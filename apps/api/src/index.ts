@@ -22,7 +22,8 @@ app.use(
 )
 
 // Webhook mount BEFORE express.json()
-app.use('/webhooks', webhookRouter)
+// We use express.raw to get the exact bytes needed for signature verification
+app.use('/webhooks', express.raw({ type: 'application/json' }), webhookRouter)
 
 app.use(express.json())
 app.use(defaultRateLimiter)

@@ -3,7 +3,7 @@ import { clerkAuth } from '../middleware/clerkAuth';
 import { supabase } from '../lib/supabase';
 import { logger } from '../lib/logger';
 
-export const meRouter = Router();
+export const meRouter: Router = Router();
 
 meRouter.get('/', clerkAuth, async (req: Request, res: Response) => {
   try {

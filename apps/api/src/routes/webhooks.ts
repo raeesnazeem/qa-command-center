@@ -3,7 +3,7 @@ import { Webhook } from 'svix';
 import { supabase } from '../lib/supabase';
 import { logger } from '../lib/logger';
 
-export const webhookRouter = Router();
+export const webhookRouter: Router = Router();
 
 const CLERK_WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET || '';
 
@@ -22,8 +22,9 @@ webhookRouter.post('/clerk', async (req: Request, res: Response) => {
     return res.status(400).json({ error: 'Missing svix headers' });
   }
 
-  // Clerk sends raw body for signature verification
-  const payload = JSON.stringify(req.body);
+  // Clerk sends raw body for signature verification.
+  // Since we use express.raw() in index.ts, req.body is a Buffer.
+  const payload = req.body.toString();
   const wh = new Webhook(CLERK_WEBHOOK_SECRET);
 
   let evt: any;
