@@ -1,6 +1,7 @@
 # Dependencies
 node_modules/
 .pnpm-store/
+pnpm-lock.yaml
 
 # Environment variables
 .env
@@ -14,6 +15,9 @@ dist/
 build/
 .next/
 out/
+apps/web/dist/
+apps/api/dist/
+apps/worker/dist/
 
 # Development tools
 .turbo/
@@ -40,6 +44,8 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+apps/*/logs/
+apps/*/*.log
 
 # Runtime data
 pids
@@ -50,6 +56,7 @@ pids
 # Coverage directory used by tools like istanbul
 coverage/
 *.lcov
+apps/*/coverage/
 
 # nyc test coverage
 .nyc_output
@@ -59,15 +66,19 @@ jspm_packages/
 
 # TypeScript cache
 *.tsbuildinfo
+apps/*/tsconfig.tsbuildinfo
 
 # Optional npm cache directory
 .npm
+apps/*/.npm/
 
 # Optional eslint cache
 .eslintcache
+apps/*/.eslintcache
 
 # Optional stylelint cache
 .stylelintcache
+apps/*/.stylelintcache
 
 # Microbundle cache
 .rpt2_cache/
@@ -87,18 +98,30 @@ jspm_packages/
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
+apps/*/.cache/
+apps/*/.parcel-cache/
 
 # Vite
 .vite/
+apps/web/.vite/
+
+# Supabase
+supabase/.branches/
+supabase/.temp/
+supabase/config.toml.local
 
 # Storybook build outputs
 .out
 .storybook-out
 storybook-static
+apps/*/.storybook-out/
+apps/*/storybook-static/
 
 # Temporary folders
 tmp/
 temp/
+apps/*/tmp/
+apps/*/temp/
 
 # Editor directories and files
 .vscode/*
