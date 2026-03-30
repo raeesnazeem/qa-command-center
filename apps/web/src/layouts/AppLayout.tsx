@@ -1,7 +1,10 @@
 import React from 'react'
 import { Outlet, Link } from 'react-router-dom'
+import { useUser, UserButton } from '@clerk/react'
 
 export const AppLayout = () => {
+  const { user } = useUser()
+
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
       {/* Sidebar */}
@@ -29,10 +32,18 @@ export const AppLayout = () => {
         <header className="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-6">
           <div className="text-lg font-semibold dark:text-white">Workspace</div>
           <div className="flex items-center space-x-4">
-            {/* User Avatar Placeholder */}
-            <div className="w-8 h-8 rounded-full bg-orange flex items-center justify-center text-white font-bold">
-              U
-            </div>
+            {user?.firstName && (
+              <span className="text-sm text-slate-700 dark:text-slate-300">
+                {user.firstName}
+              </span>
+            )}
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox: 'w-8 h-8',
+                },
+              }}
+            />
           </div>
         </header>
 
