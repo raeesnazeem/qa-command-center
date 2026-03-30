@@ -6,6 +6,8 @@ import cors from 'cors'
 import { logger } from './lib/logger'
 import { defaultRateLimiter } from './middleware/rateLimiter'
 import { healthRouter } from './routes/health'
+import { webhookRouter } from './routes/webhooks'
+import { meRouter } from './routes/me'
 
 const app = express()
 const PORT = process.env.PORT ?? 3001
@@ -18,14 +20,18 @@ app.use(
     credentials: true,
   })
 )
+
+// Webhook mount BEFORE express.json()
+app.use('/webhooks', webhookRouter)
+
 app.use(express.json())
 app.use(defaultRateLimiter)
 
 // Routes
 app.use('/health', healthRouter)
+app.use('/api/me', meRouter)
 
 // Placeholder routers — replace with real implementations as they are built
-app.use('/webhooks/clerk', (_req: Request, res: Response) => res.status(200).json({ received: true }))
 app.use('/api/projects', (_req: Request, res: Response) => res.status(501).json({ message: 'Not implemented' }))
 app.use('/api/runs', (_req: Request, res: Response) => res.status(501).json({ message: 'Not implemented' }))
 app.use('/api/tasks', (_req: Request, res: Response) => res.status(501).json({ message: 'Not implemented' }))

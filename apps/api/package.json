@@ -19,7 +19,8 @@
     "pino": "^8.19.0",
     "pino-pretty": "^11.0.0",
     "xss": "^1.0.15",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "svix": "^1.21.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
