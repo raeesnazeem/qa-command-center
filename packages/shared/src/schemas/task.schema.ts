@@ -4,24 +4,32 @@ export const TaskStatusSchema = z.enum(['open', 'in_progress', 'resolved', 'clos
 export const TaskSeveritySchema = z.enum(['critical', 'high', 'medium', 'low']);
 
 export const CreateTaskSchema = z.object({
+  finding_id: z.string().uuid().optional(),
   project_id: z.string().uuid(),
-  finding_id: z.string().uuid().optional().nullable(),
   title: z.string().min(1, 'Title is required'),
-  description: z.string().optional().nullable(),
-  severity: TaskSeveritySchema.default('medium'),
-  status: TaskStatusSchema.default('open'),
-  assigned_to: z.string().uuid().optional().nullable(),
+  description: z.string().min(1, 'Description is required'),
+  severity: TaskSeveritySchema,
+  assigned_to: z.string().uuid().optional(),
 });
 
-export const UpdateTaskSchema = z.object({
-  title: z.string().min(1).optional(),
-  description: z.string().optional().nullable(),
-  severity: TaskSeveritySchema.optional(),
+export const UpdateTaskSchema = CreateTaskSchema.partial().extend({
   status: TaskStatusSchema.optional(),
-  assigned_to: z.string().uuid().optional().nullable(),
+});
+
+export const CreateCommentSchema = z.object({
+  task_id: z.string().uuid(),
+  content: z.string().min(1, 'Comment cannot be empty').max(2000, 'Comment is too long'),
+});
+
+export const RebuttalSchema = z.object({
+  task_id: z.string().uuid(),
+  text: z.string().min(1, 'Rebuttal text is required'),
+  screenshot_url: z.string().url().optional(),
 });
 
 export type CreateTaskInput = z.infer<typeof CreateTaskSchema>;
 export type UpdateTaskInput = z.infer<typeof UpdateTaskSchema>;
+export type CreateCommentInput = z.infer<typeof CreateCommentSchema>;
+export type RebuttalInput = z.infer<typeof RebuttalSchema>;
 export type TaskStatus = z.infer<typeof TaskStatusSchema>;
 export type TaskSeverity = z.infer<typeof TaskSeveritySchema>;

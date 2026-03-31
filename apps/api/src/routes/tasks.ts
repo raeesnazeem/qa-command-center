@@ -3,7 +3,13 @@ import { supabase } from '../lib/supabase';
 import { clerkAuth } from '../middleware/clerkAuth';
 import { requireRole } from '../middleware/requireRole';
 import { zodValidate } from '../middleware/zodValidate';
-import { CreateTaskSchema, UpdateTaskSchema } from '@qacc/shared';
+import { broadcastTaskUpdate } from '../lib/realtimeService';
+import { 
+  CreateTaskSchema, 
+  UpdateTaskSchema, 
+  CreateCommentSchema, 
+  RebuttalSchema 
+} from '@qacc/shared';
 
 const router: Router = Router();
 
@@ -25,51 +31,36 @@ async function getSupabaseUserId(clerkId: string): Promise<string> {
 
 /**
  * POST /api/tasks
- * Create a new task.
+ * Create a new task. Restricted to qa_engineer and above.
  */
 router.post(
   '/',
   clerkAuth,
+  requireRole('qa_engineer'),
   zodValidate(CreateTaskSchema),
   async (req: Request, res: Response) => {
-    const { project_id, finding_id, title, description, severity, status, assigned_to } = req.body;
+    const { finding_id, project_id, title, description, severity, assigned_to } = req.body;
     const { userId: clerkUserId } = req.auth!;
 
     try {
       const supabaseUserId = await getSupabaseUserId(clerkUserId);
 
-      // Verify membership
-      const { data: membership, error: memberError } = await supabase
-        .from('project_members')
-        .select('id')
-        .eq('project_id', project_id)
-        .eq('user_id', supabaseUserId)
-        .single();
-
-      if (memberError || !membership) {
-        return res.status(403).json({ error: 'Access denied' });
-      }
-
-      const { data: task, error: taskError } = await supabase
+      const { data: task, error } = await supabase
         .from('tasks')
         .insert({
-          project_id,
           finding_id,
+          project_id,
           title,
           description,
           severity,
-          status,
           assigned_to,
           created_by: supabaseUserId,
+          status: 'open'
         })
-        .select(`
-          *,
-          users:assigned_to(full_name, email),
-          projects(name)
-        `)
+        .select()
         .single();
 
-      if (taskError) throw taskError;
+      if (error) throw error;
 
       return res.status(201).json(task);
     } catch (error: any) {
@@ -80,33 +71,79 @@ router.post(
 
 /**
  * GET /api/tasks
- * List tasks. Can filter by project_id.
+ * List tasks with filters.
  */
 router.get('/', clerkAuth, async (req: Request, res: Response) => {
-  const { project_id } = req.query;
-  const { userId: clerkUserId } = req.auth!;
+  const { project_id, status, severity, assigned_to, page = '1', limit = '10' } = req.query;
+  const { userId: clerkUserId, role } = req.auth!;
 
   try {
     const supabaseUserId = await getSupabaseUserId(clerkUserId);
-
+    
     let query = supabase
       .from('tasks')
-      .select(`
-        *,
-        users:assigned_to(full_name, email),
-        projects!inner(name, project_members!inner(user_id))
-      `)
-      .eq('projects.project_members.user_id', supabaseUserId);
+      .select('*', { count: 'exact' });
 
-    if (project_id) {
-      query = query.eq('project_id', project_id);
+    if (project_id) query = query.eq('project_id', project_id);
+    if (status) query = query.eq('status', status);
+    if (severity) query = query.eq('severity', severity);
+    if (assigned_to) query = query.eq('assigned_to', assigned_to);
+
+    // RBAC: Developer only sees assigned tasks
+    if (role === 'developer') {
+      query = query.eq('assigned_to', supabaseUserId);
     }
 
-    const { data: tasks, error } = await query.order('created_at', { ascending: false });
+    // Pagination
+    const from = (Number(page) - 1) * Number(limit);
+    const to = from + Number(limit) - 1;
+    query = query.range(from, to).order('created_at', { ascending: false });
+
+    const { data, error, count } = await query;
 
     if (error) throw error;
 
-    return res.json(tasks);
+    return res.json({
+      data,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total: count
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /api/tasks/:id
+ * Get full task with comments and rebuttals.
+ */
+router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const { data: task, error } = await supabase
+      .from('tasks')
+      .select(`
+        *,
+        comments (
+          *,
+          users:author_id (full_name, email)
+        ),
+        rebuttals (
+          *,
+          users:submitted_by (full_name, email)
+        )
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+    if (!task) return res.status(404).json({ error: 'Task not found' });
+
+    return res.json(task);
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
   }
@@ -114,7 +151,7 @@ router.get('/', clerkAuth, async (req: Request, res: Response) => {
 
 /**
  * PATCH /api/tasks/:id
- * Update a task.
+ * Update status, assignee, description (role-checked).
  */
 router.patch(
   '/:id',
@@ -122,38 +159,21 @@ router.patch(
   zodValidate(UpdateTaskSchema),
   async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { userId: clerkUserId } = req.auth!;
+    const { status, assigned_to, description } = req.body;
 
     try {
-      const supabaseUserId = await getSupabaseUserId(clerkUserId);
-
-      // Verify access via project membership
-      const { data: taskCheck, error: accessError } = await supabase
+      const { data: task, error } = await supabase
         .from('tasks')
-        .select(`
-          project_id,
-          projects!inner(project_members!inner(user_id))
-        `)
+        .update({ status, assigned_to, description })
         .eq('id', id)
-        .eq('projects.project_members.user_id', supabaseUserId)
+        .select()
         .single();
 
-      if (accessError || !taskCheck) {
-        return res.status(404).json({ error: 'Task not found or access denied' });
-      }
+      if (error) throw error;
+      if (!task) return res.status(404).json({ error: 'Task not found' });
 
-      const { data: task, error: updateError } = await supabase
-        .from('tasks')
-        .update(req.body)
-        .eq('id', id)
-        .select(`
-          *,
-          users:assigned_to(full_name, email),
-          projects(name)
-        `)
-        .single();
-
-      if (updateError) throw updateError;
+      // Broadcast update
+      await broadcastTaskUpdate(id, task);
 
       return res.json(task);
     } catch (error: any) {
@@ -163,43 +183,140 @@ router.patch(
 );
 
 /**
- * DELETE /api/tasks/:id
- * Delete a task. Restricted to admin and above.
+ * POST /api/tasks/:id/assign
+ * Assign task to a user. Restricted to qa_engineer and above.
  */
-router.delete(
-  '/:id',
+router.post(
+  '/:id/assign',
   clerkAuth,
-  requireRole('admin'),
+  requireRole('qa_engineer'),
   async (req: Request, res: Response) => {
     const { id } = req.params;
+    const { user_id } = req.body;
+
+    if (!user_id) return res.status(400).json({ error: 'user_id is required' });
+
+    try {
+      const { data: task, error } = await supabase
+        .from('tasks')
+        .update({ assigned_to: user_id })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      if (!task) return res.status(404).json({ error: 'Task not found' });
+
+      // Broadcast update
+      await broadcastTaskUpdate(id, task);
+
+      return res.json(task);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+);
+
+/**
+ * POST /api/tasks/:id/comments
+ * Add a comment to a task.
+ */
+router.post(
+  '/:id/comments',
+  clerkAuth,
+  zodValidate(CreateCommentSchema),
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { content } = req.body;
     const { userId: clerkUserId } = req.auth!;
 
     try {
       const supabaseUserId = await getSupabaseUserId(clerkUserId);
 
-      // Verify access via project membership
-      const { data: taskCheck, error: accessError } = await supabase
-        .from('tasks')
-        .select(`
-          project_id,
-          projects!inner(project_members!inner(user_id))
-        `)
-        .eq('id', id)
-        .eq('projects.project_members.user_id', supabaseUserId)
+      const { data: comment, error } = await supabase
+        .from('comments')
+        .insert({
+          task_id: id,
+          author_id: supabaseUserId,
+          content
+        })
+        .select()
         .single();
 
-      if (accessError || !taskCheck) {
-        return res.status(404).json({ error: 'Task not found or access denied' });
-      }
+      if (error) throw error;
 
-      const { error: deleteError } = await supabase
-        .from('tasks')
-        .delete()
-        .eq('id', id);
+      return res.status(201).json(comment);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+);
 
-      if (deleteError) throw deleteError;
+/**
+ * POST /api/tasks/:id/rebuttals
+ * Add a rebuttal to a task. Restricted to developer.
+ */
+router.post(
+  '/:id/rebuttals',
+  clerkAuth,
+  requireRole('developer'),
+  zodValidate(RebuttalSchema),
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { text, screenshot_url } = req.body;
+    const { userId: clerkUserId } = req.auth!;
 
-      return res.status(204).send();
+    try {
+      const supabaseUserId = await getSupabaseUserId(clerkUserId);
+
+      const { data: rebuttal, error } = await supabase
+        .from('rebuttals')
+        .insert({
+          task_id: id,
+          submitted_by: supabaseUserId,
+          text,
+          screenshot_url
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return res.status(201).json(rebuttal);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+);
+
+/**
+ * PATCH /api/findings/:id/status
+ * Update finding status. Restricted to qa_engineer and above.
+ */
+router.patch(
+  '/findings/:id/status',
+  clerkAuth,
+  requireRole('qa_engineer'),
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!['confirmed', 'false_positive'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status. Must be confirmed or false_positive' });
+    }
+
+    try {
+      const { data: finding, error } = await supabase
+        .from('findings')
+        .update({ status })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      if (!finding) return res.status(404).json({ error: 'Finding not found' });
+
+      return res.json(finding);
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
     }
