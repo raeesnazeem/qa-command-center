@@ -12,6 +12,7 @@ import { projectsRouter } from './routes/projects'
 import { runsRouter } from './routes/runs'
 import { tasksRouter } from './routes/tasks'
 import { statsRouter } from './routes/stats'
+import { projectSettingsRouter } from './routes/projectSettings'
 import { debugRouter } from './routes/debug'
 import { testWebhookRouter } from './routes/test-webhook'
 import { clerkMiddleware, getAuth } from '@clerk/express'
@@ -62,6 +63,7 @@ app.use('/api/projects', projectsRouter)
 app.use('/api/runs', runsRouter)
 app.use('/api/tasks', tasksRouter)
 app.use('/api/stats', statsRouter)
+app.use('/api/projects', projectSettingsRouter)
 app.use('/debug', debugRouter)
 app.use('/api/findings', (_req: Request, res: Response) => res.status(501).json({ message: 'Not implemented' }))
 app.use('/api/chat', (_req: Request, res: Response) => res.status(501).json({ message: 'Not implemented' }))
