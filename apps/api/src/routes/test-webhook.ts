@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { supabase } from '../lib/supabase';
 import { randomUUID } from 'crypto';
 
-export const testWebhookRouter = Router();
+export const testWebhookRouter: Router = Router();
 
 testWebhookRouter.post('/clerk', async (req: Request, res: Response) => {
   console.log('=== TEST WEBHOOK ===');
@@ -20,7 +20,35 @@ testWebhookRouter.post('/clerk', async (req: Request, res: Response) => {
       
       console.log('User data:', { clerk_id, email, full_name });
 
-      // Check if this is the first user in the system
+      // 1. Ensure an organization exists
+      let { data: org } = await supabase
+        .from('organizations')
+        .select('id')
+        .limit(1)
+        .maybeSingle();
+
+      if (!org) {
+        console.log('No organization exists. Creating default organization...');
+        const { data: newOrg, error: orgError } = await supabase
+          .from('organizations')
+          .insert({ name: 'Default Organization' })
+          .select()
+          .single();
+        
+        if (orgError || !newOrg) {
+          console.error('Error creating default organization:', orgError);
+          throw orgError || new Error('Failed to create default organization');
+        }
+        org = newOrg;
+      }
+
+      if (!org) {
+        throw new Error('Critical: No organization found or created');
+      }
+
+      console.log('Using organization:', org.id);
+
+      // 2. Check if this is the first user in the system
       const { count } = await supabase
         .from('users')
         .select('*', { count: 'exact', head: true });
@@ -38,7 +66,7 @@ testWebhookRouter.post('/clerk', async (req: Request, res: Response) => {
           email,
           full_name,
           role,
-          org_id: null,
+          org_id: org.id,
         });
 
       if (error) {
@@ -49,7 +77,7 @@ testWebhookRouter.post('/clerk', async (req: Request, res: Response) => {
     }
 
     return res.status(200).json({ success: true, type });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error processing test webhook:', error);
     return res.status(500).json({ error: 'Database sync failed', details: error.message });
   }

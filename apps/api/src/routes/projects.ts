@@ -35,9 +35,15 @@ router.post(
   zodValidate(CreateProjectSchema),
   async (req: Request, res: Response) => {
     const { name, site_url, client_name, is_woocommerce } = req.body;
+    
+    console.log('--- Project Creation Debug ---');
+    console.log('Request Body:', req.body);
+    console.log('Auth Context:', req.auth);
+
     const { orgId, userId: clerkUserId } = req.auth!;
 
     if (!orgId) {
+      console.error('Project creation failed: Missing orgId in req.auth');
       return res.status(400).json({ error: 'Organization ID is required to create a project' });
     }
 

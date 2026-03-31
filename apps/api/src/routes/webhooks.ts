@@ -76,6 +76,33 @@ webhookRouter.post('/clerk', async (req: Request, res: Response) => {
       const role = (count === 0) ? 'super_admin' : 'developer';
       console.log('Assigned role:', role);
 
+      // 1. Ensure an organization exists
+      let { data: org } = await supabase
+        .from('organizations')
+        .select('id')
+        .limit(1)
+        .maybeSingle();
+
+      if (!org) {
+        const { data: newOrg, error: orgError } = await supabase
+          .from('organizations')
+          .insert({ name: 'Default Organization' })
+          .select()
+          .single();
+        
+        if (orgError || !newOrg) {
+          console.error('Error creating default organization:', orgError);
+          throw orgError || new Error('Failed to create default organization');
+        }
+        org = newOrg;
+      }
+
+      if (!org) {
+        throw new Error('Critical: No organization found or created');
+      }
+
+      console.log('Using organization:', org.id);
+
       const { error } = await supabase
         .from('users')
         .insert({
@@ -85,7 +112,7 @@ webhookRouter.post('/clerk', async (req: Request, res: Response) => {
           email,
           full_name,
           role,
-          org_id: null,
+          org_id: org.id,
         });
 
       if (error) {
