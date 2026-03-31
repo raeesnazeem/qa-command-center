@@ -8,11 +8,12 @@ import { defaultRateLimiter } from './middleware/rateLimiter'
 import { healthRouter } from './routes/health'
 import { webhookRouter } from './routes/webhooks'
 import { meRouter } from './routes/me'
+import { projectsRouter } from './routes/projects'
 import { debugRouter } from './routes/debug'
 import { testWebhookRouter } from './routes/test-webhook'
 import { clerkMiddleware, getAuth } from '@clerk/express'
 
-const app = express()
+const app: express.Application = express()
 const PORT = process.env.PORT ?? 3001
 
 // Security & parsing middleware
@@ -39,18 +40,16 @@ app.use((req, res, next) => {
   console.log('--- Clerk Auth Debug ---');
   console.log('User ID:', auth.userId);
   console.log('Session ID:', auth.sessionId);
-  console.log('Claims:', auth.claims);
+  // @ts-ignore - claims might be sessionClaims in some versions
+  console.log('Claims:', auth.sessionClaims || (auth as any).claims);
   next();
 });
 
 // Routes
 app.use('/api/health', healthRouter)
 app.use('/api/me', meRouter)
+app.use('/api/projects', projectsRouter)
 app.use('/debug', debugRouter)
-app.use('/test-webhooks', testWebhookRouter)
-
-// Placeholder routers — replace with real implementations as they are built
-app.use('/api/projects', (_req: Request, res: Response) => res.status(501).json({ message: 'Not implemented' }))
 app.use('/api/runs', (_req: Request, res: Response) => res.status(501).json({ message: 'Not implemented' }))
 app.use('/api/tasks', (_req: Request, res: Response) => res.status(501).json({ message: 'Not implemented' }))
 app.use('/api/findings', (_req: Request, res: Response) => res.status(501).json({ message: 'Not implemented' }))
