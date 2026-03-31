@@ -80,41 +80,41 @@ export const TestPage = () => {
   return (
     <div className="p-8 max-w-4xl mx-auto space-y-8">
       <header>
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
           Day 1 Integration Test
         </h1>
-        <p className="text-slate-500">
+        <p className="text-slate-500 mt-1">
           Verify end-to-end connectivity between Web, Auth, API, and Database.
         </p>
       </header>
 
       {/* Clerk Info */}
-      <section className="bg-white dark:bg-slate-800 p-6 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
-        <h2 className="text-xl font-semibold mb-4">1. Clerk Auth State</h2>
+      <section className="bg-white p-6 rounded-md border border-slate-200 shadow-sm">
+        <h2 className="text-xl font-semibold mb-4 text-slate-900">1. Clerk Auth State</h2>
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900 rounded border">
-            <span className="font-medium">User ID:</span>
-            <code className="text-sm bg-slate-200 dark:bg-slate-700 px-2 py-1 rounded">
+          <div className="flex items-center justify-between p-3 bg-slate-50 rounded border border-slate-100">
+            <span className="font-medium text-slate-700">User ID:</span>
+            <code className="text-sm bg-slate-100 px-2 py-1 rounded text-slate-900">
               {userId || "Not Logged In"}
             </code>
           </div>
-          <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900 rounded border">
-            <span className="font-medium">JWT Token (First 50 chars):</span>
-            <code className="text-sm bg-slate-200 dark:bg-slate-700 px-2 py-1 rounded break-all">
+          <div className="flex items-center justify-between p-3 bg-slate-50 rounded border border-slate-100">
+            <span className="font-medium text-slate-700">JWT Token (First 50 chars):</span>
+            <code className="text-sm bg-slate-100 px-2 py-1 rounded break-all text-slate-900">
               {token ? `${token.substring(0, 50)}...` : "No Token"}
             </code>
           </div>
           <div className="flex items-center gap-2">
             {userId ? (
-              <CheckCircle2 className="text-green-500" />
+              <CheckCircle2 className="text-accent" />
             ) : (
               <XCircle className="text-red-500" />
             )}
             <span
               className={
                 userId
-                  ? "text-green-700 font-medium"
-                  : "text-red-700 font-medium"
+                  ? "text-accent font-semibold"
+                  : "text-red-600 font-semibold"
               }
             >
               {userId ? "Authenticated via Clerk" : "Not Authenticated"}
@@ -122,15 +122,15 @@ export const TestPage = () => {
           </div>
           <div className="mt-2">
             <div className="flex justify-between items-center">
-              <strong>JWT Token (First 50):</strong>
+              <strong className="text-slate-700">JWT Token (First 50):</strong>
               <button
                 onClick={copyFullToken}
-                className="bg-navy text-white text-[10px] px-2 py-1 rounded"
+                className="bg-black text-white text-[10px] px-2 py-1 rounded-md font-bold uppercase tracking-wider hover:bg-slate-800 transition-colors"
               >
                 Copy Full Token
               </button>
             </div>
-            <code className="block bg-slate-100 p-2 mt-1 break-all rounded border text-xs">
+            <code className="block bg-slate-50 p-2 mt-1 break-all rounded border border-slate-100 text-xs text-slate-600">
               {token ? `${token.substring(0, 50)}...` : "No token found"}
             </code>
           </div>{" "}
@@ -138,15 +138,15 @@ export const TestPage = () => {
       </section>
 
       {/* API Health */}
-      <section className="bg-white dark:bg-slate-800 p-6 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
-        <h2 className="text-xl font-semibold mb-4">
+      <section className="bg-white p-6 rounded-md border border-slate-200 shadow-sm">
+        <h2 className="text-xl font-semibold mb-4 text-slate-900">
           2. API Connectivity (/health)
         </h2>
         <div className="space-y-4">
           <button
             onClick={testHealth}
             disabled={loadingHealth}
-            className="bg-navy text-white px-4 py-2 rounded hover:bg-slate-800 disabled:opacity-50 flex items-center gap-2"
+            className="bg-black text-white px-6 py-2 rounded-md font-bold hover:bg-slate-800 disabled:opacity-50 flex items-center gap-2 transition-all shadow-sm active:scale-95"
           >
             {loadingHealth && <Loader2 className="animate-spin size-4" />}
             Test API /health
@@ -154,20 +154,20 @@ export const TestPage = () => {
 
           {healthRes && (
             <div
-              className={`p-4 rounded border flex items-start gap-3 ${healthRes.success ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}
+              className={`p-4 rounded border flex items-start gap-3 ${healthRes.success ? "bg-accent/5 border-accent/20" : "bg-red-50 border-red-100"}`}
             >
               {healthRes.success ? (
-                <CheckCircle2 className="text-green-500 shrink-0" />
+                <CheckCircle2 className="text-accent shrink-0" />
               ) : (
                 <XCircle className="text-red-500 shrink-0" />
               )}
               <div>
                 <p
-                  className={`font-bold ${healthRes.success ? "text-green-800" : "text-red-800"}`}
+                  className={`font-bold ${healthRes.success ? "text-accent" : "text-red-800"}`}
                 >
                   {healthRes.success ? "Success" : "Failed"}
                 </p>
-                <pre className="text-xs mt-2 overflow-auto max-h-40">
+                <pre className="text-xs mt-2 overflow-auto max-h-40 text-slate-600 font-mono">
                   {JSON.stringify(healthRes.data || healthRes.error, null, 2)}
                 </pre>
               </div>
@@ -177,15 +177,15 @@ export const TestPage = () => {
       </section>
 
       {/* Database Sync */}
-      <section className="bg-white dark:bg-slate-800 p-6 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
-        <h2 className="text-xl font-semibold mb-4">
+      <section className="bg-white p-6 rounded-md border border-slate-200 shadow-sm">
+        <h2 className="text-xl font-semibold mb-4 text-slate-900">
           3. Database Sync (/api/me)
         </h2>
         <div className="space-y-4">
           <button
             onClick={testMe}
             disabled={loadingMe}
-            className="bg-navy text-white px-4 py-2 rounded hover:bg-slate-800 disabled:opacity-50 flex items-center gap-2"
+            className="bg-black text-white px-6 py-2 rounded-md font-bold hover:bg-slate-800 disabled:opacity-50 flex items-center gap-2 transition-all shadow-sm active:scale-95"
           >
             {loadingMe && <Loader2 className="animate-spin size-4" />}
             Test /api/me
@@ -193,22 +193,22 @@ export const TestPage = () => {
 
           {meRes && (
             <div
-              className={`p-4 rounded border flex items-start gap-3 ${meRes.success ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}
+              className={`p-4 rounded border flex items-start gap-3 ${meRes.success ? "bg-accent/5 border-accent/20" : "bg-red-50 border-red-100"}`}
             >
               {meRes.success ? (
-                <CheckCircle2 className="text-green-500 shrink-0" />
+                <CheckCircle2 className="text-accent shrink-0" />
               ) : (
                 <XCircle className="text-red-500 shrink-0" />
               )}
               <div>
                 <p
-                  className={`font-bold ${meRes.success ? "text-green-800" : "text-red-800"}`}
+                  className={`font-bold ${meRes.success ? "text-accent" : "text-red-800"}`}
                 >
                   {meRes.success
                     ? "Success - User Sync Verified"
                     : "Failed - Sync Issues"}
                 </p>
-                <pre className="text-xs mt-2 overflow-auto max-h-40">
+                <pre className="text-xs mt-2 overflow-auto max-h-40 text-slate-600 font-mono">
                   {JSON.stringify(meRes.data || meRes.error, null, 2)}
                 </pre>
               </div>

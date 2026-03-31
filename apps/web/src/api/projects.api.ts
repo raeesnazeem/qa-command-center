@@ -15,13 +15,27 @@ export interface Project {
   last_run_date: string | null;
 }
 
+export interface ProjectMember {
+  role: 'admin' | 'sub_admin' | 'qa_engineer' | 'developer';
+  user_id: string;
+  users: {
+    full_name: string;
+    email: string;
+    role: string;
+  };
+}
+
+export interface ProjectWithMembers extends Project {
+  project_members: ProjectMember[];
+}
+
 export const getProjects = async (axios: AxiosInstance): Promise<Project[]> => {
   const { data } = await axios.get<Project[]>('/api/projects');
   return data;
 };
 
-export const getProject = async (axios: AxiosInstance, id: string): Promise<Project> => {
-  const { data } = await axios.get<Project>(`/api/projects/${id}`);
+export const getProject = async (axios: AxiosInstance, id: string): Promise<ProjectWithMembers> => {
+  const { data } = await axios.get<ProjectWithMembers>(`/api/projects/${id}`);
   return data;
 };
 

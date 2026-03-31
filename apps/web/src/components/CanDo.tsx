@@ -9,17 +9,13 @@ interface CanDoProps {
 }
 
 export const CanDo: React.FC<CanDoProps> = ({ role, children }) => {
-  const { canDo, isLoading, role: userRole } = useRole()
+  const { canDo, isLoading } = useRole()
 
   if (isLoading) {
-    console.log('--- CanDo: Loading... ---');
     return null
   }
 
-  const hasPermission = canDo(role);
-  console.log(`--- CanDo Check: Required=${role}, User=${userRole}, Result=${hasPermission} ---`);
-
-  if (!hasPermission) {
+  if (!canDo(role)) {
     return null
   }
 

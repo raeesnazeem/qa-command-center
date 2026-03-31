@@ -6,21 +6,21 @@ export const AppLayout = () => {
   const { user } = useUser()
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="flex h-screen bg-bg-main font-sans">
       {/* Sidebar */}
-      <aside className="w-64 bg-navy text-white flex flex-col">
-        <div className="p-4 text-xl font-bold border-b border-slate-700">QACC</div>
-        <nav className="flex-1 p-4 space-y-2">
-          <Link to="/dashboard" className="block px-4 py-2 rounded hover:bg-slate-700">
+      <aside className="w-64 bg-white text-slate-900 flex flex-col border-r border-slate-200">
+        <div className="p-6 text-xl font-bold border-b border-slate-100 tracking-tight">QACC</div>
+        <nav className="flex-1 p-4 space-y-1">
+          <Link to="/dashboard" className="block px-4 py-2.5 rounded-md text-sm font-medium hover:bg-slate-50 hover:text-accent transition-colors">
             Dashboard
           </Link>
-          <Link to="/projects" className="block px-4 py-2 rounded hover:bg-slate-700">
+          <Link to="/projects" className="block px-4 py-2.5 rounded-md text-sm font-medium bg-slate-50 text-accent border border-slate-100">
             Projects
           </Link>
-          <Link to="/tasks" className="block px-4 py-2 rounded hover:bg-slate-700">
+          <Link to="/tasks" className="block px-4 py-2.5 rounded-md text-sm font-medium hover:bg-slate-50 hover:text-accent transition-colors">
             Tasks
           </Link>
-          <Link to="/settings" className="block px-4 py-2 rounded hover:bg-slate-700">
+          <Link to="/settings" className="block px-4 py-2.5 rounded-md text-sm font-medium hover:bg-slate-50 hover:text-accent transition-colors">
             Settings
           </Link>
         </nav>
@@ -29,8 +29,8 @@ export const AppLayout = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Topbar */}
-        <header className="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-6">
-          <div className="text-lg font-semibold dark:text-white">Workspace</div>
+        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shadow-sm">
+          <div className="text-lg font-semibold text-slate-800">Workspace</div>
           <div className="flex items-center space-x-4">
             {user?.firstName && (
               <span className="text-sm text-slate-700 dark:text-slate-300">
