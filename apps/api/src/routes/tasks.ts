@@ -82,7 +82,11 @@ router.get('/', clerkAuth, async (req: Request, res: Response) => {
     
     let query = supabase
       .from('tasks')
-      .select('*', { count: 'exact' });
+      .select(`
+        *,
+        users:assigned_to (id, full_name, email),
+        projects:project_id (id, name)
+      `, { count: 'exact' });
 
     if (project_id) query = query.eq('project_id', project_id);
     if (status) query = query.eq('status', status);
