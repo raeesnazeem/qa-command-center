@@ -13,12 +13,26 @@ export interface QARun {
   status: RunStatus;
   created_by: string;
   created_at: string;
+  started_at?: string | null;
   completed_at?: string | null;
   pages_total: number;
   pages_processed: number;
   progress_percentage?: number;
   finding_counts?: Record<string, number>;
-  pages?: any[];
+  pages?: QAPage[];
+}
+
+export interface QAPage {
+  id: string;
+  run_id: string;
+  url: string;
+  title?: string | null;
+  status: 'pending' | 'processing' | 'done' | 'error' | 'screenshotted';
+  screenshot_url_desktop?: string | null;
+  screenshot_url_tablet?: string | null;
+  screenshot_url_mobile?: string | null;
+  created_at: string;
+  finding_counts?: Record<string, number>;
 }
 
 export interface QARunsResponse {
