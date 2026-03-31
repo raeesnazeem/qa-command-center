@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthAxios } from '../lib/useAuthAxios';
 import { CreateRunInput } from '@qacc/shared';
-import { createRun, getRuns, getRun, QARun, QARunsResponse } from '../api/runs.api';
+import { createRun, getRuns, getRun, signOffRun, QARun, QARunsResponse } from '../api/runs.api';
 import toast from 'react-hot-toast';
 
 export const useRuns = (projectId: string, page = 1, limit = 20) => {
@@ -39,6 +39,24 @@ export const useCreateRun = () => {
     onError: (error: any) => {
       const message = error.response?.data?.error || 'Failed to start QA run';
       toast.error(message);
+    },
+  });
+};
+
+export const useSignOff = () => {
+  const axios = useAuthAxios();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ runId, notes }: { runId: string; notes?: string }) => 
+      signOffRun(axios, runId, notes),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['run', data.run_id] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      toast.success('Run signed off successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to sign off');
     },
   });
 };

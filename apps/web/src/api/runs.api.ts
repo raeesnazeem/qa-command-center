@@ -60,3 +60,12 @@ export const updateRunStatus = async (
   const response = await axios.patch<QARun>(`/api/runs/${runId}/status`, { status });
   return response.data;
 };
+
+export const signOffRun = async (
+  axios: AxiosInstance,
+  runId: string,
+  notes?: string
+): Promise<any> => {
+  const response = await axios.post(`/api/runs/${runId}/sign-off`, { notes });
+  return response.data;
+};

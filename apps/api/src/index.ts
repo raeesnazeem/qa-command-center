@@ -12,6 +12,8 @@ import { projectsRouter } from './routes/projects'
 import { runsRouter } from './routes/runs'
 import { tasksRouter } from './routes/tasks'
 import { statsRouter } from './routes/stats'
+import { dashboardRouter } from './routes/dashboard'
+import { signOffRouter } from './routes/signOff'
 import { projectSettingsRouter } from './routes/projectSettings'
 import { debugRouter } from './routes/debug'
 import { testWebhookRouter } from './routes/test-webhook'
@@ -61,8 +63,10 @@ app.use('/api/health', healthRouter)
 app.use('/api/me', meRouter)
 app.use('/api/projects', projectsRouter)
 app.use('/api/runs', runsRouter)
+app.use('/api/runs', signOffRouter)
 app.use('/api/tasks', tasksRouter)
 app.use('/api/stats', statsRouter)
+app.use('/api/dashboard', dashboardRouter)
 app.use('/api/projects', projectSettingsRouter)
 app.use('/debug', debugRouter)
 app.use('/api/findings', tasksRouter)
