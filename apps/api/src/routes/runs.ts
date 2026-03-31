@@ -25,7 +25,7 @@ async function getSupabaseUserId(clerkId: string): Promise<string> {
 
 /**
  * POST /api/runs
- * Start a new QA run. Restricted to qa_engineer and above.
+ * Start a new QA run (Status: pending).
  */
 router.post(
   '/',
@@ -33,26 +33,13 @@ router.post(
   requireRole('qa_engineer'),
   zodValidate(CreateRunSchema),
   async (req: Request, res: Response) => {
-    const { project_id, run_type, site_url, figma_url, enabled_checks, is_woocommerce } = req.body;
+    const { project_id, run_type, site_url, figma_url, enabled_checks, is_woocommerce, device_matrix } = req.body;
     const { userId: clerkUserId } = req.auth!;
 
     try {
       const supabaseUserId = await getSupabaseUserId(clerkUserId);
 
-      // 1. Verify project membership and role
-      const { data: membership, error: memberError } = await supabase
-        .from('project_members')
-        .select('role')
-        .eq('project_id', project_id)
-        .eq('user_id', supabaseUserId)
-        .single();
-
-      if (memberError || !membership) {
-        return res.status(403).json({ error: 'You are not a member of this project' });
-      }
-
-      // 2. Insert the run
-      const { data: run, error: runError } = await supabase
+      const { data: run, error } = await supabase
         .from('qa_runs')
         .insert({
           project_id,
@@ -61,15 +48,14 @@ router.post(
           figma_url,
           enabled_checks,
           is_woocommerce,
+          device_matrix,
           status: 'pending',
           created_by: supabaseUserId,
         })
         .select()
         .single();
 
-      if (runError) throw runError;
-
-      // TODO: Trigger asynchronous processing (crawling/testing) here
+      if (error) throw error;
 
       return res.status(201).json(run);
     } catch (error: any) {
@@ -79,65 +65,32 @@ router.post(
 );
 
 /**
- * GET /api/runs/:id
- * Get details of a specific QA run.
+ * GET /api/projects/:id/runs
+ * List runs for a project with pagination and summary stats.
  */
-router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const { userId: clerkUserId } = req.auth!;
+router.get('/projects/:id/runs', clerkAuth, async (req: Request, res: Response) => {
+  const { id: project_id } = req.params;
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 20;
+  const offset = (page - 1) * limit;
 
   try {
-    const supabaseUserId = await getSupabaseUserId(clerkUserId);
-
-    // Fetch run with project details to verify access
-    const { data: run, error: runError } = await supabase
+    const { data: runs, error, count } = await supabase
       .from('qa_runs')
-      .select(`
-        *,
-        projects!inner(
-          id,
-          name,
-          project_members!inner(user_id)
-        )
-      `)
-      .eq('id', id)
-      .eq('projects.project_members.user_id', supabaseUserId)
-      .single();
+      .select('*', { count: 'exact' })
+      .eq('project_id', project_id)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
-    if (runError || !run) {
-      return res.status(404).json({ error: 'Run not found or access denied' });
-    }
-
-    // Fetch findings for this run with page URLs
-    const { data: findings, error: findingsError } = await supabase
-      .from('findings')
-      .select(`
-        *,
-        pages(url)
-      `)
-      .eq('run_id', id);
-
-    if (findingsError) throw findingsError;
-
-    // Flatten findings to include page_url directly
-    const flattenedFindings = findings.map((f: any) => ({
-      ...f,
-      page_url: f.pages?.url || 'Unknown',
-      pages: undefined
-    }));
-
-    // Fetch pages for this run
-    const { data: pages, error: pagesError } = await supabase
-      .from('pages')
-      .select('*')
-      .eq('run_id', id);
-
-    if (pagesError) throw pagesError;
+    if (error) throw error;
 
     return res.json({
-      ...run,
-      findings: flattenedFindings,
-      pages,
+      data: runs,
+      pagination: {
+        page,
+        limit,
+        total: count,
+      },
     });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
@@ -145,44 +98,117 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
 });
 
 /**
- * GET /api/runs
- * List runs for a project (passed as query param).
+ * GET /api/runs/:id
+ * Get full run details, pages, and findings summary.
  */
-router.get('/', clerkAuth, async (req: Request, res: Response) => {
-  const { project_id } = req.query;
-  const { userId: clerkUserId } = req.auth!;
-
-  if (!project_id) {
-    return res.status(400).json({ error: 'project_id query parameter is required' });
-  }
+router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
+  const { id } = req.params;
 
   try {
-    const supabaseUserId = await getSupabaseUserId(clerkUserId);
-
-    // Verify membership
-    const { data: membership, error: memberError } = await supabase
-      .from('project_members')
-      .select('id')
-      .eq('project_id', project_id)
-      .eq('user_id', supabaseUserId)
-      .single();
-
-    if (memberError || !membership) {
-      return res.status(403).json({ error: 'Access denied' });
-    }
-
-    const { data: runs, error: runsError } = await supabase
+    // 1. Fetch run details
+    const { data: run, error: runError } = await supabase
       .from('qa_runs')
       .select('*')
-      .eq('project_id', project_id)
-      .order('created_at', { ascending: false });
+      .eq('id', id)
+      .single();
 
-    if (runsError) throw runsError;
+    if (runError || !run) {
+      return res.status(404).json({ error: 'Run not found' });
+    }
 
-    return res.json(runs);
+    // 2. Fetch pages for this run
+    const { data: pages, error: pagesError } = await supabase
+      .from('pages')
+      .select('*')
+      .eq('run_id', id);
+
+    if (pagesError) throw pagesError;
+
+    // 3. Fetch finding counts per check factor
+    const { data: findingsSummary, error: findingsError } = await supabase
+      .from('findings')
+      .select('check_factor')
+      .eq('run_id', id);
+
+    if (findingsError) throw findingsError;
+
+    const findingCounts: Record<string, number> = {};
+    findingsSummary.forEach((f: any) => {
+      findingCounts[f.check_factor] = (findingCounts[f.check_factor] || 0) + 1;
+    });
+
+    // 4. Calculate progress
+    const pages_total = run.pages_total || 0;
+    const pages_processed = run.pages_processed || 0;
+    const progress_percentage = pages_total > 0 ? (pages_processed / pages_total) * 100 : 0;
+
+    return res.json({
+      ...run,
+      pages,
+      finding_counts: findingCounts,
+      progress_percentage,
+    });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
   }
 });
+
+/**
+ * PATCH /api/runs/:id/status
+ * Update run status with strict state transition rules.
+ */
+router.patch(
+  '/:id/status',
+  clerkAuth,
+  requireRole('qa_engineer'),
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { status: newStatus } = req.body;
+
+    try {
+      const { data: run, error: fetchError } = await supabase
+        .from('qa_runs')
+        .select('status')
+        .eq('id', id)
+        .single();
+
+      if (fetchError || !run) {
+        return res.status(404).json({ error: 'Run not found' });
+      }
+
+      const currentStatus = run.status;
+
+      // Validate transitions
+      const validTransitions: Record<string, string[]> = {
+        'pending': ['running'],
+        'running': ['completed', 'failed'],
+      };
+
+      if (!validTransitions[currentStatus]?.includes(newStatus)) {
+        return res.status(422).json({
+          error: `Invalid status transition from ${currentStatus} to ${newStatus}`,
+        });
+      }
+
+      const updateData: any = { status: newStatus };
+      if (newStatus === 'completed' || newStatus === 'failed') {
+        updateData.completed_at = new Date().toISOString();
+      }
+
+      const { data: updatedRun, error: updateError } = await supabase
+        .from('qa_runs')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (updateError) throw updateError;
+
+      return res.json(updatedRun);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+);
 
 export { router as runsRouter };
