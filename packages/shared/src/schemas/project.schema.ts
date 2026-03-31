@@ -9,6 +9,11 @@ export const CreateProjectSchema = z.object({
 
 export const UpdateProjectSchema = CreateProjectSchema.partial().extend({
   status: z.enum(['active', 'archived']).optional(),
+  figma_access_token: z.string().optional(),
+  basecamp_account_id: z.string().optional(),
+  basecamp_project_id: z.string().optional(),
+  basecamp_todo_list_id: z.string().optional(),
+  basecamp_api_token: z.string().optional(),
 });
 
 export type CreateProjectInput = z.infer<typeof CreateProjectSchema>;

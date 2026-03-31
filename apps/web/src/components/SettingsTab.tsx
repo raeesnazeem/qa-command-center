@@ -20,14 +20,14 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
     client_name: project.client_name || '',
   });
 
-  const [figmaToken, setFigmaToken] = useState('figma_secret_token_1234abcd');
+  const [figmaToken, setFigmaToken] = useState(project.figma_access_token || '');
   const [showFigma, setShowFigma] = useState(false);
 
   const [basecamp, setBasecamp] = useState({
-    accountId: '1234567',
-    projectId: '9876543',
-    todoListId: '11223344',
-    apiToken: 'bc_api_token_xyz_999',
+    accountId: project.basecamp_account_id || '',
+    projectId: project.basecamp_project_id || '',
+    todoListId: project.basecamp_todo_list_id || '',
+    apiToken: project.basecamp_api_token || '',
   });
   const [showBasecamp, setShowBasecamp] = useState(false);
 
@@ -43,6 +43,21 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
   const handleUpdateBasic = (e: React.FormEvent) => {
     e.preventDefault();
     updateProject(formData);
+  };
+
+  const handleUpdateFigma = async (e: React.FormEvent) => {
+    e.preventDefault();
+    updateProject({ figma_access_token: figmaToken });
+  };
+
+  const handleUpdateBasecamp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    updateProject({
+      basecamp_account_id: basecamp.accountId,
+      basecamp_project_id: basecamp.projectId,
+      basecamp_todo_list_id: basecamp.todoListId,
+      basecamp_api_token: basecamp.apiToken,
+    });
   };
 
   const handleTestBasecamp = async () => {
@@ -118,7 +133,7 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
             <Layout className="w-5 h-5 text-slate-400" />
             <h3 className="font-bold text-slate-900">Figma Integration</h3>
           </div>
-          <div className="p-6 space-y-6">
+          <form onSubmit={handleUpdateFigma} className="p-6 space-y-6">
             <p className="text-sm text-slate-500 leading-relaxed">
               Connect Figma to automatically pull design specs and compare them during QA runs.
             </p>
@@ -128,12 +143,17 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
                 <div className="relative">
                   <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
-                    type="text"
-                    value={showFigma ? figmaToken : maskValue(figmaToken, 4)}
+                    type={showFigma ? "text" : "password"}
+                    value={figmaToken}
                     onChange={(e) => setFigmaToken(e.target.value)}
-                    readOnly={!showFigma}
-                    className={`w-full bg-slate-50 border border-slate-200 rounded-md pl-10 pr-12 py-2 text-sm focus:outline-none focus:border-accent transition-all ${!showFigma ? 'cursor-not-allowed opacity-70' : ''}`}
+                    placeholder="Enter Figma PAT"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-md pl-10 pr-12 py-2 text-sm focus:outline-none focus:border-accent transition-all"
                   />
+                  {!showFigma && figmaToken && (
+                    <div className="absolute left-10 top-1/2 -translate-y-1/2 text-sm text-slate-900 pointer-events-none bg-slate-50 pr-2">
+                      {maskValue(figmaToken, 4)}
+                    </div>
+                  )}
                   <button
                     type="button"
                     onClick={() => setShowFigma(!showFigma)}
@@ -145,12 +165,16 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
               </div>
             </div>
             <div className="flex justify-end">
-              <button className="flex items-center space-x-2 bg-black text-white px-6 py-2 rounded-md font-bold text-sm hover:bg-slate-800 transition-all shadow-sm active:scale-95">
+              <button 
+                type="submit"
+                disabled={isUpdating}
+                className="flex items-center space-x-2 bg-black text-white px-6 py-2 rounded-md font-bold text-sm hover:bg-slate-800 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+              >
                 <Save className="w-4 h-4" />
-                <span>Update Token</span>
+                <span>{isUpdating ? 'Saving...' : 'Update Token'}</span>
               </button>
             </div>
-          </div>
+          </form>
         </section>
 
         {/* Basecamp Integration */}
@@ -159,7 +183,7 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
             <Database className="w-5 h-5 text-slate-400" />
             <h3 className="font-bold text-slate-900">Basecamp Integration</h3>
           </div>
-          <div className="p-6 space-y-6">
+          <form onSubmit={handleUpdateBasecamp} className="p-6 space-y-6">
             <p className="text-sm text-slate-500 leading-relaxed">
               Automatically sync QA issues to your Basecamp project's to-do list.
             </p>
@@ -167,42 +191,42 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Account ID</label>
                 <input
-                  type="text"
-                  value={showBasecamp ? basecamp.accountId : maskValue(basecamp.accountId)}
+                  type={showBasecamp ? "text" : "password"}
+                  value={basecamp.accountId}
                   onChange={(e) => setBasecamp({ ...basecamp, accountId: e.target.value })}
-                  readOnly={!showBasecamp}
-                  className={`w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all ${!showBasecamp ? 'cursor-not-allowed opacity-70' : ''}`}
+                  placeholder="Enter Account ID"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
                 />
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Project ID</label>
                 <input
-                  type="text"
-                  value={showBasecamp ? basecamp.projectId : maskValue(basecamp.projectId)}
+                  type={showBasecamp ? "text" : "password"}
+                  value={basecamp.projectId}
                   onChange={(e) => setBasecamp({ ...basecamp, projectId: e.target.value })}
-                  readOnly={!showBasecamp}
-                  className={`w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all ${!showBasecamp ? 'cursor-not-allowed opacity-70' : ''}`}
+                  placeholder="Enter Project ID"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
                 />
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">To-Do List ID</label>
                 <input
-                  type="text"
-                  value={showBasecamp ? basecamp.todoListId : maskValue(basecamp.todoListId)}
+                  type={showBasecamp ? "text" : "password"}
+                  value={basecamp.todoListId}
                   onChange={(e) => setBasecamp({ ...basecamp, todoListId: e.target.value })}
-                  readOnly={!showBasecamp}
-                  className={`w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all ${!showBasecamp ? 'cursor-not-allowed opacity-70' : ''}`}
+                  placeholder="Enter To-Do List ID"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
                 />
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">API Token</label>
                 <div className="relative">
                   <input
-                    type="text"
-                    value={showBasecamp ? basecamp.apiToken : maskValue(basecamp.apiToken)}
+                    type={showBasecamp ? "text" : "password"}
+                    value={basecamp.apiToken}
                     onChange={(e) => setBasecamp({ ...basecamp, apiToken: e.target.value })}
-                    readOnly={!showBasecamp}
-                    className={`w-full bg-slate-50 border border-slate-200 rounded-md pr-12 py-2 text-sm focus:outline-none focus:border-accent transition-all ${!showBasecamp ? 'cursor-not-allowed opacity-70' : ''}`}
+                    placeholder="Enter API Token"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-md pr-12 py-2 text-sm focus:outline-none focus:border-accent transition-all"
                   />
                   <button
                     type="button"
@@ -219,17 +243,21 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
                 type="button"
                 onClick={handleTestBasecamp}
                 disabled={isTestingBasecamp}
-                className="flex items-center space-x-2 text-accent hover:text-accent/80 font-bold text-sm transition-all"
+                className="flex items-center space-x-2 text-accent hover:text-accent/80 font-bold text-sm transition-all disabled:opacity-50"
               >
                 {isTestingBasecamp ? <Settings className="w-4 h-4 animate-spin" /> : <TestTube className="w-4 h-4" />}
                 <span>Test Connection</span>
               </button>
-              <button className="flex items-center space-x-2 bg-black text-white px-6 py-2 rounded-md font-bold text-sm hover:bg-slate-800 transition-all shadow-sm active:scale-95">
+              <button 
+                type="submit"
+                disabled={isUpdating}
+                className="flex items-center space-x-2 bg-black text-white px-6 py-2 rounded-md font-bold text-sm hover:bg-slate-800 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+              >
                 <Save className="w-4 h-4" />
-                <span>Save Basecamp Settings</span>
+                <span>{isUpdating ? 'Saving...' : 'Save Basecamp Settings'}</span>
               </button>
             </div>
-          </div>
+          </form>
         </section>
       </CanDo>
     </div>

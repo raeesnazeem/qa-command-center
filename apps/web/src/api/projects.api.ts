@@ -13,6 +13,11 @@ export interface Project {
   updated_at: string;
   open_issues_count: number;
   last_run_date: string | null;
+  figma_access_token?: string;
+  basecamp_account_id?: string;
+  basecamp_project_id?: string;
+  basecamp_todo_list_id?: string;
+  basecamp_api_token?: string;
 }
 
 export interface ProjectMember {
