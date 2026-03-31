@@ -1,9 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import { createClerkClient } from '@clerk/backend'
-
-const clerk = createClerkClient({
-  secretKey: process.env.CLERK_SECRET_KEY,
-})
+import { getAuth } from '@clerk/express'
 
 export interface AuthPayload {
   userId: string
@@ -24,26 +20,31 @@ export const clerkAuth = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
-  const authHeader = req.headers.authorization
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    res.status(401).json({ error: 'Missing or malformed Authorization header' })
-    return
-  }
-
-  const token = authHeader.split(' ')[1]
-
   try {
-    const payload = await clerk.verifyToken(token)
+    const auth = getAuth(req)
 
-    req.auth = {
-      userId: payload.sub,
-      orgId: (payload.org_id as string) ?? null,
-      role: (payload.org_role as string) ?? null,
+    if (!auth.userId) {
+      console.error('--- Clerk Auth Failed: No User ID in Request ---')
+      res.status(401).json({ error: 'Unauthorized', details: 'No active session found' })
+      return
     }
 
+    // Map Clerk's auth object to our local AuthPayload format
+    req.auth = {
+      userId: auth.userId,
+      orgId: auth.orgId || null,
+      role: (auth.orgRole as string) || null,
+    }
+
+    console.log('--- Clerk Auth Success ---')
+    console.log('User:', req.auth.userId)
+    console.log('Org:', req.auth.orgId)
+    console.log('Role:', req.auth.role)
+
     next()
-  } catch {
-    res.status(401).json({ error: 'Invalid or expired token' })
+  } catch (err: any) {
+    console.error('--- Clerk Auth Middleware Error ---')
+    console.error('Error:', err.message)
+    res.status(401).json({ error: 'Authentication failed', details: err.message })
   }
 }

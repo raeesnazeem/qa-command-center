@@ -1,0 +1,57 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuthAxios } from '../lib/useAuthAxios';
+import { getProjects, getProject, createProject, updateProject, Project } from '../api/projects.api';
+import { CreateProjectInput, UpdateProjectInput } from '@qacc/shared';
+import toast from 'react-hot-toast';
+
+export const useProjects = () => {
+  const axios = useAuthAxios();
+  return useQuery({
+    queryKey: ['projects'],
+    queryFn: () => getProjects(axios),
+  });
+};
+
+export const useProject = (id: string) => {
+  const axios = useAuthAxios();
+  return useQuery({
+    queryKey: ['projects', id],
+    queryFn: () => getProject(axios, id),
+    enabled: !!id,
+  });
+};
+
+export const useCreateProject = () => {
+  const axios = useAuthAxios();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateProjectInput) => createProject(axios, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      toast.success('Project created successfully');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.error || 'Failed to create project';
+      toast.error(message);
+    },
+  });
+};
+
+export const useUpdateProject = (id: string) => {
+  const axios = useAuthAxios();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: UpdateProjectInput) => updateProject(axios, id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['projects', id] });
+      toast.success('Project updated successfully');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.error || 'Failed to update project';
+      toast.error(message);
+    },
+  });
+};

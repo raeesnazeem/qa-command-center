@@ -35,7 +35,7 @@ export const useRole = (): UseRoleReturn => {
   const { data: profile, isLoading } = useQuery<UserProfile>({
     queryKey: ['user-profile'],
     queryFn: async () => {
-      const response = await axios.get('/me')
+      const response = await axios.get('/api/me')
       return response.data
     },
     staleTime: 1000 * 60 * 5, // 5 minutes

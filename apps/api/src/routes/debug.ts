@@ -74,3 +74,24 @@ debugRouter.get('/user-by-clerk-id/:clerkId', async (req: Request, res: Response
   
   return res.json(data);
 });
+
+debugRouter.post('/promote-user', async (req: Request, res: Response) => {
+  const { clerkId, role } = req.body;
+  
+  if (!clerkId || !role) {
+    return res.status(400).json({ error: 'clerkId and role are required' });
+  }
+
+  const { data, error } = await supabase
+    .from('users')
+    .update({ role })
+    .eq('clerk_user_id', clerkId)
+    .select()
+    .single();
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  return res.json({ message: `User ${clerkId} promoted to ${role}`, user: data });
+});

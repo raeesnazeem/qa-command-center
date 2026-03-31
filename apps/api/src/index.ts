@@ -16,6 +16,13 @@ import { clerkMiddleware, getAuth } from '@clerk/express'
 const app: express.Application = express()
 const PORT = process.env.PORT ?? 3001
 
+if (!process.env.CLERK_SECRET_KEY) {
+  logger.error('Missing CLERK_SECRET_KEY in environment variables')
+} else {
+  logger.info('CLERK_SECRET_KEY is set')
+}
+logger.info(`FRONTEND_URL configured as: ${process.env.FRONTEND_URL}`)
+
 // Security & parsing middleware
 app.use(helmet())
 app.use(
