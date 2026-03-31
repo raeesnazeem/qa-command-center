@@ -1,7 +1,8 @@
-import { useQuery } from '@tanstack/react-query'
-import { useAuthAxios } from '@/lib/useAuthAxios'
-
-type Role = 'developer' | 'qa_engineer' | 'project_manager' | 'sub_admin' | 'admin' | 'super_admin'
+import { useQuery } from '@tanstack/react-query';
+import { useAuthAxios } from '@/lib/useAuthAxios';
+import { useAppStore, Role } from '@/store/appStore';
+import { useEffect } from 'react';
+import { getDevRoleOverride } from '@/lib/devRoleOverride';
 
 const ROLE_HIERARCHY: Role[] = [
   'developer',
@@ -10,56 +11,61 @@ const ROLE_HIERARCHY: Role[] = [
   'sub_admin',
   'admin',
   'super_admin',
-]
-
-interface UserProfile {
-  id: string
-  email: string
-  full_name: string
-  role: Role
-  org_id: string
-}
+];
 
 interface UseRoleReturn {
-  role: Role | null
-  isAdmin: boolean
-  isQaEngineer: boolean
-  isDeveloper: boolean
-  canDo: (minRole: Role) => boolean
-  isLoading: boolean
+  role: Role | null;
+  isAdmin: boolean;
+  isSubAdmin: boolean;
+  isProjectManager: boolean;
+  isQaEngineer: boolean;
+  isDeveloper: boolean;
+  canDo: (minRole: Role) => boolean;
+  isLoading: boolean;
 }
 
 export const useRole = (): UseRoleReturn => {
-  const axios = useAuthAxios()
+  const axios = useAuthAxios();
+  const { user, setUser } = useAppStore();
 
-  const { data: profile, isLoading } = useQuery<UserProfile>({
-    queryKey: ['user-profile'],
+  const { data: profile, isLoading } = useQuery({
+    queryKey: ['me'],
     queryFn: async () => {
-      const response = await axios.get('/api/me')
-      return response.data
+      const response = await axios.get('/api/me');
+      return response.data;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
-  })
+  });
 
-  const role = profile?.role ?? null
+  useEffect(() => {
+    if (profile) {
+      setUser(profile);
+    }
+  }, [profile, setUser]);
+
+  // Apply dev role override if present
+  const devOverride = getDevRoleOverride();
+  const role = devOverride ?? user?.role ?? profile?.role ?? null;
 
   const getRoleLevel = (r: Role | null): number => {
-    if (!r) return -1
-    return ROLE_HIERARCHY.indexOf(r)
-  }
+    if (!r) return -1;
+    return ROLE_HIERARCHY.indexOf(r);
+  };
 
   const canDo = (minRole: Role): boolean => {
-    const userLevel = getRoleLevel(role)
-    const requiredLevel = getRoleLevel(minRole)
-    return userLevel >= requiredLevel
-  }
+    const userLevel = getRoleLevel(role);
+    const requiredLevel = getRoleLevel(minRole);
+    return userLevel >= requiredLevel;
+  };
 
   return {
     role,
-    isAdmin: canDo('admin'),
-    isQaEngineer: canDo('qa_engineer'),
+    isAdmin: role === 'admin' || role === 'super_admin',
+    isSubAdmin: role === 'sub_admin',
+    isProjectManager: role === 'project_manager',
+    isQaEngineer: role === 'qa_engineer',
     isDeveloper: role === 'developer',
     canDo,
     isLoading,
-  }
-}
+  };
+};

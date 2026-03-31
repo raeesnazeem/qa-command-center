@@ -1,9 +1,13 @@
 import { create } from 'zustand'
 
+export type Role = 'developer' | 'qa_engineer' | 'project_manager' | 'sub_admin' | 'admin' | 'super_admin';
+
 interface User {
-  id: string
-  email: string
-  name?: string
+  id: string;
+  email: string;
+  full_name: string;
+  role: Role;
+  org_id: string;
 }
 
 interface Project {
@@ -23,5 +27,5 @@ export const useAppStore = create<AppState>((set) => ({
   user: null,
   currentProject: null,
   setUser: (user) => set({ user }),
-  setCurrentProject: (project) => set({ currentProject }),
+  setCurrentProject: (project) => set({ currentProject: project }),
 }))

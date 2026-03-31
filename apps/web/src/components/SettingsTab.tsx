@@ -74,46 +74,46 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
 
   return (
     <div className="max-w-4xl space-y-8 animate-in fade-in duration-500 pb-20">
-      <CanDo role="admin">
-        {/* Basic Settings */}
-        <section className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-sm">
-          <div className="px-6 py-4 border-b border-slate-50 flex items-center space-x-2">
-            <Settings className="w-5 h-5 text-slate-400" />
-            <h3 className="font-bold text-slate-900">General Settings</h3>
-          </div>
-          <form onSubmit={handleUpdateBasic} className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Project Name</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Client Name</label>
-                <input
-                  type="text"
-                  value={formData.client_name}
-                  onChange={(e) => setFormData({ ...formData, client_name: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
-                />
-              </div>
+      {/* Basic Settings */}
+      <section className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-sm">
+        <div className="px-6 py-4 border-b border-slate-50 flex items-center space-x-2">
+          <Settings className="w-5 h-5 text-slate-400" />
+          <h3 className="font-bold text-slate-900">General Settings</h3>
+        </div>
+        <form onSubmit={handleUpdateBasic} className="p-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Project Name</label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+              />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Site URL</label>
-              <div className="relative">
-                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input
-                  type="url"
-                  value={formData.site_url}
-                  onChange={(e) => setFormData({ ...formData, site_url: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-md pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
-                />
-              </div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Client Name</label>
+              <input
+                type="text"
+                value={formData.client_name}
+                onChange={(e) => setFormData({ ...formData, client_name: e.target.value })}
+                className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+              />
             </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Site URL</label>
+            <div className="relative">
+              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="url"
+                value={formData.site_url}
+                onChange={(e) => setFormData({ ...formData, site_url: e.target.value })}
+                className="w-full bg-slate-50 border border-slate-200 rounded-md pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+              />
+            </div>
+          </div>
+          <CanDo role="admin">
             <div className="flex justify-end">
               <button
                 type="submit"
@@ -124,46 +124,48 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
                 <span>{isUpdating ? 'Saving...' : 'Save Changes'}</span>
               </button>
             </div>
-          </form>
-        </section>
+          </CanDo>
+        </form>
+      </section>
 
-        {/* Figma Integration */}
-        <section className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-sm">
-          <div className="px-6 py-4 border-b border-slate-50 flex items-center space-x-2">
-            <Layout className="w-5 h-5 text-slate-400" />
-            <h3 className="font-bold text-slate-900">Figma Integration</h3>
-          </div>
-          <form onSubmit={handleUpdateFigma} className="p-6 space-y-6">
-            <p className="text-sm text-slate-500 leading-relaxed">
-              Connect Figma to automatically pull design specs and compare them during QA runs.
-            </p>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Personal Access Token</label>
-                <div className="relative">
-                  <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    type={showFigma ? "text" : "password"}
-                    value={figmaToken}
-                    onChange={(e) => setFigmaToken(e.target.value)}
-                    placeholder="Enter Figma PAT"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-md pl-10 pr-12 py-2 text-sm focus:outline-none focus:border-accent transition-all"
-                  />
-                  {!showFigma && figmaToken && (
-                    <div className="absolute left-10 top-1/2 -translate-y-1/2 text-sm text-slate-900 pointer-events-none bg-slate-50 pr-2">
-                      {maskValue(figmaToken, 4)}
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setShowFigma(!showFigma)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                  >
-                    {showFigma ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
+      {/* Figma Integration */}
+      <section className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-sm">
+        <div className="px-6 py-4 border-b border-slate-50 flex items-center space-x-2">
+          <Layout className="w-5 h-5 text-slate-400" />
+          <h3 className="font-bold text-slate-900">Figma Integration</h3>
+        </div>
+        <form onSubmit={handleUpdateFigma} className="p-6 space-y-6">
+          <p className="text-sm text-slate-500 leading-relaxed">
+            Connect Figma to automatically pull design specs and compare them during QA runs.
+          </p>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Personal Access Token</label>
+              <div className="relative">
+                <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  type={showFigma ? "text" : "password"}
+                  value={figmaToken}
+                  onChange={(e) => setFigmaToken(e.target.value)}
+                  placeholder="Enter Figma PAT"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-md pl-10 pr-12 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+                />
+                {!showFigma && figmaToken && (
+                  <div className="absolute left-10 top-1/2 -translate-y-1/2 text-sm text-slate-900 pointer-events-none bg-slate-50 pr-2">
+                    {maskValue(figmaToken, 4)}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowFigma(!showFigma)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  {showFigma ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
+          </div>
+          <CanDo role="admin">
             <div className="flex justify-end">
               <button 
                 type="submit"
@@ -174,70 +176,72 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
                 <span>{isUpdating ? 'Saving...' : 'Update Token'}</span>
               </button>
             </div>
-          </form>
-        </section>
+          </CanDo>
+        </form>
+      </section>
 
-        {/* Basecamp Integration */}
-        <section className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-sm">
-          <div className="px-6 py-4 border-b border-slate-50 flex items-center space-x-2">
-            <Database className="w-5 h-5 text-slate-400" />
-            <h3 className="font-bold text-slate-900">Basecamp Integration</h3>
-          </div>
-          <form onSubmit={handleUpdateBasecamp} className="p-6 space-y-6">
-            <p className="text-sm text-slate-500 leading-relaxed">
-              Automatically sync QA issues to your Basecamp project's to-do list.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Account ID</label>
+      {/* Basecamp Integration */}
+      <section className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-sm">
+        <div className="px-6 py-4 border-b border-slate-50 flex items-center space-x-2">
+          <Database className="w-5 h-5 text-slate-400" />
+          <h3 className="font-bold text-slate-900">Basecamp Integration</h3>
+        </div>
+        <form onSubmit={handleUpdateBasecamp} className="p-6 space-y-6">
+          <p className="text-sm text-slate-500 leading-relaxed">
+            Automatically sync QA issues to your Basecamp project's to-do list.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Account ID</label>
+              <input
+                type={showBasecamp ? "text" : "password"}
+                value={basecamp.accountId}
+                onChange={(e) => setBasecamp({ ...basecamp, accountId: e.target.value })}
+                placeholder="Enter Account ID"
+                className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Project ID</label>
+              <input
+                type={showBasecamp ? "text" : "password"}
+                value={basecamp.projectId}
+                onChange={(e) => setBasecamp({ ...basecamp, projectId: e.target.value })}
+                placeholder="Enter Project ID"
+                className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">To-Do List ID</label>
+              <input
+                type={showBasecamp ? "text" : "password"}
+                value={basecamp.todoListId}
+                onChange={(e) => setBasecamp({ ...basecamp, todoListId: e.target.value })}
+                placeholder="Enter To-Do List ID"
+                className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">API Token</label>
+              <div className="relative">
                 <input
                   type={showBasecamp ? "text" : "password"}
-                  value={basecamp.accountId}
-                  onChange={(e) => setBasecamp({ ...basecamp, accountId: e.target.value })}
-                  placeholder="Enter Account ID"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+                  value={basecamp.apiToken}
+                  onChange={(e) => setBasecamp({ ...basecamp, apiToken: e.target.value })}
+                  placeholder="Enter API Token"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-md pr-12 py-2 text-sm focus:outline-none focus:border-accent transition-all"
                 />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Project ID</label>
-                <input
-                  type={showBasecamp ? "text" : "password"}
-                  value={basecamp.projectId}
-                  onChange={(e) => setBasecamp({ ...basecamp, projectId: e.target.value })}
-                  placeholder="Enter Project ID"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">To-Do List ID</label>
-                <input
-                  type={showBasecamp ? "text" : "password"}
-                  value={basecamp.todoListId}
-                  onChange={(e) => setBasecamp({ ...basecamp, todoListId: e.target.value })}
-                  placeholder="Enter To-Do List ID"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">API Token</label>
-                <div className="relative">
-                  <input
-                    type={showBasecamp ? "text" : "password"}
-                    value={basecamp.apiToken}
-                    onChange={(e) => setBasecamp({ ...basecamp, apiToken: e.target.value })}
-                    placeholder="Enter API Token"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-md pr-12 py-2 text-sm focus:outline-none focus:border-accent transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowBasecamp(!showBasecamp)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                  >
-                    {showBasecamp ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowBasecamp(!showBasecamp)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  {showBasecamp ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
+          </div>
+          <CanDo role="admin">
             <div className="flex items-center justify-between pt-4 border-t border-slate-50">
               <button
                 type="button"
@@ -257,9 +261,9 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
                 <span>{isUpdating ? 'Saving...' : 'Save Basecamp Settings'}</span>
               </button>
             </div>
-          </form>
-        </section>
-      </CanDo>
+          </CanDo>
+        </form>
+      </section>
     </div>
   );
 };

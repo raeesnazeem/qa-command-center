@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { TaskStatus } from '@qacc/shared';
 import { CreateTaskModal } from './CreateTaskModal';
+import { CanDo } from './CanDo';
 
 interface TasksTabProps {
   project: ProjectWithMembers;
@@ -61,6 +62,18 @@ export const TasksTab = ({ project }: TasksTabProps) => {
           <button className="p-2 bg-white border border-slate-200 rounded-md text-slate-600 hover:bg-slate-50 transition-all">
             <Filter className="w-4 h-4" />
           </button>
+          
+          <CanDo role="qa_engineer">
+            <button 
+              disabled
+              className="inline-flex items-center space-x-2 bg-slate-100 text-slate-400 px-4 py-2 rounded-md font-bold text-sm cursor-not-allowed opacity-60"
+              title="Bulk actions coming soon"
+            >
+              <MoreHorizontal className="w-4 h-4" />
+              <span>Bulk Actions</span>
+            </button>
+          </CanDo>
+
           <button 
             onClick={() => setIsTaskModalOpen(true)}
             className="inline-flex items-center space-x-2 bg-black text-white px-4 py-2 rounded-md font-bold text-sm hover:bg-slate-800 transition-all shadow-sm active:scale-95"
