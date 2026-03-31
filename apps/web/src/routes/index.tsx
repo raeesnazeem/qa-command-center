@@ -1,4 +1,3 @@
-import React from "react"
 import { createBrowserRouter, Navigate } from "react-router-dom"
 import { AppLayout } from "@/layouts/AppLayout"
 import { ProtectedRoute } from "@/components/ProtectedRoute"
@@ -10,6 +9,7 @@ import {
   ProjectDetailPage,
   RunDetailPage,
   SettingsPage,
+  TasksPage,
   TestPage,
 } from "@/pages"
 import { AuthenticateWithRedirectCallback } from "@clerk/react"
@@ -62,6 +62,10 @@ export const router = createBrowserRouter([
           {
             path: "/projects/:id/runs/:runId",
             element: <RunDetailPage />,
+          },
+          {
+            path: "/tasks",
+            element: <TasksPage />,
           },
           {
             path: "/settings",

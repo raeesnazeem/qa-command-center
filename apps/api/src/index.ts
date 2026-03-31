@@ -9,6 +9,9 @@ import { healthRouter } from './routes/health'
 import { webhookRouter } from './routes/webhooks'
 import { meRouter } from './routes/me'
 import { projectsRouter } from './routes/projects'
+import { runsRouter } from './routes/runs'
+import { tasksRouter } from './routes/tasks'
+import { statsRouter } from './routes/stats'
 import { debugRouter } from './routes/debug'
 import { testWebhookRouter } from './routes/test-webhook'
 import { clerkMiddleware, getAuth } from '@clerk/express'
@@ -56,9 +59,10 @@ app.use((req, res, next) => {
 app.use('/api/health', healthRouter)
 app.use('/api/me', meRouter)
 app.use('/api/projects', projectsRouter)
+app.use('/api/runs', runsRouter)
+app.use('/api/tasks', tasksRouter)
+app.use('/api/stats', statsRouter)
 app.use('/debug', debugRouter)
-app.use('/api/runs', (_req: Request, res: Response) => res.status(501).json({ message: 'Not implemented' }))
-app.use('/api/tasks', (_req: Request, res: Response) => res.status(501).json({ message: 'Not implemented' }))
 app.use('/api/findings', (_req: Request, res: Response) => res.status(501).json({ message: 'Not implemented' }))
 app.use('/api/chat', (_req: Request, res: Response) => res.status(501).json({ message: 'Not implemented' }))
 

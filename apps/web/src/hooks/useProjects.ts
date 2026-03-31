@@ -1,6 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthAxios } from '../lib/useAuthAxios';
-import { getProjects, getProject, createProject, updateProject, Project } from '../api/projects.api';
+import { 
+  getProjects, 
+  getProject, 
+  createProject, 
+  updateProject, 
+  addProjectMember,
+  updateProjectMemberRole,
+  ProjectWithMembers 
+} from '../api/projects.api';
 import { CreateProjectInput, UpdateProjectInput } from '@qacc/shared';
 import toast from 'react-hot-toast';
 
@@ -14,7 +22,7 @@ export const useProjects = () => {
 
 export const useProject = (id: string) => {
   const axios = useAuthAxios();
-  return useQuery({
+  return useQuery<ProjectWithMembers>({
     queryKey: ['projects', id],
     queryFn: () => getProject(axios, id),
     enabled: !!id,
@@ -51,6 +59,42 @@ export const useUpdateProject = (id: string) => {
     },
     onError: (error: any) => {
       const message = error.response?.data?.error || 'Failed to update project';
+      toast.error(message);
+    },
+  });
+};
+
+export const useAddProjectMember = (projectId: string) => {
+  const axios = useAuthAxios();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { email: string; role: string }) =>
+      addProjectMember(axios, projectId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects', projectId] });
+      toast.success('Member added successfully');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.error || 'Failed to add member';
+      toast.error(message);
+    },
+  });
+};
+
+export const useUpdateProjectMemberRole = (projectId: string) => {
+  const axios = useAuthAxios();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { userId: string; role: string }) =>
+      updateProjectMemberRole(axios, projectId, data.userId, data.role),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects', projectId] });
+      toast.success('Member role updated');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.error || 'Failed to update role';
       toast.error(message);
     },
   });

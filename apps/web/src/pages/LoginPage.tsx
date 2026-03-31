@@ -1,4 +1,3 @@
-import React from 'react'
 import { SignIn } from '@clerk/react'
 
 export const LoginPage = () => {

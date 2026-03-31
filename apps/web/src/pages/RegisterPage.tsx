@@ -1,4 +1,3 @@
-import React from 'react'
 import { SignUp } from '@clerk/react'
 
 export const RegisterPage = () => {

@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react'
+import { ReactNode } from 'react'
 import { useRole } from '@/hooks/useRole'
 
 type Role = 'developer' | 'qa_engineer' | 'project_manager' | 'sub_admin' | 'admin' | 'super_admin'
@@ -8,7 +8,7 @@ interface CanDoProps {
   children: ReactNode
 }
 
-export const CanDo: React.FC<CanDoProps> = ({ role, children }) => {
+export const CanDo = ({ role, children }: CanDoProps) => {
   const { canDo, isLoading } = useRole()
 
   if (isLoading) {

@@ -1,17 +1,17 @@
-import React from 'react';
-import { Project } from '../api/projects.api';
+import { ProjectWithMembers } from '../api/projects.api';
 import { BarChart3, AlertCircle, CheckCircle2, Calendar, Play } from 'lucide-react';
 import { CanDo } from './CanDo';
 
 interface ProjectOverviewTabProps {
-  project: Project;
+  project: ProjectWithMembers;
+  onStartRun: () => void;
 }
 
-export const ProjectOverviewTab: React.FC<ProjectOverviewTabProps> = ({ project }) => {
+export const ProjectOverviewTab = ({ project, onStartRun }: ProjectOverviewTabProps) => {
   const stats = [
     {
       label: 'Total Runs',
-      value: '24', // Placeholder
+      value: project.total_runs_count.toString(),
       icon: BarChart3,
       color: 'text-accent',
       bg: 'bg-accent/10',
@@ -25,7 +25,7 @@ export const ProjectOverviewTab: React.FC<ProjectOverviewTabProps> = ({ project 
     },
     {
       label: 'Resolved Issues',
-      value: '12', // Placeholder
+      value: project.resolved_issues_count.toString(),
       icon: CheckCircle2,
       color: 'text-accent',
       bg: 'bg-accent/10',
@@ -48,7 +48,10 @@ export const ProjectOverviewTab: React.FC<ProjectOverviewTabProps> = ({ project 
             <h3 className="text-lg font-bold text-slate-900">Ready to test?</h3>
             <p className="text-slate-500 text-sm">Launch a new QA run to check for regressions.</p>
           </div>
-          <button className="flex items-center space-x-2 bg-black text-white px-6 py-2.5 rounded-md font-bold hover:bg-slate-800 transition-all shadow-sm active:scale-95">
+          <button 
+            onClick={onStartRun}
+            className="flex items-center space-x-2 bg-black text-white px-6 py-2.5 rounded-md font-bold hover:bg-slate-800 transition-all shadow-sm active:scale-95"
+          >
             <Play className="w-4 h-4 fill-current" />
             <span>Start New QA Run</span>
           </button>

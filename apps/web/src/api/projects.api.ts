@@ -27,6 +27,8 @@ export interface ProjectMember {
 
 export interface ProjectWithMembers extends Project {
   project_members: ProjectMember[];
+  total_runs_count: number;
+  resolved_issues_count: number;
 }
 
 export const getProjects = async (axios: AxiosInstance): Promise<Project[]> => {
@@ -50,5 +52,24 @@ export const updateProject = async (
   projectData: UpdateProjectInput
 ): Promise<Project> => {
   const { data } = await axios.patch<Project>(`/api/projects/${id}`, projectData);
+  return data;
+};
+
+export const addProjectMember = async (
+  axios: AxiosInstance,
+  projectId: string,
+  memberData: { email: string; role: string }
+): Promise<any> => {
+  const { data } = await axios.post(`/api/projects/${projectId}/members`, memberData);
+  return data;
+};
+
+export const updateProjectMemberRole = async (
+  axios: AxiosInstance,
+  projectId: string,
+  userId: string,
+  role: string
+): Promise<any> => {
+  const { data } = await axios.patch(`/api/projects/${projectId}/members/${userId}/role`, { role });
   return data;
 };

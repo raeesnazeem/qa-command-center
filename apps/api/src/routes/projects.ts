@@ -154,8 +154,8 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Project not found or access denied' });
     }
 
-    // Fetch project with member details
-    const { data: project, error: projectError } = await supabase
+    // Fetch project with member details and basic stats
+    const { data: projectData, error: projectError } = await supabase
       .from('projects')
       .select(`
         *,
@@ -167,14 +167,38 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
             email,
             role
           )
+        ),
+        qa_runs(
+          status,
+          completed_at
+        ),
+        tasks(
+          status
         )
       `)
       .eq('id', id)
       .single();
 
-    if (projectError) throw projectError;
+    if (projectError || !projectData) throw projectError || new Error('Project not found');
 
-    return res.json(project);
+    // Compute stats
+    const totalRuns = projectData.qa_runs?.length || 0;
+    const lastRun = projectData.qa_runs
+      ?.filter((r: any) => r.status === 'completed')
+      .sort((a: any, b: any) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime())[0];
+    
+    const openIssuesCount = projectData.tasks?.filter((t: any) => t.status === 'open').length || 0;
+    const resolvedIssuesCount = projectData.tasks?.filter((t: any) => t.status === 'resolved' || t.status === 'closed').length || 0;
+
+    const { qa_runs, tasks, ...rest } = projectData;
+
+    return res.json({
+      ...rest,
+      total_runs_count: totalRuns,
+      last_run_date: lastRun?.completed_at || null,
+      open_issues_count: openIssuesCount,
+      resolved_issues_count: resolvedIssuesCount,
+    });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
   }
@@ -212,7 +236,7 @@ router.patch(
 
 /**
  * POST /api/projects/:id/members
- * Add a member to the project. Restricted to admin and above.
+ * Add a member to the project by email. Restricted to admin and above.
  */
 router.post(
   '/:id/members',
@@ -220,18 +244,42 @@ router.post(
   requireRole('admin'),
   async (req: Request, res: Response) => {
     const { id: project_id } = req.params;
-    const { user_id, role } = req.body;
+    const { email, role } = req.body;
 
-    if (!user_id || !role) {
-      return res.status(400).json({ error: 'user_id and role are required' });
+    if (!email || !role) {
+      return res.status(400).json({ error: 'email and role are required' });
     }
 
     try {
+      // 1. Find user by email in Supabase
+      const { data: user, error: userError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', email)
+        .single();
+
+      if (userError || !user) {
+        return res.status(404).json({ error: `User with email ${email} not found in system` });
+      }
+
+      // 2. Check if already a member
+      const { data: existingMember } = await supabase
+        .from('project_members')
+        .select('id')
+        .eq('project_id', project_id)
+        .eq('user_id', user.id)
+        .single();
+
+      if (existingMember) {
+        return res.status(400).json({ error: 'User is already a member of this project' });
+      }
+
+      // 3. Add to project
       const { data, error } = await supabase
         .from('project_members')
         .insert({
           project_id,
-          user_id,
+          user_id: user.id,
           role,
         })
         .select()
@@ -247,19 +295,35 @@ router.post(
 );
 
 /**
- * POST /api/projects/:id/members/role
- * Update a member\'s role in the project. Restricted to admin and above.
+ * POST /api/projects/:id/settings/test-basecamp
+ * Test Basecamp connection. Restricted to admin and above.
  */
 router.post(
-  '/:id/members/role',
+  '/:id/settings/test-basecamp',
   clerkAuth,
   requireRole('admin'),
   async (req: Request, res: Response) => {
-    const { id: project_id } = req.params;
-    const { user_id, role } = req.body;
+    // For now, just a placeholder that simulates a test
+    setTimeout(() => {
+      res.json({ message: 'Basecamp connection successful (simulated)' });
+    }, 1000);
+  }
+);
 
-    if (!user_id || !role) {
-      return res.status(400).json({ error: 'user_id and role are required' });
+/**
+ * PATCH /api/projects/:id/members/:userId/role
+ * Update a member's role in the project. Restricted to admin and above.
+ */
+router.patch(
+  '/:id/members/:userId/role',
+  clerkAuth,
+  requireRole('admin'),
+  async (req: Request, res: Response) => {
+    const { id: project_id, userId: user_id } = req.params;
+    const { role } = req.body;
+
+    if (!role) {
+      return res.status(400).json({ error: 'role is required' });
     }
 
     try {

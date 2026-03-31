@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useProjects } from '../hooks/useProjects';
 import { ProjectCard } from '../components/ProjectCard';
 import { CreateProjectModal } from '../components/CreateProjectModal';
 import { CanDo } from '../components/CanDo';
 import { Plus, FolderPlus, RefreshCcw, AlertCircle } from 'lucide-react';
 
-export const ProjectsPage: React.FC = () => {
+export const ProjectsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { data: projects, isLoading, isError, error, refetch } = useProjects();
 

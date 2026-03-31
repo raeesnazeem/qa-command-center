@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Project } from '../api/projects.api';
 import { Globe, Package, AlertCircle, Calendar } from 'lucide-react';
@@ -7,7 +6,7 @@ interface ProjectCardProps {
   project: Project;
 }
 
-export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
+export const ProjectCard = ({ project }: ProjectCardProps) => {
   const navigate = useNavigate();
 
   const formatDate = (dateString: string | null) => {

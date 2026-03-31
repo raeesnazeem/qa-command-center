@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react"
-import { useAuth, useUser } from "@clerk/react"
+import { useState, useEffect } from "react"
+import { useAuth } from "@clerk/react"
 import { useAuthAxios } from "@/lib/useAuthAxios"
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react"
 
@@ -18,7 +18,6 @@ import { CheckCircle2, XCircle, Loader2 } from "lucide-react"
 
 export const TestPage = () => {
   const { isLoaded, userId, getToken } = useAuth()
-  const { user } = useUser()
   const axios = useAuthAxios()
 
   const [token, setToken] = useState<string | null>(null)

@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CreateProjectSchema, CreateProjectInput } from '@qacc/shared';
@@ -10,7 +9,7 @@ interface CreateProjectModalProps {
   onClose: () => void;
 }
 
-export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, onClose }) => {
+export const CreateProjectModal = ({ isOpen, onClose }: CreateProjectModalProps) => {
   const { mutate: createProject, isPending } = useCreateProject();
   
   const {
