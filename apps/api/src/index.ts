@@ -8,6 +8,9 @@ import { defaultRateLimiter } from './middleware/rateLimiter'
 import { healthRouter } from './routes/health'
 import { webhookRouter } from './routes/webhooks'
 import { meRouter } from './routes/me'
+import { debugRouter } from './routes/debug'
+import { testWebhookRouter } from './routes/test-webhook'
+import { clerkMiddleware, getAuth } from '@clerk/express'
 
 const app = express()
 const PORT = process.env.PORT ?? 3001
@@ -21,16 +24,30 @@ app.use(
   })
 )
 
-// Webhook mount BEFORE express.json()
+// Webhook mount BEFORE express.json() and BEFORE Clerk middleware
 // We use express.raw to get the exact bytes needed for signature verification
 app.use('/webhooks', express.raw({ type: 'application/json' }), webhookRouter)
 
 app.use(express.json())
 app.use(defaultRateLimiter)
 
+// Clerk middleware for other routes
+app.use(clerkMiddleware())
+
+app.use((req, res, next) => {
+  const auth = getAuth(req);
+  console.log('--- Clerk Auth Debug ---');
+  console.log('User ID:', auth.userId);
+  console.log('Session ID:', auth.sessionId);
+  console.log('Claims:', auth.claims);
+  next();
+});
+
 // Routes
-app.use('/health', healthRouter)
+app.use('/api/health', healthRouter)
 app.use('/api/me', meRouter)
+app.use('/debug', debugRouter)
+app.use('/test-webhooks', testWebhookRouter)
 
 // Placeholder routers — replace with real implementations as they are built
 app.use('/api/projects', (_req: Request, res: Response) => res.status(501).json({ message: 'Not implemented' }))
