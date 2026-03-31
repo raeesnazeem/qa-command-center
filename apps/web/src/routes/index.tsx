@@ -11,6 +11,7 @@ import {
   SettingsPage,
   TasksPage,
   TestPage,
+  Week1TestPage,
 } from "@/pages"
 import { AuthenticateWithRedirectCallback } from "@clerk/react"
 
@@ -40,6 +41,10 @@ export const router = createBrowserRouter([
           {
             path: "/test",
             element: <TestPage />,
+          },
+          {
+            path: "/week1-test",
+            element: <Week1TestPage />,
           },
           {
             path: "/sso-callback",

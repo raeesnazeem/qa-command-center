@@ -78,3 +78,7 @@ export const updateProjectMemberRole = async (
   const { data } = await axios.patch(`/api/projects/${projectId}/members/${userId}/role`, { role });
   return data;
 };
+
+export const deleteProject = async (axios: AxiosInstance, id: string): Promise<void> => {
+  await axios.delete(`/api/projects/${id}`);
+};

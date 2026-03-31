@@ -17,6 +17,7 @@ import { signOffRouter } from './routes/signOff'
 import { projectSettingsRouter } from './routes/projectSettings'
 import { debugRouter } from './routes/debug'
 import { testWebhookRouter } from './routes/test-webhook'
+import { adminRouter } from './routes/admin'
 import { clerkMiddleware, getAuth } from '@clerk/express'
 
 const app: express.Application = express()
@@ -67,6 +68,7 @@ app.use('/api/runs', signOffRouter)
 app.use('/api/tasks', tasksRouter)
 app.use('/api/stats', statsRouter)
 app.use('/api/dashboard', dashboardRouter)
+app.use('/api/admin', adminRouter)
 app.use('/api/projects', projectSettingsRouter)
 app.use('/debug', debugRouter)
 app.use('/api/findings', tasksRouter)

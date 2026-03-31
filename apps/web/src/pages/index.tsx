@@ -7,3 +7,4 @@ export { RunDetailPage } from './RunDetailPage';
 export { SettingsPage } from './SettingsPage';
 export { TasksPage } from './TasksPage';
 export { TestPage } from './TestPage';
+export { default as Week1TestPage } from './Week1TestPage';

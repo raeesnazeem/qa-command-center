@@ -143,3 +143,13 @@ playwright/.cache/
 *.njsproj
 *.sln
 *.sw?
+
+# Test and Debug (Week 1)
+apps/web/src/pages/Week1TestPage.tsx
+apps/web/src/pages/TestPage.tsx
+apps/api/src/routes/debug.ts
+apps/api/src/routes/test-webhook.ts
+apps/api/src/routes/admin.ts
+apps/worker/src/jobs/testJob.ts
+scripts/
+apps/worker/scripts/

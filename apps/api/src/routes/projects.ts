@@ -351,5 +351,31 @@ router.patch(
   }
 );
 
+/**
+ * DELETE /api/projects/:id
+ * Delete a project. Restricted to admin and above.
+ */
+router.delete(
+  '/:id',
+  clerkAuth,
+  requireRole('admin'),
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      return res.status(204).send();
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+);
+
 export { router as projectsRouter };
 
