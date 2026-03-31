@@ -7,6 +7,7 @@ import {
   ChevronRight, 
   Clock, 
   ArrowUpRight,
+  CheckCircle2,
   Loader2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';

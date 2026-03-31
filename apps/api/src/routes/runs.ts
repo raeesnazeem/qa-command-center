@@ -4,6 +4,7 @@ import { clerkAuth } from '../middleware/clerkAuth';
 import { requireRole } from '../middleware/requireRole';
 import { zodValidate } from '../middleware/zodValidate';
 import { CreateRunSchema } from '@qacc/shared';
+import { addRunJob } from '../lib/queue';
 
 const router: Router = Router();
 
@@ -206,6 +207,56 @@ router.patch(
 
       return res.json(updatedRun);
     } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+);
+
+/**
+ * POST /api/runs/:id/start
+ * Manually start a pending QA run and enqueue it in BullMQ.
+ */
+router.post(
+  '/:id/start',
+  clerkAuth,
+  requireRole('qa_engineer'),
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    try {
+      // 1. Fetch current status
+      const { data: run, error: fetchError } = await supabase
+        .from('qa_runs')
+        .select('status')
+        .eq('id', id)
+        .single();
+
+      if (fetchError || !run) {
+        return res.status(404).json({ error: 'Run not found' });
+      }
+
+      if (run.status !== 'pending') {
+        return res.status(400).json({ 
+          error: `Only pending runs can be started. Current status: ${run.status}` 
+        });
+      }
+
+      // 2. Update status to 'running'
+      const { data: updatedRun, error: updateError } = await supabase
+        .from('qa_runs')
+        .update({ status: 'running' })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (updateError) throw updateError;
+
+      // 3. Enqueue the job in BullMQ for the worker to pick up
+      await addRunJob(id);
+
+      return res.json(updatedRun);
+    } catch (error: any) {
+      console.error('[Start Run Error]:', error);
       return res.status(500).json({ error: error.message });
     }
   }

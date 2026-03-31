@@ -1,5 +1,26 @@
 {
   "name": "worker",
   "private": true,
-  "version": "0.1.0"
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.42.1",
+    "@supabase/supabase-js": "^2.39.3",
+    "@upstash/ratelimit": "^1.0.1",
+    "@upstash/redis": "^1.28.4",
+    "bullmq": "^4.17.0",
+    "dotenv": "^16.4.5",
+    "ioredis": "^5.3.2",
+    "pino": "^8.19.0",
+    "playwright": "^1.42.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.4.2"
+  }
 }
