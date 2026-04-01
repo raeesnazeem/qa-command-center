@@ -18,9 +18,40 @@ import {
   LayoutDashboard,
   AlertTriangle,
   Info,
-  ShieldAlert
+  ShieldAlert,
+  FileSearch,
+  CheckCircle,
+  XCircle,
+  Timer,
+  Monitor,
+  Smartphone,
+  Tablet,
+  Eye
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+
+const CHECK_DETAILS: Record<string, { label: string; description: string }> = {
+  visual_regression: {
+    label: 'Visual Regression',
+    description: 'Captures and compares layout consistency across desktop, tablet, and mobile breakpoints.'
+  },
+  accessibility: {
+    label: 'Accessibility',
+    description: 'Scans for WCAG 2.1 compliance, including contrast, ARIA labels, and structural markers.'
+  },
+  seo: {
+    label: 'SEO Analysis',
+    description: 'Checks meta tags, title hierarchy, alt text, and crawlability factors.'
+  },
+  performance: {
+    label: 'Performance',
+    description: 'Measures Core Web Vitals, TTFB, and resource optimization levels.'
+  },
+  console_errors: {
+    label: 'Console Errors',
+    description: 'Monitors for JavaScript runtime exceptions and failed 4xx/5xx network requests.'
+  }
+};
 
 export const RunDetailPage = () => {
   const { id: projectId, runId } = useParams<{ id: string; runId: string }>();
@@ -275,98 +306,394 @@ export const RunDetailPage = () => {
           <div className="w-full">
             <PagesTable 
               pages={run.pages || []} 
-              selectedUrls={run.selected_urls}
               onPageSelect={(page) => setSelectedPageId(page.id)} 
+              showVisuals={run.enabled_checks?.includes('visual_regression') && !!run.figma_url}
             />
           </div>
         </div>
 
         {/* Findings Section */}
         <div className="space-y-6 flex flex-col w-full">
-          <div className="flex items-center justify-between w-full">
-            <h2 className="text-xl font-bold text-slate-900">Findings Details</h2>
+          <div className="flex items-center justify-between w-full border-b border-slate-200 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-black rounded-lg">
+                <FileSearch className="w-5 h-5 text-accent" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Findings Details</h2>
+                <p className="text-xs text-slate-500 font-medium">Detailed audit results for the selected scan step</p>
+              </div>
+            </div>
           </div>
+
           {selectedPage ? (
-            <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm w-full">
-              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-50">
-                <div className="flex flex-col gap-1 min-w-0">
-                  <h3 className="font-bold text-slate-900 truncate pr-4">{selectedPage.url}</h3>
-                  <p className="text-xs text-slate-500 uppercase font-black tracking-widest">
-                    Step Results: {findings?.length || 0} Issues Found
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {selectedPage.finding_counts && Object.entries(selectedPage.finding_counts).map(([factor, count]) => (
-                    <span key={factor} className="px-2 py-0.5 rounded-md bg-red-50 text-red-600 text-[10px] font-black uppercase border border-red-100">
-                      {factor.replace('_', ' ')}: {count}
-                    </span>
-                  ))}
+            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm w-full transition-all">
+              {/* Selected Page Header */}
+              <div className="bg-slate-50 border-b border-slate-100 p-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex flex-col gap-1.5 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded bg-black text-accent text-[10px] font-black uppercase tracking-widest">Selected URL</span>
+                      <h3 className="font-bold text-slate-900 truncate pr-4 text-lg">{selectedPage.url}</h3>
+                    </div>
+                    <p className="text-xs text-slate-400 font-bold uppercase tracking-[0.15em] flex items-center gap-2 mt-1">
+                      <Activity size={12} className="text-accent" />
+                      Step Results: <span className="text-slate-900">{findings?.length || 0} Issues Detected</span>
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {selectedPage.finding_counts && Object.entries(selectedPage.finding_counts).map(([factor, count]) => (
+                      <div key={factor} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-slate-200 shadow-sm">
+                        <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                        <span className="text-[10px] font-black text-slate-700 uppercase tracking-tight">
+                          {factor.replace('_', ' ')}: <span className="text-red-600">{count}</span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {isLoadingFindings ? (
-                <div className="flex flex-col items-center justify-center py-12 space-y-3">
-                  <Loader2 className="w-6 h-6 text-accent animate-spin" />
-                  <p className="text-sm text-slate-400 font-medium italic">Loading detailed findings...</p>
-                </div>
-              ) : findings && findings.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {findings.map((finding) => (
-                    <div 
-                      key={finding.id} 
-                      className="group p-4 bg-slate-50/50 rounded-xl border border-slate-100 hover:border-accent/20 hover:bg-white transition-all shadow-sm hover:shadow-md"
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className={`mt-1 p-2 rounded-lg shrink-0 ${
-                          finding.severity === 'critical' ? 'bg-red-100 text-red-600' :
-                          finding.severity === 'high' ? 'bg-orange-100 text-orange-600' :
-                          finding.severity === 'medium' ? 'bg-amber-100 text-amber-600' :
-                          'bg-blue-100 text-blue-600'
-                        }`}>
-                          {finding.severity === 'critical' ? <ShieldAlert size={16} /> :
-                           finding.severity === 'high' ? <AlertTriangle size={16} /> :
-                           finding.severity === 'medium' ? <AlertCircle size={16} /> :
-                           <Info size={16} />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className={`text-[10px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded border ${
-                              finding.severity === 'critical' ? 'bg-red-50 border-red-100 text-red-600' :
-                              finding.severity === 'high' ? 'bg-orange-50 border-orange-100 text-orange-600' :
-                              finding.severity === 'medium' ? 'bg-amber-50 border-amber-100 text-amber-600' :
-                              'bg-blue-50 border-blue-100 text-blue-600'
+              <div className="p-8">
+                {/* Scan Summary Section */}
+                <div className="mb-12">
+                  <div className="flex items-center gap-2 mb-6">
+                    <div className="h-px flex-1 bg-slate-100" />
+                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] whitespace-nowrap px-4">
+                      Execution Summary
+                    </h4>
+                    <div className="h-px flex-1 bg-slate-100" />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    {(run.enabled_checks || [])
+                      .filter((check: string) => check !== 'visual_regression' || !!run.figma_url)
+                      .map((check: string) => {
+                        const findingsCount = selectedPage.finding_counts?.[check] || 0;
+                      const isDone = selectedPage.status === 'done';
+                      const isScreenshotted = selectedPage.status === 'screenshotted';
+                      const isProcessing = selectedPage.status === 'processing';
+                      
+                      let status: 'passed' | 'failed' | 'pending' | 'scanning' = 'pending';
+                      
+                      if (isDone) {
+                        status = findingsCount > 0 ? 'failed' : 'passed';
+                      } else if (isScreenshotted) {
+                        if (check === 'visual_regression') {
+                          status = 'passed';
+                        } else {
+                          status = 'pending';
+                        }
+                      } else if (isProcessing) {
+                        const checkOrder = ['visual_regression', 'accessibility', 'seo', 'performance', 'console_errors'];
+                        const currentStep = selectedPage.current_step?.toLowerCase() || '';
+                        const checkIndex = checkOrder.indexOf(check);
+                        
+                        if (currentStep.includes(check.replace('_', ' ')) || (check === 'visual_regression' && currentStep.includes('screenshot'))) {
+                          status = 'scanning';
+                        } else if (checkIndex !== -1) {
+                          const progress = selectedPage.progress || 0;
+                          const checkThresholds = [15, 35, 55, 75, 95];
+                          if (progress > checkThresholds[checkIndex]) {
+                            status = findingsCount > 0 ? 'failed' : 'passed';
+                          }
+                        }
+                      }
+
+                      const checkDetail = CHECK_DETAILS[check] || { label: check.replace('_', ' '), description: 'Standard quality check' };
+
+                      return (
+                        <div 
+                          key={check}
+                          className={`group/item p-4 rounded-2xl border-2 transition-all duration-300 ${
+                            status === 'passed' ? 'bg-emerald-50/20 border-emerald-100/50 hover:border-emerald-200' :
+                            status === 'failed' ? 'bg-red-50/20 border-red-100/50 hover:border-red-200' :
+                            status === 'scanning' ? 'bg-blue-50/20 border-blue-100/50 animate-pulse' :
+                            'bg-slate-50/50 border-slate-100 opacity-60'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <div className={`p-2 rounded-lg ${
+                              status === 'passed' ? 'bg-emerald-100 text-emerald-600' :
+                              status === 'failed' ? 'bg-red-100 text-red-600' :
+                              status === 'scanning' ? 'bg-blue-100 text-blue-600' :
+                              'bg-slate-200 text-slate-500'
                             }`}>
-                              {finding.severity}
-                            </span>
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">
-                              {finding.check_factor.replace('_', ' ')}
+                              {status === 'passed' ? <CheckCircle size={14} /> :
+                               status === 'failed' ? <XCircle size={14} /> :
+                               status === 'scanning' ? <Loader2 size={14} className="animate-spin" /> :
+                               <Timer size={14} />}
+                            </div>
+                            <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${
+                              status === 'passed' ? 'bg-emerald-500 text-white' :
+                              status === 'failed' ? 'bg-red-500 text-white' :
+                              status === 'scanning' ? 'bg-blue-500 text-white' :
+                              'bg-slate-400 text-white'
+                            }`}>
+                              {status}
                             </span>
                           </div>
-                          <h4 className="font-bold text-slate-900 text-sm mb-1 group-hover:text-accent transition-colors">
-                            {finding.title}
-                          </h4>
-                          {finding.description && (
-                            <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                              {finding.description}
+                          <p className="text-[11px] font-black text-slate-900 uppercase tracking-tight mb-1.5">
+                            {checkDetail.label}
+                          </p>
+                          <p className="text-[10px] leading-relaxed text-slate-500 font-medium line-clamp-2">
+                            {checkDetail.description}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Visual Regression Proof Section */}
+                {run.enabled_checks?.includes('visual_regression') && run.figma_url && (
+                  <div className="mb-12">
+                    <div className="flex items-center gap-2 mb-6">
+                      <div className="h-px flex-1 bg-slate-100" />
+                      <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] whitespace-nowrap px-4">
+                        Visual Evidence
+                      </h4>
+                      <div className="h-px flex-1 bg-slate-100" />
+                    </div>
+
+                    <div className="p-8 bg-black rounded-3xl border border-slate-800 shadow-2xl overflow-hidden relative group/viz">
+                      <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none group-hover/viz:scale-110 transition-transform duration-1000">
+                        <Monitor size={160} className="text-white" />
+                      </div>
+                      
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-8 pb-6 border-b border-white/10">
+                          <div className="space-y-1.5">
+                            <h4 className="text-[10px] font-black text-accent uppercase tracking-[0.3em] flex items-center gap-2">
+                              <Eye size={14} className="animate-pulse" />
+                              Visual Regression
+                            </h4>
+                            <p className="text-white font-bold text-2xl tracking-tight">
+                              {run.figma_url ? 'Figma vs. Live Comparison' : 'Baseline vs. Live Analysis'}
                             </p>
-                          )}
+                          </div>
+                          <div className="flex flex-col items-end gap-3">
+                            <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/10 border border-accent/30 text-accent text-[10px] font-black uppercase tracking-widest shadow-[0_0_15px_rgba(147,192,177,0.1)]">
+                              <div className="w-1.5 h-1.5 rounded-full bg-accent animate-ping" />
+                              {selectedPage.status === 'done' || selectedPage.status === 'screenshotted' ? 'Scan Verified' : 'Processing Evidence'}
+                            </div>
+                            {run.figma_url && (
+                              <a 
+                                href={run.figma_url} 
+                                target="_blank" 
+                                rel="noreferrer"
+                                className="group/figma flex items-center gap-2 text-[10px] text-slate-400 hover:text-white transition-all font-black uppercase tracking-widest"
+                              >
+                                <span>Source Figma File</span>
+                                <div className="h-px w-4 bg-slate-700 group-hover/figma:w-8 transition-all bg-accent" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+                          {/* Desktop */}
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between text-slate-400 px-1">
+                              <div className="flex items-center gap-2">
+                                <Monitor size={14} className="text-accent" />
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Desktop</span>
+                              </div>
+                              <span className="text-[9px] font-bold text-slate-600 uppercase">1440px</span>
+                            </div>
+                            <div className="aspect-[16/10] bg-slate-900 rounded-2xl border border-white/5 overflow-hidden flex items-center justify-center group/img cursor-pointer relative shadow-inner">
+                              {selectedPage.screenshot_url_desktop ? (
+                                <>
+                                  <img 
+                                    src={selectedPage.screenshot_url_desktop} 
+                                    alt="Desktop Screenshot" 
+                                    className="w-full h-full object-cover object-top group-hover/img:scale-105 transition-transform duration-700"
+                                  />
+                                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
+                                    <div className="bg-white text-black text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg transform translate-y-4 group-hover/img:translate-y-0 transition-transform">Expand View</div>
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="flex flex-col items-center gap-4 text-slate-700">
+                                  <Loader2 size={24} className="animate-spin text-accent/20" />
+                                  <span className="text-[9px] font-black uppercase tracking-widest animate-pulse">Waiting for Capture</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Tablet */}
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between text-slate-400 px-1">
+                              <div className="flex items-center gap-2">
+                                <Tablet size={14} className="text-accent" />
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Tablet</span>
+                              </div>
+                              <span className="text-[9px] font-bold text-slate-600 uppercase">768px</span>
+                            </div>
+                            <div className="aspect-[3/4] max-w-[220px] mx-auto bg-slate-900 rounded-2xl border border-white/5 overflow-hidden flex items-center justify-center group/img cursor-pointer relative shadow-inner">
+                              {selectedPage.screenshot_url_tablet ? (
+                                <>
+                                  <img 
+                                    src={selectedPage.screenshot_url_tablet} 
+                                    alt="Tablet Screenshot" 
+                                    className="w-full h-full object-cover object-top group-hover/img:scale-105 transition-transform duration-700"
+                                  />
+                                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
+                                    <div className="bg-white text-black text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg transform translate-y-4 group-hover/img:translate-y-0 transition-transform">Expand</div>
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="flex flex-col items-center gap-4 text-slate-700">
+                                  <Loader2 size={24} className="animate-spin text-accent/20" />
+                                  <span className="text-[9px] font-black uppercase tracking-widest animate-pulse">Waiting</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Mobile */}
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between text-slate-400 px-1">
+                              <div className="flex items-center gap-2">
+                                <Smartphone size={14} className="text-accent" />
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Mobile</span>
+                              </div>
+                              <span className="text-[9px] font-bold text-slate-600 uppercase">375px</span>
+                            </div>
+                            <div className="aspect-[9/16] max-w-[160px] mx-auto bg-slate-900 rounded-2xl border border-white/5 overflow-hidden flex items-center justify-center group/img cursor-pointer relative shadow-inner">
+                              {selectedPage.screenshot_url_mobile ? (
+                                <>
+                                  <img 
+                                    src={selectedPage.screenshot_url_mobile} 
+                                    alt="Mobile Screenshot" 
+                                    className="w-full h-full object-cover object-top group-hover/img:scale-105 transition-transform duration-700"
+                                  />
+                                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
+                                    <div className="bg-white text-black text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg transform translate-y-4 group-hover/img:translate-y-0 transition-transform">Expand</div>
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="flex flex-col items-center gap-4 text-slate-700">
+                                  <Loader2 size={24} className="animate-spin text-accent/20" />
+                                  <span className="text-[9px] font-black uppercase tracking-widest animate-pulse">Waiting</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  ))}
+                  </div>
+                )}
+
+                {/* Audit Findings Grid */}
+                <div>
+                  <div className="flex items-center gap-2 mb-8">
+                    <div className="h-px flex-1 bg-slate-100" />
+                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] whitespace-nowrap px-4">
+                      Audit Findings
+                    </h4>
+                    <div className="h-px flex-1 bg-slate-100" />
+                  </div>
+
+                  {isLoadingFindings ? (
+                    <div className="flex flex-col items-center justify-center py-20 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
+                      <div className="relative">
+                        <Loader2 className="w-10 h-10 text-black animate-spin" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-2 h-2 bg-accent rounded-full animate-pulse" />
+                        </div>
+                      </div>
+                      <p className="mt-4 text-sm text-slate-900 font-black uppercase tracking-widest">Aggregating Audit Reports</p>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-tight">Syncing with scanning workers...</p>
+                    </div>
+                  ) : findings && findings.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {findings.map((finding) => (
+                        <div 
+                          key={finding.id} 
+                          className="group p-6 bg-white rounded-2xl border border-slate-100 hover:border-accent/40 hover:bg-slate-50/30 transition-all duration-300 shadow-sm hover:shadow-xl relative overflow-hidden"
+                        >
+                          <div className={`absolute top-0 left-0 w-1 h-full ${
+                            finding.severity === 'critical' ? 'bg-red-500' :
+                            finding.severity === 'high' ? 'bg-orange-500' :
+                            finding.severity === 'medium' ? 'bg-amber-500' :
+                            'bg-blue-500'
+                          }`} />
+                          
+                          <div className="flex items-start gap-4">
+                            <div className={`mt-1 p-3 rounded-xl shrink-0 transition-transform group-hover:scale-110 ${
+                              finding.severity === 'critical' ? 'bg-red-50 text-red-600' :
+                              finding.severity === 'high' ? 'bg-orange-50 text-orange-600' :
+                              finding.severity === 'medium' ? 'bg-amber-50 text-amber-600' :
+                              'bg-blue-50 text-blue-600'
+                            }`}>
+                              {finding.severity === 'critical' ? <ShieldAlert size={20} /> :
+                               finding.severity === 'high' ? <AlertTriangle size={20} /> :
+                               finding.severity === 'medium' ? <AlertCircle size={20} /> :
+                               <Info size={20} />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                                    finding.severity === 'critical' ? 'bg-red-100 border-red-200 text-red-700' :
+                                    finding.severity === 'high' ? 'bg-orange-100 border-orange-200 text-orange-700' :
+                                    finding.severity === 'medium' ? 'bg-amber-100 border-amber-200 text-amber-700' :
+                                    'bg-blue-100 border-blue-200 text-blue-700'
+                                  }`}>
+                                    {finding.severity}
+                                  </span>
+                                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                                    {finding.check_factor.replace('_', ' ')}
+                                  </span>
+                                </div>
+                                <span className="text-[8px] font-bold text-slate-300 uppercase">
+                                  {new Date(finding.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </div>
+                              <h4 className="font-black text-slate-900 text-base mb-2 group-hover:text-black transition-colors leading-tight">
+                                {finding.title}
+                              </h4>
+                              {finding.description && (
+                                <p className="text-[11px] text-slate-500 font-medium leading-relaxed mb-4">
+                                  {finding.description}
+                                </p>
+                              )}
+                              
+                              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                                <button className="text-[9px] font-black text-slate-400 hover:text-black uppercase tracking-widest transition-colors">
+                                  Ignore Finding
+                                </button>
+                                <button className="px-3 py-1 bg-black text-accent text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-slate-800 transition-colors">
+                                  Create Task
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="bg-emerald-50/20 rounded-3xl border border-dashed border-emerald-100 p-16 text-center group/clean">
+                      <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover/clean:scale-110 transition-transform duration-500">
+                        <CheckCircle2 className="w-10 h-10 text-emerald-600" />
+                      </div>
+                      <p className="text-slate-900 font-black text-lg uppercase tracking-tight">Audit Cleared</p>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">No scan findings detected on this page</p>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="bg-slate-50/50 rounded-xl border border-dashed border-slate-200 p-8 text-center">
-                  <CheckCircle2 className="w-8 h-8 text-emerald-300 mx-auto mb-3" />
-                  <p className="text-slate-500 font-bold text-sm">No issues found on this page</p>
-                  <p className="text-[10px] text-slate-400 uppercase tracking-widest mt-1">Check looks clean!</p>
-                </div>
-              )}
+              </div>
             </div>
           ) : (
-            <div className="bg-slate-50 border border-dashed border-slate-200 rounded-xl p-12 text-center">
-              <Search className="w-8 h-8 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-400 font-medium italic text-sm">Select a page step above to view findings</p>
+            <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-24 text-center group/select">
+              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-slate-100 group-hover/select:translate-y-[-4px] transition-all">
+                <Search className="w-10 h-10 text-slate-200 group-hover/select:text-accent transition-colors" />
+              </div>
+              <p className="text-slate-900 font-black text-base uppercase tracking-tight">Intelligence Ready</p>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-2">Select a scan step above to analyze findings</p>
             </div>
           )}
         </div>

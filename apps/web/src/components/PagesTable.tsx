@@ -13,35 +13,15 @@ import { QAPage } from '../api/runs.api';
 
 interface PagesTableProps {
   pages: QAPage[];
-  selectedUrls?: string[] | null;
   onPageSelect: (page: QAPage) => void;
+  showVisuals?: boolean;
 }
 
-export const PagesTable: React.FC<PagesTableProps> = ({ pages, selectedUrls, onPageSelect }) => {
+export const PagesTable: React.FC<PagesTableProps> = ({ pages, onPageSelect, showVisuals }) => {
   const parentRef = useRef<HTMLDivElement>(null);
 
-  // Merge actual pages with placeholders for selectedUrls
-  const displayPages: QAPage[] = React.useMemo(() => {
-    if (!selectedUrls || selectedUrls.length === 0) return pages;
-
-    const actualUrls = new Set(pages.map(p => p.url));
-    const placeholders = selectedUrls
-      .filter(url => !actualUrls.has(url))
-      .map((url, index) => ({
-        id: `placeholder-${index}`,
-        run_id: '',
-        url,
-        status: 'pending' as const,
-        created_at: new Date().toISOString(),
-        finding_counts: {},
-        screenshot_url_desktop: null,
-        screenshot_url_tablet: null,
-        screenshot_url_mobile: null,
-        title: null
-      }));
-
-    return [...pages, ...placeholders];
-  }, [pages, selectedUrls]);
+  // Use actual pages from the database only - no placeholders
+  const displayPages = pages;
 
   const rowVirtualizer = useVirtualizer({
     count: displayPages.length,
@@ -77,7 +57,7 @@ export const PagesTable: React.FC<PagesTableProps> = ({ pages, selectedUrls, onP
         <div className="flex-1">Page URL</div>
         <div className="w-24 text-center">Status</div>
         <div className="w-32 text-center">Issues</div>
-        <div className="w-20 text-center">Visual</div>
+        {showVisuals && <div className="w-20 text-center">Visual</div>}
       </div>
 
       {/* Virtualized Body */}
@@ -99,17 +79,13 @@ export const PagesTable: React.FC<PagesTableProps> = ({ pages, selectedUrls, onP
               ? Object.values(page.finding_counts).reduce((a, b) => a + b, 0) 
               : 0;
 
-            const isPlaceholder = page.id.startsWith('placeholder-');
-
             return (
               <div
                 key={virtualRow.key}
                 data-index={virtualRow.index}
                 ref={rowVirtualizer.measureElement}
-                onClick={() => !isPlaceholder && onPageSelect(page)}
-                className={`absolute top-0 left-0 w-full border-b border-slate-100 transition-colors group flex items-start px-6 py-4 ${
-                  isPlaceholder ? 'cursor-default opacity-60' : 'hover:bg-slate-50 cursor-pointer'
-                }`}
+                onClick={() => onPageSelect(page)}
+                className="absolute top-0 left-0 w-full border-b border-slate-100 transition-colors group flex items-start px-6 py-4 hover:bg-slate-50 cursor-pointer"
                 style={{
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
@@ -139,8 +115,8 @@ export const PagesTable: React.FC<PagesTableProps> = ({ pages, selectedUrls, onP
                     {page.url}
                   </p>
                   
-                  {/* Progress Section - Shown for processing, pending, and placeholder pages during a run */}
-                  {(page.status === 'processing' || page.status === 'pending' || isPlaceholder) && (
+                  {/* Progress Section - Only shown for active processing pages */}
+                  {page.status === 'processing' && (
                     <div className="mt-4 space-y-3 max-w-[320px] bg-slate-50/50 p-2.5 rounded-lg border border-slate-100 shadow-sm">
                       {/* 1. Progress Bar - High visibility track */}
                       <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden relative shadow-inner">
@@ -208,21 +184,23 @@ export const PagesTable: React.FC<PagesTableProps> = ({ pages, selectedUrls, onP
                   )}
                 </div>
 
-                <div className="w-20 flex justify-center pt-1">
-                  {page.screenshot_url_desktop ? (
-                    <div className="w-10 h-6 bg-slate-100 rounded border border-slate-200 overflow-hidden relative group/img">
-                      <img 
-                        src={page.screenshot_url_desktop} 
-                        alt="Preview" 
-                        className="w-full h-full object-cover grayscale group-hover/img:grayscale-0 transition-all"
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-10 h-6 bg-slate-50 rounded border border-slate-200 flex items-center justify-center">
-                      <ImageIcon size={12} className="text-slate-300" />
-                    </div>
-                  )}
-                </div>
+                {showVisuals && (
+                  <div className="w-20 flex justify-center pt-1">
+                    {page.screenshot_url_desktop ? (
+                      <div className="w-10 h-6 bg-slate-100 rounded border border-slate-200 overflow-hidden relative group/img">
+                        <img 
+                          src={page.screenshot_url_desktop} 
+                          alt="Preview" 
+                          className="w-full h-full object-cover grayscale group-hover/img:grayscale-0 transition-all"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-6 bg-slate-50 rounded border border-slate-200 flex items-center justify-center">
+                        <ImageIcon size={12} className="text-slate-300" />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })}
