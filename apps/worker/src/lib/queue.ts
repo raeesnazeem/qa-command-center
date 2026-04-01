@@ -10,6 +10,23 @@ if (!redisUrl) {
 
 export const connection = new IORedis(redisUrl, {
   maxRetriesPerRequest: null,
+  enableReadyCheck: false,
+  tls: redisUrl.startsWith('rediss://') ? {
+    rejectUnauthorized: false
+  } : undefined,
+  retryStrategy(times) {
+    const delay = Math.min(times * 50, 2000);
+    return delay;
+  },
+  reconnectOnError(err) {
+    const targetError = 'READONLY';
+    if (err.message.includes(targetError)) {
+      return true;
+    }
+    return false;
+  },
+  connectTimeout: 10000,
+  keepAlive: 10000,
 });
 
 export const qaQueue = new Queue('qa-jobs', { connection });
