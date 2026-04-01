@@ -41,6 +41,36 @@ export async function analyzeImage(imageBuffer: Buffer, prompt: string): Promise
   }) as Promise<string>;
 }
 
+export interface Finding {
+  issue: string;
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  area: string;
+}
+
+/**
+ * inspectPageScreenshot
+ * Specialized vision check for common UI/UX issues.
+ */
+export async function inspectPageScreenshot(screenshotBuffer: Buffer): Promise<Finding[]> {
+  const prompt = `Inspect this website screenshot. Return a JSON array of ONLY clear, definite issues: [{issue: string, severity: 'critical'|'high'|'medium'|'low', area: string}]. Look for: visible image watermarks, clearly blurry/pixelated images, text overlapping other elements, buttons/links cut off, obvious broken layout. Return [] if no clear issues. Return ONLY JSON, no markdown.`;
+  
+  const text = await analyzeImage(screenshotBuffer, prompt);
+  
+  try {
+    // Attempt to extract JSON if the model included any conversational text or markdown blocks
+    const jsonMatch = text.match(/\[.*\]/s);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+    
+    // Fallback to parsing whole text if no brackets found
+    return JSON.parse(text);
+  } catch (error) {
+    // If it's not valid JSON, we return an empty array as instructed for no clear issues
+    return [];
+  }
+}
+
 export interface VisionIssue {
   issue: string;
   severity: 'high' | 'medium' | 'low';

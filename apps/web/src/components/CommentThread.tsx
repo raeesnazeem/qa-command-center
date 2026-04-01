@@ -6,25 +6,36 @@ import {
   Clock
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { TaskComment } from '../api/tasks.api';
+import { TaskComment, TaskRebuttal } from '../api/tasks.api';
 import { useAddComment } from '../hooks/useTasks';
 
 interface CommentThreadProps {
   taskId: string;
   comments: TaskComment[];
+  rebuttals?: TaskRebuttal[];
 }
 
-export const CommentThread = ({ taskId, comments }: CommentThreadProps) => {
+type ThreadItem = 
+  | (TaskComment & { itemType: 'comment' })
+  | (TaskRebuttal & { itemType: 'rebuttal' });
+
+export const CommentThread = ({ taskId, comments, rebuttals = [] }: CommentThreadProps) => {
   const [newComment, setNewComment] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const { mutate: addComment, isPending: isSubmitting } = useAddComment();
 
-  // Auto-scroll to bottom on new comments
+  // Merge and sort in chronological order
+  const threadItems: ThreadItem[] = [
+    ...comments.map(c => ({ ...c, itemType: 'comment' as const })),
+    ...rebuttals.map(r => ({ ...r, itemType: 'rebuttal' as const }))
+  ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+  // Auto-scroll to bottom on new items
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [comments]);
+  }, [threadItems]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,47 +69,70 @@ export const CommentThread = ({ taskId, comments }: CommentThreadProps) => {
         ref={scrollRef}
         className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar mb-4"
       >
-        {comments.length === 0 ? (
+        {threadItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center opacity-40">
             <MessageSquare className="w-8 h-8 mb-2" />
             <p className="text-xs font-medium">No comments yet. Start the conversation.</p>
           </div>
         ) : (
-          comments.map((comment) => (
-            <div key={comment.id} className="flex space-x-3 group animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border border-slate-200 shrink-0">
-                {getInitials(comment.users?.full_name)}
-              </div>
-              
-              <div className="flex-1 space-y-1">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs font-bold text-slate-900">
-                      {comment.users?.full_name || 'Unknown User'}
-                    </span>
-                    {comment.is_ai_generated && (
-                      <span className="inline-flex items-center bg-blue-100 text-blue-700 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-tighter">
-                        <Bot className="w-2.5 h-2.5 mr-1" />
-                        AI Agent
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center text-[10px] text-slate-400">
-                    <Clock className="w-2.5 h-2.5 mr-1" />
-                    {format(new Date(comment.created_at), 'MMM d, HH:mm')}
-                  </div>
+          threadItems.map((item) => {
+            const isRebuttal = item.itemType === 'rebuttal';
+            const isAI = item.itemType === 'comment' && item.is_ai_generated;
+            
+            const content = isRebuttal ? item.text : item.content;
+
+            return (
+              <div key={item.id} className="flex space-x-3 group animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border border-slate-200 shrink-0">
+                  {isAI ? <Bot className="w-4 h-4 text-blue-900" /> : getInitials(item.users?.full_name)}
                 </div>
                 
-                <div className={`text-sm text-slate-600 p-3 rounded-xl rounded-tl-none border ${
-                  comment.is_ai_generated 
-                    ? 'bg-blue-50/50 border-blue-100 italic' 
-                    : 'bg-slate-50 border-slate-100'
-                }`}>
-                  {comment.content}
+                <div className="flex-1 space-y-1 min-w-0">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs font-bold text-slate-900">
+                        {isAI ? 'AI Agent' : item.users?.full_name || 'Unknown User'}
+                      </span>
+                      {isAI && (
+                        <span className="inline-flex items-center bg-blue-900 text-white text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-tighter">
+                          <Bot className="w-3 h-3 mr-1" />
+                          AI Analysis
+                        </span>
+                      )}
+                      {isRebuttal && (
+                        <span className="inline-flex items-center bg-blue-100 text-blue-700 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-tighter border border-blue-200">
+                          Rebuttal
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center text-[10px] text-slate-400">
+                      <Clock className="w-2.5 h-2.5 mr-1" />
+                      {format(new Date(item.created_at), 'MMM d, HH:mm')}
+                    </div>
+                  </div>
+                  
+                  <div className={`text-sm text-slate-600 p-3 rounded-xl rounded-tl-none border break-words ${
+                    isAI 
+                      ? 'bg-blue-50/30 border-blue-900 italic' // Navy border equivalent
+                      : isRebuttal
+                        ? 'bg-blue-50/50 border-blue-500 shadow-sm' // Blue border
+                        : 'bg-slate-50 border-slate-100'
+                  }`}>
+                    {content}
+                    {isRebuttal && item.screenshot_url && (
+                      <div className="mt-3">
+                        <img 
+                          src={item.screenshot_url} 
+                          alt="Rebuttal evidence" 
+                          className="max-h-48 rounded-lg border border-slate-200 object-contain shadow-sm"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 

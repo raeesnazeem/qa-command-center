@@ -8,6 +8,7 @@ import { checkExternalLinks } from '../checks/externalLinkCheck';
 import { checkMeta } from '../checks/metaCheck';
 import { checkConsoleErrors } from '../checks/consoleErrorCheck';
 import { checkDummyContent } from '../checks/dummyContentCheck';
+import { checkSpelling } from '../checks/spellingCheck';
 import pino from 'pino';
 
 const logger = pino({
@@ -118,12 +119,13 @@ export async function processCrawlPageJob(job: Job) {
 
       await page.goto(pageUrl, { waitUntil: 'networkidle', timeout: 30000 });
 
-      const [linkFindings, extLinkFindings, metaFindings, consoleFindings, dummyFindings] = await Promise.all([
+      const [linkFindings, extLinkFindings, metaFindings, consoleFindings, dummyFindings, spellingFindings] = await Promise.all([
         checkBrokenLinks(page, {}),
         checkExternalLinks(page, {}),
         checkMeta(page, {}),
-        checkConsoleErrors(page, {}), // This will just use the listeners we attached
-        checkDummyContent(page, {})
+        checkConsoleErrors(page, {}),
+        checkDummyContent(page, {}),
+        checkSpelling(page, {})
       ]);
 
       const allFindings = [
@@ -131,7 +133,8 @@ export async function processCrawlPageJob(job: Job) {
         ...extLinkFindings,
         ...metaFindings,
         ...consoleFindings,
-        ...dummyFindings
+        ...dummyFindings,
+        ...spellingFindings
       ].map(f => ({
         ...f,
         page_id: pageId,
@@ -149,6 +152,14 @@ export async function processCrawlPageJob(job: Job) {
         }
       }
 
+      // Add AI Check jobs decoupled to perform asynchronously
+      const pageText = await page.evaluate(() => document.body.innerText).catch(() => '');
+      qaQueue.add('queueGeminiCall', { type: 'run_ai_checks', runId, pageId, pageUrl, pageText })
+             .catch(e => logger.error('Failed to queue Gemini AI check job:', e));
+             
+      qaQueue.add('run_ai_checks', { runId, pageId, pageUrl, pageText })
+             .catch(e => logger.error('Failed to queue run_ai_checks:', e));
+             
       // Step 5: Update page status to 'checked'
       await supabase
         .from('pages')

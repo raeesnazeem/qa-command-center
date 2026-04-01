@@ -4,6 +4,7 @@ import { clerkAuth } from '../middleware/clerkAuth';
 import { requireRole } from '../middleware/requireRole';
 import { zodValidate } from '../middleware/zodValidate';
 import { broadcastTaskUpdate } from '../lib/realtimeService';
+import { qaQueue } from '../lib/queue';
 import { 
   CreateTaskSchema, 
   UpdateTaskSchema, 
@@ -286,6 +287,20 @@ router.post(
         .single();
 
       if (error) throw error;
+
+      // Enqueue AI analysis job
+      await qaQueue.add(
+        'analyze_rebuttal',
+        { rebuttalId: rebuttal.id },
+        {
+          removeOnComplete: true,
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 5000,
+          },
+        }
+      );
 
       return res.status(201).json(rebuttal);
     } catch (error: any) {
