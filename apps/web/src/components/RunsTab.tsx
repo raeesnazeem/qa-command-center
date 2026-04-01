@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Project } from '../api/projects.api';
-import { useRuns } from '../hooks/useRuns';
+import { useRuns, useUpdateRunStatus } from '../hooks/useRuns';
 import { CreateRunModal } from './CreateRunModal';
 import { CanDo } from './CanDo';
 import { 
@@ -10,7 +10,12 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  History
+  History,
+  Pause,
+  Play,
+  Square,
+  User,
+  AlertCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -52,6 +57,20 @@ const StatusBadge = ({ status }: { status: string }) => {
           Failed
         </span>
       );
+    case 'paused':
+      return (
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-600 border border-amber-100">
+          <Clock className="w-3 h-3 mr-1" />
+          Paused
+        </span>
+      );
+    case 'cancelled':
+      return (
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 border border-slate-200">
+          <AlertCircle className="w-3 h-3 mr-1" />
+          Stopped
+        </span>
+      );
     default:
       return null;
   }
@@ -61,7 +80,25 @@ export const RunsTab = ({ project }: RunsTabProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [page, setPage] = useState(1);
   const { data: runsData, isLoading } = useRuns(project.id, page);
+  const updateStatus = useUpdateRunStatus();
   const navigate = useNavigate();
+
+  const handlePause = (e: React.MouseEvent, runId: string) => {
+    e.stopPropagation();
+    updateStatus.mutate({ runId, status: 'paused' });
+  };
+
+  const handleResume = (e: React.MouseEvent, runId: string) => {
+    e.stopPropagation();
+    updateStatus.mutate({ runId, status: 'running' });
+  };
+
+  const handleStop = (e: React.MouseEvent, runId: string) => {
+    e.stopPropagation();
+    if (confirm('Are you sure you want to stop this scan?')) {
+      updateStatus.mutate({ runId, status: 'cancelled' });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -76,7 +113,7 @@ export const RunsTab = ({ project }: RunsTabProps) => {
         <CanDo role="qa_engineer">
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-black text-white rounded-md text-sm font-bold hover:bg-slate-800 transition-all shadow-sm active:scale-95"
+            className="btn-unified flex items-center space-x-2"
           >
             <PlayCircle className="w-4 h-4" />
             <span>Start New QA Run</span>
@@ -91,6 +128,7 @@ export const RunsTab = ({ project }: RunsTabProps) => {
               <tr className="bg-slate-50/50 border-b border-slate-100">
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Run #</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Type</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Creator</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Status</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Issues Found</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Date</th>
@@ -138,6 +176,14 @@ export const RunsTab = ({ project }: RunsTabProps) => {
                       </span>
                     </td>
                     <td className="px-6 py-4">
+                      <div className="flex items-center gap-1.5">
+                        <User size={12} className="text-slate-400" />
+                        <span className="text-xs font-bold text-slate-600 truncate max-w-[100px]">
+                          {run.created_by_name || 'System'}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
                       <StatusBadge status={run.status} />
                     </td>
                     <td className="px-6 py-4 text-center">
@@ -160,8 +206,39 @@ export const RunsTab = ({ project }: RunsTabProps) => {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end space-x-2">
-                        <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-slate-600 group-hover:translate-x-0.5 transition-all" />
+                      <div className="flex items-center justify-end space-x-3">
+                        {(run.status === 'running' || run.status === 'pending' || run.status === 'paused') && (
+                          <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-md border border-slate-100 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                            {run.status === 'running' ? (
+                              <button
+                                onClick={(e) => handlePause(e, run.id)}
+                                disabled={updateStatus.isPending}
+                                className="p-1 hover:bg-amber-50 text-amber-600 rounded transition-colors"
+                                title="Pause Scan"
+                              >
+                                <Pause size={14} fill="currentColor" />
+                              </button>
+                            ) : run.status === 'paused' ? (
+                              <button
+                                onClick={(e) => handleResume(e, run.id)}
+                                disabled={updateStatus.isPending}
+                                className="p-1 hover:bg-emerald-50 text-emerald-600 rounded transition-colors"
+                                title="Resume Scan"
+                              >
+                                <Play size={14} fill="currentColor" />
+                              </button>
+                            ) : null}
+                            <button
+                              onClick={(e) => handleStop(e, run.id)}
+                              disabled={updateStatus.isPending}
+                              className="p-1 hover:bg-red-50 text-red-600 rounded transition-colors"
+                              title="Stop Scan"
+                            >
+                              <Square size={14} fill="currentColor" />
+                            </button>
+                          </div>
+                        )}
+                        <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-accent group-hover:translate-x-0.5 transition-all" />
                       </div>
                     </td>
                   </tr>
@@ -181,14 +258,14 @@ export const RunsTab = ({ project }: RunsTabProps) => {
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-3 py-1 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50 transition-colors"
+              className="btn-unified-secondary"
             >
               Previous
             </button>
             <button
               onClick={() => setPage(p => p + 1)}
               disabled={page * runsData.pagination.limit >= runsData.pagination.total}
-              className="px-3 py-1 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50 transition-colors"
+              className="btn-unified-secondary"
             >
               Next
             </button>

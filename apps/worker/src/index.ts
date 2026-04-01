@@ -3,6 +3,9 @@ import { Queue, Worker, Job, QueueEvents } from 'bullmq';
 import IORedis from 'ioredis';
 import pino from 'pino';
 import { processTestJob } from './jobs/testJob';
+import { processStartRunJob } from './jobs/startRunJob';
+import { processCrawlPageJob } from './jobs/crawlPageJob';
+import { processRunChecksJob } from './jobs/runChecksJob';
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
@@ -37,26 +40,32 @@ const worker = new Worker(
   async (job: Job) => {
     const { name } = job;
     
-    logger.info({ jobId: job.id, jobName: name }, `Job ${name} received`);
+    logger.info({ jobId: job.id, jobName: name, data: job.data }, `Job ${name} received - starting processing`);
 
-    switch (name) {
-      case 'start_run':
-        // Stub for starting a run
-        break;
-      case 'crawl_page':
-        // Stub for crawling a page
-        break;
-      case 'run_checks':
-        // Stub for running checks
-        break;
-      case 'generate_embeddings':
-        // Stub for generating embeddings
-        break;
-      case 'test':
-        await processTestJob();
-        break;
-      default:
-        logger.warn({ jobName: name }, `Unknown job name: ${name}`);
+    try {
+      switch (name) {
+        case 'start_run':
+          await processStartRunJob(job);
+          break;
+        case 'crawl_page':
+          await processCrawlPageJob(job);
+          break;
+        case 'run_checks':
+          await processRunChecksJob(job);
+          break;
+        case 'generate_embeddings':
+          // Stub for generating embeddings
+          break;
+        case 'test':
+          await processTestJob();
+          break;
+        default:
+          logger.warn({ jobName: name }, `Unknown job name: ${name}`);
+      }
+      logger.info({ jobId: job.id, jobName: name }, `Job ${name} finished processing`);
+    } catch (error: any) {
+      logger.error({ jobId: job.id, jobName: name, error: error.message, stack: error.stack }, `Error processing job ${name}`);
+      throw error;
     }
   },
   { 

@@ -13,36 +13,65 @@ const logger = pino({
 });
 
 export async function processCrawlPageJob(job: Job) {
-  const { runId, pageUrl, pageIndex, totalPages } = job.data;
+  const { runId, pageId, url: pageUrl } = job.data;
 
-  if (!runId || !pageUrl) {
-    throw new Error('Missing required data for crawl_page job');
+  if (!runId || !pageId || !pageUrl) {
+    throw new Error('Missing required data for crawl_page job (runId, pageId, or url)');
   }
 
-  logger.info({ runId, pageUrl, pageIndex }, 'Processing page crawl');
-
-  let pageId: string | null = null;
+  logger.info({ runId, pageId, pageUrl }, 'Processing page crawl');
 
   try {
-    // Step 1: Insert page record into pages table with status='pending'
-    const { data: pageRecord, error: insertError } = await supabase
+    // Step 1: Update page status to 'processing' and set initial step
+    logger.info({ pageId }, 'Setting page status to processing');
+    const { error: statusError } = await supabase
       .from('pages')
-      .insert({
-        run_id: runId,
-        url: pageUrl,
-        status: 'pending'
+      .update({ 
+        status: 'processing',
+        current_step: 'Starting page crawl...',
+        progress: 2
       })
-      .select('id')
-      .single();
+      .eq('id', pageId);
 
-    if (insertError || !pageRecord) {
-      throw new Error(`Failed to insert page record: ${insertError?.message}`);
+    if (statusError) {
+      logger.error({ pageId, error: statusError.message }, 'Failed to update page status to processing');
     }
 
-    pageId = pageRecord.id;
+    // Immediate broadcast to update UI
+    const initialChannel = supabase.channel(`run:${runId}`);
+    await initialChannel.send({
+      type: 'broadcast',
+      event: 'page_progress',
+      payload: { pageId, progress: 2, current_step: 'Starting page crawl...' }
+    });
 
     // Step 2: Call screenshotPage(pageUrl, runId, pageId)
-    const screenshots = await screenshotPage(pageUrl, runId, pageId as string);
+    const screenshots = await screenshotPage(pageUrl, runId, pageId, async (progress, step) => {
+      const { error: progressError } = await supabase
+        .from('pages')
+        .update({ progress, current_step: step })
+        .eq('id', pageId);
+      
+      if (progressError) {
+        logger.error({ pageId, error: progressError.message, progress, step }, 'Failed to update page granular progress in DB');
+      }
+      
+      // Also broadcast this granular update
+      const progressChannel = supabase.channel(`run:${runId}`);
+      const broadcastStatus = await progressChannel.send({
+        type: 'broadcast',
+        event: 'page_progress',
+        payload: {
+          pageId,
+          progress,
+          current_step: step
+        }
+      });
+
+      if (broadcastStatus !== 'ok') {
+        logger.warn({ pageId, broadcastStatus }, 'Broadcast of page_progress failed');
+      }
+    });
 
     // Step 3: Update page record with screenshot URLs and status='screenshotted'
     const { error: updatePageError } = await supabase
@@ -64,7 +93,7 @@ export async function processCrawlPageJob(job: Job) {
       run_id_param: runId
     });
 
-    // Fallback if RPC doesn't exist yet (though we should create it)
+    // Fallback if RPC doesn't exist yet
     if (incrementError) {
       logger.warn({ runId, error: incrementError.message }, 'RPC increment_pages_processed failed, trying manual update');
       
@@ -83,14 +112,12 @@ export async function processCrawlPageJob(job: Job) {
     }
 
     // Step 5: Broadcast progress update to Supabase Realtime channel "run:{runId}"
-    const channel = supabase.channel(`run:${runId}`);
-    await channel.send({
+    const finalChannel = supabase.channel(`run:${runId}`);
+    await finalChannel.send({
       type: 'broadcast',
       event: 'progress',
       payload: {
         pageUrl,
-        pageIndex,
-        totalPages,
         status: 'screenshotted',
         pageId
       }
@@ -118,8 +145,6 @@ export async function processCrawlPageJob(job: Job) {
         .eq('id', pageId);
     }
     
-    // We throw to let BullMQ handle retries if configured, 
-    // but the requirement says "continue with next page" which BullMQ does by default for other jobs in the queue.
     throw error;
   }
 }

@@ -20,7 +20,8 @@ interface TasksTabProps {
 }
 
 export const TasksTab = ({ project }: TasksTabProps) => {
-  const { data: tasks, isLoading } = useTasks(project.id);
+  const { data: tasksData, isLoading } = useTasks({ projectId: project.id });
+  const tasks = tasksData?.data || [];
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const { mutate: updateTask } = useUpdateTask();
 
@@ -32,7 +33,7 @@ export const TasksTab = ({ project }: TasksTabProps) => {
   ];
 
   const handleStatusChange = (taskId: string, newStatus: TaskStatus) => {
-    updateTask({ taskId, data: { status: newStatus } });
+    updateTask({ id: taskId, data: { status: newStatus } });
   };
 
   const getSeverityColor = (severity: string) => {
@@ -59,7 +60,7 @@ export const TasksTab = ({ project }: TasksTabProps) => {
               className="bg-white border border-slate-200 rounded-md pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-accent transition-all w-full md:w-64"
             />
           </div>
-          <button className="p-2 bg-white border border-slate-200 rounded-md text-slate-600 hover:bg-slate-50 transition-all">
+          <button className="btn-unified-secondary p-2">
             <Filter className="w-4 h-4" />
           </button>
           
@@ -76,7 +77,7 @@ export const TasksTab = ({ project }: TasksTabProps) => {
 
           <button 
             onClick={() => setIsTaskModalOpen(true)}
-            className="inline-flex items-center space-x-2 bg-black text-white px-4 py-2 rounded-md font-bold text-sm hover:bg-slate-800 transition-all shadow-sm active:scale-95"
+            className="btn-unified flex items-center space-x-2"
           >
             <Plus className="w-4 h-4" />
             <span>New Task</span>
@@ -97,7 +98,7 @@ export const TasksTab = ({ project }: TasksTabProps) => {
               <div className="flex items-center space-x-2">
                 <h3 className="font-bold text-slate-900">{column.title}</h3>
                 <span className="bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                  {tasks?.filter(t => t.status === column.id).length || 0}
+                  {tasks.filter(t => t.status === column.id).length}
                 </span>
               </div>
               <button className="text-slate-400 hover:text-slate-600">
@@ -111,13 +112,13 @@ export const TasksTab = ({ project }: TasksTabProps) => {
                   <Clock className="w-6 h-6 text-accent animate-spin" />
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Loading...</p>
                 </div>
-              ) : tasks?.filter(t => t.status === column.id).length === 0 ? (
+              ) : tasks.filter(t => t.status === column.id).length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-40 text-center space-y-2 opacity-50">
                   <CheckSquare className="w-8 h-8 text-slate-200" />
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">No tasks</p>
                 </div>
               ) : (
-                tasks?.filter(t => t.status === column.id).map((task) => (
+                tasks.filter(t => t.status === column.id).map((task) => (
                   <div key={task.id} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:border-accent/20 transition-all cursor-pointer group">
                     <div className="flex items-center justify-between mb-2">
                       <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${getSeverityColor(task.severity)}`}>

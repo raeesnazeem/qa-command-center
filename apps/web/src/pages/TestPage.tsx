@@ -124,7 +124,7 @@ export const TestPage = () => {
               <strong className="text-slate-700">JWT Token (First 50):</strong>
               <button
                 onClick={copyFullToken}
-                className="bg-black text-white text-[10px] px-2 py-1 rounded-md font-bold uppercase tracking-wider hover:bg-slate-800 transition-colors"
+                className="btn-unified text-[10px] h-6"
               >
                 Copy Full Token
               </button>
@@ -145,7 +145,7 @@ export const TestPage = () => {
           <button
             onClick={testHealth}
             disabled={loadingHealth}
-            className="bg-black text-white px-6 py-2 rounded-md font-bold hover:bg-slate-800 disabled:opacity-50 flex items-center gap-2 transition-all shadow-sm active:scale-95"
+            className="btn-unified flex items-center gap-2"
           >
             {loadingHealth && <Loader2 className="animate-spin size-4" />}
             Test API /health
@@ -184,7 +184,7 @@ export const TestPage = () => {
           <button
             onClick={testMe}
             disabled={loadingMe}
-            className="bg-black text-white px-6 py-2 rounded-md font-bold hover:bg-slate-800 disabled:opacity-50 flex items-center gap-2 transition-all shadow-sm active:scale-95"
+            className="btn-unified flex items-center gap-2"
           >
             {loadingMe && <Loader2 className="animate-spin size-4" />}
             Test /api/me

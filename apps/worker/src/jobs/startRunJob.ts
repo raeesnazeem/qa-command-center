@@ -24,7 +24,7 @@ export async function processStartRunJob(job: Job) {
   // Step 1: Fetch run from Supabase
   const { data: run, error: fetchError } = await supabase
     .from('qa_runs')
-    .select('id, site_url, project_id')
+    .select('id, site_url, project_id, selected_urls')
     .eq('id', runId)
     .single();
 
@@ -46,11 +46,19 @@ export async function processStartRunJob(job: Job) {
   }
 
   try {
-    // Step 3: Call crawlSitemap(siteUrl)
-    logger.info({ runId, siteUrl: run.site_url }, 'Crawling site for pages');
-    const urls = await crawlSitemap(run.site_url);
+    // Step 3: Get URLs to process
+    let urls: string[] = [];
     
-    logger.info({ runId, count: urls.length }, 'Crawl complete');
+    logger.info({ runId }, 'Determining URLs to process');
+    if (run.selected_urls && run.selected_urls.length > 0) {
+      logger.info({ runId, count: run.selected_urls.length }, 'Using provided selected_urls');
+      urls = run.selected_urls;
+    } else {
+      logger.info({ runId, siteUrl: run.site_url }, 'Crawling site for pages (crawlSitemap)');
+      urls = await crawlSitemap(run.site_url);
+    }
+    
+    logger.info({ runId, count: urls.length }, 'URL collection complete');
 
     // Step 4: Update run.pages_total with URL count
     const { error: totalError } = await supabase
@@ -64,6 +72,7 @@ export async function processStartRunJob(job: Job) {
 
     // Step 5 & 6: For each URL, add a 'crawl_page' job AND insert into pages table
     // We do this in batches for better performance
+    logger.info({ runId, count: urls.length }, 'Inserting pages into database');
     const pagesToInsert = urls.map(url => ({
       run_id: runId,
       url: url,
@@ -76,11 +85,13 @@ export async function processStartRunJob(job: Job) {
       .select('id, url');
 
     if (insertError) {
+      logger.error({ runId, error: insertError.message }, 'Failed to insert pages into DB');
       throw new Error(`Failed to insert pages for run ${runId}: ${insertError.message}`);
     }
 
     // Add jobs to queue for each page discovered
     if (insertedPages) {
+      logger.info({ runId, count: insertedPages.length }, 'Enqueuing crawl_page jobs');
       const crawlJobs = insertedPages.map(page => ({
         name: 'crawl_page',
         data: {
@@ -96,7 +107,7 @@ export async function processStartRunJob(job: Job) {
       }));
 
       await qaQueue.addBulk(crawlJobs);
-      logger.info({ runId, count: crawlJobs.length }, 'Enqueued crawl_page jobs');
+      logger.info({ runId, count: crawlJobs.length }, 'Enqueued crawl_page jobs successfully');
     }
 
   } catch (error: any) {

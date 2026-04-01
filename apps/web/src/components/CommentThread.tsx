@@ -121,7 +121,7 @@ export const CommentThread = ({ taskId, comments }: CommentThreadProps) => {
           type="submit"
           className={`absolute right-3 bottom-3 p-2 rounded-lg transition-all active:scale-95 ${
             newComment.trim() && !isSubmitting
-              ? 'bg-black text-white hover:bg-slate-800'
+              ? 'bg-[#000000] text-white hover:bg-[#93C0B1]'
               : 'bg-slate-100 text-slate-400 cursor-not-allowed'
           }`}
           disabled={!newComment.trim() || isSubmitting}

@@ -43,7 +43,7 @@ export const TasksPage = () => {
         </div>
         <button 
           onClick={() => setIsTaskModalOpen(true)}
-          className="inline-flex items-center space-x-2 bg-black text-white px-6 py-2.5 rounded-md font-bold text-sm hover:bg-slate-800 transition-all shadow-sm active:scale-95"
+          className="btn-unified flex items-center space-x-2"
         >
           <Plus className="w-4 h-4" />
           <span>Create Task</span>
@@ -66,7 +66,7 @@ export const TasksPage = () => {
           />
         </div>
         <div className="flex items-center space-x-2">
-          <button className="flex items-center space-x-2 px-4 py-2 bg-white border border-slate-200 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all">
+          <button className="btn-unified-secondary flex items-center space-x-2">
             <Filter className="w-4 h-4" />
             <span>Filter</span>
           </button>

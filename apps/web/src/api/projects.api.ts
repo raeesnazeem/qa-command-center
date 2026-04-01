@@ -13,6 +13,14 @@ export interface Project {
   updated_at: string;
   open_issues_count: number;
   last_run_date: string | null;
+  ongoing_run?: {
+    id: string;
+    status: 'pending' | 'running' | 'paused';
+    pages_processed: number;
+    pages_total: number;
+    created_by_name: string;
+  } | null;
+  concurrent_scans?: number;
   figma_access_token?: string;
   basecamp_account_id?: string;
   basecamp_project_id?: string;

@@ -118,7 +118,7 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
               <button
                 type="submit"
                 disabled={isUpdating}
-                className="flex items-center space-x-2 bg-black text-white px-6 py-2 rounded-md font-bold text-sm hover:bg-slate-800 transition-all shadow-sm active:scale-95"
+                className="btn-unified flex items-center space-x-2"
               >
                 <Save className="w-4 h-4" />
                 <span>{isUpdating ? 'Saving...' : 'Save Changes'}</span>
@@ -170,7 +170,7 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
               <button 
                 type="submit"
                 disabled={isUpdating}
-                className="flex items-center space-x-2 bg-black text-white px-6 py-2 rounded-md font-bold text-sm hover:bg-slate-800 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+                className="btn-unified flex items-center space-x-2"
               >
                 <Save className="w-4 h-4" />
                 <span>{isUpdating ? 'Saving...' : 'Update Token'}</span>
@@ -247,7 +247,7 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
                 type="button"
                 onClick={handleTestBasecamp}
                 disabled={isTestingBasecamp}
-                className="flex items-center space-x-2 text-accent hover:text-accent/80 font-bold text-sm transition-all disabled:opacity-50"
+                className="btn-unified-secondary flex items-center space-x-2 text-accent"
               >
                 {isTestingBasecamp ? <Settings className="w-4 h-4 animate-spin" /> : <TestTube className="w-4 h-4" />}
                 <span>Test Connection</span>
@@ -255,7 +255,7 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
               <button 
                 type="submit"
                 disabled={isUpdating}
-                className="flex items-center space-x-2 bg-black text-white px-6 py-2 rounded-md font-bold text-sm hover:bg-slate-800 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+                className="btn-unified flex items-center space-x-2"
               >
                 <Save className="w-4 h-4" />
                 <span>{isUpdating ? 'Saving...' : 'Save Basecamp Settings'}</span>

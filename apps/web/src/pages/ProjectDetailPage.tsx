@@ -12,9 +12,12 @@ import {
   Settings as SettingsIcon,
   Loader2,
   AlertCircle,
-  ExternalLink
+  ExternalLink,
+  Zap
 } from 'lucide-react';
 import { ProjectOverviewTab } from '../components/ProjectOverviewTab';
+import { RunsTab } from '../components/RunsTab';
+import { TasksTab } from '../components/TasksTab';
 import { TeamTab } from '../components/TeamTab';
 import { SettingsTab } from '../components/SettingsTab';
 import { CanDo } from '../components/CanDo';
@@ -58,7 +61,7 @@ export const ProjectDetailPage = () => {
           </p>
           <Link 
             to="/projects"
-            className="inline-flex items-center space-x-2 bg-black text-white px-6 py-3 rounded-md font-bold hover:bg-slate-800 transition-all shadow-sm"
+            className="btn-unified-secondary flex items-center space-x-2"
           >
             <ChevronLeft className="w-4 h-4" />
             <span>Back to Projects</span>
@@ -136,6 +139,12 @@ export const ProjectDetailPage = () => {
                   {project.last_run_date ? new Date(project.last_run_date).toLocaleDateString() : 'Never'}
                 </span>
               </div>
+              {project.concurrent_scans !== undefined && project.concurrent_scans > 0 && (
+                <div className="flex items-center text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
+                  <Zap className="w-3 h-3 mr-1.5 fill-indigo-500" />
+                  <span className="font-bold uppercase tracking-widest text-[10px]">{project.concurrent_scans} active scans</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -143,7 +152,7 @@ export const ProjectDetailPage = () => {
             <CanDo role="qa_engineer">
               <button 
                 onClick={() => setIsRunModalOpen(true)}
-                className="bg-black text-white px-6 py-2.5 rounded-md font-bold text-sm hover:bg-slate-800 transition-all shadow-sm active:scale-95"
+                className="btn-unified"
               >
                 Run New Check
               </button>
@@ -180,32 +189,8 @@ export const ProjectDetailPage = () => {
       {/* Tab Content */}
       <div className="min-h-[400px]">
         {activeTab === 'overview' && <ProjectOverviewTab project={project} onStartRun={() => setIsRunModalOpen(true)} />}
-        
-        {/* Placeholder tabs for QA Runs and Tasks */}
-        {activeTab === 'runs' && (
-          <div className="bg-white border border-slate-100 rounded-2xl p-20 text-center shadow-sm animate-in fade-in duration-500">
-            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <PlayCircle className="w-10 h-10 text-slate-300" />
-            </div>
-            <h3 className="text-2xl font-bold text-slate-900 mb-2">QA Runs coming soon</h3>
-            <p className="text-slate-500 max-w-sm mx-auto leading-relaxed">
-              We're currently building out the execution history view. Check back soon!
-            </p>
-          </div>
-        )}
-
-        {activeTab === 'tasks' && (
-          <div className="bg-white border border-slate-100 rounded-2xl p-20 text-center shadow-sm animate-in fade-in duration-500">
-            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckSquare className="w-10 h-10 text-slate-300" />
-            </div>
-            <h3 className="text-2xl font-bold text-slate-900 mb-2">Task Board coming soon</h3>
-            <p className="text-slate-500 max-w-sm mx-auto leading-relaxed">
-              We're currently building out the project task management system. Check back soon!
-            </p>
-          </div>
-        )}
-
+        {activeTab === 'runs' && <RunsTab project={project} />}
+        {activeTab === 'tasks' && <TasksTab project={project} />}
         {activeTab === 'team' && <TeamTab project={project} />}
         {activeTab === 'settings' && <SettingsTab project={project} />}
       </div>

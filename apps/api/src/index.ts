@@ -19,6 +19,10 @@ import { debugRouter } from './routes/debug'
 import { testWebhookRouter } from './routes/test-webhook'
 import { adminRouter } from './routes/admin'
 import { clerkMiddleware, getAuth } from '@clerk/express'
+import { createBullBoard } from '@bull-board/api'
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter'
+import { ExpressAdapter } from '@bull-board/express'
+import { qaQueue } from './lib/queue'
 
 const app: express.Application = express()
 const PORT = process.env.PORT ?? 3001
@@ -48,6 +52,17 @@ app.use(defaultRateLimiter)
 
 // Clerk middleware for other routes
 app.use(clerkMiddleware())
+
+// BullBoard setup
+const serverAdapter = new ExpressAdapter()
+serverAdapter.setBasePath('/admin/queues')
+
+createBullBoard({
+  queues: [new BullMQAdapter(qaQueue as any)],
+  serverAdapter: serverAdapter,
+})
+
+app.use('/admin/queues', serverAdapter.getRouter())
 
 app.use((req, res, next) => {
   const auth = getAuth(req);

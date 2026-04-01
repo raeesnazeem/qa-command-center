@@ -74,7 +74,7 @@ router.post(
  * List tasks with filters.
  */
 router.get('/', clerkAuth, async (req: Request, res: Response) => {
-  const { project_id, status, severity, assigned_to, page = '1', limit = '10' } = req.query;
+  const { project_id, projectId, status, severity, assigned_to, page = '1', limit = '10' } = req.query;
   const { userId: clerkUserId, role } = req.auth!;
 
   try {
@@ -88,7 +88,8 @@ router.get('/', clerkAuth, async (req: Request, res: Response) => {
         projects:project_id (id, name)
       `, { count: 'exact' });
 
-    if (project_id) query = query.eq('project_id', project_id);
+    const effectiveProjectId = project_id || projectId;
+    if (effectiveProjectId) query = query.eq('project_id', effectiveProjectId);
     if (status) query = query.eq('status', status);
     if (severity) query = query.eq('severity', severity);
     if (assigned_to) query = query.eq('assigned_to', assigned_to);

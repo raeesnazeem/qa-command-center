@@ -91,7 +91,7 @@ export const SettingsPage = () => {
                         <span className="text-sm font-semibold text-slate-900">{item.value as string}</span>
                       </div>
                     )}
-                    <button className="text-xs font-bold text-accent hover:text-accent/80 transition-colors uppercase tracking-wider">Edit</button>
+            <button className="btn-unified-secondary h-6 text-[10px]">Edit</button>
                   </div>
                 </div>
               ))}
@@ -115,13 +115,13 @@ export const SettingsPage = () => {
               <h4 className="text-sm font-bold text-slate-900">Delete Account</h4>
               <p className="text-xs text-slate-500">Permanently remove your account and all associated data.</p>
             </div>
-            <button className="px-4 py-2 bg-white border border-red-200 text-red-600 rounded-md text-xs font-bold hover:bg-red-50 transition-all shadow-sm">
+            <button className="btn-unified-danger">
               Delete Account
             </button>
           </div>
           <div className="px-6 py-4 bg-red-50/50 border-t border-red-50 flex justify-end">
             <SignOutButton>
-              <button className="flex items-center space-x-2 text-red-600 hover:text-red-700 font-bold text-sm transition-colors">
+              <button className="btn-unified-danger flex items-center space-x-2">
                 <LogOut className="w-4 h-4" />
                 <span>Sign Out</span>
               </button>

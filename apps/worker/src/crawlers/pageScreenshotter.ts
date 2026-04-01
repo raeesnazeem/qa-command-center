@@ -36,13 +36,32 @@ export interface ScreenshotResult {
 export async function screenshotPage(
   url: string,
   runId: string,
-  pageId: string
+  pageId: string,
+  onProgress?: (progress: number, step: string) => Promise<void>
 ): Promise<ScreenshotResult> {
   const result: ScreenshotResult = {};
 
+  let completedViewports = 0;
+  const totalViewports = VIEWPORTS.length;
+
   for (const viewport of VIEWPORTS) {
-    const browser = await chromium.launch({ headless: true });
+    if (onProgress) {
+      await onProgress(
+        Math.round((completedViewports / totalViewports) * 100),
+        `Capturing ${viewport.name} screenshot...`
+      );
+    }
+    const browser = await chromium.launch({ 
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+    });
     try {
+      if (onProgress) {
+        await onProgress(
+          Math.min(99, Math.round((completedViewports / totalViewports) * 100) + 5),
+          `Opening browser (${viewport.name})...`
+        );
+      }
       const context = await browser.newContext({
         viewport: { width: viewport.width, height: viewport.height },
         deviceScaleFactor: 1,
@@ -51,9 +70,21 @@ export async function screenshotPage(
 
       logger.info({ url, viewport: viewport.name }, `Taking screenshot`);
 
+      if (onProgress) {
+        await onProgress(
+          Math.round((completedViewports / totalViewports) * 100) + 10,
+          `Navigating to URL (${viewport.name})...`
+        );
+      }
       // Navigate to URL
       await page.goto(url, { timeout: 30000, waitUntil: 'load' });
 
+      if (onProgress) {
+        await onProgress(
+          Math.round((completedViewports / totalViewports) * 100) + 15,
+          `Waiting for ${viewport.name} content...`
+        );
+      }
       // Wait for Elementor or fallback to networkidle
       try {
         await page.waitForSelector('.elementor-section, .elementor-widget, .elementor', { 
@@ -65,15 +96,33 @@ export async function screenshotPage(
         await page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => null);
       }
 
+      if (onProgress) {
+        await onProgress(
+          Math.round((completedViewports / totalViewports) * 100) + 20,
+          `Capturing ${viewport.name} screenshot...`
+        );
+      }
       // Take full-page screenshot
       const buffer = await page.screenshot({ fullPage: true });
 
+      if (onProgress) {
+        await onProgress(
+          Math.round((completedViewports / totalViewports) * 100) + 25,
+          `Optimizing ${viewport.name} image...`
+        );
+      }
       // Compress with sharp
       const compressedBuffer = await sharp(buffer)
         .resize({ width: viewport.width, withoutEnlargement: true })
         .jpeg({ quality: 80 }) // Using jpeg for better compression of screenshots, though request says .png path
         .toBuffer();
 
+      if (onProgress) {
+        await onProgress(
+          Math.round((completedViewports / totalViewports) * 100) + 30,
+          `Uploading ${viewport.name} to cloud...`
+        );
+      }
       // Upload to Supabase Storage
       const storagePath = `${runId}/${pageId}/${viewport.name}.png`;
       const { data, error } = await supabase.storage
@@ -96,6 +145,7 @@ export async function screenshotPage(
       if (viewport.name === 'tablet') result.tabletUrl = publicUrl;
       if (viewport.name === 'mobile') result.mobileUrl = publicUrl;
 
+      completedViewports++;
       logger.info({ url, viewport: viewport.name }, 'Screenshot uploaded successfully');
 
     } catch (error: any) {
@@ -103,6 +153,10 @@ export async function screenshotPage(
     } finally {
       await browser.close();
     }
+  }
+
+  if (onProgress) {
+    await onProgress(100, 'Screenshots complete');
   }
 
   return result;

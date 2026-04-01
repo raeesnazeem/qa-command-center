@@ -135,14 +135,14 @@ export const CreateProjectModal = ({ isOpen, onClose }: CreateProjectModalProps)
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-2.5 rounded-md text-sm font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-all"
+              className="btn-unified-secondary flex-1"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className="flex-[2] px-6 py-2.5 rounded-md text-sm font-bold text-white bg-black hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center space-x-2"
+              className="btn-unified flex-[2] flex items-center justify-center space-x-2"
             >
               {isPending ? (
                 <>

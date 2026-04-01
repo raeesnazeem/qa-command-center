@@ -148,7 +148,7 @@ export const TeamTab = ({ project }: TeamTabProps) => {
                 <button
                   type="submit"
                   disabled={isAdding}
-                  className="w-full bg-black text-white py-2 rounded-md font-bold text-sm hover:bg-slate-800 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+                  className="btn-unified w-full"
                 >
                   {isAdding ? 'Adding...' : 'Add to Project'}
                 </button>

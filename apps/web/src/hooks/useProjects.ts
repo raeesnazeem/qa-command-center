@@ -7,6 +7,7 @@ import {
   updateProject, 
   addProjectMember,
   updateProjectMemberRole,
+  Project,
   ProjectWithMembers 
 } from '../api/projects.api';
 import { CreateProjectInput, UpdateProjectInput } from '@qacc/shared';
@@ -17,6 +18,11 @@ export const useProjects = () => {
   return useQuery({
     queryKey: ['projects'],
     queryFn: () => getProjects(axios),
+    refetchInterval: (query) => {
+      const data = query.state.data as Project[] | undefined;
+      const hasOngoing = data?.some(p => p.ongoing_run);
+      return hasOngoing ? 3000 : false;
+    },
   });
 };
 

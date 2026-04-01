@@ -231,14 +231,14 @@ export const CreateRunModal = ({ project, isOpen, onClose }: CreateRunModalProps
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-6 py-2.5 rounded-md text-sm font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 transition-all shadow-sm"
+            className="btn-unified-secondary flex-1"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit(onSubmit)}
             disabled={isPending}
-            className="flex-[2] px-6 py-2.5 rounded-md text-sm font-bold text-white bg-black hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center space-x-2 shadow-lg"
+            className="btn-unified flex-[2] flex items-center justify-center space-x-2"
           >
             {isPending ? (
               <>

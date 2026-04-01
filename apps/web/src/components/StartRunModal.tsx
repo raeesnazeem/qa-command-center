@@ -1,9 +1,11 @@
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CreateRunSchema, CreateRunInput } from '@qacc/shared';
-import { useCreateRun } from '../hooks/useRuns';
+import { useCreateRun, useUpdateRunStatus, useStartRun, useFetchUrls } from '../hooks/useRuns';
 import { Project } from '../api/projects.api';
-import { X, Loader2, Globe, PlayCircle, Layout } from 'lucide-react';
+import { X, Loader2, Globe, PlayCircle, Layout, ChevronDown, ChevronRight, Square, CheckSquare } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 
 interface StartRunModalProps {
   project: Project;
@@ -12,11 +14,18 @@ interface StartRunModalProps {
 }
 
 export const StartRunModal = ({ project, isOpen, onClose }: StartRunModalProps) => {
-  const { mutate: createRun, isPending } = useCreateRun();
+  const navigate = useNavigate();
+  const { mutate: createRun, isPending: isCreating } = useCreateRun();
+  const { mutate: startRun, isPending: isStarting } = useStartRun();
+  const { mutate: updateStatus, isPending: isUpdating } = useUpdateRunStatus();
+  const [isUrlsExpanded, setIsUrlsExpanded] = useState(false);
+  const [selectedUrls, setSelectedUrls] = useState<string[]>([]);
   
   const {
     register,
     handleSubmit,
+    control,
+    setValue,
     formState: { errors },
   } = useForm<CreateRunInput>({
     resolver: zodResolver(CreateRunSchema),
@@ -27,16 +36,68 @@ export const StartRunModal = ({ project, isOpen, onClose }: StartRunModalProps) 
       figma_url: '',
       enabled_checks: ['visual_regression', 'accessibility', 'console_errors'],
       is_woocommerce: project.is_woocommerce,
+      device_matrix: ['desktop'],
+      selected_urls: [],
     },
   });
 
+  const siteUrl = useWatch({ control, name: 'site_url' });
+  const { data: fetchedUrls, isLoading: isFetchingUrls } = useFetchUrls(siteUrl);
+
+  useEffect(() => {
+    if (fetchedUrls) {
+      setSelectedUrls(fetchedUrls);
+      setValue('selected_urls', fetchedUrls);
+    }
+  }, [fetchedUrls, setValue]);
+
+  const toggleUrl = (url: string) => {
+    const newSelection = selectedUrls.includes(url)
+      ? selectedUrls.filter(u => u !== url)
+      : [...selectedUrls, url];
+    setSelectedUrls(newSelection);
+    setValue('selected_urls', newSelection);
+  };
+
+  const selectAll = () => {
+    if (fetchedUrls) {
+      setSelectedUrls(fetchedUrls);
+      setValue('selected_urls', fetchedUrls);
+    }
+  };
+
+  const deselectAll = () => {
+    setSelectedUrls([]);
+    setValue('selected_urls', []);
+  };
+
   const onSubmit = (data: CreateRunInput) => {
-    createRun(data, {
-      onSuccess: () => {
-        onClose();
+    if (selectedUrls.length === 0) {
+      return;
+    }
+
+    // Ensure empty string is sent as null
+    const payload = {
+      ...data,
+      figma_url: data.figma_url === '' ? null : data.figma_url,
+      selected_urls: selectedUrls
+    };
+
+    createRun(payload, {
+      onSuccess: (newRun) => {
+        // Correctly enqueue the job using startRun mutation
+        startRun(newRun.id, {
+          onSuccess: () => {
+            onClose();
+            // Redirect to detail page to see live progress
+            navigate(`/projects/${project.id}/runs/${newRun.id}`);
+          }
+        });
       },
     });
   };
+
+  const isPending = isCreating || isStarting || isUpdating;
 
   if (!isOpen) return null;
 
@@ -133,6 +194,77 @@ export const StartRunModal = ({ project, isOpen, onClose }: StartRunModalProps) 
                   className="w-full bg-white border border-slate-200 rounded-md pl-10 pr-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
                 />
               </div>
+              {errors.figma_url && (
+                <p className="mt-1.5 text-xs text-red-500 font-medium">{errors.figma_url.message}</p>
+              )}
+            </div>
+
+            {/* URL Selection Accordion */}
+            <div className="border border-slate-200 rounded-md overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setIsUrlsExpanded(!isUrlsExpanded)}
+                className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors"
+              >
+                <div className="flex items-center space-x-2">
+                  <Globe className="w-4 h-4 text-slate-500" />
+                  <span className="text-sm font-semibold text-slate-700">
+                    Select Pages to Test ({selectedUrls.length}/{fetchedUrls?.length || 0})
+                  </span>
+                  {isFetchingUrls && <Loader2 className="w-3 h-3 animate-spin text-accent" />}
+                </div>
+                {isUrlsExpanded ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+              </button>
+
+              {isUrlsExpanded && (
+                <div className="p-4 bg-white border-t border-slate-200 space-y-3">
+                  <div className="flex items-center space-x-4 pb-2 border-b border-slate-100">
+                    <button
+                      type="button"
+                      onClick={selectAll}
+                      className="text-[10px] font-bold uppercase tracking-wider text-accent hover:text-accent/80 transition-colors"
+                    >
+                      Select All
+                    </button>
+                    <button
+                      type="button"
+                      onClick={deselectAll}
+                      className="text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-slate-700 transition-colors"
+                    >
+                      Deselect All
+                    </button>
+                  </div>
+
+                  <div className="max-h-48 overflow-y-auto space-y-1.5 pr-2 custom-scrollbar">
+                    {!fetchedUrls && !isFetchingUrls && (
+                      <p className="text-xs text-slate-500 italic py-2">Enter a URL to fetch pages</p>
+                    )}
+                    {isFetchingUrls && (
+                      <div className="flex items-center justify-center py-4 space-x-2">
+                        <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
+                        <span className="text-xs text-slate-500">Fetching pages...</span>
+                      </div>
+                    )}
+                    {fetchedUrls?.map((url) => (
+                      <div
+                        key={url}
+                        onClick={() => toggleUrl(url)}
+                        className="flex items-center space-x-2 px-2 py-1.5 rounded hover:bg-slate-50 cursor-pointer transition-colors group"
+                      >
+                        {selectedUrls.includes(url) ? (
+                          <CheckSquare className="w-4 h-4 text-accent" />
+                        ) : (
+                          <Square className="w-4 h-4 text-slate-300 group-hover:text-slate-400" />
+                        )}
+                        <span className="text-xs text-slate-600 truncate">{url}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {selectedUrls.length === 0 && !isFetchingUrls && fetchedUrls && (
+                    <p className="text-[10px] text-red-500 font-medium italic">* At least one page must be selected</p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Enabled Checks */}
@@ -165,14 +297,14 @@ export const StartRunModal = ({ project, isOpen, onClose }: StartRunModalProps) 
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-2.5 rounded-md text-sm font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-all"
+              className="btn-unified-secondary flex-1"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={isPending}
-              className="flex-[2] px-6 py-2.5 rounded-md text-sm font-bold text-white bg-black hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center space-x-2"
+              disabled={isPending || selectedUrls.length === 0}
+              className="btn-unified flex-[2] flex items-center justify-center space-x-2"
             >
               {isPending ? (
                 <>

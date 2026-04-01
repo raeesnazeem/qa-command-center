@@ -5,6 +5,7 @@ import { requireRole } from '../middleware/requireRole';
 import { zodValidate } from '../middleware/zodValidate';
 import { CreateRunSchema } from '@qacc/shared';
 import { addRunJob } from '../lib/queue';
+import { quickFetchUrls } from '../lib/crawler';
 
 const router: Router = Router();
 
@@ -34,7 +35,7 @@ router.post(
   requireRole('qa_engineer'),
   zodValidate(CreateRunSchema),
   async (req: Request, res: Response) => {
-    const { project_id, run_type, site_url, figma_url, enabled_checks, is_woocommerce, device_matrix } = req.body;
+    const { project_id, run_type, site_url, figma_url, enabled_checks, is_woocommerce, device_matrix, selected_urls } = req.body;
     const { userId: clerkUserId } = req.auth!;
 
     try {
@@ -50,6 +51,8 @@ router.post(
           enabled_checks,
           is_woocommerce,
           device_matrix,
+          selected_urls,
+          pages_total: selected_urls ? selected_urls.length : 0,
           status: 'pending',
           created_by: supabaseUserId,
         })
@@ -59,6 +62,30 @@ router.post(
       if (error) throw error;
 
       return res.status(201).json(run);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+);
+
+/**
+ * POST /api/runs/fetch-urls
+ * Fetch URLs for a site to allow manual selection.
+ */
+router.post(
+  '/fetch-urls',
+  clerkAuth,
+  requireRole('qa_engineer'),
+  async (req: Request, res: Response) => {
+    const { site_url } = req.body;
+
+    if (!site_url) {
+      return res.status(400).json({ error: 'site_url is required' });
+    }
+
+    try {
+      const urls = await quickFetchUrls(site_url);
+      return res.json({ urls });
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
     }
@@ -78,15 +105,26 @@ router.get('/projects/:id/runs', clerkAuth, async (req: Request, res: Response) 
   try {
     const { data: runs, error, count } = await supabase
       .from('qa_runs')
-      .select('*', { count: 'exact' })
+      .select(`
+        *,
+        users!qa_runs_created_by_fkey (
+          full_name,
+          email
+        )
+      `, { count: 'exact' })
       .eq('project_id', project_id)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (error) throw error;
 
+    const enrichedRuns = runs.map((run: any) => ({
+      ...run,
+      created_by_name: run.users?.full_name || run.users?.email || 'Unknown',
+    }));
+
     return res.json({
-      data: runs,
+      data: enrichedRuns,
       pagination: {
         page,
         limit,
@@ -106,10 +144,16 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {
-    // 1. Fetch run details
+    // 1. Fetch run details with creator info
     const { data: run, error: runError } = await supabase
       .from('qa_runs')
-      .select('*')
+      .select(`
+        *,
+        users!qa_runs_created_by_fkey (
+          full_name,
+          email
+        )
+      `)
       .eq('id', id)
       .single();
 
@@ -121,33 +165,58 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
     const { data: pages, error: pagesError } = await supabase
       .from('pages')
       .select('*')
-      .eq('run_id', id);
+      .eq('run_id', id)
+      .order('created_at', { ascending: true });
 
     if (pagesError) throw pagesError;
 
-    // 3. Fetch finding counts per check factor
-    const { data: findingsSummary, error: findingsError } = await supabase
+    // 3. Fetch all findings for this run to aggregate per page
+    const { data: findings, error: findingsError } = await supabase
       .from('findings')
-      .select('check_factor')
+      .select('id, page_id, check_factor, severity')
       .eq('run_id', id);
 
     if (findingsError) throw findingsError;
 
-    const findingCounts: Record<string, number> = {};
-    findingsSummary.forEach((f: any) => {
-      findingCounts[f.check_factor] = (findingCounts[f.check_factor] || 0) + 1;
+    // 4. Aggregate findings per page and for the whole run
+    const runFindingCounts: Record<string, number> = {};
+    const pageFindingCounts: Record<string, Record<string, number>> = {};
+
+    findings?.forEach((f: any) => {
+      // Global counts
+      runFindingCounts[f.check_factor] = (runFindingCounts[f.check_factor] || 0) + 1;
+      
+      // Per-page counts
+      if (!pageFindingCounts[f.page_id]) {
+        pageFindingCounts[f.page_id] = {};
+      }
+      pageFindingCounts[f.page_id][f.check_factor] = (pageFindingCounts[f.page_id][f.check_factor] || 0) + 1;
     });
 
-    // 4. Calculate progress
+    // 5. Enrich pages with their finding counts
+    const enrichedPages = pages?.map(page => ({
+      ...page,
+      finding_counts: pageFindingCounts[page.id] || {}
+    }));
+
+    // 6. Calculate progress
     const pages_total = run.pages_total || 0;
     const pages_processed = run.pages_processed || 0;
     const progress_percentage = pages_total > 0 ? (pages_processed / pages_total) * 100 : 0;
 
+    // 7. Get concurrent scans count (running or pending in the same organization)
+    const { count: concurrentScans } = await supabase
+      .from('qa_runs')
+      .select('id', { count: 'exact', head: true })
+      .in('status', ['running', 'pending']);
+
     return res.json({
       ...run,
-      pages,
-      finding_counts: findingCounts,
+      created_by_name: run.users?.full_name || run.users?.email || 'Unknown',
+      pages: enrichedPages,
+      finding_counts: runFindingCounts,
       progress_percentage,
+      concurrent_scans: concurrentScans || 0,
     });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
@@ -181,8 +250,9 @@ router.patch(
 
       // Validate transitions
       const validTransitions: Record<string, string[]> = {
-        'pending': ['running'],
-        'running': ['completed', 'failed'],
+        'pending': ['running', 'cancelled'],
+        'running': ['completed', 'failed', 'paused', 'cancelled'],
+        'paused': ['running', 'cancelled'],
       };
 
       if (!validTransitions[currentStatus]?.includes(newStatus)) {
@@ -192,7 +262,7 @@ router.patch(
       }
 
       const updateData: any = { status: newStatus };
-      if (newStatus === 'completed' || newStatus === 'failed') {
+      if (newStatus === 'completed' || newStatus === 'failed' || newStatus === 'cancelled') {
         updateData.completed_at = new Date().toISOString();
       }
 

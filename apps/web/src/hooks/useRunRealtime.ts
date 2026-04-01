@@ -23,30 +23,48 @@ export const useRunRealtime = (runId: string) => {
         },
         (payload) => {
           console.log('Run update received via Realtime:', payload);
-          // Update React Query cache
-          queryClient.setQueryData(['run', runId], (oldData: QARun | undefined) => {
-            if (!oldData) return payload.new as QARun;
-            return { ...oldData, ...payload.new };
-          });
+          // Instead of manually updating with partial data (which lacks Joined fields like 'pages'),
+          // we invalidate to trigger a clean fetch from the API.
+          queryClient.invalidateQueries({ queryKey: ['run', runId] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'pages',
+          filter: `run_id=eq.${runId}`,
+        },
+        () => {
+          // When any page is inserted or updated, refetch the full run data
+          // to keep the pages list and progress counts in sync
+          queryClient.invalidateQueries({ queryKey: ['run', runId] });
         }
       )
       .subscribe((status) => {
+        console.log(`Supabase Realtime status for run ${runId}:`, status);
         if (status === 'SUBSCRIBED') {
           setIsConnected(true);
         } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
           setIsConnected(false);
+          console.error(`Supabase Realtime error/closed for run ${runId}:`, status);
         }
       });
 
     // 2. Subscribe to custom broadcast channel for progress events
-    // This is used by the worker to send granular progress (like specific page crawl completion)
     const broadcastChannel = supabase
       .channel(`run:${runId}`)
       .on('broadcast', { event: 'progress' }, (payload) => {
         console.log('Granular progress broadcast received:', payload);
-        // We don't update the run cache here as this is specific page progress
-        // But we could trigger a refresh or update a different cache if needed
-        // For now, we just ensure the subscription works as requested
+        // Instant refetch on broadcast
+        queryClient.invalidateQueries({ queryKey: ['run', runId] });
+      })
+      .on('broadcast', { event: 'page_progress' }, (payload) => {
+        console.log('Per-page progress broadcast received:', payload);
+        // We could manually update the cache here for smoother UI, 
+        // but invalidating is safer for now.
+        queryClient.invalidateQueries({ queryKey: ['run', runId] });
       })
       .subscribe();
 

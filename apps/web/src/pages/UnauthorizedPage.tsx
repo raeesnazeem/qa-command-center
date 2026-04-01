@@ -36,7 +36,7 @@ export const UnauthorizedPage = () => {
 
         <button
           onClick={() => navigate(-1)}
-          className="inline-flex items-center space-x-2 px-6 py-3 bg-black text-white rounded-md text-sm font-bold hover:bg-slate-800 transition-all shadow-sm active:scale-95 group"
+          className="btn-unified flex items-center space-x-2 group"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           <span>Go Back</span>

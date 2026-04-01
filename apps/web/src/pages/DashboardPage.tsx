@@ -109,7 +109,7 @@ export const DashboardPage = () => {
               <PlayCircle className="w-4 h-4 mr-2 text-slate-400" />
               Recent QA Runs
             </h3>
-            <Link to="/projects" className="text-xs font-bold text-accent hover:underline">View All Projects</Link>
+            <Link to="/projects" className="btn-unified-secondary text-[10px] h-6 flex items-center">View All Projects</Link>
           </div>
           <div className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-sm">
             <table className="w-full text-left border-collapse">
@@ -167,7 +167,7 @@ export const DashboardPage = () => {
               <CheckSquare className="w-4 h-4 mr-2 text-slate-400" />
               My Tasks
             </h3>
-            <Link to="/tasks" className="text-xs font-bold text-accent hover:underline">View All</Link>
+            <Link to="/tasks" className="btn-unified-secondary text-[10px] h-6 flex items-center">View All</Link>
           </div>
           <div className="bg-white border border-slate-100 rounded-xl shadow-sm divide-y divide-slate-50">
             {data?.my_tasks.length === 0 ? (

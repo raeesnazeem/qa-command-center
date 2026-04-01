@@ -4,6 +4,7 @@ import { clerkAuth } from '../middleware/clerkAuth';
 import { requireRole } from '../middleware/requireRole';
 import { zodValidate } from '../middleware/zodValidate';
 import { CreateProjectSchema, UpdateProjectSchema } from '@qacc/shared';
+import { logger } from '../lib/logger';
 
 const router: Router = Router();
 
@@ -93,6 +94,7 @@ router.get('/', clerkAuth, async (req: Request, res: Response) => {
 
   try {
     const supabaseUserId = await getSupabaseUserId(clerkUserId);
+    logger.info({ supabaseUserId }, 'Listing projects for user');
 
     // Fetch projects where the user is a member
     const { data, error } = await supabase
@@ -101,8 +103,12 @@ router.get('/', clerkAuth, async (req: Request, res: Response) => {
         *,
         project_members!inner(user_id),
         qa_runs(
+          id,
+          status,
           completed_at,
-          status
+          created_at,
+          pages_processed,
+          pages_total
         ),
         tasks(
           status
@@ -110,13 +116,19 @@ router.get('/', clerkAuth, async (req: Request, res: Response) => {
       `)
       .eq('project_members.user_id', supabaseUserId);
 
-    if (error) throw error;
+    if (error) {
+      logger.error({ error: error.message }, 'Error listing projects');
+      throw error;
+    }
 
     const projects = data.map((project: any) => {
-      // Compute last successful run date
-      const lastRun = project.qa_runs
-        ?.filter((r: any) => r.status === 'completed')
-        .sort((a: any, b: any) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime())[0];
+      // Compute last run date (any status)
+      const sortedRuns = project.qa_runs
+        ?.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) || [];
+      const lastRun = sortedRuns[0];
+
+      // Identify ongoing run (if any)
+      const ongoingRun = project.qa_runs?.find((r: any) => r.status === 'running' || r.status === 'pending' || r.status === 'paused');
 
       // Compute open issues count
       const openIssuesCount = project.tasks?.filter((t: any) => t.status === 'open').length || 0;
@@ -126,13 +138,84 @@ router.get('/', clerkAuth, async (req: Request, res: Response) => {
 
       return {
         ...rest,
-        last_run_date: lastRun?.completed_at || null,
+        total_runs_count: project.qa_runs?.length || 0,
+        last_run_date: lastRun ? (lastRun.completed_at || lastRun.created_at) : null,
         open_issues_count: openIssuesCount,
+        ongoing_run: ongoingRun ? {
+          id: ongoingRun.id,
+          status: ongoingRun.status,
+          pages_processed: ongoingRun.pages_processed,
+          pages_total: ongoingRun.pages_total
+        } : null
       };
     });
 
+    logger.info({ count: projects.length }, 'Returning projects list');
     return res.json(projects);
   } catch (error: any) {
+    logger.error({ error: error.message }, 'Unhandled error in GET /api/projects');
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/:id/runs', clerkAuth, async (req: Request, res: Response) => {
+  const { id: project_id } = req.params;
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 20;
+  const offset = (page - 1) * limit;
+
+  try {
+    logger.info({ project_id, page, limit }, 'Fetching runs for project');
+    
+    const { data: runs, error, count } = await supabase
+      .from('qa_runs')
+      .select(`
+        id,
+        project_id,
+        run_type,
+        status,
+        site_url,
+        figma_url,
+        pages_total,
+        pages_processed,
+        enabled_checks,
+        is_woocommerce,
+        started_at,
+        completed_at,
+        created_by,
+        created_at,
+        updated_at,
+        creator:users!qa_runs_created_by_fkey (
+          full_name,
+          email
+        )
+      `, { count: 'exact' })
+      .eq('project_id', project_id)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) {
+      logger.error({ error: error.message }, 'Supabase error fetching runs');
+      throw error;
+    }
+
+    logger.info({ count: runs?.length, total: count }, 'Fetched runs from Supabase');
+
+    const enrichedRuns = runs.map((run: any) => ({
+      ...run,
+      created_by_name: run.creator?.full_name || run.creator?.email || 'System',
+    }));
+
+    return res.json({
+      data: enrichedRuns,
+      pagination: {
+        page,
+        limit,
+        total: count,
+      },
+    });
+  } catch (error: any) {
+    logger.error({ error: error.message }, 'Error in GET /api/projects/:id/runs');
     return res.status(500).json({ error: error.message });
   }
 });
@@ -175,37 +258,78 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
           )
         ),
         qa_runs(
+          id,
           status,
-          completed_at
+          completed_at,
+          created_at,
+          pages_processed,
+          pages_total,
+          created_by,
+          creator:users!qa_runs_created_by_fkey (
+            full_name,
+            email
+          )
         ),
         tasks(
-          status
+          id,
+          status,
+          severity,
+          created_at
         )
       `)
       .eq('id', id)
       .single();
 
-    if (projectError || !projectData) throw projectError || new Error('Project not found');
+    if (projectError || !projectData) {
+      logger.error({ project_id: id, error: projectError?.message }, 'Error fetching project data');
+      throw projectError || new Error('Project not found');
+    }
 
-    // Compute stats
+    logger.info({ 
+      project_id: id, 
+      runs_found: projectData.qa_runs?.length,
+      tasks_found: projectData.tasks?.length 
+    }, 'Project data loaded');
+
     const totalRuns = projectData.qa_runs?.length || 0;
-    const lastRun = projectData.qa_runs
-      ?.filter((r: any) => r.status === 'completed')
-      .sort((a: any, b: any) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime())[0];
+    const sortedRuns = projectData.qa_runs
+      ?.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) || [];
+    const lastRun = sortedRuns[0];
     
+    // Identify ongoing run
+    const ongoingRun = projectData.qa_runs?.find((r: any) => r.status === 'running' || r.status === 'pending' || r.status === 'paused');
+
     const openIssuesCount = projectData.tasks?.filter((t: any) => t.status === 'open').length || 0;
     const resolvedIssuesCount = projectData.tasks?.filter((t: any) => t.status === 'resolved' || t.status === 'closed').length || 0;
 
+    // Get concurrent scans count
+    const { count: concurrentScans } = await supabase
+      .from('qa_runs')
+      .select('id', { count: 'exact', head: true })
+      .in('status', ['running', 'pending']);
+
     const { qa_runs, tasks, ...rest } = projectData;
 
-    return res.json({
+    const responseData = {
       ...rest,
       total_runs_count: totalRuns,
-      last_run_date: lastRun?.completed_at || null,
+      last_run_date: lastRun ? (lastRun.completed_at || lastRun.created_at) : null,
       open_issues_count: openIssuesCount,
       resolved_issues_count: resolvedIssuesCount,
-    });
+      ongoing_run: ongoingRun ? {
+        id: ongoingRun.id,
+        status: ongoingRun.status,
+        pages_processed: ongoingRun.pages_processed,
+        pages_total: ongoingRun.pages_total,
+        created_by_name: ongoingRun.creator?.full_name || ongoingRun.creator?.email || 'System'
+      } : null,
+      concurrent_scans: concurrentScans || 0
+    };
+
+    logger.info({ project_id: id, last_run_date: responseData.last_run_date }, 'Returning project details');
+    return res.json(responseData);
   } catch (error: any) {
+    logger.error({ project_id: id, error: error.message }, 'Error in GET /api/projects/:id');
     return res.status(500).json({ error: error.message });
   }
 });

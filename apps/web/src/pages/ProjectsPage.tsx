@@ -39,9 +39,9 @@ export const ProjectsPage = () => {
           <button
             type="button"
             onClick={handleOpenModal}
-            className="flex items-center justify-center space-x-2 bg-black text-white px-6 py-2.5 rounded-md font-bold transition-all shadow-sm hover:bg-slate-800 active:scale-95"
+            className="btn-unified flex items-center justify-center space-x-2"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4" />
             <span>New Project</span>
           </button>
         </CanDo>
@@ -69,7 +69,7 @@ export const ProjectsPage = () => {
             </p>
             <button
               onClick={() => refetch()}
-              className="flex items-center justify-center space-x-2 bg-white hover:bg-slate-50 text-slate-900 px-6 py-2 rounded-md border border-slate-200 font-semibold transition-all"
+              className="btn-unified-secondary flex items-center justify-center space-x-2"
             >
               <RefreshCcw className="w-4 h-4" />
               <span>Try Again</span>
@@ -98,7 +98,7 @@ export const ProjectsPage = () => {
               <button
                 type="button"
                 onClick={handleOpenModal}
-                className="bg-black text-white px-8 py-3 rounded-md font-bold transition-all shadow-sm hover:bg-slate-800 active:scale-95"
+                className="btn-unified px-8"
               >
                 Create Your First Project
               </button>

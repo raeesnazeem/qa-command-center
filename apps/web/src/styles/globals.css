@@ -7,3 +7,62 @@
     @apply text-slate-900 bg-bg-main font-sans;
   }
 }
+
+@layer components {
+  .btn-unified {
+    display: inline-block;
+    outline: 0;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    border-radius: 4px;
+    font-size: 13px;
+    height: 30px;
+    background-color: #000000;
+    color: white;
+    padding: 0 10px;
+    transition: background-color 0.2s;
+  }
+
+  .btn-unified:hover {
+    background-color: #93C0B1;
+  }
+
+  .btn-unified-secondary {
+    display: inline-block;
+    outline: 0;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    border-radius: 4px;
+    font-size: 13px;
+    height: 30px;
+    background-color: #f1f1f1;
+    color: #000000;
+    padding: 0 10px;
+    transition: background-color 0.2s;
+  }
+
+  .btn-unified-secondary:hover {
+    background-color: #e2e2e2;
+  }
+
+  .btn-unified-danger {
+    display: inline-block;
+    outline: 0;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    border-radius: 4px;
+    font-size: 13px;
+    height: 30px;
+    background-color: #ff4747;
+    color: white;
+    padding: 0 10px;
+    transition: background-color 0.2s;
+  }
+
+  .btn-unified-danger:hover {
+    background-color: #cc0000;
+  }
+}

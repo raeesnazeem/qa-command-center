@@ -19,7 +19,10 @@ export interface QARun {
   pages_processed: number;
   progress_percentage?: number;
   finding_counts?: Record<string, number>;
+  created_by_name?: string;
+  concurrent_scans?: number;
   pages?: QAPage[];
+  selected_urls?: string[] | null;
 }
 
 export interface QAPage {
@@ -27,12 +30,14 @@ export interface QAPage {
   run_id: string;
   url: string;
   title?: string | null;
-  status: 'pending' | 'processing' | 'done' | 'error' | 'screenshotted';
+  status: 'pending' | 'processing' | 'done' | 'failed' | 'screenshotted';
   screenshot_url_desktop?: string | null;
   screenshot_url_tablet?: string | null;
   screenshot_url_mobile?: string | null;
   created_at: string;
   finding_counts?: Record<string, number>;
+  progress?: number;
+  current_step?: string | null;
 }
 
 export interface QARunsResponse {
@@ -49,6 +54,11 @@ export const createRun = async (axios: AxiosInstance, data: CreateRunInput): Pro
   return response.data;
 };
 
+export const fetchUrls = async (axios: AxiosInstance, siteUrl: string): Promise<string[]> => {
+  const response = await axios.post<{ urls: string[] }>('/api/runs/fetch-urls', { site_url: siteUrl });
+  return response.data.urls;
+};
+
 export const getRuns = async (
   axios: AxiosInstance,
   projectId: string,
@@ -62,7 +72,9 @@ export const getRuns = async (
 };
 
 export const getRun = async (axios: AxiosInstance, runId: string): Promise<QARun> => {
-  const response = await axios.get<QARun>(`/api/runs/${runId}`);
+  const response = await axios.get<QARun>(`/api/runs/${runId}`, {
+    params: { _t: Date.now() } // Cache busting for live progress
+  });
   return response.data;
 };
 
@@ -72,6 +84,11 @@ export const updateRunStatus = async (
   status: RunStatus
 ): Promise<QARun> => {
   const response = await axios.patch<QARun>(`/api/runs/${runId}/status`, { status });
+  return response.data;
+};
+
+export const startRun = async (axios: AxiosInstance, runId: string): Promise<QARun> => {
+  const response = await axios.post<QARun>(`/api/runs/${runId}/start`);
   return response.data;
 };
 
