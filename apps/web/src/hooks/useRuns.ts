@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthAxios } from '../lib/useAuthAxios';
 import { CreateRunInput, RunStatus } from '@qacc/shared';
-import { createRun, getRuns, getRun, signOffRun, startRun, updateRunStatus, fetchUrls, getPageFindings, QARun, QARunsResponse, QAFinding } from '../api/runs.api';
+import { createRun, getRuns, getRun, signOffRun, startRun, updateRunStatus, fetchUrls, getPageFindings, updateFinding, QARun, QARunsResponse, QAFinding } from '../api/runs.api';
 import toast from 'react-hot-toast';
 
 export const useFetchUrls = (siteUrl: string) => {
@@ -119,5 +119,40 @@ export const useFindings = (pageId: string | null) => {
     queryKey: ['findings', pageId],
     queryFn: () => getPageFindings(axios, pageId!),
     enabled: !!pageId,
+  });
+};
+
+export const useUpdateFinding = (pageId: string | null) => {
+  const axios = useAuthAxios();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ findingId, data }: { findingId: string; data: Partial<Pick<QAFinding, 'severity' | 'status'>> }) =>
+      updateFinding(axios, findingId, data),
+    onMutate: async ({ findingId, data }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['findings', pageId] });
+
+      // Snapshot the previous value
+      const previousFindings = queryClient.getQueryData<QAFinding[]>(['findings', pageId]);
+
+      // Optimistically update to the new value
+      if (previousFindings) {
+        queryClient.setQueryData<QAFinding[]>(['findings', pageId], 
+          previousFindings.map(f => f.id === findingId ? { ...f, ...data } : f)
+        );
+      }
+
+      return { previousFindings };
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousFindings) {
+        queryClient.setQueryData(['findings', pageId], context.previousFindings);
+      }
+      toast.error('Failed to update finding');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['findings', pageId] });
+    },
   });
 };

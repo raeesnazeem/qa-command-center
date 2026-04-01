@@ -1,5 +1,11 @@
 import { Job } from 'bullmq';
+import { chromium } from 'playwright';
 import { supabase } from '../lib/supabase';
+import { checkBrokenLinks } from '../checks/brokenLinksCheck';
+import { checkExternalLinks } from '../checks/externalLinkCheck';
+import { checkMeta } from '../checks/metaCheck';
+import { checkConsoleErrors } from '../checks/consoleErrorCheck';
+import { checkDummyContent } from '../checks/dummyContentCheck';
 import pino from 'pino';
 
 const logger = pino({
@@ -35,24 +41,89 @@ export async function processRunChecksJob(job: Job) {
   };
 
   try {
-    // Simulated checks for now to show real-time progress
-    await updateProgress(5, 'Initializing page checks...');
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Load page from DB to ensure we have the latest data
+    const { data: page, error: pageError } = await supabase
+      .from('pages')
+      .select('*')
+      .eq('id', pageId)
+      .single();
 
-    await updateProgress(20, 'Checking Accessibility (A11y)...');
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    if (pageError || !page) {
+      throw new Error(`Page not found: ${pageId}`);
+    }
 
-    await updateProgress(40, 'Running SEO Analysis...');
-    await new Promise(resolve => setTimeout(resolve, 1200));
+    await updateProgress(10, 'Initializing quality checks...');
 
-    await updateProgress(60, 'Validating Performance Metrics...');
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    const browser = await chromium.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+    });
 
-    await updateProgress(80, 'Scanning for Console Errors...');
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      const context = await browser.newContext();
+      const playwrightPage = await context.newPage();
 
-    await updateProgress(95, 'Finalizing results...');
-    await new Promise(resolve => setTimeout(resolve, 800));
+      // Initialize Playwright page with console listener (via checkConsoleErrors internal setup if needed, 
+      // or explicit here as per prompt "console listener must be attached before page.goto()")
+      const consoleErrors: string[] = [];
+      const criticalErrors: string[] = [];
+
+      playwrightPage.on('console', msg => {
+        if (msg.type() === 'error') consoleErrors.push(msg.text());
+      });
+
+      playwrightPage.on('pageerror', err => {
+        criticalErrors.push(err.message);
+      });
+
+      await updateProgress(30, 'Navigating to page...');
+      await playwrightPage.goto(pageUrl, { waitUntil: 'networkidle', timeout: 30000 });
+
+      await updateProgress(60, 'Running automated audits...');
+      
+      // Run all checks in parallel
+      const [
+        linkFindings,
+        extLinkFindings,
+        metaFindings,
+        consoleFindings,
+        dummyFindings
+      ] = await Promise.all([
+        checkBrokenLinks(playwrightPage, page),
+        checkExternalLinks(playwrightPage, page),
+        checkMeta(playwrightPage, page),
+        checkConsoleErrors(playwrightPage, page),
+        checkDummyContent(playwrightPage, page)
+      ]);
+
+      const allFindings = [
+        ...linkFindings,
+        ...extLinkFindings,
+        ...metaFindings,
+        ...consoleFindings,
+        ...dummyFindings
+      ].map(f => ({
+        ...f,
+        page_id: pageId,
+        run_id: runId
+      }));
+
+      if (allFindings.length > 0) {
+        await updateProgress(80, `Saving ${allFindings.length} findings...`);
+        const { error: insertError } = await supabase
+          .from('findings')
+          .insert(allFindings);
+
+        if (insertError) {
+          logger.error({ pageId, error: insertError.message }, 'Failed to insert findings');
+        }
+      }
+
+      await updateProgress(95, 'Finalizing check results...');
+
+    } finally {
+      await browser.close();
+    }
 
     // Mark as done
     await supabase

@@ -2,7 +2,8 @@ import { useParams, Link } from 'react-router-dom';
 import { useProject } from '../hooks/useProjects';
 import { useRunProgress } from '../hooks/useRunProgress';
 import { PagesTable } from '../components/PagesTable';
-import { useUpdateRunStatus, useFindings } from '../hooks/useRuns';
+import { FindingReviewPanel } from '../components/FindingReviewPanel';
+import { useFindings, useUpdateFinding, useUpdateRunStatus } from '../hooks/useRuns';
 import { 
   ChevronLeft, 
   CheckCircle2, 
@@ -16,9 +17,6 @@ import {
   Square,
   User,
   LayoutDashboard,
-  AlertTriangle,
-  Info,
-  ShieldAlert,
   FileSearch,
   CheckCircle,
   XCircle,
@@ -75,6 +73,7 @@ export const RunDetailPage = () => {
 
   // 2b. Fetch findings for the selected page
   const { data: findings, isLoading: isLoadingFindings } = useFindings(selectedPageId);
+  const updateFindingMutation = useUpdateFinding(selectedPageId);
 
   // Auto-select first page when pages load
   useEffect(() => {
@@ -609,72 +608,15 @@ export const RunDetailPage = () => {
                       <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-tight">Syncing with scanning workers...</p>
                     </div>
                   ) : findings && findings.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {findings.map((finding) => (
-                        <div 
-                          key={finding.id} 
-                          className="group p-6 bg-white rounded-2xl border border-slate-100 hover:border-accent/40 hover:bg-slate-50/30 transition-all duration-300 shadow-sm hover:shadow-xl relative overflow-hidden"
-                        >
-                          <div className={`absolute top-0 left-0 w-1 h-full ${
-                            finding.severity === 'critical' ? 'bg-red-500' :
-                            finding.severity === 'high' ? 'bg-orange-500' :
-                            finding.severity === 'medium' ? 'bg-amber-500' :
-                            'bg-blue-500'
-                          }`} />
-                          
-                          <div className="flex items-start gap-4">
-                            <div className={`mt-1 p-3 rounded-xl shrink-0 transition-transform group-hover:scale-110 ${
-                              finding.severity === 'critical' ? 'bg-red-50 text-red-600' :
-                              finding.severity === 'high' ? 'bg-orange-50 text-orange-600' :
-                              finding.severity === 'medium' ? 'bg-amber-50 text-amber-600' :
-                              'bg-blue-50 text-blue-600'
-                            }`}>
-                              {finding.severity === 'critical' ? <ShieldAlert size={20} /> :
-                               finding.severity === 'high' ? <AlertTriangle size={20} /> :
-                               finding.severity === 'medium' ? <AlertCircle size={20} /> :
-                               <Info size={20} />}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                  <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${
-                                    finding.severity === 'critical' ? 'bg-red-100 border-red-200 text-red-700' :
-                                    finding.severity === 'high' ? 'bg-orange-100 border-orange-200 text-orange-700' :
-                                    finding.severity === 'medium' ? 'bg-amber-100 border-amber-200 text-amber-700' :
-                                    'bg-blue-100 border-blue-200 text-blue-700'
-                                  }`}>
-                                    {finding.severity}
-                                  </span>
-                                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                                    {finding.check_factor.replace('_', ' ')}
-                                  </span>
-                                </div>
-                                <span className="text-[8px] font-bold text-slate-300 uppercase">
-                                  {new Date(finding.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                              </div>
-                              <h4 className="font-black text-slate-900 text-base mb-2 group-hover:text-black transition-colors leading-tight">
-                                {finding.title}
-                              </h4>
-                              {finding.description && (
-                                <p className="text-[11px] text-slate-500 font-medium leading-relaxed mb-4">
-                                  {finding.description}
-                                </p>
-                              )}
-                              
-                              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                                <button className="text-[9px] font-black text-slate-400 hover:text-black uppercase tracking-widest transition-colors">
-                                  Ignore Finding
-                                </button>
-                                <button className="px-3 py-1 bg-black text-accent text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-slate-800 transition-colors">
-                                  Create Task
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    <FindingReviewPanel 
+                      findings={findings}
+                      onSingleConfirm={(id) => updateFindingMutation.mutate({ findingId: id, data: { status: 'confirmed' } })}
+                      onSingleFalsePositive={(id) => updateFindingMutation.mutate({ findingId: id, data: { status: 'false_positive' } })}
+                      onSingleCreateTask={(f) => console.log('Create Task', f)}
+                      onConfirmBulk={(ids) => ids.forEach(id => updateFindingMutation.mutate({ findingId: id, data: { status: 'confirmed' } }))}
+                      onFalsePositiveBulk={(ids) => ids.forEach(id => updateFindingMutation.mutate({ findingId: id, data: { status: 'false_positive' } }))}
+                      onCreateTasksBulk={(fs) => console.log('Bulk Create Tasks', fs)}
+                    />
                   ) : (
                     <div className="bg-emerald-50/20 rounded-3xl border border-dashed border-emerald-100 p-16 text-center group/clean">
                       <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover/clean:scale-110 transition-transform duration-500">

@@ -124,3 +124,12 @@ export const getPageFindings = async (
   const response = await axios.get<QAFinding[]>(`/api/runs/pages/${pageId}/findings`);
   return response.data;
 };
+
+export const updateFinding = async (
+  axios: AxiosInstance,
+  findingId: string,
+  data: Partial<Pick<QAFinding, 'severity' | 'status'>>
+): Promise<QAFinding> => {
+  const response = await axios.patch<QAFinding>(`/api/runs/findings/${findingId}`, data);
+  return response.data;
+};

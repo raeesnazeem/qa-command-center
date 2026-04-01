@@ -1,7 +1,13 @@
 import { Job } from 'bullmq';
+import { chromium } from 'playwright';
 import { supabase } from '../lib/supabase';
 import { qaQueue } from '../lib/queue';
 import { screenshotPage } from '../crawlers/pageScreenshotter';
+import { checkBrokenLinks } from '../checks/brokenLinksCheck';
+import { checkExternalLinks } from '../checks/externalLinkCheck';
+import { checkMeta } from '../checks/metaCheck';
+import { checkConsoleErrors } from '../checks/consoleErrorCheck';
+import { checkDummyContent } from '../checks/dummyContentCheck';
 import pino from 'pino';
 
 const logger = pino({
@@ -20,6 +26,24 @@ export async function processCrawlPageJob(job: Job) {
   }
 
   logger.info({ runId, pageId, pageUrl }, 'Processing page crawl');
+
+  const updateProgress = async (progress: number, step: string) => {
+    const { error: progressError } = await supabase
+      .from('pages')
+      .update({ progress, current_step: step })
+      .eq('id', pageId);
+    
+    if (progressError) {
+      logger.error({ pageId, error: progressError.message, progress, step }, 'Failed to update page progress in DB');
+    }
+    
+    const progressChannel = supabase.channel(`run:${runId}`);
+    await progressChannel.send({
+      type: 'broadcast',
+      event: 'page_progress',
+      payload: { pageId, progress, current_step: step }
+    });
+  };
 
   try {
     // Step 1: Update page status to 'processing' and set initial step
@@ -46,32 +70,7 @@ export async function processCrawlPageJob(job: Job) {
     });
 
     // Step 2: Call screenshotPage(pageUrl, runId, pageId)
-    const screenshots = await screenshotPage(pageUrl, runId, pageId, async (progress, step) => {
-      const { error: progressError } = await supabase
-        .from('pages')
-        .update({ progress, current_step: step })
-        .eq('id', pageId);
-      
-      if (progressError) {
-        logger.error({ pageId, error: progressError.message, progress, step }, 'Failed to update page granular progress in DB');
-      }
-      
-      // Also broadcast this granular update
-      const progressChannel = supabase.channel(`run:${runId}`);
-      const broadcastStatus = await progressChannel.send({
-        type: 'broadcast',
-        event: 'page_progress',
-        payload: {
-          pageId,
-          progress,
-          current_step: step
-        }
-      });
-
-      if (broadcastStatus !== 'ok') {
-        logger.warn({ pageId, broadcastStatus }, 'Broadcast of page_progress failed');
-      }
-    });
+    const screenshots = await screenshotPage(pageUrl, runId, pageId, updateProgress);
 
     // Step 3: Update page record with screenshot URLs and status='screenshotted'
     const { error: updatePageError } = await supabase
@@ -88,7 +87,79 @@ export async function processCrawlPageJob(job: Job) {
       logger.error({ pageId, error: updatePageError.message }, 'Failed to update page record with screenshots');
     }
 
-    // Step 4: Increment run.pages_processed by 1
+    // Step 4: Run automated checks
+    logger.info({ pageId }, 'Running automated checks');
+    await updateProgress(90, 'Running quality checks...');
+
+    const browser = await chromium.launch({ 
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+    });
+    
+    try {
+      const context = await browser.newContext();
+      const page = await context.newPage();
+
+      // Console error check listener must be attached before goto
+      const consoleErrors: string[] = [];
+      const criticalErrors: string[] = [];
+      
+      page.on('console', msg => {
+        if (msg.type() === 'error' && (consoleErrors.length + criticalErrors.length) < 80) {
+          consoleErrors.push(msg.text());
+        }
+      });
+
+      page.on('pageerror', err => {
+        if ((consoleErrors.length + criticalErrors.length) < 80) {
+          criticalErrors.push(err.message);
+        }
+      });
+
+      await page.goto(pageUrl, { waitUntil: 'networkidle', timeout: 30000 });
+
+      const [linkFindings, extLinkFindings, metaFindings, consoleFindings, dummyFindings] = await Promise.all([
+        checkBrokenLinks(page, {}),
+        checkExternalLinks(page, {}),
+        checkMeta(page, {}),
+        checkConsoleErrors(page, {}), // This will just use the listeners we attached
+        checkDummyContent(page, {})
+      ]);
+
+      const allFindings = [
+        ...linkFindings,
+        ...extLinkFindings,
+        ...metaFindings,
+        ...consoleFindings,
+        ...dummyFindings
+      ].map(f => ({
+        ...f,
+        page_id: pageId,
+        run_id: runId
+      }));
+
+      if (allFindings.length > 0) {
+        logger.info({ pageId, count: allFindings.length }, 'Inserting findings');
+        const { error: findingsError } = await supabase
+          .from('findings')
+          .insert(allFindings);
+        
+        if (findingsError) {
+          logger.error({ pageId, error: findingsError.message }, 'Failed to insert findings');
+        }
+      }
+
+      // Step 5: Update page status to 'checked'
+      await supabase
+        .from('pages')
+        .update({ status: 'checked', progress: 100, current_step: 'All checks complete' })
+        .eq('id', pageId);
+
+    } finally {
+      await browser.close();
+    }
+
+    // Step 6: Increment run.pages_processed by 1
     const { error: incrementError } = await supabase.rpc('increment_pages_processed', {
       run_id_param: runId
     });
@@ -111,29 +182,19 @@ export async function processCrawlPageJob(job: Job) {
       }
     }
 
-    // Step 5: Broadcast progress update to Supabase Realtime channel "run:{runId}"
+    // Step 7: Broadcast progress update to Supabase Realtime channel "run:{runId}"
     const finalChannel = supabase.channel(`run:${runId}`);
     await finalChannel.send({
       type: 'broadcast',
       event: 'progress',
       payload: {
         pageUrl,
-        status: 'screenshotted',
+        status: 'checked',
         pageId
       }
     });
 
-    // Step 6: Add 'run_checks' job for this page
-    await qaQueue.add('run_checks', {
-      runId,
-      pageId,
-      url: pageUrl
-    }, {
-      attempts: 3,
-      backoff: { type: 'exponential', delay: 5000 }
-    });
-
-    logger.info({ pageId, runId }, 'Page crawl and screenshot complete');
+    logger.info({ pageId, runId }, 'Page crawl and checks complete');
 
   } catch (error: any) {
     logger.error({ runId, pageUrl, error: error.message }, 'Error during page crawl');

@@ -246,6 +246,35 @@ router.get('/pages/:pageId/findings', clerkAuth, async (req: Request, res: Respo
 });
 
 /**
+ * PATCH /api/findings/:id
+ * Update finding details (severity, status, etc.)
+ */
+router.patch(
+  '/findings/:id',
+  clerkAuth,
+  requireRole('qa_engineer'),
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { severity, status } = req.body;
+
+    try {
+      const { data: updatedFinding, error } = await supabase
+        .from('findings')
+        .update({ severity, status })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return res.json(updatedFinding);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+);
+
+/**
  * PATCH /api/runs/:id/status
  * Update run status with strict state transition rules.
  */
