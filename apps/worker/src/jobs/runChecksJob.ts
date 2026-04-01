@@ -6,6 +6,7 @@ import { checkExternalLinks } from '../checks/externalLinkCheck';
 import { checkMeta } from '../checks/metaCheck';
 import { checkConsoleErrors } from '../checks/consoleErrorCheck';
 import { checkDummyContent } from '../checks/dummyContentCheck';
+import { checkImageCompliance } from '../checks/imageComplianceCheck';
 import pino from 'pino';
 
 const logger = pino({
@@ -87,13 +88,15 @@ export async function processRunChecksJob(job: Job) {
         extLinkFindings,
         metaFindings,
         consoleFindings,
-        dummyFindings
+        dummyFindings,
+        imageFindings
       ] = await Promise.all([
         checkBrokenLinks(playwrightPage, page),
         checkExternalLinks(playwrightPage, page),
         checkMeta(playwrightPage, page),
         checkConsoleErrors(playwrightPage, page),
-        checkDummyContent(playwrightPage, page)
+        checkDummyContent(playwrightPage, page),
+        checkImageCompliance(playwrightPage, page)
       ]);
 
       const allFindings = [
@@ -101,7 +104,8 @@ export async function processRunChecksJob(job: Job) {
         ...extLinkFindings,
         ...metaFindings,
         ...consoleFindings,
-        ...dummyFindings
+        ...dummyFindings,
+        ...imageFindings
       ].map(f => ({
         ...f,
         page_id: pageId,

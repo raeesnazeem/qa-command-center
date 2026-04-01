@@ -3,7 +3,7 @@ import { useProject } from '../hooks/useProjects';
 import { useRunProgress } from '../hooks/useRunProgress';
 import { PagesTable } from '../components/PagesTable';
 import { FindingReviewPanel } from '../components/FindingReviewPanel';
-import { useFindings, useUpdateFinding, useUpdateRunStatus } from '../hooks/useRuns';
+import { useFindings, useUpdateRunStatus } from '../hooks/useRuns';
 import { 
   ChevronLeft, 
   CheckCircle2, 
@@ -73,7 +73,6 @@ export const RunDetailPage = () => {
 
   // 2b. Fetch findings for the selected page
   const { data: findings, isLoading: isLoadingFindings } = useFindings(selectedPageId);
-  const updateFindingMutation = useUpdateFinding(selectedPageId);
 
   // Auto-select first page when pages load
   useEffect(() => {
@@ -332,7 +331,7 @@ export const RunDetailPage = () => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex flex-col gap-1.5 min-w-0">
                     <div className="flex items-center gap-2">
-                      
+                      <span className="px-2 py-0.5 rounded bg-black text-accent text-[10px] font-black uppercase tracking-widest">Selected URL</span>
                       <h3 className="font-bold text-slate-900 truncate pr-4 text-lg">{selectedPage.url}</h3>
                     </div>
                     <p className="text-xs text-slate-400 font-bold uppercase tracking-[0.15em] flex items-center gap-2 mt-1">
@@ -610,11 +609,11 @@ export const RunDetailPage = () => {
                   ) : findings && findings.length > 0 ? (
                     <FindingReviewPanel 
                       findings={findings}
-                      onSingleConfirm={(id) => updateFindingMutation.mutate({ findingId: id, data: { status: 'confirmed' } })}
-                      onSingleFalsePositive={(id) => updateFindingMutation.mutate({ findingId: id, data: { status: 'false_positive' } })}
+                      onSingleConfirm={(id) => console.log('Confirm', id)}
+                      onSingleFalsePositive={(id) => console.log('False Positive', id)}
                       onSingleCreateTask={(f) => console.log('Create Task', f)}
-                      onConfirmBulk={(ids) => ids.forEach(id => updateFindingMutation.mutate({ findingId: id, data: { status: 'confirmed' } }))}
-                      onFalsePositiveBulk={(ids) => ids.forEach(id => updateFindingMutation.mutate({ findingId: id, data: { status: 'false_positive' } }))}
+                      onConfirmBulk={(ids) => console.log('Bulk Confirm', ids)}
+                      onFalsePositiveBulk={(ids) => console.log('Bulk False Positive', ids)}
                       onCreateTasksBulk={(fs) => console.log('Bulk Create Tasks', fs)}
                     />
                   ) : (
