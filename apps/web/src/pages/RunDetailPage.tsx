@@ -2,7 +2,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useProject } from '../hooks/useProjects';
 import { useRunProgress } from '../hooks/useRunProgress';
 import { PagesTable } from '../components/PagesTable';
-import { useUpdateRunStatus } from '../hooks/useRuns';
+import { useUpdateRunStatus, useFindings } from '../hooks/useRuns';
 import { 
   ChevronLeft, 
   CheckCircle2, 
@@ -15,7 +15,10 @@ import {
   Play,
   Square,
   User,
-  LayoutDashboard
+  LayoutDashboard,
+  AlertTriangle,
+  Info,
+  ShieldAlert
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -38,6 +41,9 @@ export const RunDetailPage = () => {
   // 2. State for selected page ID to ensure it stays in sync with realtime updates
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
   const selectedPage = run?.pages?.find(p => p.id === selectedPageId) || null;
+
+  // 2b. Fetch findings for the selected page
+  const { data: findings, isLoading: isLoadingFindings } = useFindings(selectedPageId);
 
   // Auto-select first page when pages load
   useEffect(() => {
@@ -282,8 +288,13 @@ export const RunDetailPage = () => {
           </div>
           {selectedPage ? (
             <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm w-full">
-              <div className="flex items-center justify-between mb-4 pb-4 border-b border-slate-50">
-                <h3 className="font-bold text-slate-900 truncate pr-4">{selectedPage.url}</h3>
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-50">
+                <div className="flex flex-col gap-1 min-w-0">
+                  <h3 className="font-bold text-slate-900 truncate pr-4">{selectedPage.url}</h3>
+                  <p className="text-xs text-slate-500 uppercase font-black tracking-widest">
+                    Step Results: {findings?.length || 0} Issues Found
+                  </p>
+                </div>
                 <div className="flex items-center gap-2">
                   {selectedPage.finding_counts && Object.entries(selectedPage.finding_counts).map(([factor, count]) => (
                     <span key={factor} className="px-2 py-0.5 rounded-md bg-red-50 text-red-600 text-[10px] font-black uppercase border border-red-100">
@@ -292,9 +303,65 @@ export const RunDetailPage = () => {
                   ))}
                 </div>
               </div>
-              <p className="text-slate-400 text-sm italic py-8 text-center bg-slate-50/50 rounded-lg border border-dashed border-slate-100">
-                Detailed finding reports for this step will appear here.
-              </p>
+
+              {isLoadingFindings ? (
+                <div className="flex flex-col items-center justify-center py-12 space-y-3">
+                  <Loader2 className="w-6 h-6 text-accent animate-spin" />
+                  <p className="text-sm text-slate-400 font-medium italic">Loading detailed findings...</p>
+                </div>
+              ) : findings && findings.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {findings.map((finding) => (
+                    <div 
+                      key={finding.id} 
+                      className="group p-4 bg-slate-50/50 rounded-xl border border-slate-100 hover:border-accent/20 hover:bg-white transition-all shadow-sm hover:shadow-md"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`mt-1 p-2 rounded-lg shrink-0 ${
+                          finding.severity === 'critical' ? 'bg-red-100 text-red-600' :
+                          finding.severity === 'high' ? 'bg-orange-100 text-orange-600' :
+                          finding.severity === 'medium' ? 'bg-amber-100 text-amber-600' :
+                          'bg-blue-100 text-blue-600'
+                        }`}>
+                          {finding.severity === 'critical' ? <ShieldAlert size={16} /> :
+                           finding.severity === 'high' ? <AlertTriangle size={16} /> :
+                           finding.severity === 'medium' ? <AlertCircle size={16} /> :
+                           <Info size={16} />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`text-[10px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded border ${
+                              finding.severity === 'critical' ? 'bg-red-50 border-red-100 text-red-600' :
+                              finding.severity === 'high' ? 'bg-orange-50 border-orange-100 text-orange-600' :
+                              finding.severity === 'medium' ? 'bg-amber-50 border-amber-100 text-amber-600' :
+                              'bg-blue-50 border-blue-100 text-blue-600'
+                            }`}>
+                              {finding.severity}
+                            </span>
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">
+                              {finding.check_factor.replace('_', ' ')}
+                            </span>
+                          </div>
+                          <h4 className="font-bold text-slate-900 text-sm mb-1 group-hover:text-accent transition-colors">
+                            {finding.title}
+                          </h4>
+                          {finding.description && (
+                            <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                              {finding.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-slate-50/50 rounded-xl border border-dashed border-slate-200 p-8 text-center">
+                  <CheckCircle2 className="w-8 h-8 text-emerald-300 mx-auto mb-3" />
+                  <p className="text-slate-500 font-bold text-sm">No issues found on this page</p>
+                  <p className="text-[10px] text-slate-400 uppercase tracking-widest mt-1">Check looks clean!</p>
+                </div>
+              )}
             </div>
           ) : (
             <div className="bg-slate-50 border border-dashed border-slate-200 rounded-xl p-12 text-center">

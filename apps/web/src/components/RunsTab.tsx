@@ -113,7 +113,7 @@ export const RunsTab = ({ project }: RunsTabProps) => {
         <CanDo role="qa_engineer">
           <button
             onClick={() => setIsModalOpen(true)}
-            className="btn-unified flex items-center space-x-2"
+            className="flex items-center space-x-2 px-4 py-2 bg-black text-white rounded-md text-sm font-bold hover:bg-slate-800 transition-all shadow-sm active:scale-95"
           >
             <PlayCircle className="w-4 h-4" />
             <span>Start New QA Run</span>
@@ -258,14 +258,14 @@ export const RunsTab = ({ project }: RunsTabProps) => {
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="btn-unified-secondary"
+              className="px-3 py-1 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50 transition-colors"
             >
               Previous
             </button>
             <button
               onClick={() => setPage(p => p + 1)}
               disabled={page * runsData.pagination.limit >= runsData.pagination.total}
-              className="btn-unified-secondary"
+              className="px-3 py-1 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50 transition-colors"
             >
               Next
             </button>

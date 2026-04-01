@@ -224,6 +224,28 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
 });
 
 /**
+ * GET /api/runs/pages/:pageId/findings
+ * Get detailed findings for a specific page.
+ */
+router.get('/pages/:pageId/findings', clerkAuth, async (req: Request, res: Response) => {
+  const { pageId } = req.params;
+
+  try {
+    const { data: findings, error } = await supabase
+      .from('findings')
+      .select('*')
+      .eq('page_id', pageId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    return res.json(findings || []);
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+/**
  * PATCH /api/runs/:id/status
  * Update run status with strict state transition rules.
  */

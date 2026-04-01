@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthAxios } from '../lib/useAuthAxios';
 import { CreateRunInput, RunStatus } from '@qacc/shared';
-import { createRun, getRuns, getRun, signOffRun, startRun, updateRunStatus, fetchUrls, QARun, QARunsResponse } from '../api/runs.api';
+import { createRun, getRuns, getRun, signOffRun, startRun, updateRunStatus, fetchUrls, getPageFindings, QARun, QARunsResponse, QAFinding } from '../api/runs.api';
 import toast from 'react-hot-toast';
 
 export const useFetchUrls = (siteUrl: string) => {
@@ -110,5 +110,14 @@ export const useSignOff = () => {
     onError: (error: any) => {
       toast.error(error.response?.data?.error || 'Failed to sign off');
     },
+  });
+};
+
+export const useFindings = (pageId: string | null) => {
+  const axios = useAuthAxios();
+  return useQuery<QAFinding[]>({
+    queryKey: ['findings', pageId],
+    queryFn: () => getPageFindings(axios, pageId!),
+    enabled: !!pageId,
   });
 };

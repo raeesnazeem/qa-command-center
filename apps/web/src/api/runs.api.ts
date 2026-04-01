@@ -40,6 +40,22 @@ export interface QAPage {
   current_step?: string | null;
 }
 
+export interface QAFinding {
+  id: string;
+  page_id: string;
+  run_id: string;
+  check_factor: string;
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  title: string;
+  description?: string | null;
+  context_text?: string | null;
+  screenshot_url?: string | null;
+  status: 'open' | 'confirmed' | 'false_positive';
+  ai_generated: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface QARunsResponse {
   data: QARun[];
   pagination: {
@@ -98,5 +114,13 @@ export const signOffRun = async (
   notes?: string
 ): Promise<any> => {
   const response = await axios.post(`/api/runs/${runId}/sign-off`, { notes });
+  return response.data;
+};
+
+export const getPageFindings = async (
+  axios: AxiosInstance,
+  pageId: string
+): Promise<QAFinding[]> => {
+  const response = await axios.get<QAFinding[]>(`/api/runs/pages/${pageId}/findings`);
   return response.data;
 };

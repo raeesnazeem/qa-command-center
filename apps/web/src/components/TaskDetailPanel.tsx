@@ -129,7 +129,7 @@ export const TaskDetailPanel = ({ task, isOpen, onClose }: TaskDetailPanelProps)
                 <CanDo role="qa_engineer">
                   <div className="flex flex-col space-y-1">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Integration</span>
-                    <button className="btn-unified flex items-center space-x-2 bg-[#F97316] hover:bg-[#EA580C]">
+                    <button className="inline-flex items-center space-x-2 bg-[#F97316] text-white px-4 py-1.5 rounded-md font-bold text-xs hover:bg-[#EA580C] transition-all shadow-sm active:scale-95">
                       <ExternalLink className="w-3 h-3" />
                       <span>Push to Basecamp</span>
                     </button>
@@ -224,7 +224,7 @@ export const TaskDetailPanel = ({ task, isOpen, onClose }: TaskDetailPanelProps)
                       <button 
                         type="submit"
                         disabled={!rebuttalText.trim()}
-                        className="btn-unified bg-red-600 hover:bg-red-700 disabled:opacity-50"
+                        className="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-xs hover:bg-red-700 transition-all active:scale-95 disabled:opacity-50"
                       >
                         Submit
                       </button>
