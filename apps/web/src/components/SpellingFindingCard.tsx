@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   ShieldAlert, 
   AlertTriangle, 
@@ -7,19 +7,14 @@ import {
   CheckCircle2, 
   XCircle, 
   Plus, 
-  ExternalLink,
   Eye,
   FileSearch,
-  Globe,
-  Monitor,
-  Search,
-  Layout
 } from 'lucide-react';
+import { useParams } from 'react-router-dom';
 import { FindingSeverityEditor } from './FindingSeverityEditor';
-import { SpellingFindingCard } from './SpellingFindingCard';
-import { FindingCardWithScreenshot } from './FindingCardWithScreenshot';
 import { QAFinding } from '../api/runs.api';
 import { useUser } from '@clerk/react';
+import { api } from '../lib/axios';
 
 interface FindingCardProps {
   finding: QAFinding;
@@ -28,19 +23,7 @@ interface FindingCardProps {
   onCreateTask?: (finding: QAFinding) => void;
 }
 
-const CHECK_FACTOR_ICONS: Record<string, React.ReactNode> = {
-  broken_links: <Globe size={14} />,
-  external_links: <ExternalLink size={14} />,
-  meta_tags: <Search size={14} />,
-  console_errors: <FileSearch size={14} />,
-  dummy_content: <Layout size={14} />,
-  visual_regression: <Eye size={14} />,
-  accessibility: <Monitor size={14} />,
-  performance: <Info size={14} />,
-  seo: <Search size={14} />,
-};
-
-export const FindingCard: React.FC<FindingCardProps> = ({ 
+export const SpellingFindingCard: React.FC<FindingCardProps> = ({ 
   finding, 
   onConfirm, 
   onFalsePositive, 
@@ -49,6 +32,9 @@ export const FindingCard: React.FC<FindingCardProps> = ({
   const { user } = useUser();
   const role = user?.publicMetadata?.role as string;
   const canAction = role === 'qa_engineer' || role === 'admin';
+  const { id: projectId } = useParams<{ id: string }>();
+  
+  const [isAddingAllowlist, setIsAddingAllowlist] = useState(false);
 
   const severityIcons = {
     critical: <ShieldAlert size={20} />,
@@ -60,16 +46,42 @@ export const FindingCard: React.FC<FindingCardProps> = ({
   const isConfirmed = finding.status === 'confirmed';
   const isFalsePositive = finding.status === 'false_positive';
 
-  if (finding.check_factor === 'spelling') {
-    return (
-      <SpellingFindingCard 
-        finding={finding}
-        onConfirm={onConfirm}
-        onFalsePositive={onFalsePositive}
-        onCreateTask={onCreateTask}
-      />
+  // Extract misspelled word from title (e.g., "Misspelled: word")
+  const titleMatch = finding.title.match(/Misspelled:\s*(.+)/i);
+  const misspelledWord = titleMatch ? titleMatch[1] : '';
+
+  // Extract suggestion from description (e.g., "Suggestion: word" or "No suggestions found")
+  const descMatch = finding.description?.match(/Suggestion:\s*(.+)/i);
+  const suggestion = descMatch ? descMatch[1] : '';
+
+  const handleAllowlist = async () => {
+    if (!projectId || !misspelledWord) return;
+    setIsAddingAllowlist(true);
+    try {
+      await api.post(`/api/projects/${projectId}/spelling-allowlist`, { word: misspelledWord });
+    } catch (e) {
+      console.error('Failed to add to allowlist', e);
+    } finally {
+      setIsAddingAllowlist(false);
+    }
+  };
+
+  const renderContextText = () => {
+    if (!finding.context_text) return null;
+    if (!misspelledWord) return finding.context_text;
+    
+    // Case-insensitive replace for highlighting the precise mispelled word
+    const regex = new RegExp(`(${misspelledWord})`, 'gi');
+    const parts = finding.context_text.split(regex);
+
+    return parts.map((part, i) => 
+      part.toLowerCase() === misspelledWord.toLowerCase() ? (
+        <span key={i} className="text-red-500 font-bold bg-red-500/10 px-1 rounded">{part}</span>
+      ) : (
+        <span key={i}>{part}</span>
+      )
     );
-  }
+  };
 
   return (
     <div className={`group p-6 bg-white rounded-2xl border transition-all duration-300 shadow-sm hover:shadow-xl relative overflow-hidden ${
@@ -108,8 +120,8 @@ export const FindingCard: React.FC<FindingCardProps> = ({
                 canEdit={canAction && !isFalsePositive}
               />
               <div className="flex items-center gap-1.5 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                {CHECK_FACTOR_ICONS[finding.check_factor] || <FileSearch size={14} />}
-                {finding.check_factor.replace('_', ' ')}
+                <FileSearch size={14} />
+                SPELLING
               </div>
             </div>
             <span className="text-[8px] font-bold text-slate-300 uppercase">
@@ -133,26 +145,41 @@ export const FindingCard: React.FC<FindingCardProps> = ({
 
           {/* Screenshot Thumbnail */}
           {finding.screenshot_url && (
-            <div className="mb-4">
-              <FindingCardWithScreenshot finding={finding} />
+            <div className="mb-4 relative group/img cursor-pointer max-w-[200px]">
+              <div className="aspect-video bg-slate-100 rounded-lg border border-slate-200 overflow-hidden relative">
+                <img 
+                  src={finding.screenshot_url} 
+                  alt="Finding evidence" 
+                  className="w-full h-full object-cover object-top"
+                />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-all flex items-center justify-center">
+                  <Eye className="text-white w-5 h-5" />
+                </div>
+              </div>
               <p className="text-[8px] font-black text-slate-400 uppercase mt-1 tracking-widest">Click to expand evidence</p>
             </div>
           )}
 
-          {/* Context Text */}
+          {/* Context Text and Suggestions */}
           {finding.context_text && (
             <div className="mb-6">
-              <p className="text-[8px] font-black text-slate-400 uppercase mb-1.5 tracking-widest">Contextual Data</p>
-              <div className="p-3 bg-slate-900 rounded-lg border border-slate-800 font-mono text-[10px] text-slate-300 overflow-x-auto whitespace-pre">
-                {finding.context_text}
+              <p className="text-[8px] font-black text-slate-400 uppercase mb-1.5 tracking-widest">Context Sentence</p>
+              <div className="p-3 bg-slate-900 rounded-lg border border-slate-800 font-mono text-[11px] text-slate-300 leading-relaxed whitespace-pre-wrap">
+                {renderContextText()}
               </div>
+              {suggestion && (
+                <div className="mt-2 text-[11px] font-medium text-emerald-600 bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-200">
+                  <span className="font-bold uppercase tracking-wider text-[9px] mr-1.5">Suggested:</span> 
+                  {suggestion}
+                </div>
+              )}
             </div>
           )}
           
           {/* Action Buttons */}
           {canAction && !isFalsePositive && (
             <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 {!isConfirmed && (
                   <button 
                     onClick={() => onConfirm?.(finding.id)}
@@ -169,10 +196,20 @@ export const FindingCard: React.FC<FindingCardProps> = ({
                   <XCircle size={12} />
                   False Positive
                 </button>
+                {misspelledWord && (
+                  <button
+                    onClick={handleAllowlist}
+                    disabled={isAddingAllowlist}
+                    className="flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-600 border border-indigo-200 text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-indigo-100 transition-colors disabled:opacity-50"
+                  >
+                    <Plus size={12} />
+                    {isAddingAllowlist ? 'Adding...' : 'Add to Allowlist'}
+                  </button>
+                )}
               </div>
               <button 
                 onClick={() => onCreateTask?.(finding)}
-                className="flex items-center gap-1.5 px-3 py-1 bg-black text-accent text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-slate-800 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1 bg-black text-accent text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-slate-800 transition-colors shrink-0"
               >
                 <Plus size={12} />
                 Create Task

@@ -18,6 +18,7 @@ import { projectSettingsRouter } from './routes/projectSettings'
 import { debugRouter } from './routes/debug'
 import { testWebhookRouter } from './routes/test-webhook'
 import { adminRouter } from './routes/admin'
+import { findingsRouter } from './routes/findings'
 import { clerkMiddleware, getAuth } from '@clerk/express'
 import { createBullBoard } from '@bull-board/api'
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter'
@@ -85,6 +86,7 @@ app.use('/api/stats', statsRouter)
 app.use('/api/dashboard', dashboardRouter)
 app.use('/api/admin', adminRouter)
 app.use('/api/projects', projectSettingsRouter)
+app.use('/api/findings', findingsRouter)
 app.use('/debug', debugRouter)
 app.use('/api/findings', tasksRouter)
 app.use('/api/chat', (_req: Request, res: Response) => res.status(501).json({ message: 'Not implemented' }))

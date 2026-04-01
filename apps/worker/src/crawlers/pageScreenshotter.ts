@@ -1,6 +1,6 @@
 import { chromium } from 'playwright';
 import sharp from 'sharp';
-import { supabase } from '../lib/supabase';
+import { uploadScreenshot } from '../lib/supabaseStorage';
 import pino from 'pino';
 
 const logger = pino({
@@ -123,23 +123,9 @@ export async function screenshotPage(
           `Uploading ${viewport.name} to cloud...`
         );
       }
-      // Upload to Supabase Storage
+      // Upload to Supabase Storage using utility (ensures bucket exists)
       const storagePath = `${runId}/${pageId}/${viewport.name}.png`;
-      const { data, error } = await supabase.storage
-        .from('screenshots')
-        .upload(storagePath, compressedBuffer, {
-          contentType: 'image/png',
-          upsert: true,
-        });
-
-      if (error) {
-        throw new Error(`Failed to upload ${viewport.name} screenshot: ${error.message}`);
-      }
-
-      // Get Public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('screenshots')
-        .getPublicUrl(storagePath);
+      const publicUrl = await uploadScreenshot(compressedBuffer, storagePath);
 
       if (viewport.name === 'desktop') result.desktopUrl = publicUrl;
       if (viewport.name === 'tablet') result.tabletUrl = publicUrl;
