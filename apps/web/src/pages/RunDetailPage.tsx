@@ -332,7 +332,7 @@ export const RunDetailPage = () => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex flex-col gap-1.5 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded bg-black text-accent text-[10px] font-black uppercase tracking-widest">Selected URL</span>
+                      
                       <h3 className="font-bold text-slate-900 truncate pr-4 text-lg">{selectedPage.url}</h3>
                     </div>
                     <p className="text-xs text-slate-400 font-bold uppercase tracking-[0.15em] flex items-center gap-2 mt-1">
