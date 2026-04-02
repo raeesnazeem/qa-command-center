@@ -7,26 +7,25 @@ const router: Router = Router();
 /**
  * Helper to get Supabase user UUID from Clerk ID
  */
-async function getSupabaseUserId(clerkId: string): Promise<string> {
+async function getSupabaseUserId(clerkIdOrUuid: string): Promise<string> {
+  if (clerkIdOrUuid.length === 36 && clerkIdOrUuid.includes('-')) {
+    return clerkIdOrUuid;
+  }
   const { data, error } = await supabase
     .from('users')
     .select('id')
-    .eq('clerk_user_id', clerkId)
+    .eq('clerk_user_id', clerkIdOrUuid)
     .single();
-  
-  if (error || !data) {
-    throw new Error(`User not synced: ${clerkId}`);
-  }
+  if (error || !data) throw new Error(`User not synced: ${clerkIdOrUuid}`);
   return data.id;
 }
 
 /**
  * GET /api/dashboard/stats
- * Get aggregated statistics for the dashboard.
+ * Get aggregated statistics for the dashboard, respecting RBAC.
  */
 router.get('/stats', clerkAuth, async (req: Request, res: Response) => {
-  const { orgId } = req.auth!;
-  const clerkUserId = req.auth!.userId;
+  const { orgId, role, userId: clerkUserId } = req.auth!;
 
   if (!orgId) {
     return res.status(400).json({ error: 'Organization ID is required' });
@@ -35,118 +34,73 @@ router.get('/stats', clerkAuth, async (req: Request, res: Response) => {
   try {
     const supabaseUserId = await getSupabaseUserId(clerkUserId);
 
-    // 1. Get project IDs for the organization
-    const { data: projects, error: projectsError } = await supabase
-      .from('projects')
-      .select('id')
-      .eq('org_id', orgId);
-
-    if (projectsError) throw projectsError;
-    const projectIds = projects.map(p => p.id);
+    // 1. Resolve accessible projects based on role
+    let projectIds: string[] = [];
+    if (role === 'super_admin' || role === 'admin') {
+      const { data } = await supabase.from('projects').select('id').eq('org_id', orgId);
+      projectIds = data?.map(p => p.id) || [];
+    } else {
+      const { data } = await supabase.from('project_members').select('project_id').eq('user_id', supabaseUserId);
+      projectIds = data?.map(m => m.project_id) || [];
+    }
 
     if (projectIds.length === 0) {
       return res.json({
-        open_issues: 0,
-        total_runs: 0,
-        runs_this_week: 0,
-        my_open_tasks: 0,
-        projects_count: 0
+        open_issues: 0, total_runs: 0, runs_this_week: 0, my_open_tasks: 0, projects_count: 0,
+        recent_runs: [], my_tasks: [], pending_signoffs: []
       });
     }
 
-    // 2. Aggregate Stats
-    
-    // Projects count
-    const projectsCount = projectIds.length;
+    // 2. Open issues matching permissions
+    // Developer: ONLY assigned to them. Others: ALL in their projects.
+    let issuesQuery = supabase.from('tasks').select('*', { count: 'exact', head: true }).in('project_id', projectIds).eq('status', 'open');
+    if (role === 'developer') {
+      issuesQuery = issuesQuery.eq('assigned_to', supabaseUserId);
+    }
+    const { count: openIssuesCount } = await issuesQuery;
 
-    // Open issues count across all projects in org
-    const { count: openIssuesCount, error: issuesError } = await supabase
-      .from('tasks')
-      .select('*', { count: 'exact', head: true })
-      .in('project_id', projectIds)
-      .eq('status', 'open');
+    // 3. Runs across accessible projects
+    const { count: totalRunsCount } = await supabase.from('qa_runs').select('*', { count: 'exact', head: true }).in('project_id', projectIds);
 
-    if (issuesError) throw issuesError;
-
-    // Total runs count across all projects in org
-    const { count: totalRunsCount, error: runsError } = await supabase
-      .from('qa_runs')
-      .select('*', { count: 'exact', head: true })
-      .in('project_id', projectIds);
-
-    if (runsError) throw runsError;
-
-    // Runs this week
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    const { count: runsThisWeekCount, error: weeklyRunsError } = await supabase
-      .from('qa_runs')
-      .select('*', { count: 'exact', head: true })
-      .in('project_id', projectIds)
-      .gte('created_at', oneWeekAgo.toISOString());
+    const { count: runsThisWeekCount } = await supabase.from('qa_runs').select('*', { count: 'exact', head: true }).in('project_id', projectIds).gte('created_at', oneWeekAgo.toISOString());
 
-    if (weeklyRunsError) throw weeklyRunsError;
+    // 4. My Open Tasks (always for current user)
+    const { count: myOpenTasksCount } = await supabase.from('tasks').select('*', { count: 'exact', head: true }).eq('assigned_to', supabaseUserId).eq('status', 'open');
 
-    // My open tasks count
-    const { count: myOpenTasksCount, error: myTasksCountError } = await supabase
-      .from('tasks')
-      .select('*', { count: 'exact', head: true })
-      .eq('assigned_to', supabaseUserId)
-      .eq('status', 'open');
+    // 5. Recent Runs (limit 5)
+    const { data: recentRuns } = await supabase.from('qa_runs').select('*, projects(name)').in('project_id', projectIds).order('created_at', { ascending: false }).limit(5);
 
-    if (myTasksCountError) throw myTasksCountError;
+    // 6. My Tasks (Top 5 assigned to user)
+    const { data: myTasks } = await supabase.from('tasks').select('*, projects(name)').eq('assigned_to', supabaseUserId).eq('status', 'open').order('created_at', { ascending: false }).limit(5);
 
-    // 3. Fetch Lists for UI components
-
-    // Recent QA Runs (Last 5 across all projects)
-    const { data: recentRuns, error: recentRunsError } = await supabase
-      .from('qa_runs')
-      .select('*, projects(name)')
-      .in('project_id', projectIds)
-      .order('created_at', { ascending: false })
-      .limit(5);
-
-    if (recentRunsError) throw recentRunsError;
-
-    // My Tasks (Top 5 assigned to user)
-    const { data: myTasks, error: myTasksError } = await supabase
-      .from('tasks')
-      .select('*, projects(name)')
-      .eq('assigned_to', supabaseUserId)
-      .eq('status', 'open')
-      .order('created_at', { ascending: false })
-      .limit(5);
-
-    if (myTasksError) throw myTasksError;
-
-    // Pending Sign-offs (Runs completed but not signed off)
-    // We fetch completed runs and then filter out those with sign-offs
-    const { data: completedRuns, error: completedRunsError } = await supabase
-      .from('qa_runs')
-      .select('*, projects(name), sign_offs(id)')
-      .in('project_id', projectIds)
-      .eq('status', 'completed')
-      .order('completed_at', { ascending: false })
-      .limit(20);
-
-    if (completedRunsError) throw completedRunsError;
-
-    const pendingSignoffs = (completedRuns || [])
-      .filter((run: any) => !run.sign_offs || run.sign_offs.length === 0)
-      .slice(0, 5);
+    // 7. Pending Sign-offs (Only for management)
+    let pendingSignoffs = [];
+    if (['super_admin', 'admin', 'sub_admin'].includes(role || '')) {
+      const { data: completedRuns } = await supabase.from('qa_runs')
+        .select('*, projects(name), sign_offs(id)')
+        .in('project_id', projectIds)
+        .eq('status', 'completed')
+        .order('completed_at', { ascending: false })
+        .limit(20);
+      
+      pendingSignoffs = (completedRuns || [])
+        .filter((run: any) => !run.sign_offs || run.sign_offs.length === 0)
+        .slice(0, 5);
+    }
 
     return res.json({
       open_issues: openIssuesCount || 0,
       total_runs: totalRunsCount || 0,
       runs_this_week: runsThisWeekCount || 0,
       my_open_tasks: myOpenTasksCount || 0,
-      projects_count: projectsCount,
+      projects_count: projectIds.length,
       recent_runs: recentRuns || [],
       my_tasks: myTasks || [],
       pending_signoffs: pendingSignoffs
     });
   } catch (error: any) {
-    console.error('[Dashboard Stats Error]:', error);
     return res.status(500).json({ error: error.message });
   }
 });

@@ -91,7 +91,7 @@ export const getRuns = async (
   page = 1,
   limit = 20
 ): Promise<QARunsResponse> => {
-  const response = await axios.get<QARunsResponse>(`/api/projects/${projectId}/runs`, {
+  const response = await axios.get<QARunsResponse>(`/api/runs/projects/${projectId}/runs`, {
     params: { page, limit },
   });
   return response.data;

@@ -5,18 +5,19 @@ import { requireRole } from '../middleware/requireRole';
 import { zodValidate } from '../middleware/zodValidate';
 import { CreateProjectSchema, UpdateProjectSchema } from '@qacc/shared';
 import { logger } from '../lib/logger';
+import { encrypt } from '../lib/encryption';
+import axios from 'axios';
 
 const router: Router = Router();
 
-/**
- * Helper to get Supabase user UUID from Clerk ID
- */
 /**
  * Helper to get Supabase user UUID from Clerk ID.
  * Refactored to handle cases where the ID might already be a Supabase UUID from the middleware.
  */
 async function getSupabaseUserId(clerkIdOrUuid: string): Promise<string> {
-  // If it's already a UUID, return it (Supabase UUIDs are always 36 chars)
+  if (!clerkIdOrUuid) throw new Error('clerkIdOrUuid is required');
+  
+  // If it's already a UUID, return it
   if (clerkIdOrUuid.length === 36 && clerkIdOrUuid.includes('-')) {
     return clerkIdOrUuid;
   }
@@ -28,8 +29,6 @@ async function getSupabaseUserId(clerkIdOrUuid: string): Promise<string> {
     .maybeSingle();
   
   if (error || !data) {
-    // If not found, it might be due to a sync delay. The middleware should have handled this,
-    // but we add a small log and throw if we truly can't find it.
     throw new Error(`User not synced: ${clerkIdOrUuid}`);
   }
   return data.id;
@@ -38,7 +37,6 @@ async function getSupabaseUserId(clerkIdOrUuid: string): Promise<string> {
 /**
  * POST /api/projects
  * Create a new project. Restricted to sub_admin and above.
- * Automatically assigns the creator as sub_admin of the project.
  */
 router.post(
   '/',
@@ -47,16 +45,10 @@ router.post(
   zodValidate(CreateProjectSchema),
   async (req: Request, res: Response) => {
     const { name, site_url, client_name, is_woocommerce } = req.body;
-    
-    console.log('--- Project Creation Debug ---');
-    console.log('Request Body:', req.body);
-    console.log('Auth Context:', req.auth);
-
     const { orgId, userId: clerkUserId } = req.auth!;
 
     if (!orgId) {
-      console.error('Project creation failed: Missing orgId in req.auth');
-      return res.status(400).json({ error: 'Organization ID is required to create a project' });
+      return res.status(400).json({ error: 'Organization ID is required' });
     }
 
     try {
@@ -98,21 +90,18 @@ router.post(
 
 /**
  * GET /api/projects
- * List all projects the user is a member of.
+ * List projects based on RBAC.
  */
 router.get('/', clerkAuth, async (req: Request, res: Response) => {
-  const { userId: clerkUserId } = req.auth!;
+  const { userId: clerkUserId, role, orgId } = req.auth!;
 
   try {
     const supabaseUserId = await getSupabaseUserId(clerkUserId);
-    logger.info({ supabaseUserId }, 'Listing projects for user');
-
-    // Fetch projects where the user is a member
-    const { data, error } = await supabase
+    
+    let query = supabase
       .from('projects')
       .select(`
         *,
-        project_members!inner(user_id),
         qa_runs(
           id,
           status,
@@ -125,28 +114,32 @@ router.get('/', clerkAuth, async (req: Request, res: Response) => {
           status
         )
       `)
-      .eq('project_members.user_id', supabaseUserId);
+      .eq('org_id', orgId);
 
-    if (error) {
-      logger.error({ error: error.message }, 'Error listing projects');
-      throw error;
+    // Filter by membership if not super_admin or admin
+    if (role !== 'super_admin' && role !== 'admin') {
+      const { data: memberships } = await supabase
+        .from('project_members')
+        .select('project_id')
+        .eq('user_id', supabaseUserId);
+      
+      const projectIds = memberships?.map(m => m.project_id) || [];
+      if (projectIds.length === 0) return res.json([]);
+      query = query.in('id', projectIds);
     }
 
+    const { data, error } = await query;
+    if (error) throw error;
+
     const projects = data.map((project: any) => {
-      // Compute last run date (any status)
-      const sortedRuns = project.qa_runs
-        ?.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) || [];
+      const sortedRuns = project.qa_runs?.sort((a: any, b: any) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) || [];
       const lastRun = sortedRuns[0];
-
-      // Identify ongoing run (if any)
-      const ongoingRun = project.qa_runs?.find((r: any) => r.status === 'running' || r.status === 'pending' || r.status === 'paused');
-
-      // Compute open issues count
+      const ongoingRun = project.qa_runs?.find((r: any) => 
+        ['running', 'pending', 'paused'].includes(r.status));
       const openIssuesCount = project.tasks?.filter((t: any) => t.status === 'open').length || 0;
 
-      // Cleanup response object
-      const { project_members, qa_runs, tasks, ...rest } = project;
-
+      const { qa_runs, tasks, ...rest } = project;
       return {
         ...rest,
         total_runs_count: project.qa_runs?.length || 0,
@@ -161,100 +154,83 @@ router.get('/', clerkAuth, async (req: Request, res: Response) => {
       };
     });
 
-    logger.info({ count: projects.length }, 'Returning projects list');
     return res.json(projects);
   } catch (error: any) {
-    logger.error({ error: error.message }, 'Unhandled error in GET /api/projects');
-    return res.status(500).json({ error: error.message });
-  }
-});
-
-router.get('/:id/runs', clerkAuth, async (req: Request, res: Response) => {
-  const { id: project_id } = req.params;
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 20;
-  const offset = (page - 1) * limit;
-
-  try {
-    logger.info({ project_id, page, limit }, 'Fetching runs for project');
-    
-    const { data: runs, error, count } = await supabase
-      .from('qa_runs')
-      .select(`
-        id,
-        project_id,
-        run_type,
-        status,
-        site_url,
-        figma_url,
-        pages_total,
-        pages_processed,
-        enabled_checks,
-        is_woocommerce,
-        started_at,
-        completed_at,
-        created_by,
-        created_at,
-        updated_at,
-        creator:users!qa_runs_created_by_fkey (
-          full_name,
-          email
-        )
-      `, { count: 'exact' })
-      .eq('project_id', project_id)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
-
-    if (error) {
-      logger.error({ error: error.message }, 'Supabase error fetching runs');
-      throw error;
-    }
-
-    logger.info({ count: runs?.length, total: count }, 'Fetched runs from Supabase');
-
-    const enrichedRuns = runs.map((run: any) => ({
-      ...run,
-      created_by_name: run.creator?.full_name || run.creator?.email || 'System',
-    }));
-
-    return res.json({
-      data: enrichedRuns,
-      pagination: {
-        page,
-        limit,
-        total: count,
-      },
-    });
-  } catch (error: any) {
-    logger.error({ error: error.message }, 'Error in GET /api/projects/:id/runs');
     return res.status(500).json({ error: error.message });
   }
 });
 
 /**
+ * POST /api/projects/:id/members
+ * Add user to project. Restricted to sub_admin and above.
+ */
+router.post(
+  '/:id/members',
+  clerkAuth,
+  requireRole('qa_engineer'),
+  async (req: Request, res: Response) => {
+    const { id: project_id } = req.params;
+    const { email, role } = req.body;
+
+    if (!email || !role) {
+      return res.status(400).json({ error: 'email and role are required' });
+    }
+
+    try {
+      // 1. Find user in the ORG's users table
+      const { data: user, error: userError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', email)
+        .eq('org_id', req.auth?.orgId)
+        .single();
+
+      if (userError || !user) {
+        return res.status(404).json({ error: `User with email ${email} not found in your organization` });
+      }
+
+      // 2. Add to project_members
+      const { data, error: insertError } = await supabase
+        .from('project_members')
+        .upsert({
+          project_id,
+          user_id: user.id,
+          role,
+        }, { onConflict: 'project_id,user_id' })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      return res.status(201).json(data);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+);
+
+/**
  * GET /api/projects/:id
- * Get a single project details including its members.
  */
 router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { userId: clerkUserId } = req.auth!;
+  const { userId: clerkUserId, role, orgId } = req.auth!;
 
   try {
     const supabaseUserId = await getSupabaseUserId(clerkUserId);
 
-    // Verify membership first
-    const { data: membership, error: memberCheckError } = await supabase
-      .from('project_members')
-      .select('id')
-      .eq('project_id', id)
-      .eq('user_id', supabaseUserId)
-      .single();
+    // Verify access if not super_admin/admin
+    if (role !== 'super_admin' && role !== 'admin') {
+      const { data: membership } = await supabase
+        .from('project_members')
+        .select('id')
+        .eq('project_id', id)
+        .eq('user_id', supabaseUserId)
+        .single();
 
-    if (memberCheckError || !membership) {
-      return res.status(404).json({ error: 'Project not found or access denied' });
+      if (!membership) return res.status(404).json({ error: 'Access denied or project not found' });
     }
 
-    // Fetch project with member details and basic stats
     const { data: projectData, error: projectError } = await supabase
       .from('projects')
       .select(`
@@ -262,66 +238,35 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
         project_members(
           role,
           user_id,
-          users(
-            full_name,
-            email,
-            role
-          )
+          users(full_name, email, role)
         ),
         qa_runs(
-          id,
-          status,
-          completed_at,
-          created_at,
-          pages_processed,
-          pages_total,
-          created_by,
-          creator:users!qa_runs_created_by_fkey (
-            full_name,
-            email
-          )
+          id, status, completed_at, created_at, pages_processed, pages_total,
+          creator:users!qa_runs_created_by_fkey (full_name, email)
         ),
-        tasks(
-          id,
-          status,
-          severity,
-          created_at
-        )
+        tasks(id, status, severity, created_at),
+        project_settings(*)
       `)
       .eq('id', id)
+      .eq('org_id', orgId)
       .single();
 
-    if (projectError || !projectData) {
-      logger.error({ project_id: id, error: projectError?.message }, 'Error fetching project data');
-      throw projectError || new Error('Project not found');
-    }
-
-    logger.info({ 
-      project_id: id, 
-      runs_found: projectData.qa_runs?.length,
-      tasks_found: projectData.tasks?.length 
-    }, 'Project data loaded');
+    if (projectError || !projectData) throw projectError || new Error('Project not found');
 
     const totalRuns = projectData.qa_runs?.length || 0;
-    const sortedRuns = projectData.qa_runs
-      ?.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) || [];
+    const sortedRuns = projectData.qa_runs?.sort((a: any, b: any) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) || [];
     const lastRun = sortedRuns[0];
-    
-    // Identify ongoing run
-    const ongoingRun = projectData.qa_runs?.find((r: any) => r.status === 'running' || r.status === 'pending' || r.status === 'paused');
+    const ongoingRun = projectData.qa_runs?.find((r: any) => 
+      ['running', 'pending', 'paused'].includes(r.status));
 
     const openIssuesCount = projectData.tasks?.filter((t: any) => t.status === 'open').length || 0;
-    const resolvedIssuesCount = projectData.tasks?.filter((t: any) => t.status === 'resolved' || t.status === 'closed').length || 0;
-
-    // Get concurrent scans count
-    const { count: concurrentScans } = await supabase
-      .from('qa_runs')
-      .select('id', { count: 'exact', head: true })
-      .in('status', ['running', 'pending']);
+    const resolvedIssuesCount = projectData.tasks?.filter((t: any) => 
+      ['resolved', 'closed'].includes(t.status)).length || 0;
 
     const { qa_runs, tasks, ...rest } = projectData;
 
-    const responseData = {
+    return res.json({
       ...rest,
       total_runs_count: totalRuns,
       last_run_date: lastRun ? (lastRun.completed_at || lastRun.created_at) : null,
@@ -334,101 +279,93 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
         pages_total: ongoingRun.pages_total,
         created_by_name: ongoingRun.creator?.full_name || ongoingRun.creator?.email || 'System'
       } : null,
-      concurrent_scans: concurrentScans || 0
-    };
-
-    logger.info({ project_id: id, last_run_date: responseData.last_run_date }, 'Returning project details');
-    return res.json(responseData);
+      figma_access_token: projectData.project_settings?.[0]?.figma_token_encrypted,
+      basecamp_account_id: projectData.project_settings?.[0]?.basecamp_account_id,
+      basecamp_project_id: projectData.project_settings?.[0]?.basecamp_project_id,
+      basecamp_todo_list_id: projectData.project_settings?.[0]?.basecamp_todolist_id,
+      basecamp_api_token: projectData.project_settings?.[0]?.basecamp_token_encrypted
+    });
   } catch (error: any) {
-    logger.error({ project_id: id, error: error.message }, 'Error in GET /api/projects/:id');
     return res.status(500).json({ error: error.message });
   }
 });
 
 /**
  * PATCH /api/projects/:id
- * Update project details. Restricted to admin and above.
  */
 router.patch(
   '/:id',
   clerkAuth,
-  requireRole('admin'),
+  requireRole('sub_admin'),
   zodValidate(UpdateProjectSchema),
   async (req: Request, res: Response) => {
     const { id } = req.params;
-
     try {
       const { data, error } = await supabase
         .from('projects')
-        .update(req.body)
+        .update({
+          name: req.body.name,
+          site_url: req.body.site_url,
+          client_name: req.body.client_name,
+          status: req.body.status || 'active'
+        })
         .eq('id', id)
+        .eq('org_id', req.auth?.orgId)
         .select()
         .single();
 
       if (error) throw error;
-      if (!data) return res.status(404).json({ error: 'Project not found' });
+
+      // Handle project_settings upsert
+      const settingsUpdate: any = {};
+      if (req.body.figma_access_token !== undefined) {
+        settingsUpdate.figma_token_encrypted = req.body.figma_access_token ? encrypt(req.body.figma_access_token) : null;
+      }
+      if (req.body.basecamp_account_id !== undefined) settingsUpdate.basecamp_account_id = req.body.basecamp_account_id;
+      if (req.body.basecamp_project_id !== undefined) settingsUpdate.basecamp_project_id = req.body.basecamp_project_id;
+      if (req.body.basecamp_todo_list_id !== undefined) settingsUpdate.basecamp_todolist_id = req.body.basecamp_todo_list_id;
+      if (req.body.basecamp_api_token !== undefined) {
+        settingsUpdate.basecamp_token_encrypted = req.body.basecamp_api_token ? encrypt(req.body.basecamp_api_token) : null;
+      }
+
+      if (Object.keys(settingsUpdate).length > 0) {
+        const { error: settingsError } = await supabase
+          .from('project_settings')
+          .upsert({
+            project_id: id,
+            ...settingsUpdate,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'project_id' });
+        
+        if (settingsError) throw settingsError;
+      }
 
       return res.json(data);
     } catch (error: any) {
+      logger.error({ error, projectId: id }, '[Update Project Error]');
       return res.status(500).json({ error: error.message });
     }
   }
 );
 
 /**
- * POST /api/projects/:id/members
- * Add a member to the project by email. Restricted to admin and above.
+ * DELETE /api/projects/:id
  */
-router.post(
-  '/:id/members',
+router.delete(
+  '/:id',
   clerkAuth,
   requireRole('admin'),
   async (req: Request, res: Response) => {
-    const { id: project_id } = req.params;
-    const { email, role } = req.body;
-
-    if (!email || !role) {
-      return res.status(400).json({ error: 'email and role are required' });
-    }
-
+    const { id } = req.params;
     try {
-      // 1. Find user by email in Supabase
-      const { data: user, error: userError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('email', email)
-        .single();
-
-      if (userError || !user) {
-        return res.status(404).json({ error: `User with email ${email} not found in system` });
-      }
-
-      // 2. Check if already a member
-      const { data: existingMember } = await supabase
-        .from('project_members')
-        .select('id')
-        .eq('project_id', project_id)
-        .eq('user_id', user.id)
-        .single();
-
-      if (existingMember) {
-        return res.status(400).json({ error: 'User is already a member of this project' });
-      }
-
-      // 3. Add to project
-      const { data, error } = await supabase
-        .from('project_members')
-        .insert({
-          project_id,
-          user_id: user.id,
-          role,
-        })
-        .select()
-        .single();
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', id)
+        .eq('org_id', req.auth?.orgId);
 
       if (error) throw error;
-
-      return res.status(201).json(data);
+      return res.status(204).send();
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
     }
@@ -437,80 +374,48 @@ router.post(
 
 /**
  * POST /api/projects/:id/settings/test-basecamp
- * Test Basecamp connection. Restricted to admin and above.
  */
 router.post(
   '/:id/settings/test-basecamp',
   clerkAuth,
   requireRole('admin'),
   async (req: Request, res: Response) => {
-    // For now, just a placeholder that simulates a test
-    setTimeout(() => {
-      res.json({ message: 'Basecamp connection successful (simulated)' });
-    }, 1000);
-  }
-);
-
-/**
- * PATCH /api/projects/:id/members/:userId/role
- * Update a member's role in the project. Restricted to admin and above.
- */
-router.patch(
-  '/:id/members/:userId/role',
-  clerkAuth,
-  requireRole('admin'),
-  async (req: Request, res: Response) => {
-    const { id: project_id, userId: user_id } = req.params;
-    const { role } = req.body;
-
-    if (!role) {
-      return res.status(400).json({ error: 'role is required' });
-    }
+    const { id: project_id } = req.params;
 
     try {
-      const { data, error } = await supabase
-        .from('project_members')
-        .update({ role })
+      const { data: settings, error } = await supabase
+        .from('project_settings')
+        .select('*')
         .eq('project_id', project_id)
-        .eq('user_id', user_id)
-        .select()
         .single();
 
-      if (error) throw error;
-      if (!data) return res.status(404).json({ error: 'Member not found in project' });
+      if (error || !settings) {
+        return res.status(404).json({ error: 'Project settings not found' });
+      }
 
-      return res.json(data);
+      if (!settings.basecamp_token_encrypted || !settings.basecamp_account_id) {
+        return res.status(400).json({ error: 'Basecamp configuration missing' });
+      }
+
+      const { decrypt } = await import('../lib/encryption');
+      const decryptedToken = decrypt(settings.basecamp_token_encrypted);
+
+      const response = await axios.get(
+        `https://3.basecampapi.com/${settings.basecamp_account_id}/projects.json`,
+        {
+          headers: {
+            'Authorization': `Bearer ${decryptedToken}`,
+            'User-Agent': 'QA Command Center (raees@example.com)',
+          },
+        }
+      );
+
+      return res.json({ success: true, message: 'Connected', projectsCount: response.data?.length });
     } catch (error: any) {
-      return res.status(500).json({ error: error.message });
-    }
-  }
-);
-
-/**
- * DELETE /api/projects/:id
- * Delete a project. Restricted to admin and above.
- */
-router.delete(
-  '/:id',
-  clerkAuth,
-  requireRole('admin'),
-  async (req: Request, res: Response) => {
-    const { id } = req.params;
-
-    try {
-      const { error } = await supabase
-        .from('projects')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      return res.status(204).send();
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+      const message = error.response?.data?.error || error.message;
+      return res.status(400).json({ error: `Basecamp API error: ${message}` });
     }
   }
 );
 
 export { router as projectsRouter };
-

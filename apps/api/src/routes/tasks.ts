@@ -15,7 +15,7 @@ import {
 const router: Router = Router();
 
 /**
- * Helper to get Supabase user UUID from Clerk ID
+ * Helper to get Supabase user UUID from Clerk ID.
  */
 async function getSupabaseUserId(clerkIdOrUuid: string): Promise<string> {
   if (clerkIdOrUuid.length === 36 && clerkIdOrUuid.includes('-')) {
@@ -80,7 +80,7 @@ router.post(
  */
 router.get('/', clerkAuth, async (req: Request, res: Response) => {
   const { project_id, projectId, status, severity, assigned_to, page = '1', limit = '10' } = req.query;
-  const { userId: clerkUserId, role } = req.auth!;
+  const { userId: clerkUserId, role, orgId } = req.auth!;
 
   try {
     const supabaseUserId = await getSupabaseUserId(clerkUserId);
@@ -90,9 +90,13 @@ router.get('/', clerkAuth, async (req: Request, res: Response) => {
       .select(`
         *,
         users:assigned_to (id, full_name, email),
-        projects:project_id (id, name)
+        projects!inner:project_id (id, name, org_id)
       `, { count: 'exact' });
 
+    // Filter by organization
+    query = query.eq('projects.org_id', orgId);
+
+    // Apply filters
     const effectiveProjectId = project_id || projectId;
     if (effectiveProjectId) query = query.eq('project_id', effectiveProjectId);
     if (status) query = query.eq('status', status);
@@ -102,6 +106,17 @@ router.get('/', clerkAuth, async (req: Request, res: Response) => {
     // RBAC: Developer only sees assigned tasks
     if (role === 'developer') {
       query = query.eq('assigned_to', supabaseUserId);
+    } 
+    // RBAC: Sub-Admin/QA/PM only see tasks in their project memberships
+    else if (role !== 'super_admin' && role !== 'admin') {
+      const { data: memberships } = await supabase
+        .from('project_members')
+        .select('project_id')
+        .eq('user_id', supabaseUserId);
+      
+      const projectIds = memberships?.map(m => m.project_id) || [];
+      if (projectIds.length === 0) return res.json({ data: [], pagination: { total: 0 } });
+      query = query.in('project_id', projectIds);
     }
 
     // Pagination
@@ -110,7 +125,6 @@ router.get('/', clerkAuth, async (req: Request, res: Response) => {
     query = query.range(from, to).order('created_at', { ascending: false });
 
     const { data, error, count } = await query;
-
     if (error) throw error;
 
     return res.json({
@@ -128,16 +142,19 @@ router.get('/', clerkAuth, async (req: Request, res: Response) => {
 
 /**
  * GET /api/tasks/:id
- * Get full task with comments and rebuttals.
  */
 router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
   const { id } = req.params;
+  const { userId: clerkUserId, role, orgId } = req.auth!;
 
   try {
+    const supabaseUserId = await getSupabaseUserId(clerkUserId);
+
     const { data: task, error } = await supabase
       .from('tasks')
       .select(`
         *,
+        projects!inner:project_id (id, name, org_id),
         comments (
           *,
           users:author_id (full_name, email)
@@ -148,10 +165,15 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
         )
       `)
       .eq('id', id)
+      .eq('projects.org_id', orgId)
       .single();
 
-    if (error) throw error;
-    if (!task) return res.status(404).json({ error: 'Task not found' });
+    if (error || !task) return res.status(404).json({ error: 'Task not found' });
+
+    // RBAC Check
+    if (role === 'developer' && task.assigned_to !== supabaseUserId) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
 
     return res.json(task);
   } catch (error: any) {
@@ -161,7 +183,6 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
 
 /**
  * PATCH /api/tasks/:id
- * Update status, assignee, description (role-checked).
  */
 router.patch(
   '/:id',
@@ -170,7 +191,6 @@ router.patch(
   async (req: Request, res: Response) => {
     const { id } = req.params;
     const { status, assigned_to, description } = req.body;
-
     try {
       const { data: task, error } = await supabase
         .from('tasks')
@@ -180,11 +200,7 @@ router.patch(
         .single();
 
       if (error) throw error;
-      if (!task) return res.status(404).json({ error: 'Task not found' });
-
-      // Broadcast update
       await broadcastTaskUpdate(id, task);
-
       return res.json(task);
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
@@ -194,7 +210,6 @@ router.patch(
 
 /**
  * POST /api/tasks/:id/assign
- * Assign task to a user. Restricted to qa_engineer and above.
  */
 router.post(
   '/:id/assign',
@@ -203,7 +218,6 @@ router.post(
   async (req: Request, res: Response) => {
     const { id } = req.params;
     const { user_id } = req.body;
-
     if (!user_id) return res.status(400).json({ error: 'user_id is required' });
 
     try {
@@ -215,11 +229,7 @@ router.post(
         .single();
 
       if (error) throw error;
-      if (!task) return res.status(404).json({ error: 'Task not found' });
-
-      // Broadcast update
       await broadcastTaskUpdate(id, task);
-
       return res.json(task);
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
@@ -229,7 +239,6 @@ router.post(
 
 /**
  * POST /api/tasks/:id/comments
- * Add a comment to a task.
  */
 router.post(
   '/:id/comments',
@@ -242,7 +251,6 @@ router.post(
 
     try {
       const supabaseUserId = await getSupabaseUserId(clerkUserId);
-
       const { data: comment, error } = await supabase
         .from('comments')
         .insert({
@@ -254,7 +262,6 @@ router.post(
         .single();
 
       if (error) throw error;
-
       return res.status(201).json(comment);
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
@@ -264,7 +271,6 @@ router.post(
 
 /**
  * POST /api/tasks/:id/rebuttals
- * Add a rebuttal to a task. Restricted to developer.
  */
 router.post(
   '/:id/rebuttals',
@@ -278,7 +284,6 @@ router.post(
 
     try {
       const supabaseUserId = await getSupabaseUserId(clerkUserId);
-
       const { data: rebuttal, error } = await supabase
         .from('rebuttals')
         .insert({
@@ -292,19 +297,11 @@ router.post(
 
       if (error) throw error;
 
-      // Enqueue AI analysis job
-      await qaQueue.add(
-        'analyze_rebuttal',
-        { rebuttalId: rebuttal.id, taskId: id },
-        {
-          removeOnComplete: true,
-          attempts: 3,
-          backoff: {
-            type: 'exponential',
-            delay: 5000,
-          },
-        }
-      );
+      await qaQueue.add('analyze_rebuttal', { rebuttalId: rebuttal.id, taskId: id }, {
+        removeOnComplete: true,
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 5000 }
+      });
 
       return res.status(201).json(rebuttal);
     } catch (error: any) {
@@ -312,6 +309,5 @@ router.post(
     }
   }
 );
-
 
 export { router as tasksRouter };

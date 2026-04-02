@@ -97,16 +97,27 @@ router.post(
 );
 
 /**
- * GET /api/projects/:id/runs
+ * GET /api/runs/projects/:id/runs
  * List runs for a project with pagination and summary stats.
  */
 router.get('/projects/:id/runs', clerkAuth, async (req: Request, res: Response) => {
   const { id: project_id } = req.params;
+  const { orgId } = req.auth!;
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 20;
   const offset = (page - 1) * limit;
 
   try {
+    // Verify project belongs to org
+    const { data: project } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('id', project_id)
+      .eq('org_id', orgId)
+      .single();
+
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+
     const { data: runs, error, count } = await supabase
       .from('qa_runs')
       .select(`

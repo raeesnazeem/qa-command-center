@@ -31,19 +31,38 @@ export const clerkAuth = async (
       return
     }
 
-    // 1. Get role from Clerk if available
+    // 1. Get raw claims to extract name/email
+    const claims = auth.sessionClaims as any;
+    const email = claims?.email || null;
+    const fullName = claims?.full_name || claims?.name || (claims?.first_name ? `${claims.first_name} ${claims.last_name || ''}`.trim() : null);
+
+    // 2. Get role from Clerk if available (priority)
     let role = (auth.orgRole as string) || null
     let orgId: string | null = null
 
-    // 2. Always fetch user from Supabase to get the internal UUID org_id
+    // 3. Always fetch user from Supabase to get the internal UUID org_id and profile
     console.log(`[clerkAuth] Fetching user profile for ${auth.userId}...`);
     let { data: user, error } = await supabase
       .from('users')
-      .select('id, role, org_id')
+      .select('*')
       .eq('clerk_user_id', auth.userId)
       .maybeSingle()
 
-    // 3. Self-healing: If user doesn't exist in Supabase, create them
+    // 4. Synchronization: Update name/email if they changed or were missing
+    if (user && (fullName || email)) {
+      const updates: any = {};
+      if (fullName && user.full_name !== fullName) updates.full_name = fullName;
+      if (email && user.email !== email) updates.email = email;
+      
+      if (Object.keys(updates).length > 0) {
+        console.log(`[clerkAuth] Syncing profile updates for ${auth.userId}:`, updates);
+        await supabase.from('users').update(updates).eq('id', user.id);
+        // Refresh local user object
+        user = { ...user, ...updates };
+      }
+    }
+
+    // 5. Self-healing: If user doesn't exist in Supabase, create them
     if (!user && !error) {
       console.log(`[clerkAuth] User ${auth.userId} not found in Supabase. Creating profile...`);
       
@@ -74,6 +93,8 @@ export const clerkAuth = async (
             id: randomUUID(),
             clerk_user_id: auth.userId,
             clerk_id: auth.userId,
+            email: email,
+            full_name: fullName,
             role: 'developer', // Default role for new users
             org_id: defaultOrg.id
           })
@@ -87,15 +108,23 @@ export const clerkAuth = async (
       }
     }
 
-    // 4. Resolve role and orgId
+    // 6. Resolve role and orgId
     if (user) {
       // Prioritize Clerk role if available, otherwise use DB role
-      if (!role) role = user.role;
+      // Note: mapping Clerk roles (e.g. 'org:admin') to internal roles
+      if (!role) {
+        role = user.role;
+      } else {
+        // Simple mapping for common Clerk roles
+        if (role === 'org:admin') role = 'admin';
+        else if (role === 'org:member') role = 'developer';
+      }
+      
       // ALWAYS use the UUID from the database for orgId
       orgId = user.org_id;
     }
 
-    // 5. Final safety check: if orgId is still null, find ANY organization
+    // 7. Final safety check: if orgId is still null, find ANY organization
     if (!orgId) {
       console.log(`[clerkAuth] orgId still null for ${auth.userId}, attempting final fallback...`);
       const { data: fallbackOrg } = await supabase
@@ -120,7 +149,7 @@ export const clerkAuth = async (
     } as any;
 
     console.log('--- Clerk Auth Success ---')
-    console.log('User:', req.auth?.userId)
+    console.log('User:', req.auth?.userId, `(${fullName})`)
     console.log('Org:', req.auth?.orgId)
     console.log('Role:', req.auth?.role)
 

@@ -6,5 +6,7 @@ export { DashboardPage } from './DashboardPage';
 export { RunDetailPage } from './RunDetailPage';
 export { SettingsPage } from './SettingsPage';
 export { TasksPage } from './TasksPage';
+export { TeamPage } from './TeamPage';
+export { OnboardingPage } from './OnboardingPage';
 export { TestPage } from './TestPage';
 export { default as Week1TestPage } from './Week1TestPage';

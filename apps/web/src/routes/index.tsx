@@ -10,6 +10,8 @@ import {
   RunDetailPage,
   SettingsPage,
   TasksPage,
+  TeamPage,
+  OnboardingPage,
   TestPage,
   Week1TestPage,
 } from "@/pages"
@@ -54,6 +56,10 @@ export const router = createBrowserRouter(
           element: <AppLayout />,
           children: [
             {
+              path: "/onboarding",
+              element: <OnboardingPage />,
+            },
+            {
               path: "/dashboard",
               element: <DashboardPage />,
             },
@@ -94,6 +100,10 @@ export const router = createBrowserRouter(
             {
               path: "/settings",
               element: <SettingsPage />,
+            },
+            {
+              path: "/team",
+              element: <TeamPage />,
             },
           ],
         },
