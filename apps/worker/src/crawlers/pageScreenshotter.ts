@@ -27,6 +27,8 @@ export interface ScreenshotResult {
   desktopUrl?: string;
   tabletUrl?: string;
   mobileUrl?: string;
+  desktopBuffer?: Buffer;
+  mobileBuffer?: Buffer;
 }
 
 /**
@@ -127,9 +129,15 @@ export async function screenshotPage(
       const storagePath = `${runId}/${pageId}/${viewport.name}.png`;
       const publicUrl = await uploadScreenshot(compressedBuffer, storagePath);
 
-      if (viewport.name === 'desktop') result.desktopUrl = publicUrl;
+      if (viewport.name === 'desktop') {
+        result.desktopUrl = publicUrl;
+        result.desktopBuffer = compressedBuffer;
+      }
       if (viewport.name === 'tablet') result.tabletUrl = publicUrl;
-      if (viewport.name === 'mobile') result.mobileUrl = publicUrl;
+      if (viewport.name === 'mobile') {
+        result.mobileUrl = publicUrl;
+        result.mobileBuffer = compressedBuffer;
+      }
 
       completedViewports++;
       logger.info({ url, viewport: viewport.name }, 'Screenshot uploaded successfully');

@@ -10,6 +10,9 @@ import { checkConsoleErrors } from '../checks/consoleErrorCheck';
 import { checkDummyContent } from '../checks/dummyContentCheck';
 import { checkSpelling } from '../checks/spellingCheck';
 import { checkImageCompliance } from '../checks/imageComplianceCheck';
+import { checkForms } from '../checks/formTestingCheck';
+import { checkWooCommerce } from '../checks/wooCommerceCheck';
+import { checkResponsiveVisual } from '../checks/responsiveVisualCheck';
 import pino from 'pino';
 
 const logger = pino({
@@ -28,6 +31,13 @@ export async function processCrawlPageJob(job: Job) {
   }
 
   logger.info({ runId, pageId, pageUrl }, 'Processing page crawl');
+
+  // Fetch run settings for conditional checks
+  const { data: run } = await supabase
+    .from('qa_runs')
+    .select('is_woocommerce, site_url')
+    .eq('id', runId)
+    .single();
 
   const updateProgress = async (progress: number, step: string) => {
     const { error: progressError } = await supabase
@@ -89,6 +99,20 @@ export async function processCrawlPageJob(job: Job) {
       logger.error({ pageId, error: updatePageError.message }, 'Failed to update page record with screenshots');
     }
 
+    // Step 3.5: Responsive Visual Check (Check Factor 12)
+    let responsiveFindings: any[] = [];
+    if (screenshots.desktopBuffer && screenshots.mobileBuffer) {
+      logger.info({ pageId }, 'Running responsive visual check');
+      responsiveFindings = await checkResponsiveVisual(
+        screenshots.desktopBuffer,
+        screenshots.mobileBuffer,
+        pageUrl
+      ).catch(e => {
+        logger.error('Responsive visual check failed:', e);
+        return [];
+      });
+    }
+
     // Step 4: Run automated checks
     logger.info({ pageId }, 'Running automated checks');
     await updateProgress(90, 'Running quality checks...');
@@ -120,14 +144,29 @@ export async function processCrawlPageJob(job: Job) {
 
       await page.goto(pageUrl, { waitUntil: 'load', timeout: 60000 });
 
-      const [linkFindings, extLinkFindings, metaFindings, consoleFindings, dummyFindings, spellingFindings, imageFindings] = await Promise.all([
+      // Check for forms on page
+      const hasForms = await page.$('form') !== null;
+
+      const [linkFindings, extLinkFindings, metaFindings, consoleFindings, dummyFindings, spellingFindings, imageFindings, formFindings, wooFindings] = await Promise.all([
         checkBrokenLinks(page, screenshots).catch(e => { logger.error('Broken links check failed:', e); return []; }),
         checkExternalLinks(page, screenshots).catch(e => { logger.error('External links check failed:', e); return []; }),
         checkMeta(page, screenshots).catch(e => { logger.error('Meta check failed:', e); return []; }),
         checkConsoleErrors(page, screenshots).catch(e => { logger.error('Console errors check failed:', e); return []; }),
         checkDummyContent(page, screenshots).catch(e => { logger.error('Dummy content check failed:', e); return []; }),
         checkSpelling(page, screenshots).catch(e => { logger.error('Spelling check failed:', e); return []; }),
-        checkImageCompliance(page, screenshots).catch(e => { logger.error('Image compliance check failed:', e); return []; })
+        checkImageCompliance(page, screenshots).catch(e => { logger.error('Image compliance check failed:', e); return []; }),
+        hasForms ? checkForms(page, screenshots).catch(e => { logger.error('Forms check failed:', e); return []; }) : Promise.resolve([]),
+        run?.is_woocommerce ? (async () => {
+          const wooPage = await context.newPage();
+          try {
+            return await checkWooCommerce(wooPage, run.site_url, run);
+          } catch (e) {
+            logger.error('WooCommerce check failed:', e);
+            return [];
+          } finally {
+            await wooPage.close();
+          }
+        })() : Promise.resolve([])
       ]);
 
       const allFindings = [
@@ -137,7 +176,10 @@ export async function processCrawlPageJob(job: Job) {
         ...consoleFindings,
         ...dummyFindings,
         ...spellingFindings,
-        ...imageFindings
+        ...imageFindings,
+        ...formFindings,
+        ...wooFindings,
+        ...responsiveFindings
       ].map(f => ({
         ...f,
         page_id: pageId,

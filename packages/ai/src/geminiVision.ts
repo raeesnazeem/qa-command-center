@@ -17,19 +17,26 @@ const queue = new PQueue({
  * Returns the raw text response from the model.
  * Handles errors gracefully and adheres to rate limits.
  */
-export async function analyzeImage(imageBuffer: Buffer, prompt: string): Promise<string> {
+export async function analyzeImage(imageBuffer: Buffer | Buffer[], prompt: string): Promise<string> {
   return queue.add(async () => {
     try {
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-      const imageParts = [
-        {
+      const imageParts = Array.isArray(imageBuffer) 
+      ? imageBuffer.map(buf => ({
           inlineData: {
-            data: imageBuffer.toString("base64"),
+            data: buf.toString("base64"),
             mimeType: "image/png",
           },
-        },
-      ];
+        }))
+      : [
+          {
+            inlineData: {
+              data: imageBuffer.toString("base64"),
+              mimeType: "image/png",
+            },
+          },
+        ];
 
       const result = await model.generateContent([prompt, ...imageParts]);
       const response = await result.response;
