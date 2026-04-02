@@ -62,6 +62,7 @@ export async function checkBrokenLinks(page: PlaywrightPage, pageRecord: any): P
     title: `${count} broken link${count > 1 ? 's' : ''} found`,
     description: `The following URLs returned 4xx/5xx errors:\n${brokenLinks.map(l => `- ${l.url} (${l.status === 0 ? 'Failed' : l.status})`).join('\n')}`,
     context_text: brokenLinks.map(l => `Link Text: "${l.text}" | URL: ${l.url}`).join('\n'),
+    screenshot_url: pageRecord.desktopUrl,
     status: 'open',
     ai_generated: false
   }];

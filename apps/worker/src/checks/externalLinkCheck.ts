@@ -32,6 +32,7 @@ export async function checkExternalLinks(page: PlaywrightPage, pageRecord: any):
           title: 'External link missing noopener',
           description: `The external link to "${link.href}" opens in a new tab but missing "noopener" or "noreferrer" rel attribute. This is a security risk (tabnabbing).`,
           context_text: `Link Text: "${link.text}" | URL: ${link.href} | rel: "${link.rel}"`,
+          screenshot_url: pageRecord.desktopUrl,
           status: 'open',
           ai_generated: false
         });

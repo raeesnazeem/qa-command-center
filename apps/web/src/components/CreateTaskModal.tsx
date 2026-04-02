@@ -60,7 +60,7 @@ export const CreateTaskModal = ({ projectId, isOpen, onClose, prefillData }: Cre
         onClick={onClose} 
       />
       
-      <div className="relative w-full max-w-lg bg-white border border-slate-200 rounded-md shadow-sm overflow-hidden transition-all duration-200">
+      <div className="relative w-full max-w-lg bg-white border border-slate-200 rounded-[10px] shadow-sm overflow-hidden transition-all duration-200">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
           <div className="flex items-center space-x-2">
             <div className="p-1.5 bg-accent/10 rounded-md text-accent">

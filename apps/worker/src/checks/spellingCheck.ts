@@ -114,6 +114,7 @@ export async function checkSpelling(page: PlaywrightPage, pageRecord: any): Prom
               title: `Misspelled: ${word}`,
               description: suggestions.length > 0 ? `Suggestion: ${suggestions[0]}` : `No suggestions found for ${word}`,
               context_text: contextText,
+              screenshot_url: pageRecord.desktopUrl,
             } as Finding);
           }
         }

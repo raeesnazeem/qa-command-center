@@ -121,13 +121,13 @@ export async function processCrawlPageJob(job: Job) {
       await page.goto(pageUrl, { waitUntil: 'load', timeout: 60000 });
 
       const [linkFindings, extLinkFindings, metaFindings, consoleFindings, dummyFindings, spellingFindings, imageFindings] = await Promise.all([
-        checkBrokenLinks(page, {}).catch(e => { logger.error('Broken links check failed:', e); return []; }),
-        checkExternalLinks(page, {}).catch(e => { logger.error('External links check failed:', e); return []; }),
-        checkMeta(page, {}).catch(e => { logger.error('Meta check failed:', e); return []; }),
-        checkConsoleErrors(page, {}).catch(e => { logger.error('Console errors check failed:', e); return []; }),
-        checkDummyContent(page, {}).catch(e => { logger.error('Dummy content check failed:', e); return []; }),
-        checkSpelling(page, {}).catch(e => { logger.error('Spelling check failed:', e); return []; }),
-        checkImageCompliance(page, { screenshot_url_desktop: screenshots.desktopUrl }).catch(e => { logger.error('Image compliance check failed:', e); return []; })
+        checkBrokenLinks(page, screenshots).catch(e => { logger.error('Broken links check failed:', e); return []; }),
+        checkExternalLinks(page, screenshots).catch(e => { logger.error('External links check failed:', e); return []; }),
+        checkMeta(page, screenshots).catch(e => { logger.error('Meta check failed:', e); return []; }),
+        checkConsoleErrors(page, screenshots).catch(e => { logger.error('Console errors check failed:', e); return []; }),
+        checkDummyContent(page, screenshots).catch(e => { logger.error('Dummy content check failed:', e); return []; }),
+        checkSpelling(page, screenshots).catch(e => { logger.error('Spelling check failed:', e); return []; }),
+        checkImageCompliance(page, screenshots).catch(e => { logger.error('Image compliance check failed:', e); return []; })
       ]);
 
       const allFindings = [

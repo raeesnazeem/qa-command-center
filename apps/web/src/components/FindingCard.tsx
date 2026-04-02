@@ -70,6 +70,7 @@ export const FindingCard: React.FC<FindingCardProps> = ({
   const isConfirmed = finding.status === 'confirmed';
   const isFalsePositive = finding.status === 'false_positive';
   const hasTask = (finding.tasks && finding.tasks.length > 0);
+  const [isExpanded, setIsExpanded] = React.useState(false);
 
   if (finding.check_factor === 'spelling') {
     return (
@@ -96,7 +97,7 @@ export const FindingCard: React.FC<FindingCardProps> = ({
           finding.severity === 'critical' ? 'bg-red-50 text-red-600' :
           finding.severity === 'high' ? 'bg-orange-50 text-orange-600' :
           finding.severity === 'medium' ? 'bg-amber-50 text-amber-600' :
-          'bg-blue-50 text-blue-600'
+          'bg-yellow-50 text-yellow-600'
         }`}>
           {isFalsePositive ? <XCircle size={20} /> : severityIcons[finding.severity]}
         </div>
@@ -128,11 +129,21 @@ export const FindingCard: React.FC<FindingCardProps> = ({
             {finding.title}
           </h4>
           {finding.description && (
-            <p className={`text-[11px] text-slate-500 font-medium leading-relaxed mb-4 ${
-              isFalsePositive ? 'text-slate-400' : ''
-            }`}>
-              {finding.description}
-            </p>
+            <div className="mb-4">
+              <p className={`text-[11px] text-slate-500 font-medium leading-relaxed ${
+                isFalsePositive ? 'text-slate-400' : ''
+              } ${!isExpanded ? 'line-clamp-3' : ''}`}>
+                {finding.description}
+              </p>
+              {finding.description.length > 150 && (
+                <button 
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="text-[10px] font-black text-accent uppercase tracking-widest mt-1 hover:text-black transition-colors"
+                >
+                  {isExpanded ? 'See less' : 'See more'}
+                </button>
+              )}
+            </div>
           )}
 
           {/* Screenshot Thumbnail */}
@@ -149,7 +160,7 @@ export const FindingCard: React.FC<FindingCardProps> = ({
           {finding.context_text && (
             <div className="mb-6">
               <p className="text-[8px] font-black text-slate-400 uppercase mb-1.5 tracking-widest">Contextual Data</p>
-              <div className="p-3 bg-slate-900 rounded-lg border border-slate-800 font-mono text-[10px] text-slate-300 overflow-x-auto whitespace-pre">
+              <div className="h-[80px] p-3 bg-slate-900 rounded-[10px] border border-slate-800 font-mono text-[10px] text-slate-300 whitespace-pre-wrap break-words overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-[#93C0B1] [&::-webkit-scrollbar-track]:bg-transparent">
                 {finding.context_text}
               </div>
             </div>
@@ -188,7 +199,7 @@ export const FindingCard: React.FC<FindingCardProps> = ({
                 {!isConfirmed && (
                   <button 
                     onClick={() => onConfirm?.(finding.id)}
-                    className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500 text-white text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-emerald-600 transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500 text-white text-[9px] font-black uppercase tracking-widest rounded-[10px] hover:bg-emerald-600 transition-colors"
                   >
                     <CheckCircle2 size={12} />
                     Confirm
@@ -196,7 +207,7 @@ export const FindingCard: React.FC<FindingCardProps> = ({
                 )}
                 <button 
                   onClick={() => onFalsePositive?.(finding.id)}
-                  className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-slate-50 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-[10px] hover:bg-slate-50 transition-colors"
                 >
                   <XCircle size={12} />
                   False Positive
@@ -205,7 +216,7 @@ export const FindingCard: React.FC<FindingCardProps> = ({
               <button 
                 onClick={() => onCreateTask?.(finding)}
                 disabled={hasTask}
-                className={`flex items-center gap-1.5 px-3 py-1 bg-black text-accent text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-slate-800 transition-colors ${hasTask ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`flex items-center gap-1.5 px-3 py-1 bg-black text-accent text-[9px] font-black uppercase tracking-widest rounded-[10px] hover:bg-slate-800 transition-colors ${hasTask ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <Plus size={12} />
                 {hasTask ? 'Task Linked' : 'Create Task'}

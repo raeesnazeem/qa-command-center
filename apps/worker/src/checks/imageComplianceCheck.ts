@@ -31,6 +31,7 @@ export async function checkImageCompliance(page: PlaywrightPage, pageRecord: any
         title: 'Missing or empty alt attribute',
         description: 'Image is missing an alt attribute or it is empty. This impacts accessibility.',
         context_text: `Element: ${outerHTML}`,
+        screenshot_url: pageRecord.desktopUrl,
         status: 'open',
         ai_generated: false
       });
@@ -46,6 +47,7 @@ export async function checkImageCompliance(page: PlaywrightPage, pageRecord: any
         title: `Placeholder image detected (${foundKeyword})`,
         description: `Image source contains "${foundKeyword}", suggesting it might be temporary or stock content.`,
         context_text: `Source: ${src}\nElement: ${outerHTML}`,
+        screenshot_url: pageRecord.desktopUrl,
         status: 'open',
         ai_generated: false
       });
@@ -60,6 +62,7 @@ export async function checkImageCompliance(page: PlaywrightPage, pageRecord: any
         title: 'Small image dimensions (potential tracking pixel)',
         description: `Image natural dimensions are ${naturalWidth}x${naturalHeight}px. Small images are often used for tracking or might be layout spacers.`,
         context_text: `Source: ${src}\nDimensions: ${naturalWidth}x${naturalHeight}`,
+        screenshot_url: pageRecord.desktopUrl,
         status: 'open',
         ai_generated: false
       });
@@ -73,6 +76,7 @@ export async function checkImageCompliance(page: PlaywrightPage, pageRecord: any
         title: 'Missing width or height attributes',
         description: 'Image lacks explicit width or height attributes, which can cause Cumulative Layout Shift (CLS).',
         context_text: `Element: ${outerHTML}`,
+        screenshot_url: pageRecord.desktopUrl,
         status: 'open',
         ai_generated: false
       });
@@ -80,10 +84,10 @@ export async function checkImageCompliance(page: PlaywrightPage, pageRecord: any
   }
 
   // 5. AI-Vision Check (Check Factor 7 - Part 2)
-  if (pageRecord.screenshot_url_desktop) {
+  if (pageRecord.desktopUrl) {
     try {
       // Extract path from URL (e.g., https://.../storage/v1/object/public/screenshots/run_id/page_id.png)
-      const url = new URL(pageRecord.screenshot_url_desktop);
+      const url = new URL(pageRecord.desktopUrl);
       const pathParts = url.pathname.split('/public/screenshots/');
       if (pathParts.length === 2) {
         const filePath = pathParts[1];
@@ -104,7 +108,7 @@ export async function checkImageCompliance(page: PlaywrightPage, pageRecord: any
               title: `AI Vision: ${issue.issue}`,
               description: `AI detected a visual issue: ${issue.issue}. Affected area: ${issue.area}`,
               context_text: `AI-Vision analysis of desktop screenshot.`,
-              screenshot_url: pageRecord.screenshot_url_desktop,
+              screenshot_url: pageRecord.desktopUrl,
               status: 'open',
               ai_generated: true
             });

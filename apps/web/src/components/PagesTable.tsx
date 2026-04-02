@@ -51,7 +51,7 @@ export const PagesTable: React.FC<PagesTableProps> = ({ pages, onPageSelect, sho
   };
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full min-h-[400px]">
+    <div className="bg-white rounded-[10px] border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full min-h-[400px]">
       {/* Table Header */}
       <div className="bg-slate-50 border-b border-slate-200 px-6 py-3 flex items-center text-[10px] font-black uppercase tracking-widest text-slate-500">
         <div className="w-16">Step</div>
@@ -124,7 +124,7 @@ export const PagesTable: React.FC<PagesTableProps> = ({ pages, onPageSelect, sho
                         <div 
                           className={`h-full transition-all duration-1000 ease-in-out ${
                             page.status === 'processing' 
-                              ? 'bg-gradient-to-r from-blue-500 to-indigo-600 shadow-[0_0_8px_rgba(59,130,246,0.4)]' 
+                              ? 'bg-accent shadow-[0_0_8px_rgba(147,192,177,0.4)]' 
                               : 'bg-slate-300'
                           }`}
                           style={{ width: `${page.status === 'processing' ? Math.max(5, page.progress || 0) : 2}%` }}

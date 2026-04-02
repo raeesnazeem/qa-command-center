@@ -262,7 +262,7 @@ const getSeverityStyles = (severity: TaskSeverity) => {
     case 'critical': return 'bg-red-50 text-red-600 border-red-100';
     case 'high': return 'bg-orange-50 text-orange-600 border-orange-100';
     case 'medium': return 'bg-yellow-50 text-yellow-600 border-yellow-100';
-    case 'low': return 'bg-gray-50 text-gray-600 border-gray-100';
+    case 'low': return 'bg-yellow-50 text-yellow-600 border-yellow-100';
     default: return 'bg-slate-50 text-slate-600 border-slate-100';
   }
 };

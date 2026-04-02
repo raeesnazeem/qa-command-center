@@ -42,6 +42,7 @@ export async function checkConsoleErrors(page: PlaywrightPage, pageRecord: any):
       title: `${criticalErrors.size} Critical Runtime Errors`,
       description: `The page encountered critical JavaScript execution errors that may prevent it from functioning correctly:\n${Array.from(criticalErrors).join('\n')}`,
       context_text: Array.from(criticalErrors).join(' | '),
+      screenshot_url: pageRecord.desktopUrl,
       status: 'open',
       ai_generated: false
     });
@@ -54,6 +55,7 @@ export async function checkConsoleErrors(page: PlaywrightPage, pageRecord: any):
       title: `${errors.size} Console Errors Detected`,
       description: `JavaScript errors were logged to the console during the page session:\n${Array.from(errors).join('\n')}`,
       context_text: Array.from(errors).join(' | '),
+      screenshot_url: pageRecord.desktopUrl,
       status: 'open',
       ai_generated: false
     });

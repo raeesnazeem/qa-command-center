@@ -41,7 +41,7 @@ export const TasksTab = ({ project }: TasksTabProps) => {
       case 'critical': return 'bg-red-50 text-red-600 border-red-100';
       case 'high': return 'bg-amber-50 text-amber-600 border-amber-100';
       case 'medium': return 'bg-amber-50 text-amber-600 border-amber-100';
-      case 'low': return 'bg-blue-50 text-blue-600 border-blue-100';
+      case 'low': return 'bg-yellow-50 text-yellow-600 border-yellow-100';
       default: return 'bg-slate-50 text-slate-500 border-slate-200';
     }
   };

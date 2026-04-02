@@ -14,7 +14,7 @@ const SEVERITY_OPTIONS: { value: FindingSeverity; label: string; icon: React.Rea
   { value: 'critical', label: 'Critical', icon: <ShieldAlert size={12} />, color: 'text-red-600 bg-red-50' },
   { value: 'high', label: 'High', icon: <AlertTriangle size={12} />, color: 'text-orange-600 bg-orange-50' },
   { value: 'medium', label: 'Medium', icon: <AlertCircle size={12} />, color: 'text-amber-600 bg-amber-50' },
-  { value: 'low', label: 'Low', icon: <Info size={12} />, color: 'text-blue-600 bg-blue-50' },
+  { value: 'low', label: 'Low', icon: <Info size={12} />, color: 'text-yellow-600 bg-yellow-50' },
 ];
 
 export const FindingSeverityEditor: React.FC<FindingSeverityEditorProps> = ({

@@ -58,6 +58,7 @@ export async function checkDummyContent(page: PlaywrightPage, pageRecord: any): 
     title: `${count} placeholder/dummy content matches found`,
     description: `The page contains text that appears to be placeholder or dummy content (e.g., "Lorem Ipsum", "Coming Soon"). This should be replaced with actual content before release.`,
     context_text: allMatches.map(m => `Match: "${m.pattern}" | Context: ${m.context}`).join('\n').substring(0, 2000),
+    screenshot_url: pageRecord.desktopUrl,
     status: 'open',
     ai_generated: false
   }];

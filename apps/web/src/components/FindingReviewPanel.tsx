@@ -45,6 +45,12 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
   const [selectedFactor, setSelectedFactor] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
+  // Reset filter and selection when findings change (indicating a page switch)
+  React.useEffect(() => {
+    setSelectedFactor(null);
+    setSelectedIds(new Set());
+  }, [findings]);
+
   // Summary Stats
   const stats = useMemo(() => {
     return {
@@ -175,28 +181,28 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
           <div className="flex items-center gap-2">
             <button 
               onClick={handleBulkConfirm}
-              className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-600 transition-all active:scale-95"
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-[10px] hover:bg-emerald-600 transition-all active:scale-95"
             >
               <CheckCircle size={14} />
               Confirm All
             </button>
             <button 
               onClick={handleBulkFalsePositive}
-              className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-white/20 border border-white/10 transition-all active:scale-95"
+              className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-[10px] hover:bg-white/20 border border-white/10 transition-all active:scale-95"
             >
               <XCircle size={14} />
               Mark False Positives
             </button>
             <button 
               onClick={handleBulkCreateTasks}
-              className="flex items-center gap-2 px-4 py-2 bg-accent text-black text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-accent/90 transition-all active:scale-95"
+              className="flex items-center gap-2 px-4 py-2 bg-accent text-black text-[10px] font-black uppercase tracking-widest rounded-[10px] hover:bg-accent/90 transition-all active:scale-95"
             >
               <Plus size={14} />
               Create Tasks
             </button>
             <button 
               onClick={() => onAssignBulk?.(Array.from(selectedIds))}
-              className="flex items-center gap-2 px-4 py-2 bg-white text-black text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-100 transition-all active:scale-95"
+              className="flex items-center gap-2 px-4 py-2 bg-white text-black text-[10px] font-black uppercase tracking-widest rounded-[10px] hover:bg-slate-100 transition-all active:scale-95"
             >
               <UserPlus size={14} />
               Assign

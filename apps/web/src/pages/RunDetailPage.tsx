@@ -240,7 +240,7 @@ export const RunDetailPage = () => {
               href={`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/admin/queues`}
               target="_blank"
               rel="noreferrer"
-              className="btn-unified flex items-center gap-2"
+              className="btn-unified flex items-center gap-2 rounded-[10px]"
               title="View BullMQ Dashboard"
             >
               <LayoutDashboard size={14} />
@@ -283,7 +283,7 @@ export const RunDetailPage = () => {
           <div className="w-full h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200 p-1">
             <div 
               className={`h-full rounded-full transition-all duration-500 ease-out shadow-sm ${
-                run.status === 'failed' ? 'bg-red-500' : 'bg-gradient-to-r from-blue-500 to-indigo-600'
+                run.status === 'failed' ? 'bg-red-500' : 'bg-accent'
               }`}
               style={{ 
                 width: isDiscovering 
