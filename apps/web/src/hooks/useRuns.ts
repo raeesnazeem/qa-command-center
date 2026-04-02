@@ -122,6 +122,18 @@ export const useFindings = (pageId: string | null) => {
   });
 };
 
+export const useRunFindings = (runId: string | null) => {
+  const axios = useAuthAxios();
+  return useQuery<QAFinding[]>({
+    queryKey: ['run-findings', runId],
+    queryFn: async () => {
+      const response = await axios.get<QAFinding[]>(`/api/runs/${runId}/findings`);
+      return response.data;
+    },
+    enabled: !!runId,
+  });
+};
+
 export const useUpdateFinding = (pageId: string | null) => {
   const axios = useAuthAxios();
   const queryClient = useQueryClient();

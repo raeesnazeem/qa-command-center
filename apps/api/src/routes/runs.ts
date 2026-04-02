@@ -163,6 +163,9 @@ router.get('/pages/:pageId/findings', clerkAuth, async (req: Request, res: Respo
       .from('findings')
       .select(`
         *,
+        pages (
+          url
+        ),
         tasks (
           id,
           status,
@@ -175,6 +178,43 @@ router.get('/pages/:pageId/findings', clerkAuth, async (req: Request, res: Respo
         )
       `)
       .eq('page_id', pageId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    return res.json(findings || []);
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /api/runs/:id/findings
+ * Get all findings for a full run (all pages).
+ */
+router.get('/:id/findings', clerkAuth, async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const { data: findings, error } = await supabase
+      .from('findings')
+      .select(`
+        *,
+        pages (
+          url
+        ),
+        tasks (
+          id,
+          status,
+          rebuttals (
+            id,
+            ai_verdict,
+            ai_confidence,
+            ai_reasoning
+          )
+        )
+      `)
+      .eq('run_id', id)
       .order('created_at', { ascending: false });
 
     if (error) throw error;

@@ -4,10 +4,10 @@ import { useRunProgress } from '../hooks/useRunProgress';
 import { PagesTable } from '../components/PagesTable';
 import { FindingReviewPanel } from '../components/FindingReviewPanel';
 import { CreateTaskModal } from '../components/CreateTaskModal';
-import { useFindings, useUpdateRunStatus, useUpdateFinding } from '../hooks/useRuns';
+import { useFindings, useRunFindings, useUpdateRunStatus, useUpdateFinding } from '../hooks/useRuns';
 import { useCreateTask } from '../hooks/useTasks';
 import { AssignMemberModal } from '../components/AssignMemberModal';
-import toast from 'react-hot-toast';
+import { WooCommerceSection } from '../components/WooCommerceSection';
 import { 
   ChevronLeft, 
   CheckCircle2, 
@@ -21,20 +21,20 @@ import {
   Square,
   User,
   LayoutDashboard,
+  ShoppingCart,
   FileSearch,
-  Monitor,
-  Smartphone,
-  Tablet,
-  Eye
+  Eye,
+  ClipboardList,
+  BarChart3
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { QAFinding } from '../api/runs.api';
+import toast from 'react-hot-toast';
 
 export const RunDetailPage = () => {
   const { id: projectId, runId } = useParams<{ id: string; runId: string }>();
   const updateStatus = useUpdateRunStatus();
   
-  // 1. Use the unified progress hook (Polling + Realtime)
   const { 
     run, 
     progress, 
@@ -46,31 +46,28 @@ export const RunDetailPage = () => {
   
   const { data: project, isLoading: isLoadingProject } = useProject(projectId!);
   
-  // 2. State for selected page ID to ensure it stays in sync with realtime updates
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
-  const selectedPage = run?.pages?.find(p => p.id === selectedPageId) || null;
+  const selectedPage = useMemo(() => run?.pages?.find(p => p.id === selectedPageId) || null, [run?.pages, selectedPageId]);
 
-  // Task Creation State
+  const [activeTab, setActiveTab] = useState<'overview' | 'pages' | 'findings' | 'visual_diff' | 'woocommerce' | 'report'>('overview');
+
   const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
   const [prefillFinding, setPrefillFinding] = useState<QAFinding | null>(null);
 
-  // 2b. Fetch findings for the selected page
   const { data: findings, isLoading: isLoadingFindings } = useFindings(selectedPageId);
+  const { data: runFindings, isLoading: isLoadingRunFindings } = useRunFindings(runId!);
   const updateFindingMutation = useUpdateFinding(selectedPageId);
   const { mutate: createTask } = useCreateTask();
 
-  // Assignment Modal State
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [assignTarget, setAssignTarget] = useState<{ type: 'single' | 'bulk'; ids: string[] }>({ type: 'single', ids: [] });
 
-  // Auto-select first page when pages load
   useEffect(() => {
     if (!selectedPageId && run?.pages && run.pages.length > 0) {
       setSelectedPageId(run.pages[0].id);
     }
   }, [run?.pages, selectedPageId]);
 
-  // 3. ETA Calculation
   const [eta, setEta] = useState<string | null>(null);
 
   useEffect(() => {
@@ -184,13 +181,7 @@ export const RunDetailPage = () => {
 
   const handleAssignFinding = async (userId: string) => {
     try {
-      // For findings, assigning means creating a task for each finding assigned to that user
-      // or we can just mark it if our backend supports direct finding assignment.
-      // Current architecture: Finding -> Create Task -> Assign Task.
-      // If we want "Assign" directly from findings, we create a task for each.
-      
-      const targets = findings?.filter(f => assignTarget.ids.includes(f.id)) || [];
-      
+      const targets = (findings || []).filter(f => assignTarget.ids.includes(f.id));
       for (const finding of targets) {
         createTask({
           project_id: projectId!,
@@ -201,7 +192,6 @@ export const RunDetailPage = () => {
           assigned_to: userId
         });
       }
-      
       setIsAssignModalOpen(false);
     } catch (error) {
       toast.error('Failed to assign findings');
@@ -357,274 +347,298 @@ export const RunDetailPage = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-10">
-        {/* Pages Section - Centered above Findings */}
-        <div className="space-y-6 flex flex-col items-center w-full">
-          <div className="flex items-center justify-between w-full">
-            <h2 className="text-xl font-bold text-slate-900">Scan Steps</h2>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-100 px-2 py-1 rounded">
-                {pagesProcessed} / {pagesTotal} Completed
-              </span>
+      {/* Tabs */}
+      <div className="flex items-center gap-1 p-1 bg-slate-100/50 rounded-xl border border-slate-200 w-full overflow-x-auto scrollbar-hide">
+        <button
+          onClick={() => setActiveTab('overview')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+            activeTab === 'overview' 
+              ? 'bg-white text-slate-900 shadow-sm border border-slate-200' 
+              : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          <BarChart3 size={14} />
+          Overview
+        </button>
+        <button
+          onClick={() => setActiveTab('pages')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+            activeTab === 'pages' 
+              ? 'bg-white text-slate-900 shadow-sm border border-slate-200' 
+              : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          <FileSearch size={14} />
+          Pages
+        </button>
+        <button
+          onClick={() => setActiveTab('findings')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+            activeTab === 'findings' 
+              ? 'bg-white text-slate-900 shadow-sm border border-slate-200' 
+              : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          <Search size={14} />
+          Findings
+        </button>
+        <button
+          onClick={() => setActiveTab('visual_diff')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+            activeTab === 'visual_diff' 
+              ? 'bg-white text-slate-900 shadow-sm border border-slate-200' 
+              : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          <Eye size={14} />
+          Visual Diff
+        </button>
+        {run.is_woocommerce && (
+          <button
+            onClick={() => setActiveTab('woocommerce')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+              activeTab === 'woocommerce' 
+                ? 'bg-white text-slate-900 shadow-sm border border-slate-200' 
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <ShoppingCart size={14} />
+            WooCommerce
+          </button>
+        )}
+        <button
+          onClick={() => setActiveTab('report')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+            activeTab === 'report' 
+              ? 'bg-white text-slate-900 shadow-sm border border-slate-200' 
+              : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          <ClipboardList size={14} />
+          Report
+        </button>
+      </div>
+
+      {activeTab === 'overview' && (
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+            <div className="flex justify-between items-end">
+              <div className="space-y-1">
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                  <Activity size={16} className="text-accent" />
+                  {isDiscovering ? 'Phase 1: Sitemap Discovery' : 'Phase 2: Scanning Pages'}
+                </h3>
+                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">
+                  {isDiscovering 
+                    ? 'Identifying all target URLs...' 
+                    : run.status === 'completed'
+                      ? 'Scan complete. All pages verified.'
+                      : `Scanning: ${(run.pages || []).filter((p) => p.status === 'processing' || p.status === 'screenshotted').length} active | ${pagesProcessed} / ${pagesTotal} total`
+                  }
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-black text-slate-900">
+                  {isDiscovering ? '...' : run.status === 'completed' ? '100%' : `${Math.max(1, Math.round(progress))}%`}
+                </p>
+              </div>
+            </div>
+
+            <div className="w-full h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200 p-1">
+              <div 
+                className={`h-full rounded-full transition-all duration-500 ease-out shadow-sm ${
+                  run.status === 'failed' ? 'bg-red-500' : 'bg-accent'
+                }`}
+                style={{ 
+                  width: isDiscovering 
+                    ? '40%' 
+                    : run.status === 'completed'
+                      ? '100%'
+                      : `${Math.max(2, progress)}%` 
+                }}
+              >
+                {(run.status === 'running' || isDiscovering) && (
+                  <div className="w-full h-full opacity-30 bg-[linear-gradient(45deg,rgba(255,255,255,.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,.15)_50%,rgba(255,255,255,.15)_75%,transparent_75%,transparent)] bg-[length:1rem_1rem] animate-[progress-bar-stripes_1s_linear_infinite]" />
+                )}
+              </div>
             </div>
           </div>
-          <div className="w-full">
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Pages</p>
+              <p className="text-2xl font-black text-slate-900">{pagesTotal}</p>
+            </div>
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Processed</p>
+              <p className="text-2xl font-black text-slate-900">{pagesProcessed}</p>
+            </div>
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Issues</p>
+              <p className="text-2xl font-black text-red-600">
+                {Object.values(run.finding_counts || {}).reduce((a, b) => a + b, 0)}
+              </p>
+            </div>
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
+              <div className="flex items-center gap-2">
+                {getStatusIcon(run.status)}
+                <p className="text-base font-black text-slate-900 uppercase tracking-tighter">{run.status}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'pages' && (
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-slate-900">Scan Steps</h2>
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
+              {pagesProcessed} / {pagesTotal} Completed
+            </span>
+          </div>
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <PagesTable 
               pages={run.pages || []} 
-              onPageSelect={(page) => setSelectedPageId(page.id)} 
+              onPageSelect={(page) => {
+                setSelectedPageId(page.id);
+                setActiveTab('findings');
+              }} 
               showVisuals={run.enabled_checks?.includes('visual_regression') && !!run.figma_url}
             />
           </div>
         </div>
+      )}
 
-        {/* Findings Section */}
-        <div className="space-y-6 flex flex-col w-full">
-          <div className="flex items-center justify-between w-full border-b border-slate-200 pb-4">
-            <div className="flex items-center gap-3">
-
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">Findings Details</h2>
-                <p className="text-xs text-slate-500 font-medium">Detailed audit results for the selected scan step</p>
-              </div>
-            </div>
+      {activeTab === 'findings' && (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+            <h2 className="text-xl font-bold text-slate-900">Findings Details</h2>
           </div>
 
           {selectedPage ? (
-            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm w-full transition-all">
-              {/* Selected Page Header */}
-              <div className="bg-slate-50 border-b border-slate-100 p-6">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex flex-col gap-1.5 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-slate-900 truncate pr-4 text-lg">{selectedPage.url}</h3>
-                    </div>
-                    <p className="text-xs text-slate-400 font-bold uppercase tracking-[0.15em] flex items-center gap-2 mt-1">
-                      <Activity size={12} className="text-accent" />
-                      Step Results: <span className="text-slate-900">{findings?.length || 0} Issues Detected</span>
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    {selectedPage.finding_counts && Object.entries(selectedPage.finding_counts).map(([factor, count]) => (
-                      <div key={factor} className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl hover:bg-white hover:shadow-md transition-all duration-300">
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">
-                          {factor.replace(/_/g, ' ')}: <span className="text-red-600">{count}</span>
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm w-full">
+              <div className="bg-slate-50 border-b border-slate-100 p-6 flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-slate-900 truncate text-lg">{selectedPage.url}</h3>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest">
+                    {findings?.length || 0} Issues Detected on this page
+                  </p>
                 </div>
+                <button 
+                  onClick={() => setActiveTab('pages')}
+                  className="text-[10px] font-black text-accent uppercase tracking-widest hover:text-black transition-colors"
+                >
+                  Change Page
+                </button>
               </div>
 
               <div className="p-8">
-                {/* Visual Regression Proof Section */}
-                {run.enabled_checks?.includes('visual_regression') && run.figma_url && (
+                {/* Visual Evidence */}
+                {run.enabled_checks?.includes('visual_regression') && selectedPage && (
                   <div className="mb-12">
-                    <div className="flex items-center gap-2 mb-6">
-                      <div className="h-px flex-1 bg-slate-100" />
-                      <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] whitespace-nowrap px-4">
-                        Visual Evidence
-                      </h4>
-                      <div className="h-px flex-1 bg-slate-100" />
-                    </div>
-
-                    <div className="p-8 bg-black rounded-3xl border border-slate-800 shadow-2xl overflow-hidden relative group/viz">
-                      <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none group-hover/viz:scale-110 transition-transform duration-1000">
-                        <Monitor size={160} className="text-white" />
-                      </div>
-                      
-                      <div className="relative z-10">
-                        <div className="flex items-center justify-between mb-8 pb-6 border-b border-white/10">
-                          <div className="space-y-1.5">
-                            <h4 className="text-[10px] font-black text-accent uppercase tracking-[0.3em] flex items-center gap-2">
-                              <Eye size={14} className="animate-pulse" />
-                              Visual Regression
-                            </h4>
-                            <p className="text-white font-bold text-2xl tracking-tight">
-                              {run.figma_url ? 'Figma vs. Live Comparison' : 'Baseline vs. Live Analysis'}
-                            </p>
-                          </div>
-                          <div className="flex flex-col items-end gap-3">
-                            <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/10 border border-accent/30 text-accent text-[10px] font-black uppercase tracking-widest shadow-[0_0_15px_rgba(147,192,177,0.1)]">
-                              <div className="w-1.5 h-1.5 rounded-full bg-accent animate-ping" />
-                              {selectedPage.status === 'done' || selectedPage.status === 'screenshotted' ? 'Scan Verified' : 'Processing Evidence'}
-                            </div>
-                            {run.figma_url && (
-                              <a 
-                                href={run.figma_url} 
-                                target="_blank" 
-                                rel="noreferrer"
-                                className="group/figma flex items-center gap-2 text-[10px] text-slate-400 hover:text-white transition-all font-black uppercase tracking-widest"
-                              >
-                                <span>Source Figma File</span>
-                                <div className="h-px w-4 bg-slate-700 group-hover/figma:w-8 transition-all bg-accent" />
-                              </a>
-                            )}
-                          </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+                      <div className="space-y-2">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Desktop</span>
+                        <div className="aspect-[16/10] bg-slate-100 rounded-xl overflow-hidden">
+                          {selectedPage.screenshot_url_desktop && <img src={selectedPage.screenshot_url_desktop} className="w-full h-full object-cover object-top" alt="Desktop" />}
                         </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-                          {/* Desktop */}
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between text-slate-400 px-1">
-                              <div className="flex items-center gap-2">
-                                <Monitor size={14} className="text-accent" />
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Desktop</span>
-                              </div>
-                              <span className="text-[9px] font-bold text-slate-600 uppercase">1440px</span>
-                            </div>
-                            <div className="aspect-[16/10] bg-slate-900 rounded-2xl border border-white/5 overflow-hidden flex items-center justify-center group/img cursor-pointer relative shadow-inner">
-                              {selectedPage.screenshot_url_desktop ? (
-                                <>
-                                  <img 
-                                    src={selectedPage.screenshot_url_desktop} 
-                                    alt="Desktop Screenshot" 
-                                    className="w-full h-full object-cover object-top group-hover/img:scale-105 transition-transform duration-700"
-                                  />
-                                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
-                                    <div className="bg-white text-black text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg transform translate-y-4 group-hover/img:translate-y-0 transition-transform">Expand View</div>
-                                  </div>
-                                </>
-                              ) : (
-                                <div className="flex flex-col items-center gap-4 text-slate-700">
-                                  <Loader2 size={24} className="animate-spin text-accent/20" />
-                                  <span className="text-[9px] font-black uppercase tracking-widest animate-pulse">Waiting for Capture</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Tablet */}
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between text-slate-400 px-1">
-                              <div className="flex items-center gap-2">
-                                <Tablet size={14} className="text-accent" />
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Tablet</span>
-                              </div>
-                              <span className="text-[9px] font-bold text-slate-600 uppercase">768px</span>
-                            </div>
-                            <div className="aspect-[3/4] max-w-[220px] mx-auto bg-slate-900 rounded-2xl border border-white/5 overflow-hidden flex items-center justify-center group/img cursor-pointer relative shadow-inner">
-                              {selectedPage.screenshot_url_tablet ? (
-                                <>
-                                  <img 
-                                    src={selectedPage.screenshot_url_tablet} 
-                                    alt="Tablet Screenshot" 
-                                    className="w-full h-full object-cover object-top group-hover/img:scale-105 transition-transform duration-700"
-                                  />
-                                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
-                                    <div className="bg-white text-black text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg transform translate-y-4 group-hover/img:translate-y-0 transition-transform">Expand</div>
-                                  </div>
-                                </>
-                              ) : (
-                                <div className="flex flex-col items-center gap-4 text-slate-700">
-                                  <Loader2 size={24} className="animate-spin text-accent/20" />
-                                  <span className="text-[9px] font-black uppercase tracking-widest animate-pulse">Waiting</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Mobile */}
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between text-slate-400 px-1">
-                              <div className="flex items-center gap-2">
-                                <Smartphone size={14} className="text-accent" />
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Mobile</span>
-                              </div>
-                              <span className="text-[9px] font-bold text-slate-600 uppercase">375px</span>
-                            </div>
-                            <div className="aspect-[9/16] max-w-[160px] mx-auto bg-slate-900 rounded-2xl border border-white/5 overflow-hidden flex items-center justify-center group/img cursor-pointer relative shadow-inner">
-                              {selectedPage.screenshot_url_mobile ? (
-                                <>
-                                  <img 
-                                    src={selectedPage.screenshot_url_mobile} 
-                                    alt="Mobile Screenshot" 
-                                    className="w-full h-full object-cover object-top group-hover/img:scale-105 transition-transform duration-700"
-                                  />
-                                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
-                                    <div className="bg-white text-black text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg transform translate-y-4 group-hover/img:translate-y-0 transition-transform">Expand</div>
-                                  </div>
-                                </>
-                              ) : (
-                                <div className="flex flex-col items-center gap-4 text-slate-700">
-                                  <Loader2 size={24} className="animate-spin text-accent/20" />
-                                  <span className="text-[9px] font-black uppercase tracking-widest animate-pulse">Waiting</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
+                      </div>
+                      <div className="space-y-2">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Tablet</span>
+                        <div className="aspect-[3/4] bg-slate-100 rounded-xl overflow-hidden">
+                          {selectedPage.screenshot_url_tablet && <img src={selectedPage.screenshot_url_tablet} className="w-full h-full object-cover object-top" alt="Tablet" />}
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <span className="text-[10px] font-black uppercase text-slate-400">Mobile</span>
+                        <div className="aspect-[9/16] bg-slate-100 rounded-xl overflow-hidden">
+                          {selectedPage.screenshot_url_mobile && <img src={selectedPage.screenshot_url_mobile} className="w-full h-full object-cover object-top" alt="Mobile" />}
                         </div>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Audit Findings Grid */}
-                <div>
-                  <div className="flex items-center gap-2 mb-8">
-                    <div className="h-px flex-1 bg-slate-100" />
-                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] whitespace-nowrap px-4">
-                      Audit Findings
-                    </h4>
-                    <div className="h-px flex-1 bg-slate-100" />
+                {/* Findings List */}
+                {isLoadingFindings ? (
+                  <div className="py-20 text-center">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-accent" />
                   </div>
-
-                  {isLoadingFindings ? (
-                    <div className="flex flex-col items-center justify-center py-20 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
-                      <div className="relative">
-                        <Loader2 className="w-10 h-10 text-black animate-spin" />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-2 h-2 bg-accent rounded-full animate-pulse" />
-                        </div>
-                      </div>
-                      <p className="mt-4 text-sm text-slate-900 font-black uppercase tracking-widest">Aggregating Audit Reports</p>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-tight">Syncing with scanning workers...</p>
-                    </div>
-                  ) : findings && findings.length > 0 ? (
-                    <FindingReviewPanel 
-                      findings={findings}
-                      pageScreenshots={{
-                        desktop: selectedPage.screenshot_url_desktop,
-                        tablet: selectedPage.screenshot_url_tablet,
-                        mobile: selectedPage.screenshot_url_mobile
-                      }}
-                      onSingleConfirm={handleConfirmFinding}
-                      onSingleFalsePositive={handleFalsePositiveFinding}
-                      onSingleCreateTask={handleCreateTaskForFinding}
-                      onConfirmBulk={handleBulkConfirm}
-                      onFalsePositiveBulk={handleBulkFalsePositive}
-                      onCreateTasksBulk={handleBulkCreateTasks}
-                      onAssignBulk={handleBulkAssign}
-                      onSingleAssign={handleSingleAssign}
-                    />
-                  ) : (selectedPage.status !== 'done' && selectedPage.status !== 'failed' && selectedPage.status !== 'checked') ? (
-                    <div className="flex flex-col items-center justify-center py-20 bg-blue-50/20 rounded-3xl border border-dashed border-blue-100 italic">
-                      <Activity className="w-8 h-8 text-blue-400 animate-pulse mb-3" />
-                      <p className="text-slate-900 font-black text-sm uppercase tracking-tight">Crawl In Progress</p>
-                      <p className="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-widest">Analyzing quality factors... {selectedPage.current_step}</p>
-                    </div>
-                  ) : (
-                    <div className="bg-emerald-50/20 rounded-3xl border border-dashed border-emerald-100 p-16 text-center group/clean">
-                      <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover/clean:scale-110 transition-transform duration-500">
-                        <CheckCircle2 className="w-10 h-10 text-emerald-600" />
-                      </div>
-                      <p className="text-slate-900 font-black text-lg uppercase tracking-tight">Audit Cleared</p>
-                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">No scan findings detected on this page</p>
-                    </div>
-                  )}
-                </div>
+                ) : findings && findings.length > 0 && selectedPage ? (
+                  <FindingReviewPanel 
+                    findings={findings}
+                    pageScreenshots={{
+                      desktop: selectedPage.screenshot_url_desktop,
+                      tablet: selectedPage.screenshot_url_tablet,
+                      mobile: selectedPage.screenshot_url_mobile
+                    }}
+                    onSingleConfirm={handleConfirmFinding}
+                    onSingleFalsePositive={handleFalsePositiveFinding}
+                    onSingleCreateTask={handleCreateTaskForFinding}
+                    onConfirmBulk={handleBulkConfirm}
+                    onFalsePositiveBulk={handleBulkFalsePositive}
+                    onCreateTasksBulk={handleBulkCreateTasks}
+                    onAssignBulk={handleBulkAssign}
+                    onSingleAssign={handleSingleAssign}
+                  />
+                ) : (
+                  <div className="py-20 text-center bg-emerald-50/20 rounded-3xl border border-dashed border-emerald-100">
+                    <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto mb-4" />
+                    <p className="text-slate-900 font-black uppercase tracking-tight">Audit Cleared</p>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
-            <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-24 text-center group/select">
-              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-slate-100 group-hover/select:translate-y-[-4px] transition-all">
-                <Search className="w-10 h-10 text-slate-200 group-hover/select:text-accent transition-colors" />
-              </div>
-              <p className="text-slate-900 font-black text-base uppercase tracking-tight">Intelligence Ready</p>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-2">Select a scan step above to analyze findings</p>
+            <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-24 text-center">
+              <Search className="w-10 h-10 text-slate-200 mx-auto mb-4" />
+              <p className="text-slate-900 font-black uppercase tracking-tight">Intelligence Ready</p>
+              <button 
+                onClick={() => setActiveTab('pages')}
+                className="mt-4 text-[10px] font-black text-accent uppercase tracking-widest hover:text-black transition-colors"
+              >
+                Select a page to view findings
+              </button>
             </div>
           )}
         </div>
-      </div>
+      )}
+
+      {activeTab === 'visual_diff' && (
+        <div className="bg-white border border-slate-200 rounded-2xl p-20 text-center animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-100">
+            <Eye size={40} className="text-slate-300" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Visual Diff Engine</h2>
+          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-2">Coming in Week 3: Pixel-perfect baseline comparisons</p>
+        </div>
+      )}
+
+      {activeTab === 'woocommerce' && (
+        <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
+          {isLoadingRunFindings ? (
+            <div className="py-20 text-center">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto text-accent" />
+              <p className="text-[10px] text-slate-400 font-bold uppercase mt-4 tracking-widest">Loading commerce reports...</p>
+            </div>
+          ) : (
+            <WooCommerceSection findings={runFindings || []} />
+          )}
+        </div>
+      )}
+
+      {activeTab === 'report' && (
+        <div className="bg-white border border-slate-200 rounded-2xl p-20 text-center animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-100">
+            <ClipboardList size={40} className="text-slate-300" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Executive QA Report</h2>
+          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-2">Coming in Week 3: PDF Exports and Sign-off summaries</p>
+        </div>
+      )}
+
       <CreateTaskModal 
         isOpen={isCreateTaskModalOpen}
         onClose={() => {
@@ -639,6 +653,7 @@ export const RunDetailPage = () => {
           severity: prefillFinding.severity
         } : undefined}
       />
+      
       <AssignMemberModal 
         isOpen={isAssignModalOpen}
         onClose={() => setIsAssignModalOpen(false)}

@@ -10,3 +10,4 @@ export { TeamPage } from './TeamPage';
 export { OnboardingPage } from './OnboardingPage';
 export { TestPage } from './TestPage';
 export { default as Week1TestPage } from './Week1TestPage';
+export { default as Week2TestPage } from './Week2TestPage';

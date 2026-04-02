@@ -14,6 +14,7 @@ import {
   OnboardingPage,
   TestPage,
   Week1TestPage,
+  Week2TestPage,
 } from "@/pages"
 import { AuthenticateWithRedirectCallback } from "@clerk/react"
 
@@ -70,6 +71,10 @@ export const router = createBrowserRouter(
             {
               path: "/week1-test",
               element: <Week1TestPage />,
+            },
+            {
+              path: "/week2-test",
+              element: <Week2TestPage />,
             },
             {
               path: "/sso-callback",

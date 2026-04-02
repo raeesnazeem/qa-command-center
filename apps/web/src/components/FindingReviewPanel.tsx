@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { 
-  CheckCircle2, 
   XCircle, 
   Plus, 
   UserPlus, 
@@ -9,7 +8,11 @@ import {
   BarChart3,
   Filter,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  ShieldAlert,
+  AlertTriangle,
+  Info,
+  Activity
 } from 'lucide-react';
 import { QAFinding } from '../api/runs.api';
 import { FindingCard } from './FindingCard';
@@ -31,6 +34,50 @@ interface FindingReviewPanelProps {
   onSingleFalsePositive?: (id: string) => void;
   onSingleCreateTask?: (finding: QAFinding) => void;
 }
+
+const DonutChart = ({ percentage, size = 120 }: { percentage: number; size?: number }) => {
+  const radius = 35;
+  const stroke = 8;
+  const normalizedRadius = radius - stroke / 2;
+  const circumference = normalizedRadius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+  return (
+    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+      <svg
+        height={size}
+        width={size}
+        viewBox="0 0 80 80"
+        className="transform -rotate-90"
+      >
+        <circle
+          stroke="#f1f5f9"
+          fill="transparent"
+          strokeWidth={stroke}
+          r={normalizedRadius}
+          cx="40"
+          cy="40"
+        />
+        <circle
+          stroke="#86B0A3"
+          fill="transparent"
+          strokeWidth={stroke}
+          strokeDasharray={`${circumference} ${circumference}`}
+          style={{ strokeDashoffset }}
+          strokeLinecap="round"
+          r={normalizedRadius}
+          cx="40"
+          cy="40"
+          className="transition-all duration-1000 ease-out"
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-xl font-black text-slate-900 leading-none">{percentage}%</span>
+        <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter mt-1">Resolved</span>
+      </div>
+    </div>
+  );
+};
 
 export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
   findings,
@@ -55,11 +102,22 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
 
   // Summary Stats
   const stats = useMemo(() => {
+    const total = findings.length;
+    const confirmed = findings.filter(f => f.status === 'confirmed').length;
+    const falsePositives = findings.filter(f => f.status === 'false_positive').length;
+    const open = findings.filter(f => f.status === 'open').length;
+    const resolved = confirmed + falsePositives;
+    
     return {
-      open: findings.filter(f => f.status === 'open').length,
-      confirmed: findings.filter(f => f.status === 'confirmed').length,
-      falsePositives: findings.filter(f => f.status === 'false_positive').length,
-      total: findings.length
+      open,
+      confirmed,
+      falsePositives,
+      critical: findings.filter(f => f.severity === 'critical').length,
+      high: findings.filter(f => f.severity === 'high').length,
+      medium: findings.filter(f => f.severity === 'medium').length,
+      low: findings.filter(f => f.severity === 'low').length,
+      total,
+      resolvedPercentage: total > 0 ? Math.round((resolved / total) * 100) : 0
     };
   }, [findings]);
 
@@ -67,7 +125,6 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
   const filteredFindings = useMemo(() => {
     if (!selectedFactor) return findings;
     
-    // Find the tab definition to get associated factors
     const tab = FILTER_TABS.find((t: FilterTab) => t.id === selectedFactor);
     if (!tab || tab.factors.length === 0) return findings.filter(f => f.check_factor === selectedFactor);
     
@@ -109,43 +166,74 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
   };
 
   return (
-    <div className="flex flex-col w-full space-y-6">
-      {/* Summary Stats Header */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm flex items-center gap-4">
-          <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
-            <AlertCircle size={20} />
-          </div>
-          <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Open</p>
-            <p className="text-xl font-black text-slate-900 leading-none">{stats.open}</p>
-          </div>
+    <div className="flex flex-col w-full space-y-8">
+      {/* Summary Dashboard */}
+      <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm overflow-hidden relative group">
+        <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none group-hover:scale-110 transition-transform duration-700">
+          <BarChart3 size={160} />
         </div>
-        <div className="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm flex items-center gap-4">
-          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
-            <CheckCircle2 size={20} />
+
+        <div className="flex flex-col lg:flex-row items-center gap-10 relative z-10">
+          {/* Resolved Progress Donut */}
+          <div className="shrink-0 bg-slate-50 p-4 rounded-3xl border border-slate-100 shadow-inner">
+            <DonutChart percentage={stats.resolvedPercentage} />
           </div>
-          <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Confirmed</p>
-            <p className="text-xl font-black text-slate-900 leading-none">{stats.confirmed}</p>
-          </div>
-        </div>
-        <div className="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm flex items-center gap-4">
-          <div className="p-3 bg-slate-50 text-slate-400 rounded-xl">
-            <XCircle size={20} />
-          </div>
-          <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">False Positives</p>
-            <p className="text-xl font-black text-slate-900 leading-none">{stats.falsePositives}</p>
-          </div>
-        </div>
-        <div className="bg-black p-4 rounded-2xl shadow-sm flex items-center gap-4">
-          <div className="p-3 bg-accent/20 text-accent rounded-xl">
-            <BarChart3 size={20} />
-          </div>
-          <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total Audit</p>
-            <p className="text-xl font-black text-white leading-none">{stats.total}</p>
+
+          <div className="flex-1 space-y-8 w-full">
+            {/* Severity Breakdown Text */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-slate-400">
+                <ShieldAlert size={14} />
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em]">Audit Summary</h4>
+              </div>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xl font-black text-red-600">{stats.critical}</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Critical</span>
+                </div>
+                <div className="h-4 w-px bg-slate-200" />
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xl font-black text-orange-500">{stats.high}</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">High</span>
+                </div>
+                <div className="h-4 w-px bg-slate-200" />
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xl font-black text-amber-500">{stats.medium}</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Medium</span>
+                </div>
+                <div className="h-4 w-px bg-slate-200" />
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xl font-black text-blue-500">{stats.low}</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Low</span>
+                </div>
+                <span className="text-[10px] font-medium text-slate-400 italic ml-2">findings found</span>
+              </div>
+            </div>
+
+            {/* Status Breakdown Text */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-slate-400">
+                <Activity size={14} />
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em]">Status Overview</h4>
+              </div>
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <span className="text-sm font-black text-slate-900">{stats.confirmed}</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Confirmed</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-slate-400" />
+                  <span className="text-sm font-black text-slate-900">{stats.falsePositives}</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">False Positives</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                  <span className="text-sm font-black text-slate-900">{stats.open}</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Open for Review</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -157,7 +245,7 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
           selectedFactor={selectedFactor}
           onSelectFactor={(factor) => {
             setSelectedFactor(factor);
-            setSelectedIds(new Set()); // Reset selection on filter change
+            setSelectedIds(new Set());
           }}
         />
       </div>

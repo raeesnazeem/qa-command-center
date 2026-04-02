@@ -54,6 +54,9 @@ export interface QAFinding {
   ai_generated: boolean;
   created_at: string;
   updated_at: string;
+  pages?: {
+    url: string;
+  };
   tasks?: {
     id: string;
     status: string;
