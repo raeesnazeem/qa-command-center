@@ -12,15 +12,19 @@ const router: Router = Router();
 /**
  * Helper to get Supabase user UUID from Clerk ID
  */
-async function getSupabaseUserId(clerkId: string): Promise<string> {
+async function getSupabaseUserId(clerkIdOrUuid: string): Promise<string> {
+  if (clerkIdOrUuid.length === 36 && clerkIdOrUuid.includes('-')) {
+    return clerkIdOrUuid;
+  }
+
   const { data, error } = await supabase
     .from('users')
     .select('id')
-    .eq('clerk_user_id', clerkId)
-    .single();
+    .eq('clerk_user_id', clerkIdOrUuid)
+    .maybeSingle();
   
   if (error || !data) {
-    throw new Error(`User not synced: ${clerkId}`);
+    throw new Error(`User not synced: ${clerkIdOrUuid}`);
   }
   return data.id;
 }

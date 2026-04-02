@@ -7,8 +7,10 @@ import {
   updateProject, 
   addProjectMember,
   updateProjectMemberRole,
+  getWorkspaceUsers,
   Project,
-  ProjectWithMembers 
+  ProjectWithMembers,
+  WorkspaceMember 
 } from '../api/projects.api';
 import { CreateProjectInput, UpdateProjectInput } from '@qacc/shared';
 import toast from 'react-hot-toast';
@@ -103,5 +105,14 @@ export const useUpdateProjectMemberRole = (projectId: string) => {
       const message = error.response?.data?.error || 'Failed to update role';
       toast.error(message);
     },
+  });
+};
+
+export const useWorkspaceUsers = () => {
+  const axios = useAuthAxios();
+  return useQuery<WorkspaceMember[]>({
+    queryKey: ['workspace-users'],
+    queryFn: () => getWorkspaceUsers(axios),
+    staleTime: 0,
   });
 };

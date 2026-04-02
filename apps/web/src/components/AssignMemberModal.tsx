@@ -1,4 +1,4 @@
-import { useProject } from '../hooks/useProjects';
+import { useWorkspaceUsers } from '../hooks/useProjects';
 import { User, X, CheckCircle2, Loader2 } from 'lucide-react';
 
 interface AssignMemberModalProps {
@@ -18,7 +18,7 @@ export const AssignMemberModal = ({
   isPending,
   title = "Assign Finding"
 }: AssignMemberModalProps) => {
-  const { data: project, isLoading } = useProject(projectId);
+  const { data: members, isLoading } = useWorkspaceUsers();
 
   if (!isOpen) return null;
 
@@ -57,19 +57,19 @@ export const AssignMemberModal = ({
                 <Loader2 className="w-6 h-6 animate-spin mr-2" />
                 <span className="text-xs font-bold uppercase tracking-widest">Loading members...</span>
               </div>
-            ) : project?.project_members.map((member) => (
+            ) : members?.map((member) => (
               <button
-                key={member.user_id}
-                onClick={() => onAssign(member.user_id)}
+                key={member.id}
+                onClick={() => onAssign(member.id)}
                 disabled={isPending}
                 className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:bg-slate-50 hover:border-accent/30 transition-all group/member text-left active:scale-[0.98]"
               >
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs group-hover/member:bg-accent group-hover/member:text-white transition-colors">
-                    {member.users.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                    {member.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-slate-900 leading-none mb-1">{member.users.full_name}</p>
+                    <p className="text-sm font-bold text-slate-900 leading-none mb-1">{member.full_name}</p>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">{member.role.replace('_', ' ')}</p>
                   </div>
                 </div>
@@ -79,7 +79,7 @@ export const AssignMemberModal = ({
               </button>
             ))}
 
-            {!isLoading && project?.project_members.length === 0 && (
+            {!isLoading && (!members || members.length === 0) && (
               <div className="text-center py-10 bg-slate-50 rounded-xl border border-dashed border-slate-200">
                 <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">No members found</p>
               </div>

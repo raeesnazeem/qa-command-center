@@ -39,7 +39,7 @@ export const clerkAuth = async (
     console.log(`[clerkAuth] Fetching user profile for ${auth.userId}...`);
     let { data: user, error } = await supabase
       .from('users')
-      .select('role, org_id')
+      .select('id, role, org_id')
       .eq('clerk_user_id', auth.userId)
       .maybeSingle()
 
@@ -113,15 +113,16 @@ export const clerkAuth = async (
 
     // Map to our local AuthPayload format
     req.auth = {
-      userId: auth.userId,
+      userId: user?.id || auth.userId, // Prefer Supabase UUID
+      clerkUserId: auth.userId,      // Keep original Clerk ID for sync if needed
       orgId: orgId,
       role: role,
-    }
+    } as any;
 
     console.log('--- Clerk Auth Success ---')
-    console.log('User:', req.auth.userId)
-    console.log('Org:', req.auth.orgId)
-    console.log('Role:', req.auth.role)
+    console.log('User:', req.auth?.userId)
+    console.log('Org:', req.auth?.orgId)
+    console.log('Role:', req.auth?.role)
 
     next()
   } catch (err: any) {

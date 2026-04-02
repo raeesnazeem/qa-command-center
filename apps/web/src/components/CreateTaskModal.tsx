@@ -3,9 +3,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CreateTaskSchema, CreateTaskInput } from '@qacc/shared';
 import { useCreateTask } from '../hooks/useTasks';
-import { useProjects } from '../hooks/useProjects';
+import { useProjects, useWorkspaceUsers } from '../hooks/useProjects';
 import { X, Loader2, CheckCircle2, ShieldAlert, User } from 'lucide-react';
-import { useProject } from '../hooks/useProjects';
 
 interface CreateTaskModalProps {
   projectId?: string;
@@ -17,7 +16,7 @@ interface CreateTaskModalProps {
 export const CreateTaskModal = ({ projectId, isOpen, onClose, prefillData }: CreateTaskModalProps) => {
   const { mutate: createTask, isPending } = useCreateTask();
   const { data: projects } = useProjects();
-  const { data: project } = useProject(projectId || '');
+  const { data: members } = useWorkspaceUsers();
   
   const {
     register,
@@ -155,7 +154,7 @@ export const CreateTaskModal = ({ projectId, isOpen, onClose, prefillData }: Cre
             </div>
 
             {/* Assignee Selection */}
-            {projectId && project?.project_members && (
+            {members && (
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">
                   Assign To <span className="text-slate-400 text-[10px] uppercase ml-1">(Optional)</span>
@@ -167,9 +166,9 @@ export const CreateTaskModal = ({ projectId, isOpen, onClose, prefillData }: Cre
                     className="w-full bg-white border border-slate-200 rounded-md pl-10 pr-4 py-2.5 text-slate-900 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all appearance-none"
                   >
                     <option value="">Unassigned</option>
-                    {project.project_members.map((member) => (
-                      <option key={member.user_id} value={member.user_id}>
-                        {member.users.full_name} ({member.role.replace('_', ' ')})
+                    {members.map((member) => (
+                      <option key={member.id} value={member.id}>
+                        {member.full_name} ({member.role.replace('_', ' ')})
                       </option>
                     ))}
                   </select>

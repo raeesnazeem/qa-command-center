@@ -11,15 +11,26 @@ const router: Router = Router();
 /**
  * Helper to get Supabase user UUID from Clerk ID
  */
-async function getSupabaseUserId(clerkId: string): Promise<string> {
+/**
+ * Helper to get Supabase user UUID from Clerk ID.
+ * Refactored to handle cases where the ID might already be a Supabase UUID from the middleware.
+ */
+async function getSupabaseUserId(clerkIdOrUuid: string): Promise<string> {
+  // If it's already a UUID, return it (Supabase UUIDs are always 36 chars)
+  if (clerkIdOrUuid.length === 36 && clerkIdOrUuid.includes('-')) {
+    return clerkIdOrUuid;
+  }
+
   const { data, error } = await supabase
     .from('users')
     .select('id')
-    .eq('clerk_user_id', clerkId)
-    .single();
+    .eq('clerk_user_id', clerkIdOrUuid)
+    .maybeSingle();
   
   if (error || !data) {
-    throw new Error(`User not synced: ${clerkId}`);
+    // If not found, it might be due to a sync delay. The middleware should have handled this,
+    // but we add a small log and throw if we truly can't find it.
+    throw new Error(`User not synced: ${clerkIdOrUuid}`);
   }
   return data.id;
 }
