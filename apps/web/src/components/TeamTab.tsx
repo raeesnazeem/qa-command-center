@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { ProjectWithMembers } from '../api/projects.api';
-import { useAddProjectMember, useUpdateProjectMemberRole } from '../hooks/useProjects';
-import { UserPlus, Mail } from 'lucide-react';
+import { useAddProjectMember, useUpdateProjectMemberRole, useWorkspaceUsers } from '../hooks/useProjects';
+import { UserPlus, Mail, Search } from 'lucide-react';
 import { CanDo } from './CanDo';
+import toast from 'react-hot-toast';
 
 interface TeamTabProps {
   project: ProjectWithMembers;
@@ -11,11 +12,41 @@ interface TeamTabProps {
 export const TeamTab = ({ project }: TeamTabProps) => {
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [newMemberRole, setNewMemberRole] = useState<'admin' | 'sub_admin' | 'qa_engineer' | 'developer'>('developer');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const { data: allUsers } = useWorkspaceUsers();
   const { mutate: addMember, isPending: isAdding } = useAddProjectMember(project.id);
   const { mutate: updateRole } = useUpdateProjectMemberRole(project.id);
 
+  // Filter users based on input and exclude existing members
+  const memberEmails = useMemo(() => 
+    new Set(project.project_members.map(m => m.users.email.toLowerCase())), 
+  [project.project_members]);
+
+  const filteredUsers = useMemo(() => {
+    const query = newMemberEmail.toLowerCase().trim();
+    if (!query || !allUsers) return [];
+    
+    return allUsers.filter(u => 
+      !memberEmails.has(u.email.toLowerCase()) && 
+      (u.email.toLowerCase().includes(query) || u.full_name?.toLowerCase().includes(query))
+    ).slice(0, 5);
+  }, [allUsers, newMemberEmail, memberEmails]);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsSearchFocused(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const getInitials = (name: string) => {
+    if (!name) return '?';
     return name
       .split(' ')
       .map((n) => n[0])
@@ -41,8 +72,8 @@ export const TeamTab = ({ project }: TeamTabProps) => {
     updateRole({ userId, role: newRole });
   };
 
-  const handleAddMember = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAddMember = (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!newMemberEmail) return;
 
     addMember(
@@ -50,9 +81,19 @@ export const TeamTab = ({ project }: TeamTabProps) => {
       {
         onSuccess: () => {
           setNewMemberEmail('');
+          toast.success('Member added successfully');
         },
+        onError: (err: any) => {
+          toast.error(err.response?.data?.error || 'Failed to add member');
+        }
       }
     );
+  };
+
+  const selectUser = (user: any) => {
+    setNewMemberEmail(user.email);
+    setNewMemberRole(user.role as any);
+    setIsSearchFocused(false);
   };
 
   return (
@@ -71,7 +112,7 @@ export const TeamTab = ({ project }: TeamTabProps) => {
               {project.project_members.map((member) => (
                 <div key={member.user_id} className="px-6 py-4 flex items-center justify-between group hover:bg-slate-50/50 transition-colors">
                   <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-sm border border-accent/20">
+                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-sm border border-slate-200">
                       {getInitials(member.users.full_name)}
                     </div>
                     <div>
@@ -88,11 +129,11 @@ export const TeamTab = ({ project }: TeamTabProps) => {
                       {member.role.replace('_', ' ')}
                     </span>
                     
-                    <CanDo role="admin">
+                    <CanDo role="qa_engineer">
                       <select
                         value={member.role}
                         onChange={(e) => handleUpdateRole(member.user_id, e.target.value)}
-                        className="text-xs border-slate-200 rounded-md bg-white px-2 py-1 focus:outline-none focus:ring-1 focus:ring-accent/20 focus:border-accent"
+                        className="text-xs border-slate-200 rounded-md bg-white px-2 py-1 focus:outline-none focus:ring-1 focus:ring-accent/20 focus:border-accent appearance-none cursor-pointer hover:border-accent transition-all"
                       >
                         <option value="admin">Admin</option>
                         <option value="sub_admin">Sub Admin</option>
@@ -108,27 +149,65 @@ export const TeamTab = ({ project }: TeamTabProps) => {
         </div>
 
         {/* Add Member Form */}
-        <CanDo role="admin">
+        <CanDo role="qa_engineer">
           <div className="lg:w-80 shrink-0">
             <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-sm sticky top-6">
               <div className="flex items-center space-x-2 mb-6">
-                <div className="p-2 bg-accent/10 rounded-lg text-accent">
+                <div className="p-2 bg-slate-900 rounded-lg text-white">
                   <UserPlus className="w-5 h-5" />
                 </div>
                 <h3 className="font-bold text-slate-900">Add Member</h3>
               </div>
               
               <form onSubmit={handleAddMember} className="space-y-4">
-                <div>
+                <div className="relative" ref={dropdownRef}>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Email Address</label>
-                  <input
-                    type="email"
-                    value={newMemberEmail}
-                    onChange={(e) => setNewMemberEmail(e.target.value)}
-                    placeholder="teammate@example.com"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
-                    required
-                  />
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                    <input
+                      type="text"
+                      value={newMemberEmail}
+                      onChange={(e) => {
+                        setNewMemberEmail(e.target.value);
+                        setIsSearchFocused(true);
+                      }}
+                      onFocus={() => setIsSearchFocused(true)}
+                      placeholder="teammate@example.com"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-md pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-accent transition-all font-medium"
+                      required
+                    />
+                  </div>
+
+                  {/* Dropdown Suggestions */}
+                  {isSearchFocused && filteredUsers.length > 0 && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden animate-in slide-in-from-top-2 duration-200">
+                      <div className="p-2 border-b border-slate-50 bg-slate-50/50">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Matching Profiles</span>
+                      </div>
+                      <div className="divide-y divide-slate-50">
+                        {filteredUsers.map(user => (
+                          <div 
+                            key={user.id}
+                            onClick={() => selectUser(user)}
+                            className="p-3 hover:bg-slate-50 flex items-center space-x-3 cursor-pointer group transition-colors"
+                          >
+                            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 text-[10px] font-bold uppercase transition-all group-hover:bg-white group-hover:border-accent border border-transparent">
+                              {getInitials(user.full_name)}
+                            </div>
+                            <div className="flex-grow min-w-0">
+                              <p className="text-xs font-bold text-slate-900 truncate uppercase tracking-tight">{user.full_name || 'Incomplete Profile'}</p>
+                              <p className="text-[10px] text-slate-500 truncate">{user.email}</p>
+                            </div>
+                            <div className="shrink-0">
+                               <span className="text-[9px] font-black uppercase text-accent bg-accent/10 px-1.5 py-0.5 rounded border border-accent/20">
+                                 {user.role}
+                               </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
                 <div>
@@ -136,7 +215,7 @@ export const TeamTab = ({ project }: TeamTabProps) => {
                   <select
                     value={newMemberRole}
                     onChange={(e) => setNewMemberRole(e.target.value as any)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-accent transition-all font-bold text-slate-900"
                   >
                     <option value="admin">Admin</option>
                     <option value="sub_admin">Sub Admin</option>
@@ -148,14 +227,14 @@ export const TeamTab = ({ project }: TeamTabProps) => {
                 <button
                   type="submit"
                   disabled={isAdding}
-                  className="btn-unified w-full"
+                  className="btn-unified w-full h-11 uppercase font-bold tracking-widest text-[11px]"
                 >
                   {isAdding ? 'Adding...' : 'Add to Project'}
                 </button>
               </form>
               
               <div className="mt-6 pt-6 border-t border-slate-50">
-                <p className="text-[10px] text-slate-400 leading-relaxed italic">
+                <p className="text-[10px] text-slate-400 leading-relaxed italic font-medium">
                   New members will receive an email notification and immediate access to the project based on their role.
                 </p>
               </div>
