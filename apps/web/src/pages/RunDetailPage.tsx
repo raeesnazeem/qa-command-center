@@ -5,6 +5,9 @@ import { PagesTable } from '../components/PagesTable';
 import { FindingReviewPanel } from '../components/FindingReviewPanel';
 import { CreateTaskModal } from '../components/CreateTaskModal';
 import { useFindings, useUpdateRunStatus, useUpdateFinding } from '../hooks/useRuns';
+import { useCreateTask } from '../hooks/useTasks';
+import { AssignMemberModal } from '../components/AssignMemberModal';
+import toast from 'react-hot-toast';
 import { 
   ChevronLeft, 
   CheckCircle2, 
@@ -54,6 +57,11 @@ export const RunDetailPage = () => {
   // 2b. Fetch findings for the selected page
   const { data: findings, isLoading: isLoadingFindings } = useFindings(selectedPageId);
   const updateFindingMutation = useUpdateFinding(selectedPageId);
+  const { mutate: createTask } = useCreateTask();
+
+  // Assignment Modal State
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [assignTarget, setAssignTarget] = useState<{ type: 'single' | 'bulk'; ids: string[] }>({ type: 'single', ids: [] });
 
   // Auto-select first page when pages load
   useEffect(() => {
@@ -161,6 +169,54 @@ export const RunDetailPage = () => {
   const handleBulkFalsePositive = async (ids: string[]) => {
     ids.forEach(id => {
       updateFindingMutation.mutate({ findingId: id, data: { status: 'false_positive' } });
+    });
+  };
+
+  const handleBulkAssign = (ids: string[]) => {
+    setAssignTarget({ type: 'bulk', ids });
+    setIsAssignModalOpen(true);
+  };
+
+  const handleSingleAssign = (id: string) => {
+    setAssignTarget({ type: 'single', ids: [id] });
+    setIsAssignModalOpen(true);
+  };
+
+  const handleAssignFinding = async (userId: string) => {
+    try {
+      // For findings, assigning means creating a task for each finding assigned to that user
+      // or we can just mark it if our backend supports direct finding assignment.
+      // Current architecture: Finding -> Create Task -> Assign Task.
+      // If we want "Assign" directly from findings, we create a task for each.
+      
+      const targets = findings?.filter(f => assignTarget.ids.includes(f.id)) || [];
+      
+      for (const finding of targets) {
+        createTask({
+          project_id: projectId!,
+          finding_id: finding.id,
+          title: finding.title,
+          description: finding.description || '',
+          severity: finding.severity,
+          assigned_to: userId
+        });
+      }
+      
+      setIsAssignModalOpen(false);
+    } catch (error) {
+      toast.error('Failed to assign findings');
+    }
+  };
+
+  const handleBulkCreateTasks = (selectedFindings: QAFinding[]) => {
+    selectedFindings.forEach(finding => {
+      createTask({
+        project_id: projectId!,
+        finding_id: finding.id,
+        title: finding.title,
+        description: finding.description || '',
+        severity: finding.severity
+      });
     });
   };
 
@@ -536,7 +592,9 @@ export const RunDetailPage = () => {
                       onSingleCreateTask={handleCreateTaskForFinding}
                       onConfirmBulk={handleBulkConfirm}
                       onFalsePositiveBulk={handleBulkFalsePositive}
-                      onCreateTasksBulk={(fs) => console.log('Bulk Create Tasks', fs)}
+                      onCreateTasksBulk={handleBulkCreateTasks}
+                      onAssignBulk={handleBulkAssign}
+                      onSingleAssign={handleSingleAssign}
                     />
                   ) : (selectedPage.status !== 'done' && selectedPage.status !== 'failed' && selectedPage.status !== 'checked') ? (
                     <div className="flex flex-col items-center justify-center py-20 bg-blue-50/20 rounded-3xl border border-dashed border-blue-100 italic">
@@ -580,6 +638,13 @@ export const RunDetailPage = () => {
           description: prefillFinding.description || '',
           severity: prefillFinding.severity
         } : undefined}
+      />
+      <AssignMemberModal 
+        isOpen={isAssignModalOpen}
+        onClose={() => setIsAssignModalOpen(false)}
+        projectId={projectId!}
+        onAssign={handleAssignFinding}
+        title={assignTarget.type === 'bulk' ? `Assign ${assignTarget.ids.length} Findings` : 'Assign Finding'}
       />
     </div>
   );

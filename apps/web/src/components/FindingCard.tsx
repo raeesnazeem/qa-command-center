@@ -14,7 +14,8 @@ import {
   Layout,
   Eye,
   Monitor,
-  Activity
+  Activity,
+  User
 } from 'lucide-react';
 import { FindingSeverityEditor } from './FindingSeverityEditor';
 import { SpellingFindingCard } from './SpellingFindingCard';
@@ -33,6 +34,7 @@ interface FindingCardProps {
   onConfirm?: (id: string) => void;
   onFalsePositive?: (id: string) => void;
   onCreateTask?: (finding: QAFinding) => void;
+  onAssign?: (id: string) => void;
 }
 
 const CHECK_FACTOR_ICONS: Record<string, React.ReactNode> = {
@@ -54,7 +56,8 @@ export const FindingCard: React.FC<FindingCardProps> = ({
   pageScreenshots,
   onConfirm, 
   onFalsePositive, 
-  onCreateTask 
+  onCreateTask,
+  onAssign
 }) => {
   const { user } = useUser();
   const role = user?.publicMetadata?.role as string;
@@ -211,6 +214,13 @@ export const FindingCard: React.FC<FindingCardProps> = ({
                 >
                   <XCircle size={12} />
                   False Positive
+                </button>
+                <button 
+                  onClick={() => onAssign?.(finding.id)}
+                  className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-[10px] hover:bg-slate-50 transition-colors"
+                >
+                  <User size={12} />
+                  Assign
                 </button>
               </div>
               <button 

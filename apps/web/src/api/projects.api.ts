@@ -90,3 +90,15 @@ export const updateProjectMemberRole = async (
 export const deleteProject = async (axios: AxiosInstance, id: string): Promise<void> => {
   await axios.delete(`/api/projects/${id}`);
 };
+
+export interface WorkspaceMember {
+  id: string;
+  full_name: string;
+  email: string;
+  role: string;
+}
+
+export const getWorkspaceUsers = async (axios: AxiosInstance): Promise<WorkspaceMember[]> => {
+  const { data } = await axios.get<WorkspaceMember[]>('/api/users');
+  return data;
+};

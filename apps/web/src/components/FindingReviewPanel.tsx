@@ -26,6 +26,7 @@ interface FindingReviewPanelProps {
   onFalsePositiveBulk?: (ids: string[]) => void;
   onCreateTasksBulk?: (findings: QAFinding[]) => void;
   onAssignBulk?: (ids: string[]) => void;
+  onSingleAssign?: (id: string) => void;
   onSingleConfirm?: (id: string) => void;
   onSingleFalsePositive?: (id: string) => void;
   onSingleCreateTask?: (finding: QAFinding) => void;
@@ -40,7 +41,8 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
   onAssignBulk,
   onSingleConfirm,
   onSingleFalsePositive,
-  onSingleCreateTask
+  onSingleCreateTask,
+  onSingleAssign
 }) => {
   const [selectedFactor, setSelectedFactor] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -229,6 +231,7 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
               onConfirm={onSingleConfirm}
               onFalsePositive={onSingleFalsePositive}
               onCreateTask={onSingleCreateTask}
+              onAssign={onSingleAssign}
             />
           </div>
         ))}

@@ -4,7 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { CreateTaskSchema, CreateTaskInput } from '@qacc/shared';
 import { useCreateTask } from '../hooks/useTasks';
 import { useProjects } from '../hooks/useProjects';
-import { X, Loader2, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { X, Loader2, CheckCircle2, ShieldAlert, User } from 'lucide-react';
+import { useProject } from '../hooks/useProjects';
 
 interface CreateTaskModalProps {
   projectId?: string;
@@ -16,6 +17,7 @@ interface CreateTaskModalProps {
 export const CreateTaskModal = ({ projectId, isOpen, onClose, prefillData }: CreateTaskModalProps) => {
   const { mutate: createTask, isPending } = useCreateTask();
   const { data: projects } = useProjects();
+  const { data: project } = useProject(projectId || '');
   
   const {
     register,
@@ -151,6 +153,29 @@ export const CreateTaskModal = ({ projectId, isOpen, onClose, prefillData }: Cre
                 </div>
               </div>
             </div>
+
+            {/* Assignee Selection */}
+            {projectId && project?.project_members && (
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                  Assign To <span className="text-slate-400 text-[10px] uppercase ml-1">(Optional)</span>
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  <select
+                    {...register('assigned_to')}
+                    className="w-full bg-white border border-slate-200 rounded-md pl-10 pr-4 py-2.5 text-slate-900 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all appearance-none"
+                  >
+                    <option value="">Unassigned</option>
+                    {project.project_members.map((member) => (
+                      <option key={member.user_id} value={member.user_id}>
+                        {member.users.full_name} ({member.role.replace('_', ' ')})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex space-x-3 pt-2">
