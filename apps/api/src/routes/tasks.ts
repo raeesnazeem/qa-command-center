@@ -291,7 +291,7 @@ router.post(
       // Enqueue AI analysis job
       await qaQueue.add(
         'analyze_rebuttal',
-        { rebuttalId: rebuttal.id },
+        { rebuttalId: rebuttal.id, taskId: id },
         {
           removeOnComplete: true,
           attempts: 3,
@@ -309,38 +309,5 @@ router.post(
   }
 );
 
-/**
- * PATCH /api/findings/:id/status
- * Update finding status. Restricted to qa_engineer and above.
- */
-router.patch(
-  '/findings/:id/status',
-  clerkAuth,
-  requireRole('qa_engineer'),
-  async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const { status } = req.body;
-
-    if (!['confirmed', 'false_positive'].includes(status)) {
-      return res.status(400).json({ error: 'Invalid status. Must be confirmed or false_positive' });
-    }
-
-    try {
-      const { data: finding, error } = await supabase
-        .from('findings')
-        .update({ status })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      if (!finding) return res.status(404).json({ error: 'Finding not found' });
-
-      return res.json(finding);
-    } catch (error: any) {
-      return res.status(500).json({ error: error.message });
-    }
-  }
-);
 
 export { router as tasksRouter };

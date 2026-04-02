@@ -9,6 +9,7 @@ import { checkMeta } from '../checks/metaCheck';
 import { checkConsoleErrors } from '../checks/consoleErrorCheck';
 import { checkDummyContent } from '../checks/dummyContentCheck';
 import { checkSpelling } from '../checks/spellingCheck';
+import { checkImageCompliance } from '../checks/imageComplianceCheck';
 import pino from 'pino';
 
 const logger = pino({
@@ -117,15 +118,16 @@ export async function processCrawlPageJob(job: Job) {
         }
       });
 
-      await page.goto(pageUrl, { waitUntil: 'networkidle', timeout: 30000 });
+      await page.goto(pageUrl, { waitUntil: 'load', timeout: 60000 });
 
-      const [linkFindings, extLinkFindings, metaFindings, consoleFindings, dummyFindings, spellingFindings] = await Promise.all([
-        checkBrokenLinks(page, {}),
-        checkExternalLinks(page, {}),
-        checkMeta(page, {}),
-        checkConsoleErrors(page, {}),
-        checkDummyContent(page, {}),
-        checkSpelling(page, {})
+      const [linkFindings, extLinkFindings, metaFindings, consoleFindings, dummyFindings, spellingFindings, imageFindings] = await Promise.all([
+        checkBrokenLinks(page, {}).catch(e => { logger.error('Broken links check failed:', e); return []; }),
+        checkExternalLinks(page, {}).catch(e => { logger.error('External links check failed:', e); return []; }),
+        checkMeta(page, {}).catch(e => { logger.error('Meta check failed:', e); return []; }),
+        checkConsoleErrors(page, {}).catch(e => { logger.error('Console errors check failed:', e); return []; }),
+        checkDummyContent(page, {}).catch(e => { logger.error('Dummy content check failed:', e); return []; }),
+        checkSpelling(page, {}).catch(e => { logger.error('Spelling check failed:', e); return []; }),
+        checkImageCompliance(page, { screenshot_url_desktop: screenshots.desktopUrl }).catch(e => { logger.error('Image compliance check failed:', e); return []; })
       ]);
 
       const allFindings = [
@@ -134,7 +136,8 @@ export async function processCrawlPageJob(job: Job) {
         ...metaFindings,
         ...consoleFindings,
         ...dummyFindings,
-        ...spellingFindings
+        ...spellingFindings,
+        ...imageFindings
       ].map(f => ({
         ...f,
         page_id: pageId,
@@ -154,23 +157,34 @@ export async function processCrawlPageJob(job: Job) {
 
       // Add AI Check jobs decoupled to perform asynchronously
       const pageText = await page.evaluate(() => document.body.innerText).catch(() => '');
-      qaQueue.add('queueGeminiCall', { type: 'run_ai_checks', runId, pageId, pageUrl, pageText })
-             .catch(e => logger.error('Failed to queue Gemini AI check job:', e));
-             
+      
       qaQueue.add('run_ai_checks', { runId, pageId, pageUrl, pageText })
              .catch(e => logger.error('Failed to queue run_ai_checks:', e));
              
-      // Step 5: Update page status to 'checked'
+      // Step 5: Update page status to 'done'
       await supabase
         .from('pages')
-        .update({ status: 'checked', progress: 100, current_step: 'All checks complete' })
+        .update({ status: 'done', progress: 100, current_step: 'All checks complete' })
         .eq('id', pageId);
 
     } finally {
-      await browser.close();
+      await browser.close().catch(e => logger.error({ err: e }, 'Failed to close browser'));
     }
 
+  } catch (error: any) {
+    logger.error({ runId, pageUrl, error: error.message }, 'Error during page crawl');
+    
+    if (pageId) {
+      await supabase
+        .from('pages')
+        .update({ status: 'failed' })
+        .eq('id', pageId);
+    }
+    
+    throw error;
+  } finally {
     // Step 6: Increment run.pages_processed by 1
+    // This MUST run regardless of success/failure so the run doesn't get stuck
     const { error: incrementError } = await supabase.rpc('increment_pages_processed', {
       run_id_param: runId
     });
@@ -193,30 +207,34 @@ export async function processCrawlPageJob(job: Job) {
       }
     }
 
-    // Step 7: Broadcast progress update to Supabase Realtime channel "run:{runId}"
+    // Step 7: Check for run completion
+    const { data: runCheck } = await supabase
+      .from('qa_runs')
+      .select('pages_processed, pages_total')
+      .eq('id', runId)
+      .single();
+
+    if (runCheck && runCheck.pages_processed >= runCheck.pages_total) {
+      await supabase
+        .from('qa_runs')
+        .update({ status: 'completed', completed_at: new Date().toISOString() })
+        .eq('id', runId);
+      
+      logger.info({ runId }, 'Run marked as completed');
+    }
+
+    // Step 8: Broadcast progress update
     const finalChannel = supabase.channel(`run:${runId}`);
     await finalChannel.send({
       type: 'broadcast',
       event: 'progress',
       payload: {
         pageUrl,
-        status: 'checked',
+        status: 'done',
         pageId
       }
     });
 
-    logger.info({ pageId, runId }, 'Page crawl and checks complete');
-
-  } catch (error: any) {
-    logger.error({ runId, pageUrl, error: error.message }, 'Error during page crawl');
-    
-    if (pageId) {
-      await supabase
-        .from('pages')
-        .update({ status: 'failed' })
-        .eq('id', pageId);
-    }
-    
-    throw error;
+    logger.info({ pageId, runId }, 'Page crawl lifecycle finished');
   }
 }

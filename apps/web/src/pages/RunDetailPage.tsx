@@ -3,7 +3,8 @@ import { useProject } from '../hooks/useProjects';
 import { useRunProgress } from '../hooks/useRunProgress';
 import { PagesTable } from '../components/PagesTable';
 import { FindingReviewPanel } from '../components/FindingReviewPanel';
-import { useFindings, useUpdateRunStatus } from '../hooks/useRuns';
+import { CreateTaskModal } from '../components/CreateTaskModal';
+import { useFindings, useUpdateRunStatus, useUpdateFinding } from '../hooks/useRuns';
 import { 
   ChevronLeft, 
   CheckCircle2, 
@@ -18,38 +19,13 @@ import {
   User,
   LayoutDashboard,
   FileSearch,
-  CheckCircle,
-  XCircle,
-  Timer,
   Monitor,
   Smartphone,
   Tablet,
   Eye
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-
-const CHECK_DETAILS: Record<string, { label: string; description: string }> = {
-  visual_regression: {
-    label: 'Visual Regression',
-    description: 'Captures and compares layout consistency across desktop, tablet, and mobile breakpoints.'
-  },
-  accessibility: {
-    label: 'Accessibility',
-    description: 'Scans for WCAG 2.1 compliance, including contrast, ARIA labels, and structural markers.'
-  },
-  seo: {
-    label: 'SEO Analysis',
-    description: 'Checks meta tags, title hierarchy, alt text, and crawlability factors.'
-  },
-  performance: {
-    label: 'Performance',
-    description: 'Measures Core Web Vitals, TTFB, and resource optimization levels.'
-  },
-  console_errors: {
-    label: 'Console Errors',
-    description: 'Monitors for JavaScript runtime exceptions and failed 4xx/5xx network requests.'
-  }
-};
+import { QAFinding } from '../api/runs.api';
 
 export const RunDetailPage = () => {
   const { id: projectId, runId } = useParams<{ id: string; runId: string }>();
@@ -71,8 +47,13 @@ export const RunDetailPage = () => {
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
   const selectedPage = run?.pages?.find(p => p.id === selectedPageId) || null;
 
+  // Task Creation State
+  const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
+  const [prefillFinding, setPrefillFinding] = useState<QAFinding | null>(null);
+
   // 2b. Fetch findings for the selected page
   const { data: findings, isLoading: isLoadingFindings } = useFindings(selectedPageId);
+  const updateFindingMutation = useUpdateFinding(selectedPageId);
 
   // Auto-select first page when pages load
   useEffect(() => {
@@ -142,7 +123,6 @@ export const RunDetailPage = () => {
     }
   };
 
-  const isCrawlComplete = run.status === 'completed' || (pagesTotal > 0 && pagesProcessed === pagesTotal);
   const isDiscovering = run.status === 'running' && pagesTotal === 0 && (!run.selected_urls || run.selected_urls.length === 0);
 
   const handlePause = () => {
@@ -157,6 +137,31 @@ export const RunDetailPage = () => {
     if (confirm('Are you sure you want to stop this scan? It cannot be resumed.')) {
       updateStatus.mutate({ runId: run.id, status: 'cancelled' });
     }
+  };
+
+  const handleConfirmFinding = async (id: string) => {
+    updateFindingMutation.mutate({ findingId: id, data: { status: 'confirmed' } });
+  };
+
+  const handleFalsePositiveFinding = async (id: string) => {
+    updateFindingMutation.mutate({ findingId: id, data: { status: 'false_positive' } });
+  };
+
+  const handleCreateTaskForFinding = (finding: QAFinding) => {
+    setPrefillFinding(finding);
+    setIsCreateTaskModalOpen(true);
+  };
+
+  const handleBulkConfirm = async (ids: string[]) => {
+    ids.forEach(id => {
+      updateFindingMutation.mutate({ findingId: id, data: { status: 'confirmed' } });
+    });
+  };
+
+  const handleBulkFalsePositive = async (ids: string[]) => {
+    ids.forEach(id => {
+      updateFindingMutation.mutate({ findingId: id, data: { status: 'false_positive' } });
+    });
   };
 
   return (
@@ -251,38 +256,44 @@ export const RunDetailPage = () => {
           </div>
         </div>
 
-        {/* Progress Bar Container */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <div className="flex justify-between items-end">
             <div className="space-y-1">
               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
                 <Activity size={16} className="text-blue-500" />
-                {isDiscovering ? 'Sitemap Discovery' : 'Crawl Progress'}
+                {isDiscovering ? 'Phase 1: Sitemap Discovery' : 'Phase 2: Scanning Pages'}
               </h3>
               <p className="text-xs text-slate-500 font-medium">
                 {isDiscovering 
-                  ? 'Analyzing site structure and discovering pages...' 
-                  : `${pagesProcessed} of ${pagesTotal || '?'} pages crawled`
+                  ? 'Identifying all target URLs...' 
+                  : run.status === 'completed'
+                    ? 'Scan complete. All pages verified.'
+                    : `Scanning: ${(run.pages || []).filter((p) => p.status === 'processing' || p.status === 'screenshotted').length} active | ${pagesProcessed} / ${pagesTotal} total`
                 }
               </p>
             </div>
             
-            {isCrawlComplete && run.status === 'completed' && (
-              <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
-                <CheckCircle2 size={16} />
-                <span className="text-xs font-bold uppercase tracking-tight">Crawl complete! Reviewing findings...</span>
-              </div>
-            )}
+            <div className="text-right">
+              <p className="text-xl font-black text-slate-900">
+                {isDiscovering ? '...' : run.status === 'completed' ? '100%' : `${Math.max(1, Math.round(progress))}%`}
+              </p>
+            </div>
           </div>
 
           <div className="w-full h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200 p-1">
             <div 
-              className={`h-full rounded-full transition-all duration-1000 ease-out shadow-sm ${
+              className={`h-full rounded-full transition-all duration-500 ease-out shadow-sm ${
                 run.status === 'failed' ? 'bg-red-500' : 'bg-gradient-to-r from-blue-500 to-indigo-600'
               }`}
-              style={{ width: `${isDiscovering ? 100 : Math.max(2, progress)}%` }}
+              style={{ 
+                width: isDiscovering 
+                  ? '40%' 
+                  : run.status === 'completed'
+                    ? '100%'
+                    : `${Math.max(2, progress)}%` 
+              }}
             >
-              {run.status === 'running' && (
+              {(run.status === 'running' || isDiscovering) && (
                 <div className="w-full h-full opacity-30 bg-[linear-gradient(45deg,rgba(255,255,255,.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,.15)_50%,rgba(255,255,255,.15)_75%,transparent_75%,transparent)] bg-[length:1rem_1rem] animate-[progress-bar-stripes_1s_linear_infinite]" />
               )}
             </div>
@@ -314,9 +325,7 @@ export const RunDetailPage = () => {
         <div className="space-y-6 flex flex-col w-full">
           <div className="flex items-center justify-between w-full border-b border-slate-200 pb-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-black rounded-lg">
-                <FileSearch className="w-5 h-5 text-accent" />
-              </div>
+
               <div>
                 <h2 className="text-xl font-bold text-slate-900">Findings Details</h2>
                 <p className="text-xs text-slate-500 font-medium">Detailed audit results for the selected scan step</p>
@@ -331,7 +340,6 @@ export const RunDetailPage = () => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex flex-col gap-1.5 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded bg-black text-accent text-[10px] font-black uppercase tracking-widest">Selected URL</span>
                       <h3 className="font-bold text-slate-900 truncate pr-4 text-lg">{selectedPage.url}</h3>
                     </div>
                     <p className="text-xs text-slate-400 font-bold uppercase tracking-[0.15em] flex items-center gap-2 mt-1">
@@ -341,10 +349,9 @@ export const RunDetailPage = () => {
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     {selectedPage.finding_counts && Object.entries(selectedPage.finding_counts).map(([factor, count]) => (
-                      <div key={factor} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-slate-200 shadow-sm">
-                        <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                        <span className="text-[10px] font-black text-slate-700 uppercase tracking-tight">
-                          {factor.replace('_', ' ')}: <span className="text-red-600">{count}</span>
+                      <div key={factor} className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl hover:bg-white hover:shadow-md transition-all duration-300">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">
+                          {factor.replace(/_/g, ' ')}: <span className="text-red-600">{count}</span>
                         </span>
                       </div>
                     ))}
@@ -353,96 +360,6 @@ export const RunDetailPage = () => {
               </div>
 
               <div className="p-8">
-                {/* Scan Summary Section */}
-                <div className="mb-12">
-                  <div className="flex items-center gap-2 mb-6">
-                    <div className="h-px flex-1 bg-slate-100" />
-                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] whitespace-nowrap px-4">
-                      Execution Summary
-                    </h4>
-                    <div className="h-px flex-1 bg-slate-100" />
-                  </div>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                    {(run.enabled_checks || [])
-                      .filter((check: string) => check !== 'visual_regression' || !!run.figma_url)
-                      .map((check: string) => {
-                        const findingsCount = selectedPage.finding_counts?.[check] || 0;
-                      const isDone = selectedPage.status === 'done';
-                      const isScreenshotted = selectedPage.status === 'screenshotted';
-                      const isProcessing = selectedPage.status === 'processing';
-                      
-                      let status: 'passed' | 'failed' | 'pending' | 'scanning' = 'pending';
-                      
-                      if (isDone) {
-                        status = findingsCount > 0 ? 'failed' : 'passed';
-                      } else if (isScreenshotted) {
-                        if (check === 'visual_regression') {
-                          status = 'passed';
-                        } else {
-                          status = 'pending';
-                        }
-                      } else if (isProcessing) {
-                        const checkOrder = ['visual_regression', 'accessibility', 'seo', 'performance', 'console_errors'];
-                        const currentStep = selectedPage.current_step?.toLowerCase() || '';
-                        const checkIndex = checkOrder.indexOf(check);
-                        
-                        if (currentStep.includes(check.replace('_', ' ')) || (check === 'visual_regression' && currentStep.includes('screenshot'))) {
-                          status = 'scanning';
-                        } else if (checkIndex !== -1) {
-                          const progress = selectedPage.progress || 0;
-                          const checkThresholds = [15, 35, 55, 75, 95];
-                          if (progress > checkThresholds[checkIndex]) {
-                            status = findingsCount > 0 ? 'failed' : 'passed';
-                          }
-                        }
-                      }
-
-                      const checkDetail = CHECK_DETAILS[check] || { label: check.replace('_', ' '), description: 'Standard quality check' };
-
-                      return (
-                        <div 
-                          key={check}
-                          className={`group/item p-4 rounded-2xl border-2 transition-all duration-300 ${
-                            status === 'passed' ? 'bg-emerald-50/20 border-emerald-100/50 hover:border-emerald-200' :
-                            status === 'failed' ? 'bg-red-50/20 border-red-100/50 hover:border-red-200' :
-                            status === 'scanning' ? 'bg-blue-50/20 border-blue-100/50 animate-pulse' :
-                            'bg-slate-50/50 border-slate-100 opacity-60'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between mb-3">
-                            <div className={`p-2 rounded-lg ${
-                              status === 'passed' ? 'bg-emerald-100 text-emerald-600' :
-                              status === 'failed' ? 'bg-red-100 text-red-600' :
-                              status === 'scanning' ? 'bg-blue-100 text-blue-600' :
-                              'bg-slate-200 text-slate-500'
-                            }`}>
-                              {status === 'passed' ? <CheckCircle size={14} /> :
-                               status === 'failed' ? <XCircle size={14} /> :
-                               status === 'scanning' ? <Loader2 size={14} className="animate-spin" /> :
-                               <Timer size={14} />}
-                            </div>
-                            <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${
-                              status === 'passed' ? 'bg-emerald-500 text-white' :
-                              status === 'failed' ? 'bg-red-500 text-white' :
-                              status === 'scanning' ? 'bg-blue-500 text-white' :
-                              'bg-slate-400 text-white'
-                            }`}>
-                              {status}
-                            </span>
-                          </div>
-                          <p className="text-[11px] font-black text-slate-900 uppercase tracking-tight mb-1.5">
-                            {checkDetail.label}
-                          </p>
-                          <p className="text-[10px] leading-relaxed text-slate-500 font-medium line-clamp-2">
-                            {checkDetail.description}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
                 {/* Visual Regression Proof Section */}
                 {run.enabled_checks?.includes('visual_regression') && run.figma_url && (
                   <div className="mb-12">
@@ -609,13 +526,24 @@ export const RunDetailPage = () => {
                   ) : findings && findings.length > 0 ? (
                     <FindingReviewPanel 
                       findings={findings}
-                      onSingleConfirm={(id) => console.log('Confirm', id)}
-                      onSingleFalsePositive={(id) => console.log('False Positive', id)}
-                      onSingleCreateTask={(f) => console.log('Create Task', f)}
-                      onConfirmBulk={(ids) => console.log('Bulk Confirm', ids)}
-                      onFalsePositiveBulk={(ids) => console.log('Bulk False Positive', ids)}
+                      pageScreenshots={{
+                        desktop: selectedPage.screenshot_url_desktop,
+                        tablet: selectedPage.screenshot_url_tablet,
+                        mobile: selectedPage.screenshot_url_mobile
+                      }}
+                      onSingleConfirm={handleConfirmFinding}
+                      onSingleFalsePositive={handleFalsePositiveFinding}
+                      onSingleCreateTask={handleCreateTaskForFinding}
+                      onConfirmBulk={handleBulkConfirm}
+                      onFalsePositiveBulk={handleBulkFalsePositive}
                       onCreateTasksBulk={(fs) => console.log('Bulk Create Tasks', fs)}
                     />
+                  ) : (selectedPage.status !== 'done' && selectedPage.status !== 'failed' && selectedPage.status !== 'checked') ? (
+                    <div className="flex flex-col items-center justify-center py-20 bg-blue-50/20 rounded-3xl border border-dashed border-blue-100 italic">
+                      <Activity className="w-8 h-8 text-blue-400 animate-pulse mb-3" />
+                      <p className="text-slate-900 font-black text-sm uppercase tracking-tight">Crawl In Progress</p>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-widest">Analyzing quality factors... {selectedPage.current_step}</p>
+                    </div>
                   ) : (
                     <div className="bg-emerald-50/20 rounded-3xl border border-dashed border-emerald-100 p-16 text-center group/clean">
                       <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 group-hover/clean:scale-110 transition-transform duration-500">
@@ -639,6 +567,20 @@ export const RunDetailPage = () => {
           )}
         </div>
       </div>
+      <CreateTaskModal 
+        isOpen={isCreateTaskModalOpen}
+        onClose={() => {
+          setIsCreateTaskModalOpen(false);
+          setPrefillFinding(null);
+        }}
+        projectId={projectId}
+        prefillData={prefillFinding ? {
+          finding_id: prefillFinding.id,
+          title: prefillFinding.title,
+          description: prefillFinding.description || '',
+          severity: prefillFinding.severity
+        } : undefined}
+      />
     </div>
   );
 };

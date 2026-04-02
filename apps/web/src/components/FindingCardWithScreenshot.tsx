@@ -5,12 +5,22 @@ import { QAFinding } from '../api/runs.api';
 
 interface FindingCardWithScreenshotProps {
   finding: QAFinding;
+  pageScreenshots?: {
+    desktop?: string | null;
+    tablet?: string | null;
+    mobile?: string | null;
+  };
 }
 
-export const FindingCardWithScreenshot: React.FC<FindingCardWithScreenshotProps> = ({ finding }) => {
+export const FindingCardWithScreenshot: React.FC<FindingCardWithScreenshotProps> = ({ 
+  finding, 
+  pageScreenshots 
+}) => {
   const [isViewerOpen, setIsViewerOpen] = useState(false);
 
-  if (!finding.screenshot_url) return null;
+  const screenshotUrl = finding.screenshot_url || pageScreenshots?.desktop;
+
+  if (!screenshotUrl) return null;
 
   return (
     <>
@@ -19,7 +29,7 @@ export const FindingCardWithScreenshot: React.FC<FindingCardWithScreenshotProps>
         onClick={() => setIsViewerOpen(true)}
       >
         <img 
-          src={finding.screenshot_url} 
+          src={screenshotUrl} 
           alt="Finding evidence" 
           className="w-full h-full object-cover object-top transition-transform group-hover:scale-110"
         />
@@ -32,7 +42,9 @@ export const FindingCardWithScreenshot: React.FC<FindingCardWithScreenshotProps>
         isOpen={isViewerOpen}
         onClose={() => setIsViewerOpen(false)}
         screenshots={{
-          desktop: finding.screenshot_url
+          desktop: screenshotUrl,
+          tablet: pageScreenshots?.tablet,
+          mobile: pageScreenshots?.mobile
         }}
         initialTab="desktop"
       />

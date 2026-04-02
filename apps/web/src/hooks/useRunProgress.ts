@@ -23,21 +23,23 @@ export const useRunProgress = (runId: string) => {
     if (pagesTotal === 0) return 0;
     
     const progressSum = pages.reduce((acc, page) => {
-      if (page.status === 'done' || page.status === 'screenshotted') {
+      if (page.status === 'done' || page.status === 'checked' || page.status === 'failed') {
         return acc + 100;
       }
+      if (page.status === 'screenshotted') {
+        return acc + Math.max(40, page.progress || 0);
+      }
       if (page.status === 'processing') {
-        // Ensure we at least show 5% if it's processing to show movement
         return acc + Math.max(5, page.progress || 0);
       }
       return acc;
     }, 0);
     
-    const calculated = progressSum / pagesTotal;
+    const calculated = pagesTotal > 0 ? progressSum / pagesTotal : 0;
     
-    // If the run is 'running' but calculated is 0, show 2% to indicate activity
+    // If the run is 'running' but no pages have started, return a small indicator
     if (run?.status === 'running' && calculated === 0) {
-      return 2;
+      return 1;
     }
     
     return Math.min(100, calculated);

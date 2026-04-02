@@ -104,6 +104,7 @@ export async function checkImageCompliance(page: PlaywrightPage, pageRecord: any
               title: `AI Vision: ${issue.issue}`,
               description: `AI detected a visual issue: ${issue.issue}. Affected area: ${issue.area}`,
               context_text: `AI-Vision analysis of desktop screenshot.`,
+              screenshot_url: pageRecord.screenshot_url_desktop,
               status: 'open',
               ai_generated: true
             });

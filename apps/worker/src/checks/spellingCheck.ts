@@ -2,9 +2,9 @@ import { Page as PlaywrightPage } from 'playwright';
 import { Finding } from '@qacc/shared';
 
 export async function checkSpelling(page: PlaywrightPage, pageRecord: any): Promise<Finding[]> {
-  // Use dynamic imports for ESM-only packages
-  const nspellModule = await import('nspell');
-  const dictionaryEnModule = await import('dictionary-en');
+  // Use eval('import()') hack for ESM-only packages in CJS environment
+  const nspellModule = await eval('import("nspell")');
+  const dictionaryEnModule = await eval('import("dictionary-en")');
   
   const nspell = nspellModule.default;
   const dictionaryEn = dictionaryEnModule.default;

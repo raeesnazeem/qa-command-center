@@ -137,6 +137,40 @@ router.get('/projects/:id/runs', clerkAuth, async (req: Request, res: Response) 
 });
 
 /**
+ * GET /api/runs/pages/:pageId/findings
+ * Get detailed findings for a specific page.
+ */
+router.get('/pages/:pageId/findings', clerkAuth, async (req: Request, res: Response) => {
+  const { pageId } = req.params;
+
+  try {
+    const { data: findings, error } = await supabase
+      .from('findings')
+      .select(`
+        *,
+        tasks (
+          id,
+          status,
+          rebuttals (
+            id,
+            ai_verdict,
+            ai_confidence,
+            ai_reasoning
+          )
+        )
+      `)
+      .eq('page_id', pageId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    return res.json(findings || []);
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+/**
  * GET /api/runs/:id
  * Get full run details, pages, and findings summary.
  */
@@ -173,7 +207,7 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
     // 3. Fetch all findings for this run to aggregate per page
     const { data: findings, error: findingsError } = await supabase
       .from('findings')
-      .select('id, page_id, check_factor, severity')
+      .select('id, page_id, check_factor, severity, status')
       .eq('run_id', id);
 
     if (findingsError) throw findingsError;
@@ -183,6 +217,9 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
     const pageFindingCounts: Record<string, Record<string, number>> = {};
 
     findings?.forEach((f: any) => {
+      // Only count open or confirmed findings
+      if (f.status === 'false_positive') return;
+
       // Global counts
       runFindingCounts[f.check_factor] = (runFindingCounts[f.check_factor] || 0) + 1;
       
@@ -218,28 +255,6 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
       progress_percentage,
       concurrent_scans: concurrentScans || 0,
     });
-  } catch (error: any) {
-    return res.status(500).json({ error: error.message });
-  }
-});
-
-/**
- * GET /api/runs/pages/:pageId/findings
- * Get detailed findings for a specific page.
- */
-router.get('/pages/:pageId/findings', clerkAuth, async (req: Request, res: Response) => {
-  const { pageId } = req.params;
-
-  try {
-    const { data: findings, error } = await supabase
-      .from('findings')
-      .select('*')
-      .eq('page_id', pageId)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-
-    return res.json(findings || []);
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
   }

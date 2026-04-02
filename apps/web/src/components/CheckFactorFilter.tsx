@@ -7,22 +7,21 @@ interface CheckFactorFilterProps {
   onSelectFactor: (factor: string | null) => void;
 }
 
-interface FilterTab {
+export interface FilterTab {
   id: string | null;
   label: string;
   factors: string[];
 }
 
-const FILTER_TABS: FilterTab[] = [
+export const FILTER_TABS: FilterTab[] = [
   { id: null, label: 'All', factors: [] },
   { id: 'spelling', label: 'Spelling', factors: ['spelling'] },
-  { id: 'broken_links', label: 'Links', factors: ['broken_links'] },
-  { id: 'external_links', label: 'External Links', factors: ['external_links'] },
+  { id: 'broken_links', label: 'Links', factors: ['broken_links', 'external_links'] },
   { id: 'meta_tags', label: 'Meta', factors: ['meta_tags'] },
   { id: 'console_errors', label: 'Console', factors: ['console_errors'] },
   { id: 'dummy_content', label: 'Dummy', factors: ['dummy_content'] },
-  { id: 'images', label: 'Images', factors: ['images'] },
-  { id: 'ai_analysis', label: 'AI', factors: ['ai_analysis'] },
+  { id: 'image_compliance', label: 'Images', factors: ['image_compliance'] },
+  { id: 'ai_content_audit', label: 'AI', factors: ['ai_content_audit'] },
   { id: 'forms', label: 'Forms', factors: ['forms'] },
   { id: 'woocommerce', label: 'WooCommerce', factors: ['woocommerce'] },
   { id: 'visual_regression', label: 'Responsive', factors: ['visual_regression'] },

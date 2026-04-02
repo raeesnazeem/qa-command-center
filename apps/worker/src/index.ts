@@ -6,6 +6,9 @@ import { processTestJob } from './jobs/testJob';
 import { processStartRunJob } from './jobs/startRunJob';
 import { processCrawlPageJob } from './jobs/crawlPageJob';
 import { processRunChecksJob } from './jobs/runChecksJob';
+import { processAnalyzeRebuttalJob } from './jobs/analyzeRebuttalJob';
+
+import { processRunAiChecksJob } from './jobs/runAiChecksJob';
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
@@ -69,6 +72,13 @@ const worker = new Worker(
           break;
         case 'run_checks':
           await processRunChecksJob(job);
+          break;
+        case 'run_ai_checks':
+        case 'queueGeminiCall':
+          await processRunAiChecksJob(job);
+          break;
+        case 'analyze_rebuttal':
+          await processAnalyzeRebuttalJob(job);
           break;
         case 'generate_embeddings':
           // Stub for generating embeddings

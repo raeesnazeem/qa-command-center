@@ -88,7 +88,6 @@ app.use('/api/admin', adminRouter)
 app.use('/api/projects', projectSettingsRouter)
 app.use('/api/findings', findingsRouter)
 app.use('/debug', debugRouter)
-app.use('/api/findings', tasksRouter)
 app.use('/api/chat', (_req: Request, res: Response) => res.status(501).json({ message: 'Not implemented' }))
 
 // 404 handler

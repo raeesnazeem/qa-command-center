@@ -38,6 +38,7 @@ export const PagesTable: React.FC<PagesTableProps> = ({ pages, onPageSelect, sho
         return <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />;
       case 'screenshotted':
       case 'done':
+      case 'checked':
         if (totalIssues > 0) {
           return <XCircle className="w-5 h-5 text-red-500" />;
         }

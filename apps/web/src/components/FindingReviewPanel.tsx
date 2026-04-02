@@ -13,10 +13,15 @@ import {
 } from 'lucide-react';
 import { QAFinding } from '../api/runs.api';
 import { FindingCard } from './FindingCard';
-import { CheckFactorFilter } from './CheckFactorFilter';
+import { CheckFactorFilter, FILTER_TABS, FilterTab } from './CheckFactorFilter';
 
 interface FindingReviewPanelProps {
   findings: QAFinding[];
+  pageScreenshots?: {
+    desktop?: string | null;
+    tablet?: string | null;
+    mobile?: string | null;
+  };
   onConfirmBulk?: (ids: string[]) => void;
   onFalsePositiveBulk?: (ids: string[]) => void;
   onCreateTasksBulk?: (findings: QAFinding[]) => void;
@@ -28,6 +33,7 @@ interface FindingReviewPanelProps {
 
 export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
   findings,
+  pageScreenshots,
   onConfirmBulk,
   onFalsePositiveBulk,
   onCreateTasksBulk,
@@ -52,7 +58,12 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
   // Filtered Findings
   const filteredFindings = useMemo(() => {
     if (!selectedFactor) return findings;
-    return findings.filter(f => f.check_factor === selectedFactor);
+    
+    // Find the tab definition to get associated factors
+    const tab = FILTER_TABS.find((t: FilterTab) => t.id === selectedFactor);
+    if (!tab || tab.factors.length === 0) return findings.filter(f => f.check_factor === selectedFactor);
+    
+    return findings.filter(f => tab.factors.includes(f.check_factor));
   }, [findings, selectedFactor]);
 
   const toggleSelectAll = () => {
@@ -208,6 +219,7 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
             </div>
             <FindingCard 
               finding={finding}
+              pageScreenshots={pageScreenshots}
               onConfirm={onSingleConfirm}
               onFalsePositive={onSingleFalsePositive}
               onCreateTask={onSingleCreateTask}

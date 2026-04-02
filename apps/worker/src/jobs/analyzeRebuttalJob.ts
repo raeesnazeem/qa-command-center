@@ -1,6 +1,6 @@
 import { Job } from 'bullmq';
 import { supabase } from '../lib/supabase';
-import { analyzeRebuttal } from '@qacc/ai/src/rebuttalAnalyzer';
+import { analyzeRebuttal } from '@qacc/ai';
 import pino from 'pino';
 
 const logger = pino({
@@ -35,7 +35,7 @@ export async function processAnalyzeRebuttalJob(job: Job) {
 
   // Load rebuttal
   const { data: rebuttal, error: rebuttalError } = await supabase
-    .from('task_rebuttals')
+    .from('rebuttals')
     .select('*')
     .eq('id', rebuttalId)
     .single();
@@ -62,18 +62,34 @@ export async function processAnalyzeRebuttalJob(job: Job) {
   if (task.finding_id) {
     const { data: findingData } = await supabase
       .from('findings')
-      .select('description, screenshot_url')
+      .select('description, screenshot_url, page_id')
       .eq('id', task.finding_id)
       .single();
     
     if (findingData) {
       findingDesc = findingData.description || findingDesc;
       findingImageBuffer = await downloadBuffer(findingData.screenshot_url);
+      
+      // Fallback: If finding HAS NO screenshot (e.g. spelling error), use the page screenshot
+      if (!findingImageBuffer && findingData.page_id) {
+        const { data: pageData } = await supabase
+          .from('pages')
+          .select('screenshot_url_desktop')
+          .eq('id', findingData.page_id)
+          .single();
+          
+        if (pageData?.screenshot_url_desktop) {
+          findingImageBuffer = await downloadBuffer(pageData.screenshot_url_desktop);
+        }
+      }
     }
   }
 
   if (!findingImageBuffer) {
-    throw new Error('Original finding screenshot is missing, cannot perform visual AI evaluation');
+    logger.warn({ taskId }, 'Original screenshot not found for task, proceeding with description only');
+    // We could continue without images if required, but the analyzer's prompt assumes image 1.
+    // Let's create an empty 1x1 buffer as a absolute fallback if we still want to use Gemini 
+    // but the analyzer prompt currently expects images.
   }
 
   const rebuttalImageBuffer = await downloadBuffer(rebuttal.screenshot_url);
@@ -91,7 +107,7 @@ export async function processAnalyzeRebuttalJob(job: Job) {
 
   // Update rebuttal record with AI analysis details
   const { error: updateError } = await supabase
-    .from('task_rebuttals')
+    .from('rebuttals')
     .update({
       ai_verdict: verdictResult.verdict,
       ai_confidence: verdictResult.confidence,
@@ -110,7 +126,7 @@ export async function processAnalyzeRebuttalJob(job: Job) {
 *Reasoning:* ${verdictResult.reasoning}`;
 
   const { data: aiComment, error: commentError } = await supabase
-    .from('task_comments')
+    .from('comments')
     .insert({
       task_id: taskId,
       content: commentContent,

@@ -35,8 +35,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
 
   const currentImage = screenshots[activeTab];
 
-  if (!isOpen) return null;
-
+  // Helpers
   const handleZoomIn = () => setScale(prev => Math.min(prev + 0.2, 4));
   const handleZoomOut = () => setScale(prev => Math.max(prev - 0.2, 0.5));
   const handleReset = () => {
@@ -59,7 +58,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
 
   const handleMouseUp = () => setIsDragging(false);
 
-  // Prevent background scroll
+  // Effects
   React.useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -70,6 +69,8 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
       document.body.style.overflow = 'unset';
     };
   }, [isOpen]);
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 backdrop-blur-md select-none overflow-hidden">

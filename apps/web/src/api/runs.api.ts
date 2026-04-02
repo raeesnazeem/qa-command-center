@@ -30,7 +30,7 @@ export interface QAPage {
   run_id: string;
   url: string;
   title?: string | null;
-  status: 'pending' | 'processing' | 'done' | 'failed' | 'screenshotted';
+  status: 'pending' | 'processing' | 'done' | 'failed' | 'screenshotted' | 'checked';
   screenshot_url_desktop?: string | null;
   screenshot_url_tablet?: string | null;
   screenshot_url_mobile?: string | null;
@@ -54,6 +54,16 @@ export interface QAFinding {
   ai_generated: boolean;
   created_at: string;
   updated_at: string;
+  tasks?: {
+    id: string;
+    status: string;
+    rebuttals?: {
+      id: string;
+      ai_verdict: 'resolved' | 'disputed' | null;
+      ai_confidence: number | null;
+      ai_reasoning: string | null;
+    }[];
+  }[];
 }
 
 export interface QARunsResponse {
@@ -130,6 +140,12 @@ export const updateFinding = async (
   findingId: string,
   data: Partial<Pick<QAFinding, 'severity' | 'status'>>
 ): Promise<QAFinding> => {
-  const response = await axios.patch<QAFinding>(`/api/runs/findings/${findingId}`, data);
+  // Use the /api/findings/:id/status endpoint if status is provided
+  if (data.status) {
+    const response = await axios.patch<QAFinding>(`/api/findings/${findingId}/status`, { status: data.status });
+    return response.data;
+  }
+  
+  const response = await axios.patch<QAFinding>(`/api/findings/${findingId}`, data);
   return response.data;
 };

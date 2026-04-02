@@ -1,17 +1,19 @@
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CreateTaskSchema, CreateTaskInput } from '@qacc/shared';
 import { useCreateTask } from '../hooks/useTasks';
 import { useProjects } from '../hooks/useProjects';
-import { X, Loader2, AlertCircle, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { X, Loader2, CheckCircle2, ShieldAlert } from 'lucide-react';
 
 interface CreateTaskModalProps {
   projectId?: string;
   isOpen: boolean;
   onClose: () => void;
+  prefillData?: Partial<CreateTaskInput>;
 }
 
-export const CreateTaskModal = ({ projectId, isOpen, onClose }: CreateTaskModalProps) => {
+export const CreateTaskModal = ({ projectId, isOpen, onClose, prefillData }: CreateTaskModalProps) => {
   const { mutate: createTask, isPending } = useCreateTask();
   const { data: projects } = useProjects();
   
@@ -25,9 +27,20 @@ export const CreateTaskModal = ({ projectId, isOpen, onClose }: CreateTaskModalP
     defaultValues: {
       project_id: projectId || '',
       severity: 'medium',
-      status: 'open',
+      ...prefillData
     },
   });
+
+  // Update form when prefillData changes
+  React.useEffect(() => {
+    if (isOpen && prefillData) {
+      reset({
+        project_id: projectId || '',
+        severity: 'medium',
+        ...prefillData
+      } as CreateTaskInput);
+    }
+  }, [isOpen, prefillData, reset, projectId]);
 
   const onSubmit = (data: CreateTaskInput) => {
     createTask(data, {
@@ -118,8 +131,8 @@ export const CreateTaskModal = ({ projectId, isOpen, onClose }: CreateTaskModalP
               />
             </div>
 
-            {/* Severity & Status */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Severity */}
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">
                   Severity
@@ -134,23 +147,6 @@ export const CreateTaskModal = ({ projectId, isOpen, onClose }: CreateTaskModalP
                     <option value="medium">Medium</option>
                     <option value="high">High</option>
                     <option value="critical">Critical</option>
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                  Initial Status
-                </label>
-                <div className="relative">
-                  <CheckCircle2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                  <select
-                    {...register('status')}
-                    className="w-full bg-white border border-slate-200 rounded-md pl-10 pr-4 py-2.5 text-slate-900 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all appearance-none"
-                  >
-                    <option value="open">Open</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="resolved">Resolved</option>
-                    <option value="closed">Closed</option>
                   </select>
                 </div>
               </div>
