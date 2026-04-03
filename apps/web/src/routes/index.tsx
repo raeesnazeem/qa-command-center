@@ -13,6 +13,7 @@ import {
   TeamPage,
   OnboardingPage,
   TestPage,
+  VisualDiffPage,
   Week1TestPage,
   Week2TestPage,
 } from "@/pages"
@@ -97,6 +98,10 @@ export const router = createBrowserRouter(
             {
               path: "/projects/:id/runs/:runId",
               element: <RunDetailPage />,
+            },
+            {
+              path: "/projects/:id/runs/:runId/diff",
+              element: <VisualDiffPage />,
             },
             {
               path: "/tasks",

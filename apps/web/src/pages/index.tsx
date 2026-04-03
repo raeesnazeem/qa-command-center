@@ -9,5 +9,6 @@ export { TasksPage } from './TasksPage';
 export { TeamPage } from './TeamPage';
 export { OnboardingPage } from './OnboardingPage';
 export { TestPage } from './TestPage';
+export { VisualDiffPage } from './VisualDiffPage';
 export { default as Week1TestPage } from './Week1TestPage';
 export { default as Week2TestPage } from './Week2TestPage';

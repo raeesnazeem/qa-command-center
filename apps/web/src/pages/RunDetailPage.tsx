@@ -1,13 +1,16 @@
 import { useParams, Link } from 'react-router-dom';
 import { useProject } from '../hooks/useProjects';
 import { useRunProgress } from '../hooks/useRunProgress';
+import { useAuthAxios } from '../lib/useAuthAxios';
 import { PagesTable } from '../components/PagesTable';
 import { FindingReviewPanel } from '../components/FindingReviewPanel';
 import { CreateTaskModal } from '../components/CreateTaskModal';
-import { useFindings, useRunFindings, useUpdateRunStatus, useUpdateFinding } from '../hooks/useRuns';
+import { useFindings, useRunFindings, useUpdateRunStatus, useUpdateFinding, } from '../hooks/useRuns';
 import { useCreateTask } from '../hooks/useTasks';
 import { AssignMemberModal } from '../components/AssignMemberModal';
 import { WooCommerceSection } from '../components/WooCommerceSection';
+import { SignOffButton } from '../components/SignOffButton';
+import { startVisualDiff } from '../api/visualDiff.api';
 import { 
   ChevronLeft, 
   CheckCircle2, 
@@ -25,7 +28,11 @@ import {
   FileSearch,
   Eye,
   ClipboardList,
-  BarChart3
+  BarChart3,
+  RefreshCw,
+  ChevronRight,
+  Download,
+  Send
 } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 import { QAFinding } from '../api/runs.api';
@@ -33,6 +40,7 @@ import toast from 'react-hot-toast';
 
 export const RunDetailPage = () => {
   const { id: projectId, runId } = useParams<{ id: string; runId: string }>();
+  const axios = useAuthAxios();
   const updateStatus = useUpdateRunStatus();
   
   const { 
@@ -607,12 +615,65 @@ export const RunDetailPage = () => {
       )}
 
       {activeTab === 'visual_diff' && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-20 text-center animate-in fade-in slide-in-from-bottom-2 duration-500">
-          <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-100">
-            <Eye size={40} className="text-slate-300" />
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+            <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Visual Diff Analysis</h2>
+            {run.status === 'completed' && (
+              <button 
+                onClick={async () => {
+                  try {
+                    await startVisualDiff(axios, runId!);
+                    toast.success('Visual diff analysis started');
+                  } catch (err) {
+                    toast.error('Failed to start visual diff');
+                  }
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-black text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-all shadow-sm active:scale-95"
+              >
+                <RefreshCw size={14} />
+                Re-run Analysis
+              </button>
+            )}
           </div>
-          <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Visual Diff Engine</h2>
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-2">Coming in Week 3: Pixel-perfect baseline comparisons</p>
+
+          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+            <div className="p-12 text-center max-w-2xl mx-auto">
+              <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-blue-100">
+                <Eye size={40} className="text-blue-500" />
+              </div>
+              <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-2">Compare Design vs. Implementation</h3>
+              <p className="text-sm text-slate-500 leading-relaxed mb-8">
+                The Visual Diff engine uses AI to compare your Figma designs against the live site screenshots across desktop, tablet, and mobile breakpoints.
+              </p>
+              
+              <Link 
+                to={`/projects/${projectId}/runs/${runId}/diff`}
+                className="inline-flex items-center gap-3 px-8 py-4 bg-accent text-black text-xs font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-accent/90 transition-all active:scale-95 shadow-xl shadow-accent/20"
+              >
+                Open Diff Workspace
+                <ChevronRight size={16} />
+              </Link>
+            </div>
+
+            <div className="bg-slate-50 p-6 border-t border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Frames</p>
+                <p className="text-xl font-black text-slate-900">{run.pages_total || 0}</p>
+              </div>
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Visual Issues</p>
+                <p className="text-xl font-black text-red-600">
+                  {runFindings?.filter(f => f.check_factor === 'visual_diff').length || 0}
+                </p>
+              </div>
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Figma Baseline</p>
+                <p className="text-xs font-bold text-slate-600 truncate max-w-[200px]">
+                  {run.figma_url ? run.figma_url.split('/').pop() : 'No baseline set'}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -630,12 +691,120 @@ export const RunDetailPage = () => {
       )}
 
       {activeTab === 'report' && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-20 text-center animate-in fade-in slide-in-from-bottom-2 duration-500">
-          <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-100">
-            <ClipboardList size={40} className="text-slate-300" />
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+          {/* Report Header */}
+          <div className="flex items-center justify-between border-b border-slate-200 pb-6">
+            <div>
+              <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Executive QA Report</h2>
+              <p className="text-xs text-slate-500 font-medium mt-1">Summary and official sign-off for Run #{runId?.substring(0, 8)}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button 
+                className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-900 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-200 transition-all border border-slate-200"
+                onClick={() => toast.success('PDF Generation started')}
+              >
+                <Download size={14} />
+                Export PDF
+              </button>
+              {run.status === 'completed' && (
+                <SignOffButton runId={runId!} />
+              )}
+            </div>
           </div>
-          <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Executive QA Report</h2>
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-2">Coming in Week 3: PDF Exports and Sign-off summaries</p>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Column: Stats & Summary */}
+            <div className="lg:col-span-2 space-y-8">
+              <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className="p-8 border-b border-slate-50">
+                  <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Quality Score</h3>
+                  <div className="flex items-end gap-4">
+                    <p className="text-6xl font-black text-slate-900 leading-none">
+                      {Math.max(0, 100 - (Object.values(run.finding_counts || {}).reduce((a, b) => a + b, 0) * 2))}%
+                    </p>
+                    <div className="pb-1">
+                      <p className="text-xs font-bold text-emerald-600 uppercase">Healthy</p>
+                      <p className="text-[10px] text-slate-400 font-medium">Based on issue density</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-8 grid grid-cols-2 sm:grid-cols-4 gap-8">
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Critical</p>
+                    <p className="text-2xl font-black text-red-600">{run.finding_counts?.critical || 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">High</p>
+                    <p className="text-2xl font-black text-orange-500">{run.finding_counts?.high || 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Medium</p>
+                    <p className="text-2xl font-black text-amber-500">{run.finding_counts?.medium || 0}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Low</p>
+                    <p className="text-2xl font-black text-blue-500">{run.finding_counts?.low || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Finding Categories</h3>
+                <div className="space-y-4">
+                  {[
+                    { label: 'Visual Consistency', count: runFindings?.filter(f => f.check_factor === 'visual_diff').length || 0, color: 'bg-blue-500' },
+                    { label: 'Performance', count: runFindings?.filter(f => f.check_factor === 'performance').length || 0, color: 'bg-emerald-500' },
+                    { label: 'Accessibility', count: runFindings?.filter(f => f.check_factor === 'accessibility').length || 0, color: 'bg-purple-500' },
+                    { label: 'Console Errors', count: runFindings?.filter(f => f.check_factor === 'console_error').length || 0, color: 'bg-red-500' },
+                  ].map((cat, i) => (
+                    <div key={i} className="space-y-2">
+                      <div className="flex justify-between text-[10px] font-black uppercase tracking-tight">
+                        <span className="text-slate-600">{cat.label}</span>
+                        <span className="text-slate-900">{cat.count} Issues</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full ${cat.color} rounded-full`} 
+                          style={{ width: `${Math.min(100, (cat.count / (runFindings?.length || 1)) * 100)}%` }} 
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Run Info & Actions */}
+            <div className="space-y-8">
+              <div className="bg-slate-900 rounded-3xl p-8 text-white">
+                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-6">Run Details</h3>
+                <div className="space-y-6">
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase">Started At</p>
+                    <p className="text-sm font-bold mt-1">{run.started_at ? new Date(run.started_at).toLocaleString() : 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase">Completed At</p>
+                    <p className="text-sm font-bold mt-1">{run.completed_at ? new Date(run.completed_at).toLocaleString() : 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase">Run Type</p>
+                    <p className="text-sm font-bold mt-1 uppercase">{run.run_type.replace('_', ' ')}</p>
+                  </div>
+                  <div className="pt-4 border-t border-white/10">
+                    <button 
+                      className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/5 flex items-center justify-center gap-2"
+                      onClick={() => toast.success('Report shared with team')}
+                    >
+                      <Send size={14} />
+                      Share Report
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

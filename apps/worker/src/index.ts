@@ -7,6 +7,7 @@ import { processStartRunJob } from './jobs/startRunJob';
 import { processCrawlPageJob } from './jobs/crawlPageJob';
 import { processRunChecksJob } from './jobs/runChecksJob';
 import { processAnalyzeRebuttalJob } from './jobs/analyzeRebuttalJob';
+import { processVisualDiffJob } from './jobs/visualDiffJob';
 
 import { processRunAiChecksJob } from './jobs/runAiChecksJob';
 
@@ -79,6 +80,9 @@ const worker = new Worker(
           break;
         case 'analyze_rebuttal':
           await processAnalyzeRebuttalJob(job);
+          break;
+        case 'visual_diff':
+          await processVisualDiffJob(job);
           break;
         case 'generate_embeddings':
           // Stub for generating embeddings
