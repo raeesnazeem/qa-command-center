@@ -23,10 +23,10 @@ export const DiffPageSelector: React.FC<DiffPageSelectorProps> = ({
         <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">Pages</h3>
         <button
           onClick={() => onRunDiff(runId)}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-black text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-slate-800 transition-all active:scale-95"
+          className="btn-unified flex items-center gap-1.5 px-3 py-1.5 bg-black text-white text-[10px] font-black uppercase tracking-widest hover:bg-#93c0b1-800 transition-all active:scale-95"
         >
           <Play size={12} fill="currentColor" />
-          Run All
+          <span>Run All</span>
         </button>
       </div>
 

@@ -68,9 +68,7 @@ export const AppLayout = () => {
         {/* Topbar */}
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shadow-sm z-10">
           <div className="flex items-center space-x-2">
-             <div className="px-2.5 py-1 bg-slate-900 rounded-md">
-                <span className="text-[10px] font-black text-white uppercase tracking-tighter">WORKSPACE</span>
-             </div>
+           
              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2.5 py-1 rounded-md">
                {role?.replace('_', ' ')}
              </span>

@@ -294,7 +294,7 @@ export const RunDetailPage = () => {
               href={`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/admin/queues`}
               target="_blank"
               rel="noreferrer"
-              className="btn-unified flex items-center gap-2 rounded-[10px]"
+              className="btn-unified flex items-center gap-2"
               title="View BullMQ Dashboard"
             >
               <LayoutDashboard size={14} />
@@ -628,9 +628,8 @@ export const RunDetailPage = () => {
                     toast.error('Failed to start visual diff');
                   }
                 }}
-                className="flex items-center gap-2 px-4 py-2 bg-black text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-all shadow-sm active:scale-95"
+                className="btn-unified"
               >
-                <RefreshCw size={14} />
                 Re-run Analysis
               </button>
             )}
@@ -648,7 +647,7 @@ export const RunDetailPage = () => {
               
               <Link 
                 to={`/projects/${projectId}/runs/${runId}/diff`}
-                className="inline-flex items-center gap-3 px-8 py-4 bg-accent text-black text-xs font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-accent/90 transition-all active:scale-95 shadow-xl shadow-accent/20"
+                className="btn-unified inline-flex items-center gap-2 px-4 py-2 bg-black text-white text-[10px] font-black uppercase tracking-widest hover:bg-#93c0b1-800 transition-all shadow-sm active:scale-95"
               >
                 Open Diff Workspace
                 <ChevronRight size={16} />
