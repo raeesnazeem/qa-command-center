@@ -184,13 +184,13 @@ export const VisualDiffPage: React.FC = () => {
                 ) : diffData ? (
                   viewMode === 'side-by-side' ? (
                     <SideBySideViewer 
-                      figmaUrl={diffData.figma_image_url}
-                      siteUrl={diffData.site_image_url}
+                      figmaUrl={diffData.figma_screenshot_url}
+                      siteUrl={diffData.site_screenshot_url}
                     />
                   ) : (
                     <DiffOverlay 
-                      figmaUrl={diffData.figma_image_url}
-                      siteUrl={diffData.site_image_url}
+                      figmaUrl={diffData.figma_screenshot_url}
+                      siteUrl={diffData.site_screenshot_url}
                       viewMode="overlay"
                       onToggleMode={() => setViewMode('side-by-side')}
                     />

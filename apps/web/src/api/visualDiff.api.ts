@@ -11,9 +11,9 @@ export interface VisualDiff {
   id: string;
   page_id: string;
   run_id: string;
-  figma_image_url: string;
-  site_image_url: string;
-  issues: VisualDiffIssue[];
+  figma_screenshot_url: string;
+  site_screenshot_url: string;
+  ai_summary: { issues: VisualDiffIssue[] };
   status: 'pending' | 'in_progress' | 'completed' | 'failed';
   created_at: string;
 }

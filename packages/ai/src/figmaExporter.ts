@@ -18,10 +18,10 @@ function parseFigmaUrl(url: string): { fileKey: string; nodeId: string | null } 
     const pathParts = u.pathname.split('/');
     const fileKeyIndex = pathParts.findIndex(part => part === 'design' || part === 'file') + 1;
     const fileKey = pathParts[fileKeyIndex];
-    const nodeId = u.searchParams.get('node-id');
+    const nodeId = u.searchParams.get('node-id')?.replace(/-/g, ':');
     
     if (!fileKey) throw new Error('Invalid Figma URL: file key not found');
-    return { fileKey, nodeId };
+    return { fileKey, nodeId: nodeId || null };
   } catch (error) {
     throw new Error('Invalid Figma URL format');
   }
@@ -51,61 +51,82 @@ export async function exportFigmaFrames(
   const headers = { 'X-Figma-Token': figmaToken };
 
   // 1. Cache check: Has this runId already been exported?
-  const { data: existingFiles } = await supabase.storage.from('findings').list(`figma/${runId}`);
+  const { data: existingFiles } = await supabase.storage.from('screenshots').list(`figma/${runId}`);
   if (existingFiles && existingFiles.length > 0) {
     console.log(`Using cached Figma exports for run ${runId}`);
-    return existingFiles.map(file => {
+    const results: FigmaFrame[] = [];
+    for (const file of existingFiles) {
+      // frameId was stored as id.replace(/:/g, '_')
       const frameId = file.name.replace('.png', '').replace(/_/g, ':');
-      const { data: { publicUrl } } = supabase.storage.from('findings').getPublicUrl(`figma/${runId}/${file.name}`);
-      return {
+      const { data: signedData } = await supabase.storage
+        .from('screenshots')
+        .createSignedUrl(`figma/${runId}/${file.name}`, 31536000);
+
+      // We don't have the original name in cache, but we can try to guess or use ID
+      results.push({
         frameId,
-        frameName: 'Cached Frame',
-        imageUrl: publicUrl,
-        pageUrl: '' // Page mapping might need more state if purely cached
-      };
-    });
+        frameName: `Cached ${frameId}`,
+        imageUrl: signedData?.signedUrl || '',
+        pageUrl: '/' // Default to root for cache fallback
+      });
+    }
+    return results;
   }
 
   let nodeIds: string[] = [];
   const frameMetadata: Record<string, { name: string }> = {};
 
   if (nodeId) {
+    console.log(`Figma Exporter: Using specific node ID ${nodeId}`);
     nodeIds = [nodeId];
     frameMetadata[nodeId] = { name: 'Selected Frame' };
   } else {
+    console.log(`Figma Exporter: Fetching entire file ${fileKey} to find frames`);
     const fileRes = await fetch(`https://api.figma.com/v1/files/${fileKey}`, { headers });
     if (!fileRes.ok) throw new Error(`Figma API error (files): ${fileRes.statusText}`);
     const fileData: any = await fileRes.json();
     
+    const findFrames = (node: any) => {
+      if (node.type === 'FRAME' || node.type === 'COMPONENT' || node.type === 'INSTANCE') {
+        nodeIds.push(node.id);
+        frameMetadata[node.id] = { name: node.name };
+        return;
+      }
+      if (node.children) {
+        node.children.forEach(findFrames);
+      }
+    };
+
     fileData.document.children.forEach((page: any) => {
       if (page.type === 'CANVAS') {
-        page.children.forEach((node: any) => {
-          if (node.type === 'FRAME') {
-            nodeIds.push(node.id);
-            frameMetadata[node.id] = { name: node.name };
-          }
-        });
+        findFrames(page);
       }
     });
+    console.log(`Figma Exporter: Found ${nodeIds.length} candidate frames in file`);
   }
 
   if (nodeIds.length === 0) return [];
 
   // Get image URLs from Figma
+  const encodedNodeIds = nodeIds.map(id => encodeURIComponent(id)).join(',');
   const imageRes = await fetch(
-    `https://api.figma.com/v1/images/${fileKey}?ids=${nodeIds.join(',')}&format=png&scale=2`,
+    `https://api.figma.com/v1/images/${fileKey}?ids=${encodedNodeIds}&format=png&scale=2`,
     { headers }
   );
   if (!imageRes.ok) throw new Error(`Figma API error (images): ${imageRes.statusText}`);
   const imageData: any = await imageRes.json();
   const imageUrls = imageData.images || {};
+  console.log(`Figma Exporter: Figma returned ${Object.keys(imageUrls).length} image URLs`);
 
   const results: FigmaFrame[] = [];
 
   // Download each PNG and save to Supabase Storage
   for (const id of nodeIds) {
     const remoteUrl = imageUrls[id];
-    if (!remoteUrl) continue;
+    if (!remoteUrl) {
+      console.warn(`Figma Exporter: No image URL returned for node ID ${id}`);
+      continue;
+    }
 
     const imgRes = await fetch(remoteUrl);
     if (!imgRes.ok) continue;
@@ -113,7 +134,7 @@ export async function exportFigmaFrames(
 
     const storagePath = `figma/${runId}/${id.replace(/:/g, '_')}.png`;
     const { error: uploadError } = await supabase.storage
-      .from('findings')
+      .from('screenshots')
       .upload(storagePath, buffer, {
         contentType: 'image/png',
         upsert: true
@@ -124,12 +145,19 @@ export async function exportFigmaFrames(
       continue;
     }
 
-    const { data: { publicUrl } } = supabase.storage.from('findings').getPublicUrl(storagePath);
+    const { data: signedData, error: signedError } = await supabase.storage
+      .from('screenshots')
+      .createSignedUrl(storagePath, 31536000); // 1 year
+
+    if (signedError || !signedData?.signedUrl) {
+      console.error(`Failed to generate signed URL for frame ${id}:`, signedError);
+      continue;
+    }
 
     results.push({
       frameId: id,
       frameName: frameMetadata[id]?.name || 'Unknown',
-      imageUrl: publicUrl,
+      imageUrl: signedData.signedUrl,
       pageUrl: mapFrameNameToUrl(frameMetadata[id]?.name || '')
     });
   }

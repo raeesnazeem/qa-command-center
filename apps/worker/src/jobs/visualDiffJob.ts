@@ -1,6 +1,7 @@
 import { Job } from 'bullmq';
 import { supabase } from '../lib/supabase';
-import { exportFigmaFrames, compareScreenshots, queueGeminiCall } from '@qacc/ai';
+import { exportFigmaFrames, compareScreenshots, queueGeminiCall, FigmaFrame } from '@qacc/ai';
+import { decrypt } from '../../../api/src/lib/encryption';
 import pino from 'pino';
 
 const logger = pino({
@@ -36,7 +37,7 @@ export async function processVisualDiffJob(job: Job) {
   // Step 1: Load page record + run record
   const { data: page, error: pageError } = await supabase
     .from('pages')
-    .select('*, runs!inner(figma_url, project_id)')
+    .select('*, qa_runs!inner(figma_url, project_id)')
     .eq('id', pageId)
     .single();
 
@@ -44,7 +45,7 @@ export async function processVisualDiffJob(job: Job) {
     throw new Error(`Failed to load page or run details: ${pageError?.message}`);
   }
 
-  const run = page.runs as any;
+  const run = (page as any).qa_runs;
   if (!run.figma_url) {
     logger.warn({ runId }, 'No Figma URL provided for this run, skipping visual diff');
     return;
@@ -52,31 +53,74 @@ export async function processVisualDiffJob(job: Job) {
 
   // Step 2: Get decrypted Figma token from project settings
   const { data: project, error: projectError } = await supabase
-    .from('projects')
-    .select('figma_token')
-    .eq('id', run.project_id)
+    .from('project_settings')
+    .select('figma_token_encrypted')
+    .eq('project_id', run.project_id)
     .single();
 
-  if (projectError || !project?.figma_token) {
+  if (projectError || !project?.figma_token_encrypted) {
     throw new Error('Figma token not found in project settings');
   }
 
+  const figmaToken = decrypt(project.figma_token_encrypted);
+
   // Step 3: Export Figma frames
   logger.info({ figmaUrl: run.figma_url }, 'Exporting Figma frames...');
-  const frames = await exportFigmaFrames(run.figma_url, project.figma_token, supabase, runId);
+  const frames = await exportFigmaFrames(run.figma_url, figmaToken, supabase, runId);
+
+  if (!frames || frames.length === 0) {
+    logger.error({ figmaUrl: run.figma_url }, 'Figma exporter returned no frames');
+    throw new Error('No Figma frames could be extracted from the provided URL. Please verify the URL and Figma token.');
+  }
 
   // Step 4: Match frames to page URL
-  const normalizedPagePath = new URL(page.url).pathname;
-  const matchedFrame = frames.find(f => f.pageUrl === normalizedPagePath) || frames[0]; // Fallback to first if no match
+  let normalizedPagePath = '/';
+  try {
+    const urlObj = new URL(page.url);
+    normalizedPagePath = urlObj.pathname.replace(/\/$/, '') || '/';
+  } catch (e) {
+    logger.warn({ url: page.url }, 'Invalid page URL, using / as path for matching');
+  }
+  
+  logger.info({ normalizedPagePath, frameCount: frames.length }, 'Matching Figma frames to page path');
+  
+  // Try exact match first
+  let matchedFrame = frames.find((f: FigmaFrame) => f.pageUrl === normalizedPagePath);
+  
+  // Try partial match if no exact match
+  if (!matchedFrame) {
+    matchedFrame = frames.find((f: FigmaFrame) => normalizedPagePath.includes(f.pageUrl) && f.pageUrl !== '/');
+  }
+
+  // Fallback to first frame if still no match
+  if (!matchedFrame && frames.length > 0) {
+    logger.warn({ normalizedPagePath }, 'No exact or partial frame match found, falling back to first available frame');
+    matchedFrame = frames[0];
+  }
 
   if (!matchedFrame) {
-    throw new Error('No Figma frames found to compare');
+    throw new Error(`No Figma frames found to compare for path: ${normalizedPagePath}. Available frame paths: ${frames.map((f: FigmaFrame) => f.pageUrl).join(', ')}`);
   }
 
   // Step 5: Download Figma PNG and Site desktop screenshot
-  logger.info({ matchedFrame: matchedFrame.frameName }, 'Downloading images for comparison...');
+  logger.info({ matchedFrame: matchedFrame.frameName, frameUrl: matchedFrame.pageUrl }, 'Downloading images for comparison...');
   const figmaBuffer = await downloadBuffer(matchedFrame.imageUrl);
-  const siteBuffer = await downloadBuffer(page.screenshot_url_desktop);
+  
+  if (!page.screenshot_url_desktop) {
+    throw new Error('Site desktop screenshot is missing for this page');
+  }
+
+  // Site screenshot might have an expired signed URL in the DB, so we generate a fresh one
+  const screenshotPath = `${runId}/${pageId}/desktop.png`;
+  const { data: signedSite, error: signedSiteError } = await supabase.storage
+    .from('screenshots')
+    .createSignedUrl(screenshotPath, 3600);
+
+  if (signedSiteError || !signedSite?.signedUrl) {
+    logger.warn({ pageId, error: signedSiteError?.message }, 'Failed to generate fresh signed URL for site screenshot, falling back to DB URL');
+  }
+
+  const siteBuffer = await downloadBuffer(signedSite?.signedUrl || page.screenshot_url_desktop);
 
   if (!figmaBuffer || !siteBuffer) {
     throw new Error('Failed to download images for visual diff');
@@ -92,10 +136,10 @@ export async function processVisualDiffJob(job: Job) {
     .insert({
       page_id: pageId,
       run_id: runId,
-      figma_image_url: matchedFrame.imageUrl,
-      site_image_url: page.screenshot_url_desktop,
-      issues: diffResult.issues,
-      status: 'completed'
+      figma_screenshot_url: matchedFrame.imageUrl,
+      site_screenshot_url: page.screenshot_url_desktop,
+      ai_summary: { issues: diffResult.issues },
+      created_at: new Date().toISOString()
     })
     .select()
     .single();
@@ -106,15 +150,14 @@ export async function processVisualDiffJob(job: Job) {
 
   // Step 8: Create findings of type 'visual_diff' for each identified issue
   if (diffResult.issues.length > 0) {
-    const findings = diffResult.issues.map(issue => ({
+    const findings = diffResult.issues.map((issue: any) => ({
       run_id: runId,
       page_id: pageId,
       check_factor: 'visual_diff',
       severity: issue.severity,
       title: `[VISUAL DIFF] ${issue.type.toUpperCase()} in ${issue.area}`,
       description: issue.issue,
-      status: 'open',
-      visual_diff_id: visualDiff.id
+      status: 'open'
     }));
 
     const { error: findingsError } = await supabase.from('findings').insert(findings);
