@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CreateProjectSchema, CreateProjectInput } from '@qacc/shared';
 import { useCreateProject } from '../hooks/useProjects';
-import { X, Loader2, Globe, Building, CheckCircle2 } from 'lucide-react';
+import { X, Loader2, Globe, Building, CheckCircle2, Zap } from 'lucide-react';
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -21,6 +21,7 @@ export const CreateProjectModal = ({ isOpen, onClose }: CreateProjectModalProps)
     resolver: zodResolver(CreateProjectSchema),
     defaultValues: {
       is_woocommerce: false,
+      is_pre_release: false,
     },
   });
 
@@ -127,6 +128,27 @@ export const CreateProjectModal = ({ isOpen, onClose }: CreateProjectModalProps)
                   className="sr-only peer"
                 />
                 <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent"></div>
+              </label>
+            </div>
+
+            {/* Pre-release Toggle */}
+            <div className="flex items-center justify-between p-4 bg-amber-50 rounded-md border border-amber-100">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-amber-100 rounded-md">
+                  <Zap className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-amber-900">Pre-release Project</h4>
+                  <p className="text-xs text-amber-700">Prioritize this project on the QA dashboard</p>
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  {...register('is_pre_release')}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-amber-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-amber-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
               </label>
             </div>
           </div>

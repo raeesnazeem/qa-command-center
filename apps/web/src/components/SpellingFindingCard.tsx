@@ -9,13 +9,14 @@ import {
   Plus,
   FileSearch,
   Activity,
+  UserPlus
 } from 'lucide-react';
 import { useParams } from 'react-router-dom';
+import { useRole } from '../hooks/useRole';
 import { FindingSeverityEditor } from './FindingSeverityEditor';
 import { RebuttalVerdictCard } from './RebuttalVerdictCard';
 import { FindingCardWithScreenshot } from './FindingCardWithScreenshot';
 import { QAFinding } from '../api/runs.api';
-import { useUser } from '@clerk/react';
 import { useAuthAxios } from '../lib/useAuthAxios';
 
 interface FindingCardProps {
@@ -28,6 +29,7 @@ interface FindingCardProps {
   onConfirm?: (id: string) => void;
   onFalsePositive?: (id: string) => void;
   onCreateTask?: (finding: QAFinding) => void;
+  onAssign?: (id: string) => void;
 }
 
 export const SpellingFindingCard: React.FC<FindingCardProps> = ({ 
@@ -35,12 +37,12 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
   pageScreenshots,
   onConfirm, 
   onFalsePositive, 
-  onCreateTask 
+  onCreateTask,
+  onAssign
 }) => {
-  const { user } = useUser();
+  const { canDo } = useRole();
   const axios = useAuthAxios();
-  const role = user?.publicMetadata?.role as string;
-  const canAction = role === 'qa_engineer' || role === 'admin';
+  const canAction = canDo('qa_engineer');
   const { id: projectId } = useParams<{ id: string }>();
   
   const [isAddingAllowlist, setIsAddingAllowlist] = useState(false);
@@ -231,6 +233,13 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
                 >
                   <XCircle size={12} />
                   False Positive
+                </button>
+                <button 
+                  onClick={() => onAssign?.(finding.id)}
+                  className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-[10px] hover:bg-slate-50 transition-colors"
+                >
+                  <UserPlus size={12} />
+                  Assign
                 </button>
                 {misspelledWord && (
                   <button

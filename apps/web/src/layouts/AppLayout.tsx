@@ -34,9 +34,7 @@ export const AppLayout = () => {
       {/* Sidebar */}
       <aside className="w-64 bg-white text-slate-900 flex flex-col border-r border-slate-200">
         <div className="p-6 text-xl font-bold border-b border-slate-100 tracking-tight flex items-center space-x-2">
-          <div className="w-8 h-8 bg-black rounded-md flex items-center justify-center">
-            <span className="text-white text-xs font-black italic">QA</span>
-          </div>
+            <img src="https://growth99.com/storage/2024/09/LOGO.svg" style={{ objectFit: 'contain', width:'130px' }} alt="logo" className="h-8 w-8" />
           <span className="tracking-tighter">QACC</span>
         </div>
         <nav className="flex-1 p-4 space-y-1">

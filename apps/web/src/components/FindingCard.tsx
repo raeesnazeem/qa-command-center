@@ -17,12 +17,12 @@ import {
   Activity,
   User
 } from 'lucide-react';
+import { useRole } from '../hooks/useRole';
 import { FindingSeverityEditor } from './FindingSeverityEditor';
 import { SpellingFindingCard } from './SpellingFindingCard';
 import { FindingCardWithScreenshot } from './FindingCardWithScreenshot';
 import { RebuttalVerdictCard } from './RebuttalVerdictCard';
 import { QAFinding } from '../api/runs.api';
-import { useUser } from '@clerk/react';
 
 interface FindingCardProps {
   finding: QAFinding;
@@ -59,9 +59,8 @@ export const FindingCard: React.FC<FindingCardProps> = ({
   onCreateTask,
   onAssign
 }) => {
-  const { user } = useUser();
-  const role = user?.publicMetadata?.role as string;
-  const canAction = role === 'qa_engineer' || role === 'admin';
+  const { canDo } = useRole();
+  const canAction = canDo('qa_engineer');
 
   const severityIcons = {
     critical: <ShieldAlert size={20} />,

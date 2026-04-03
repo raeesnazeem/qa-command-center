@@ -7,6 +7,7 @@ export interface Project {
   site_url: string;
   client_name?: string;
   is_woocommerce: boolean;
+  is_pre_release: boolean;
   status: 'active' | 'archived' | 'paused';
   org_id: string;
   created_at: string;

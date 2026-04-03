@@ -8,12 +8,10 @@ import {
   BarChart3,
   Filter,
   CheckCircle,
-  AlertCircle,
   ShieldAlert,
-  AlertTriangle,
-  Info,
   Activity
 } from 'lucide-react';
+import { useRole } from '../hooks/useRole';
 import { QAFinding } from '../api/runs.api';
 import { FindingCard } from './FindingCard';
 import { CheckFactorFilter, FILTER_TABS, FilterTab } from './CheckFactorFilter';
@@ -91,6 +89,8 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
   onSingleCreateTask,
   onSingleAssign
 }) => {
+  const { canDo } = useRole();
+  const canAction = canDo('qa_engineer');
   const [selectedFactor, setSelectedFactor] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -251,68 +251,72 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
       </div>
 
       {/* Bulk Action Toolbar */}
-      <div className={`sticky top-4 z-20 bg-black rounded-2xl p-4 border border-slate-800 shadow-2xl transition-all duration-300 ${
-        selectedIds.size > 0 ? 'translate-y-0 opacity-100 visible' : '-translate-y-4 opacity-0 invisible h-0 overflow-hidden !p-0 !m-0'
-      }`}>
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={toggleSelectAll}
-              className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
-            >
-              {selectedIds.size === filteredFindings.length ? <CheckSquare className="text-accent" /> : <Square />}
-            </button>
-            <div>
-              <p className="text-white font-black text-sm leading-none">{selectedIds.size} Selected</p>
-              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Bulk action ready</p>
+      {canAction && (
+        <div className={`sticky top-4 z-20 bg-black rounded-2xl p-4 border border-slate-800 shadow-2xl transition-all duration-300 ${
+          selectedIds.size > 0 ? 'translate-y-0 opacity-100 visible' : '-translate-y-4 opacity-0 invisible h-0 overflow-hidden !p-0 !m-0'
+        }`}>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={toggleSelectAll}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
+              >
+                {selectedIds.size === filteredFindings.length ? <CheckSquare className="text-accent" /> : <Square />}
+              </button>
+              <div>
+                <p className="text-white font-black text-sm leading-none">{selectedIds.size} Selected</p>
+                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Bulk action ready</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={handleBulkConfirm}
+                className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-[10px] hover:bg-emerald-600 transition-all active:scale-95"
+              >
+                <CheckCircle size={14} />
+                Confirm All
+              </button>
+              <button 
+                onClick={handleBulkFalsePositive}
+                className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-[10px] hover:bg-white/20 border border-white/10 transition-all active:scale-95"
+              >
+                <XCircle size={14} />
+                Mark False Positives
+              </button>
+              <button 
+                onClick={handleBulkCreateTasks}
+                className="flex items-center gap-2 px-4 py-2 bg-accent text-black text-[10px] font-black uppercase tracking-widest rounded-[10px] hover:bg-accent/90 transition-all active:scale-95"
+              >
+                <Plus size={14} />
+                Create Tasks
+              </button>
+              <button 
+                onClick={() => onAssignBulk?.(Array.from(selectedIds))}
+                className="flex items-center gap-2 px-4 py-2 bg-white text-black text-[10px] font-black uppercase tracking-widest rounded-[10px] hover:bg-slate-100 transition-all active:scale-95"
+              >
+                <UserPlus size={14} />
+                Assign
+              </button>
             </div>
           </div>
-          
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={handleBulkConfirm}
-              className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-[10px] hover:bg-emerald-600 transition-all active:scale-95"
-            >
-              <CheckCircle size={14} />
-              Confirm All
-            </button>
-            <button 
-              onClick={handleBulkFalsePositive}
-              className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-[10px] hover:bg-white/20 border border-white/10 transition-all active:scale-95"
-            >
-              <XCircle size={14} />
-              Mark False Positives
-            </button>
-            <button 
-              onClick={handleBulkCreateTasks}
-              className="flex items-center gap-2 px-4 py-2 bg-accent text-black text-[10px] font-black uppercase tracking-widest rounded-[10px] hover:bg-accent/90 transition-all active:scale-95"
-            >
-              <Plus size={14} />
-              Create Tasks
-            </button>
-            <button 
-              onClick={() => onAssignBulk?.(Array.from(selectedIds))}
-              className="flex items-center gap-2 px-4 py-2 bg-white text-black text-[10px] font-black uppercase tracking-widest rounded-[10px] hover:bg-slate-100 transition-all active:scale-95"
-            >
-              <UserPlus size={14} />
-              Assign
-            </button>
-          </div>
         </div>
-      </div>
+      )}
 
       {/* Scrollable Findings List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
         {filteredFindings.map((finding) => (
           <div key={finding.id} className="relative group/wrapper">
-            <div 
-              onClick={() => toggleSelect(finding.id)}
-              className={`absolute top-4 left-4 z-10 cursor-pointer p-1 rounded-md transition-all ${
-                selectedIds.has(finding.id) ? 'bg-black text-accent scale-110 shadow-lg' : 'bg-slate-100 text-slate-300 opacity-0 group-hover/wrapper:opacity-100'
-              }`}
-            >
-              {selectedIds.has(finding.id) ? <CheckSquare size={16} /> : <Square size={16} />}
-            </div>
+            {canAction && (
+              <div 
+                onClick={() => toggleSelect(finding.id)}
+                className={`absolute top-4 left-4 z-10 cursor-pointer p-1 rounded-md transition-all ${
+                  selectedIds.has(finding.id) ? 'bg-black text-accent scale-110 shadow-lg' : 'bg-slate-100 text-slate-300 opacity-0 group-hover/wrapper:opacity-100'
+                }`}
+              >
+                {selectedIds.has(finding.id) ? <CheckSquare size={16} /> : <Square size={16} />}
+              </div>
+            )}
             <FindingCard 
               finding={finding}
               pageScreenshots={pageScreenshots}

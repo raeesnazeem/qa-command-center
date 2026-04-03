@@ -44,7 +44,7 @@ router.post(
   requireRole('sub_admin'),
   zodValidate(CreateProjectSchema),
   async (req: Request, res: Response) => {
-    const { name, site_url, client_name, is_woocommerce } = req.body;
+    const { name, site_url, client_name, is_woocommerce, is_pre_release } = req.body;
     const { orgId, userId: clerkUserId } = req.auth!;
 
     if (!orgId) {
@@ -62,6 +62,7 @@ router.post(
           site_url,
           client_name,
           is_woocommerce,
+          is_pre_release: is_pre_release || false,
           org_id: orgId,
           status: 'active',
         })
@@ -307,6 +308,7 @@ router.patch(
           name: req.body.name,
           site_url: req.body.site_url,
           client_name: req.body.client_name,
+          is_pre_release: req.body.is_pre_release !== undefined ? req.body.is_pre_release : undefined,
           status: req.body.status || 'active'
         })
         .eq('id', id)

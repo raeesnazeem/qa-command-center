@@ -5,6 +5,7 @@ export const CreateProjectSchema = z.object({
   site_url: z.string().url('Invalid site URL'),
   client_name: z.string().optional(),
   is_woocommerce: z.boolean().default(false),
+  is_pre_release: z.boolean().default(false),
 });
 
 export const UpdateProjectSchema = CreateProjectSchema.partial().extend({

@@ -70,7 +70,7 @@ router.get('/stats', clerkAuth, async (req: Request, res: Response) => {
     const { count: myOpenTasksCount } = await supabase.from('tasks').select('*', { count: 'exact', head: true }).eq('assigned_to', supabaseUserId).eq('status', 'open');
 
     // 5. Recent Runs (limit 5)
-    const { data: recentRuns } = await supabase.from('qa_runs').select('*, projects(name)').in('project_id', projectIds).order('created_at', { ascending: false }).limit(5);
+    const { data: recentRuns } = await supabase.from('qa_runs').select('*, projects(name, is_pre_release)').in('project_id', projectIds).order('created_at', { ascending: false }).limit(5);
 
     // 6. My Tasks (Top 5 assigned to user)
     const { data: myTasks } = await supabase.from('tasks').select('*, projects(name)').eq('assigned_to', supabaseUserId).eq('status', 'open').order('created_at', { ascending: false }).limit(5);
@@ -90,6 +90,48 @@ router.get('/stats', clerkAuth, async (req: Request, res: Response) => {
         .slice(0, 5);
     }
 
+    // 8. Role Specific Data
+    let preReleaseProjects = [];
+    let postReleaseProjects = [];
+    let allProjects = [];
+
+    if (['super_admin', 'admin', 'qa_engineer'].includes(role || '')) {
+      const { data: preRelease } = await supabase
+        .from('projects')
+        .select('*, qa_runs(status, created_at), tasks(status)')
+        .eq('org_id', orgId)
+        .eq('is_pre_release', true)
+        .order('created_at', { ascending: false });
+      
+      const { data: postRelease } = await supabase
+        .from('projects')
+        .select('*, qa_runs(status, created_at), tasks(status)')
+        .eq('org_id', orgId)
+        .eq('is_pre_release', false)
+        .order('created_at', { ascending: false });
+
+      preReleaseProjects = (preRelease || []).map((p: any) => ({
+        ...p,
+        open_issues_count: p.tasks?.filter((t: any) => t.status === 'open').length || 0
+      }));
+      postReleaseProjects = (postRelease || []).map((p: any) => ({
+        ...p,
+        open_issues_count: p.tasks?.filter((t: any) => t.status === 'open').length || 0
+      }));
+
+      if (role === 'qa_engineer' || role === 'super_admin' || role === 'admin') {
+        const { data: all } = await supabase
+          .from('projects')
+          .select('*, qa_runs(status, created_at), tasks(status)')
+          .eq('org_id', orgId)
+          .order('name', { ascending: true });
+        allProjects = (all || []).map((p: any) => ({
+          ...p,
+          open_issues_count: p.tasks?.filter((t: any) => t.status === 'open').length || 0
+        }));
+      }
+    }
+
     return res.json({
       open_issues: openIssuesCount || 0,
       total_runs: totalRunsCount || 0,
@@ -98,7 +140,10 @@ router.get('/stats', clerkAuth, async (req: Request, res: Response) => {
       projects_count: projectIds.length,
       recent_runs: recentRuns || [],
       my_tasks: myTasks || [],
-      pending_signoffs: pendingSignoffs
+      pending_signoffs: pendingSignoffs,
+      pre_release_projects: preReleaseProjects,
+      post_release_projects: postReleaseProjects,
+      all_projects: allProjects
     });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
