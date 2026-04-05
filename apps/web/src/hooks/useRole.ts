@@ -45,7 +45,13 @@ export const useRole = (): UseRoleReturn => {
 
   // Apply dev role override if present
   const devOverride = getDevRoleOverride();
-  const role = devOverride ?? user?.role ?? profile?.role ?? null;
+  const rawRole = devOverride ?? user?.role ?? profile?.role ?? null;
+  const role = (() => {
+    if (!rawRole) return null;
+    const normalized = rawRole.toLowerCase().replace(/[\s-]/g, '_');
+    if (normalized === 'qa') return 'qa_engineer' as Role;
+    return normalized as Role;
+  })();
 
   const getRoleLevel = (r: Role | null): number => {
     if (!r) return -1;

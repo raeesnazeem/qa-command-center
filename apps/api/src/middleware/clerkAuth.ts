@@ -110,14 +110,21 @@ export const clerkAuth = async (
 
     // 6. Resolve role and orgId
     if (user) {
-      // Prioritize Clerk role if available, otherwise use DB role
-      // Note: mapping Clerk roles (e.g. 'org:admin') to internal roles
-      if (!role) {
-        role = user.role;
-      } else {
-        // Simple mapping for common Clerk roles
-        if (role === 'org:admin') role = 'admin';
-        else if (role === 'org:member') role = 'developer';
+      // Trust the database role as the primary source of truth for permissions
+      // Clerk roles are only used as a fallback or for initial setup
+      if (user.role) {
+        // Normalize role string: lowercase and replace spaces/hyphens with underscores
+        const normalized = user.role.toLowerCase().replace(/[\s-]/g, '_');
+        // Map common variants to internal role names
+        if (normalized === 'qa') role = 'qa_engineer';
+        else role = normalized;
+      } else if (role) {
+        // Simple mapping for common Clerk roles if user.role is missing
+        const clerkRole = role.toLowerCase().replace(/[\s-]/g, '_');
+        if (clerkRole === 'org:admin' || clerkRole === 'admin') role = 'admin';
+        else if (clerkRole === 'org:member' || clerkRole === 'member') role = 'developer';
+        else if (clerkRole === 'qa') role = 'qa_engineer';
+        else role = clerkRole;
       }
       
       // ALWAYS use the UUID from the database for orgId
