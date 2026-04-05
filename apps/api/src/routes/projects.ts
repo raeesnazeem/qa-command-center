@@ -118,7 +118,7 @@ router.get('/', clerkAuth, async (req: Request, res: Response) => {
       .eq('org_id', orgId);
 
     // Filter by membership if not super_admin or admin
-    if (role !== 'super_admin' && role !== 'admin') {
+    if (role !== 'super_admin' && role !== 'admin' && role !== 'qa_engineer') {
       const { data: memberships } = await supabase
         .from('project_members')
         .select('project_id')
@@ -221,7 +221,7 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
     const supabaseUserId = await getSupabaseUserId(clerkUserId);
 
     // Verify access if not super_admin/admin
-    if (role !== 'super_admin' && role !== 'admin') {
+    if (role !== 'super_admin' && role !== 'admin' && role !== 'qa_engineer') {
       const { data: membership } = await supabase
         .from('project_members')
         .select('id')

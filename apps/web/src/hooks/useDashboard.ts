@@ -5,11 +5,11 @@ import { useAuth } from '@clerk/react';
 
 export const useDashboardStats = () => {
   const axios = useAuthAxios();
-  const { orgId } = useAuth();
+  const { isLoaded, userId } = useAuth();
 
   return useQuery<DashboardStats>({
-    queryKey: ['dashboard-stats', orgId],
-    queryFn: () => getDashboardStats(axios, orgId || ''),
-    enabled: !!orgId,
+    queryKey: ['dashboard-stats'],
+    queryFn: () => getDashboardStats(axios, ''), // orgId will be resolved by backend middleware
+    enabled: isLoaded && !!userId,
   });
 };

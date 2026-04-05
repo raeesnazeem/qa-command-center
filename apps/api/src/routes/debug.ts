@@ -95,3 +95,27 @@ debugRouter.post('/promote-user', async (req: Request, res: Response) => {
 
   return res.json({ message: `User ${clerkId} promoted to ${role}`, user: data });
 });
+
+debugRouter.get('/projects', async (req: Request, res: Response) => {
+  const { data, error } = await supabase
+    .from('projects')
+    .select('id, name, org_id, is_pre_release');
+  
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+  
+  return res.json({ projects: data, count: data?.length || 0 });
+});
+
+debugRouter.get('/organizations', async (req: Request, res: Response) => {
+  const { data, error } = await supabase
+    .from('organizations')
+    .select('*');
+  
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+  
+  return res.json({ organizations: data, count: data?.length || 0 });
+});
