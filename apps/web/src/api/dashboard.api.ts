@@ -12,9 +12,11 @@ export interface DashboardStats {
   recent_runs: QARun[];
   my_tasks: Task[];
   pending_signoffs: QARun[];
-  pre_release_projects?: any[];
-  post_release_projects?: any[];
-  all_projects?: any[];
+  pre_release_projects: any[];
+  post_release_projects: any[];
+  all_projects: any[];
+  qa_projects?: any[];
+  dev_projects?: any[];
 }
 
 export const getDashboardStats = async (
