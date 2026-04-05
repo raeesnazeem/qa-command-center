@@ -263,6 +263,10 @@ export async function processCrawlPageJob(job: Job) {
         .eq('id', runId);
       
       logger.info({ runId }, 'Run marked as completed');
+
+      // Trigger embeddings generation
+      qaQueue.add('generate_embeddings', { runId })
+             .catch(e => logger.error('Failed to queue generate_embeddings:', e));
     }
 
     // Step 8: Broadcast progress update
