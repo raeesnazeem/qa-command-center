@@ -3,6 +3,7 @@ import { useUser, UserButton } from '@clerk/react'
 import { LayoutDashboard, FolderKanban, CheckSquare, Settings as SettingsIcon, Users } from 'lucide-react'
 import { useRole } from '../hooks/useRole'
 import { useEffect } from 'react'
+import { ChatSidebar } from '../components/ChatSidebar'
 
 export const AppLayout = () => {
   const { user } = useUser()
@@ -92,6 +93,7 @@ export const AppLayout = () => {
         <main className="flex-1 overflow-auto p-8 bg-slate-50/30">
           <Outlet />
         </main>
+        <ChatSidebar />
       </div>
     </div>
   )

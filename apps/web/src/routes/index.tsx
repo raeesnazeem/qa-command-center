@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router-dom"
 import { AppLayout } from "@/layouts/AppLayout"
+import { ChatProvider } from "@/contexts/ChatContext"
 import { ProtectedRoute } from "@/components/ProtectedRoute"
 import {
   LoginPage,
@@ -55,7 +56,11 @@ export const router = createBrowserRouter(
       element: <ProtectedRoute />,
       children: [
         {
-          element: <AppLayout />,
+          element: (
+            <ChatProvider>
+              <AppLayout />
+            </ChatProvider>
+          ),
           children: [
             {
               path: "/onboarding",

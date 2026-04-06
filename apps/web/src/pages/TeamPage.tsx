@@ -22,9 +22,9 @@ export const TeamPage = () => {
   const isSuperAdmin = currentUserRole === 'super_admin' || currentUserRole === 'admin';
 
   const filteredMembers = members?.filter(member => 
-    member.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.role.toLowerCase().includes(searchTerm.toLowerCase())
+    (member.full_name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (member.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (member.role?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   const handleManage = (member: any) => {
