@@ -6,14 +6,18 @@ import {
   Clock, 
   MoreHorizontal, 
   MessageSquare, 
-  Paperclip,
   Search,
   Filter,
-  Plus
+  Plus,
+  CheckCircle2,
+  ExternalLink
 } from 'lucide-react';
 import { TaskStatus } from '@qacc/shared';
 import { CreateTaskModal } from './CreateTaskModal';
 import { CanDo } from './CanDo';
+import { BulkBasecampPush } from './BulkBasecampPush';
+import { TaskDetailPanel } from './TaskDetailPanel';
+import { Task } from '../api/tasks.api';
 
 interface TasksTabProps {
   project: ProjectWithMembers;
@@ -23,7 +27,17 @@ export const TasksTab = ({ project }: TasksTabProps) => {
   const { data: tasksData, isLoading } = useTasks({ projectId: project.id });
   const tasks = tasksData?.data || [];
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const { mutate: updateTask } = useUpdateTask();
+
+  const toggleTaskSelection = (taskId: string) => {
+    setSelectedTaskIds(prev => 
+      prev.includes(taskId) 
+        ? prev.filter(id => id !== taskId) 
+        : [...prev, taskId]
+    );
+  };
 
   const columns: { id: TaskStatus; title: string }[] = [
     { id: 'open', title: 'To Do' },
@@ -60,20 +74,30 @@ export const TasksTab = ({ project }: TasksTabProps) => {
               className="bg-white border border-slate-200 rounded-md pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-accent transition-all w-full md:w-64"
             />
           </div>
-          <button className="btn-unified-secondary p-2">
-            <Filter className="w-4 h-4" />
-          </button>
           
-          <CanDo role="qa_engineer">
-            <button 
-              disabled
-              className="inline-flex items-center space-x-2 bg-slate-100 text-slate-400 px-4 py-2 rounded-md font-bold text-sm cursor-not-allowed opacity-60"
-              title="Bulk actions coming soon"
-            >
-              <MoreHorizontal className="w-4 h-4" />
-              <span>Bulk Actions</span>
-            </button>
-          </CanDo>
+          {selectedTaskIds.length > 0 ? (
+            <BulkBasecampPush 
+              taskIds={selectedTaskIds} 
+              onComplete={() => setSelectedTaskIds([])} 
+            />
+          ) : (
+            <>
+              <button className="btn-unified-secondary p-2">
+                <Filter className="w-4 h-4" />
+              </button>
+              
+              <CanDo role="qa_engineer">
+                <button 
+                  disabled
+                  className="inline-flex items-center space-x-2 bg-slate-100 text-slate-400 px-4 py-2 rounded-md font-bold text-sm cursor-not-allowed opacity-60"
+                  title="Select tasks to see bulk actions"
+                >
+                  <MoreHorizontal className="w-4 h-4" />
+                  <span>Bulk Actions</span>
+                </button>
+              </CanDo>
+            </>
+          )}
 
           <button 
             onClick={() => setIsTaskModalOpen(true)}
@@ -119,11 +143,41 @@ export const TasksTab = ({ project }: TasksTabProps) => {
                 </div>
               ) : (
                 tasks.filter(t => t.status === column.id).map((task) => (
-                  <div key={task.id} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:border-accent/20 transition-all cursor-pointer group">
+                  <div 
+                    key={task.id} 
+                    onClick={() => setSelectedTask(task)}
+                    className={`bg-white p-4 rounded-xl border shadow-sm hover:shadow-md transition-all cursor-pointer group relative ${
+                      selectedTaskIds.includes(task.id) ? 'border-accent ring-1 ring-accent/20' : 'border-slate-100 hover:border-accent/20'
+                    }`}
+                  >
+                    {/* Selection Checkbox */}
+                    <div 
+                      className="absolute -top-2 -left-2 z-10"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleTaskSelection(task.id);
+                      }}
+                    >
+                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${
+                        selectedTaskIds.includes(task.id) 
+                          ? 'bg-accent border-accent text-white shadow-sm' 
+                          : 'bg-white border-slate-200 text-transparent hover:border-accent group-hover:text-slate-200'
+                      }`}>
+                        <CheckCircle2 size={12} strokeWidth={3} />
+                      </div>
+                    </div>
+
                     <div className="flex items-center justify-between mb-2">
-                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${getSeverityColor(task.severity)}`}>
-                        {task.severity}
-                      </span>
+                      <div className="flex items-center space-x-2">
+                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${getSeverityColor(task.severity)}`}>
+                          {task.severity}
+                        </span>
+                        {task.basecamp_url && (
+                          <div className="text-emerald-600" title="Synced with Basecamp">
+                            <CheckCircle2 size={12} />
+                          </div>
+                        )}
+                      </div>
                       
                       <div className="relative group/status">
                         <select
@@ -145,12 +199,19 @@ export const TasksTab = ({ project }: TasksTabProps) => {
                       <div className="flex items-center space-x-3 text-slate-400">
                         <div className="flex items-center space-x-1">
                           <MessageSquare className="w-3 h-3" />
-                          <span className="text-[10px] font-bold">0</span>
+                          <span className="text-[10px] font-bold">{(task as any).comments?.length || 0}</span>
                         </div>
-                        <div className="flex items-center space-x-1">
-                          <Paperclip className="w-3 h-3" />
-                          <span className="text-[10px] font-bold">0</span>
-                        </div>
+                        {task.basecamp_url && (
+                          <a 
+                            href={task.basecamp_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-emerald-500 hover:text-emerald-600"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
                       </div>
                       <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border-2 border-white">
                         {task.users?.full_name ? task.users.full_name.charAt(0) : '?'}
@@ -163,6 +224,12 @@ export const TasksTab = ({ project }: TasksTabProps) => {
           </div>
         ))}
       </div>
+
+      <TaskDetailPanel 
+        task={selectedTask}
+        isOpen={!!selectedTask}
+        onClose={() => setSelectedTask(null)}
+      />
     </div>
   );
 };

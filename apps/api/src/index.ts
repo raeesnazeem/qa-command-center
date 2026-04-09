@@ -10,6 +10,7 @@ import { webhookRouter } from './routes/webhooks'
 import { meRouter } from './routes/me'
 import { projectsRouter } from './routes/projects'
 import { usersRouter } from './routes/users'
+import { userSettingsRouter } from './routes/userSettings'
 import { runsRouter } from './routes/runs'
 import { tasksRouter } from './routes/tasks'
 import { statsRouter } from './routes/stats'
@@ -85,6 +86,7 @@ app.use('/api/health', healthRouter)
 app.use('/api/me', meRouter)
 app.use('/api/projects', projectsRouter)
 app.use('/api/users', usersRouter)
+app.use('/api/users', userSettingsRouter)
 app.use('/api/runs', runsRouter)
 app.use('/api/runs', signOffRouter)
 app.use('/api/tasks', tasksRouter)

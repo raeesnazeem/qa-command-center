@@ -22,6 +22,9 @@ export interface Task {
   created_by: string;
   created_at: string;
   updated_at: string;
+  basecamp_task_id?: string;
+  basecamp_url?: string;
+  findings?: any;
   comments?: TaskComment[];
   rebuttals?: TaskRebuttal[];
   users?: {
@@ -134,5 +137,13 @@ export const updateFindingStatus = async (
   status: 'confirmed' | 'false_positive'
 ): Promise<any> => {
   const { data } = await axios.patch(`/api/findings/${findingId}/status`, { status });
+  return data;
+};
+
+export const pushToBasecamp = async (
+  axios: AxiosInstance,
+  taskId: string
+): Promise<{ basecampUrl: string }> => {
+  const { data } = await axios.post<{ basecampUrl: string }>(`/api/tasks/${taskId}/basecamp`);
   return data;
 };
