@@ -11,6 +11,8 @@ import {
   CreateCommentSchema, 
   RebuttalSchema 
 } from '@qacc/shared';
+import * as emailNotifier from '../lib/emailNotifier';
+import { logger } from '../lib/logger';
 
 const router: Router = Router();
 
@@ -66,6 +68,29 @@ router.post(
         .single();
 
       if (error) throw error;
+
+      // If task is assigned on creation, notify the user
+      if (assigned_to) {
+        try {
+          const { data: userData } = await supabase
+            .from('users')
+            .select('full_name, email')
+            .eq('id', assigned_to)
+            .single();
+          
+          const { data: projectData } = await supabase
+            .from('projects')
+            .select('name')
+            .eq('id', project_id)
+            .single();
+          
+          if (userData && projectData) {
+            await emailNotifier.emailTaskAssigned(userData, task, projectData.name);
+          }
+        } catch (err: any) {
+          logger.error(err, `Failed to send assignment email for new task ${task.id}`);
+        }
+      }
 
       return res.status(201).json(task);
     } catch (error: any) {
@@ -150,11 +175,11 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
   try {
     const supabaseUserId = await getSupabaseUserId(clerkUserId);
 
-    const { data: task, error } = await supabase
+    const { data, error } = await supabase
       .from('tasks')
       .select(`
         *,
-        projects!inner:project_id (id, name, org_id),
+        projects (id, name, org_id),
         comments (
           *,
           users:author_id (full_name, email)
@@ -167,6 +192,8 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
       .eq('id', id)
       .eq('projects.org_id', orgId)
       .single();
+
+    const task = data as any;
 
     if (error || !task) return res.status(404).json({ error: 'Task not found' });
 
@@ -229,6 +256,28 @@ router.post(
         .single();
 
       if (error) throw error;
+
+      // Notify the user via email
+      try {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('full_name, email')
+          .eq('id', user_id)
+          .single();
+        
+        const { data: projectData } = await supabase
+          .from('projects')
+          .select('name')
+          .eq('id', task.project_id)
+          .single();
+        
+        if (userData && projectData) {
+          await emailNotifier.emailTaskAssigned(userData, task, projectData.name);
+        }
+      } catch (err: any) {
+        logger.error(err, `Failed to send assignment email for task ${id}`);
+      }
+
       await broadcastTaskUpdate(id, task);
       return res.json(task);
     } catch (error: any) {

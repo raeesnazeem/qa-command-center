@@ -22,6 +22,7 @@ import { adminRouter } from './routes/admin'
 import { findingsRouter } from './routes/findings'
 import { visualDiffRouter } from './routes/visualDiff'
 import { chatRouter } from './routes/chat'
+import { basecampIntegrationRouter } from './routes/basecampIntegration'
 import { clerkMiddleware, getAuth } from '@clerk/express'
 import { createBullBoard } from '@bull-board/api'
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter'
@@ -50,6 +51,7 @@ app.use(
 // Webhook mount BEFORE express.json() and BEFORE Clerk middleware
 // We use express.raw to get the exact bytes needed for signature verification
 app.use('/webhooks', express.raw({ type: 'application/json' }), webhookRouter)
+app.use('/webhooks', express.raw({ type: 'application/json' }), basecampIntegrationRouter)
 
 app.use(express.json())
 app.use(defaultRateLimiter)
@@ -93,6 +95,7 @@ app.use('/api/projects', projectSettingsRouter)
 app.use('/api/findings', findingsRouter)
 app.use('/api/visual-diff', visualDiffRouter)
 app.use('/api/chat', chatRouter)
+app.use('/api/tasks', basecampIntegrationRouter)
 app.use('/debug', debugRouter)
 
 // 404 handler

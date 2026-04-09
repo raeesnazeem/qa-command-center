@@ -6,7 +6,7 @@ import { embedText } from '@qacc/ai';
 import { geminiFlash } from '@qacc/ai';
 import { logger } from '../lib/logger';
 
-const router: Router = Router();
+const router = Router();
 
 /**
  * POST /api/chat
@@ -88,4 +88,4 @@ User Message: ${message}
   }
 });
 
-export { router as chatRouter };
+export const chatRouter: Router = router;
