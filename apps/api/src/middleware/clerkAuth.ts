@@ -1,12 +1,14 @@
 import { Request, Response, NextFunction } from 'express'
-import { getAuth } from '@clerk/express'
+import { getAuth, clerkClient } from '@clerk/express'
 import { supabase } from '../lib/supabase'
 import { randomUUID } from 'crypto'
 
 export interface AuthPayload {
   userId: string
+  clerkUserId: string
   orgId: string | null
   role: string | null
+  email: string | null
 }
 
 declare global {
@@ -33,8 +35,29 @@ export const clerkAuth = async (
 
     // 1. Get raw claims to extract name/email
     const claims = auth.sessionClaims as any;
-    const email = claims?.email || null;
-    const fullName = claims?.full_name || claims?.name || (claims?.first_name ? `${claims.first_name} ${claims.last_name || ''}`.trim() : null);
+    let email = claims?.email || claims?.primary_email_address || null;
+    let firstName = claims?.first_name || claims?.given_name || '';
+    let lastName = claims?.last_name || claims?.family_name || '';
+    let fullName = claims?.full_name || claims?.name || (firstName ? `${firstName} ${lastName}`.trim() : null);
+
+    // 1.5 Fallback to Clerk Backend API if claims are missing data
+    if (!email || !fullName) {
+      console.log(`[clerkAuth] Missing claims for ${auth.userId}, fetching from Clerk API...`);
+      try {
+        const fullClerkUser = await clerkClient.users.getUser(auth.userId);
+        if (!email) {
+          email = fullClerkUser.emailAddresses.find(e => e.id === fullClerkUser.primaryEmailAddressId)?.emailAddress || 
+                  fullClerkUser.emailAddresses[0]?.emailAddress || null;
+        }
+        if (!fullName) {
+          firstName = fullClerkUser.firstName || '';
+          lastName = fullClerkUser.lastName || '';
+          fullName = (firstName || lastName) ? `${firstName} ${lastName}`.trim() : null;
+        }
+      } catch (clerkErr) {
+        console.error(`[clerkAuth] Failed to fetch user from Clerk API:`, clerkErr);
+      }
+    }
 
     // 2. Get role from Clerk if available (priority)
     let role = (auth.orgRole as string) || null
@@ -48,17 +71,21 @@ export const clerkAuth = async (
       .eq('clerk_user_id', auth.userId)
       .maybeSingle()
 
-    // 4. Synchronization: Update name/email if they changed or were missing
+    // 4. Synchronization: Update name/email if they changed or were missing in Supabase
     if (user && (fullName || email)) {
       const updates: any = {};
-      if (fullName && user.full_name !== fullName) updates.full_name = fullName;
-      if (email && user.email !== email) updates.email = email;
+      if (fullName && (!user.full_name || user.full_name !== fullName)) updates.full_name = fullName;
+      if (email && (!user.email || user.email !== email)) updates.email = email;
       
       if (Object.keys(updates).length > 0) {
         console.log(`[clerkAuth] Syncing profile updates for ${auth.userId}:`, updates);
-        await supabase.from('users').update(updates).eq('id', user.id);
-        // Refresh local user object
-        user = { ...user, ...updates };
+        const { error: syncError } = await supabase.from('users').update(updates).eq('id', user.id);
+        if (syncError) {
+          console.error(`[clerkAuth] Failed to sync profile for ${auth.userId}:`, syncError);
+        } else {
+          // Refresh local user object
+          user = { ...user, ...updates };
+        }
       }
     }
 
@@ -87,14 +114,17 @@ export const clerkAuth = async (
       }
 
       if (defaultOrg) {
+        const userId = randomUUID();
+        console.log(`[clerkAuth] Inserting new user ${userId} for Clerk user ${auth.userId}`);
+        
         const { data: newUser, error: insertError } = await supabase
           .from('users')
           .insert({
-            id: randomUUID(),
+            id: userId,
             clerk_user_id: auth.userId,
             clerk_id: auth.userId,
             email: email,
-            full_name: fullName,
+            full_name: fullName || 'New User', // Ensure non-null if required
             role: 'developer', // Default role for new users
             org_id: defaultOrg.id
           })
@@ -103,7 +133,19 @@ export const clerkAuth = async (
 
         if (!insertError && newUser) {
           user = newUser;
-          console.log(`[clerkAuth] Created new user profile for ${auth.userId} with org ${defaultOrg.id}`);
+          console.log(`[clerkAuth] Created new user profile for ${auth.userId} with UUID ${user.id}`);
+        } else if (insertError) {
+          console.error(`[clerkAuth] Failed to create user profile:`, insertError);
+          // Even if insert fails, we might want to know why. 
+          // If it's a conflict, maybe we should try fetching again?
+          if (insertError.code === '23505') { // Unique violation
+             const { data: retryUser } = await supabase
+              .from('users')
+              .select('*')
+              .eq('clerk_user_id', auth.userId)
+              .maybeSingle();
+             if (retryUser) user = retryUser;
+          }
         }
       }
     }
@@ -153,6 +195,7 @@ export const clerkAuth = async (
       clerkUserId: auth.userId,      // Keep original Clerk ID for sync if needed
       orgId: orgId,
       role: role,
+      email: email || user?.email || null,
     } as any;
 
     console.log('--- Clerk Auth Success ---')

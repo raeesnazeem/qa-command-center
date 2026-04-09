@@ -5,6 +5,7 @@ import { useAuthAxios } from '@/lib/useAuthAxios';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useUser } from '@clerk/react';
+import { useQueryClient } from '@tanstack/react-query';
 
 const OnboardingSchema = z.object({
   fullName: z.string().min(2, 'Name must be at least 2 characters'),
@@ -19,6 +20,7 @@ export const OnboardingPage = () => {
   const axios = useAuthAxios();
   const navigate = useNavigate();
   const { user: clerkUser } = useUser();
+  const queryClient = useQueryClient();
   
   const {
     register,
@@ -34,7 +36,17 @@ export const OnboardingPage = () => {
 
   const onSubmit = async (data: OnboardingForm) => {
     try {
-      await axios.post('/api/users/onboard', data);
+      // Include email from Clerk user if available
+      const payload = {
+        ...data,
+        email: clerkUser?.primaryEmailAddress?.emailAddress || clerkUser?.emailAddresses[0]?.emailAddress,
+      };
+      await axios.post('/api/users/onboard', payload);
+      
+      // Wait for the 'me' query to be refetched completely before navigating
+      // to avoid the AppLayout redirection loop.
+      await queryClient.refetchQueries({ queryKey: ['me'] });
+      
       toast.success('Welcome aboard!');
       navigate('/dashboard');
     } catch (error: any) {

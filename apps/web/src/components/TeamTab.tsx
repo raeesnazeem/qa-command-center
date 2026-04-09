@@ -21,17 +21,18 @@ export const TeamTab = ({ project }: TeamTabProps) => {
 
   // Filter users based on input and exclude existing members
   const memberEmails = useMemo(() => 
-    new Set(project.project_members.map(m => m.users.email.toLowerCase())), 
+    new Set(project.project_members.map(m => m.users?.email?.toLowerCase()).filter(Boolean)), 
   [project.project_members]);
 
   const filteredUsers = useMemo(() => {
     const query = newMemberEmail.toLowerCase().trim();
     if (!query || !allUsers) return [];
     
-    return allUsers.filter(u => 
-      !memberEmails.has(u.email.toLowerCase()) && 
-      (u.email.toLowerCase().includes(query) || u.full_name?.toLowerCase().includes(query))
-    ).slice(0, 5);
+    return allUsers.filter(u => {
+      const email = u.email?.toLowerCase() || '';
+      const name = u.full_name?.toLowerCase() || '';
+      return !memberEmails.has(email) && (email.includes(query) || name.includes(query));
+    }).slice(0, 5);
   }, [allUsers, newMemberEmail, memberEmails]);
 
   // Close dropdown on click outside

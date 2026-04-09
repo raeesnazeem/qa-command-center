@@ -7,18 +7,24 @@ import { ChatSidebar } from '../components/ChatSidebar'
 
 export const AppLayout = () => {
   const { user } = useUser()
-  const { role, isLoading } = useRole()
+  const { role, profile, isLoading } = useRole()
   const navigate = useNavigate()
   const location = useLocation()
 
   useEffect(() => {
-    // If we're not loading, and we don't have a role or name in our Supabase profile
-    // we should redirect to onboarding. 
-    // We check specifically for full_name to be sure they completed the form.
-    if (!isLoading && !role && location.pathname !== '/onboarding') {
-      navigate('/onboarding', { replace: true })
+    // Redirect to onboarding if profile is incomplete in Supabase
+    if (!isLoading && location.pathname !== '/onboarding') {
+      // A profile is incomplete if role is missing, full_name is missing, 
+      // or if it's the default "New User" name we set in the middleware.
+      const isProfileIncomplete = !profile?.role || 
+                                  !profile?.full_name || 
+                                  profile?.full_name === 'New User';
+      
+      if (isProfileIncomplete) {
+        navigate('/onboarding', { replace: true });
+      }
     }
-  }, [role, isLoading, navigate, location.pathname])
+  }, [profile, isLoading, navigate, location.pathname])
 
   const isDeveloper = role === 'developer'
 

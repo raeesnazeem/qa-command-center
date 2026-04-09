@@ -43,8 +43,8 @@ router.get('/', clerkAuth, async (req: Request, res: Response) => {
  * Complete user profile and add to all existing projects in the organization.
  */
 router.post('/onboard', clerkAuth, async (req: Request, res: Response) => {
-  const { fullName, role } = req.body;
-  const { userId, orgId } = req.auth!;
+  const { fullName, role, email: bodyEmail } = req.body;
+  const { userId, orgId, email: authEmail } = req.auth as any;
 
   if (!fullName || !role) {
     return res.status(400).json({ error: 'fullName and role are required' });
@@ -52,13 +52,24 @@ router.post('/onboard', clerkAuth, async (req: Request, res: Response) => {
 
   try {
     // 1. Update user profile
+    // Use email from body (form) or auth context (Clerk claims/API)
+    const emailToUpdate = bodyEmail || authEmail;
+    
+    const updateData: any = {
+      full_name: fullName,
+      role: role,
+      updated_at: new Date().toISOString()
+    };
+
+    if (emailToUpdate) {
+      updateData.email = emailToUpdate;
+    }
+
+    logger.info({ userId, updateData }, 'Onboarding user');
+
     const { data: user, error: userError } = await supabase
       .from('users')
-      .update({
-        full_name: fullName,
-        role: role,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', userId)
       .select()
       .single();
