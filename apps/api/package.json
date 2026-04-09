@@ -13,6 +13,7 @@
     "@bull-board/express": "^6.20.6",
     "@clerk/backend": "^1.2.0",
     "@clerk/express": "^2.0.7",
+    "@qacc/ai": "workspace:*",
     "@qacc/shared": "workspace:*",
     "@supabase/supabase-js": "^2.39.3",
     "axios": "^1.14.0",

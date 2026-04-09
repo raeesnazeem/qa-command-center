@@ -15,6 +15,7 @@ const ROLE_HIERARCHY: Role[] = [
 
 interface UseRoleReturn {
   role: Role | null;
+  profile: any | null;
   isAdmin: boolean;
   isSubAdmin: boolean;
   isProjectManager: boolean;
@@ -66,6 +67,7 @@ export const useRole = (): UseRoleReturn => {
 
   return {
     role,
+    profile: profile || user,
     isAdmin: role === 'admin' || role === 'super_admin',
     isSubAdmin: role === 'sub_admin',
     isProjectManager: role === 'project_manager',

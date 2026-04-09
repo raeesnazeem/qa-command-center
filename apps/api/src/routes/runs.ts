@@ -396,6 +396,13 @@ router.patch(
 
       if (updateError) throw updateError;
 
+      // Trigger embeddings generation if completed
+      if (newStatus === 'completed') {
+        const { qaQueue } = require('../lib/queue');
+        qaQueue.add('generate_embeddings', { runId: id })
+               .catch((e: any) => console.error('Failed to queue generate_embeddings from API:', e));
+      }
+
       return res.json(updatedRun);
     } catch (error: any) {
       return res.status(500).json({ error: error.message });

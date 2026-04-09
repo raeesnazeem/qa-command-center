@@ -37,7 +37,7 @@ CREATE INDEX idx_embeddings_ivfflat
 CREATE OR REPLACE FUNCTION match_embeddings(
   query_embedding vector(768),
   match_count     int,
-  filter_org_id   uuid
+  p_org_id        uuid
 )
 RETURNS TABLE (
   id           uuid,
@@ -57,7 +57,7 @@ AS $$
     e.content,
     1 - (e.embedding <=> query_embedding) AS similarity
   FROM embeddings e
-  WHERE e.org_id = filter_org_id
+  WHERE e.org_id = p_org_id
   ORDER BY e.embedding <=> query_embedding
   LIMIT match_count;
 $$;

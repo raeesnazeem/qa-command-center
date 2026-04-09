@@ -24,12 +24,18 @@ export async function processStartRunJob(job: Job) {
   // Step 1: Fetch run from Supabase
   const { data: run, error: fetchError } = await supabase
     .from('qa_runs')
-    .select('id, site_url, project_id, selected_urls')
+    .select('id, site_url, project_id, selected_urls, status')
     .eq('id', runId)
     .single();
 
   if (fetchError || !run) {
     throw new Error(`Failed to fetch run ${runId}: ${fetchError?.message}`);
+  }
+
+  // Check if run should still proceed
+  if (run.status === 'cancelled' || run.status === 'paused') {
+    logger.info({ runId, status: run.status }, 'Run is cancelled or paused. Aborting start_run job.');
+    return;
   }
 
   // Step 2: Update run status to 'running'

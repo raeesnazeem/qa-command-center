@@ -8,6 +8,7 @@ import { processCrawlPageJob } from './jobs/crawlPageJob';
 import { processRunChecksJob } from './jobs/runChecksJob';
 import { processAnalyzeRebuttalJob } from './jobs/analyzeRebuttalJob';
 import { processVisualDiffJob } from './jobs/visualDiffJob';
+import { processGenerateEmbeddingsJob } from './jobs/generateEmbeddingsJob';
 
 import { processRunAiChecksJob } from './jobs/runAiChecksJob';
 
@@ -85,7 +86,7 @@ const worker = new Worker(
           await processVisualDiffJob(job);
           break;
         case 'generate_embeddings':
-          // Stub for generating embeddings
+          await processGenerateEmbeddingsJob(job);
           break;
         case 'test':
           await processTestJob();

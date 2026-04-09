@@ -33,11 +33,22 @@ export async function processCrawlPageJob(job: Job) {
   logger.info({ runId, pageId, pageUrl }, 'Processing page crawl');
 
   // Fetch run settings for conditional checks
-  const { data: run } = await supabase
+  const { data: run, error: runError } = await supabase
     .from('qa_runs')
-    .select('is_woocommerce, site_url')
+    .select('status, is_woocommerce, site_url')
     .eq('id', runId)
     .single();
+
+  if (runError || !run) {
+    logger.error({ runId, error: runError?.message }, 'Failed to fetch run status for crawl_page job');
+    throw new Error(`Failed to fetch run status: ${runError?.message}`);
+  }
+
+  // Check if run is paused or cancelled
+  if (run.status === 'paused' || run.status === 'cancelled') {
+    logger.info({ runId, pageId, status: run.status }, 'Run is paused or cancelled. Aborting crawl_page job.');
+    return;
+  }
 
   const updateProgress = async (progress: number, step: string) => {
     const { error: progressError } = await supabase
@@ -263,6 +274,10 @@ export async function processCrawlPageJob(job: Job) {
         .eq('id', runId);
       
       logger.info({ runId }, 'Run marked as completed');
+
+      // Trigger embeddings generation
+      qaQueue.add('generate_embeddings', { runId })
+             .catch(e => logger.error('Failed to queue generate_embeddings:', e));
     }
 
     // Step 8: Broadcast progress update

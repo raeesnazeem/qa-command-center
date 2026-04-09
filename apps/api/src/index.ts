@@ -21,6 +21,7 @@ import { testWebhookRouter } from './routes/test-webhook'
 import { adminRouter } from './routes/admin'
 import { findingsRouter } from './routes/findings'
 import { visualDiffRouter } from './routes/visualDiff'
+import { chatRouter } from './routes/chat'
 import { clerkMiddleware, getAuth } from '@clerk/express'
 import { createBullBoard } from '@bull-board/api'
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter'
@@ -91,8 +92,8 @@ app.use('/api/admin', adminRouter)
 app.use('/api/projects', projectSettingsRouter)
 app.use('/api/findings', findingsRouter)
 app.use('/api/visual-diff', visualDiffRouter)
+app.use('/api/chat', chatRouter)
 app.use('/debug', debugRouter)
-app.use('/api/chat', (_req: Request, res: Response) => res.status(501).json({ message: 'Not implemented' }))
 
 // 404 handler
 app.use((_req: Request, res: Response) => {
