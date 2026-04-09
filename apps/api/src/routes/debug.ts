@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { supabase } from '../lib/supabase';
 
-export const debugRouter = Router();
+export const debugRouter: Router = Router();
 
 debugRouter.get('/env', (req: Request, res: Response) => {
   res.json({

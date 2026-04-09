@@ -23,7 +23,7 @@ export async function createBasecampTodo(params: CreateBasecampTodoParams): Prom
     {
       content: title,
       description: description,
-      assignee_ids: assigneeId ? [assigneeId] : [],
+      assignee_ids: assigneeId ? [Number(assigneeId)] : [],
     },
     {
       headers: {
