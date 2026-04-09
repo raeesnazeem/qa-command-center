@@ -8,6 +8,7 @@ import {
   assignTask,
   addComment, 
   addRebuttal,
+  pushToBasecamp,
   TaskFilters
 } from '../api/tasks.api';
 import { CreateTaskInput, UpdateTaskInput, RebuttalInput } from '@qacc/shared';
@@ -112,6 +113,23 @@ export const useAssignTask = () => {
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.error || 'Failed to reassign task');
+    },
+  });
+};
+
+export const usePushToBasecamp = () => {
+  const axios = useAuthAxios();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (taskId: string) => pushToBasecamp(axios, taskId),
+    onSuccess: (_, taskId) => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks', taskId] });
+      toast.success('Pushed to Basecamp');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to push to Basecamp');
     },
   });
 };

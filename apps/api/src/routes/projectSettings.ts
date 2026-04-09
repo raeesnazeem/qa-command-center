@@ -66,31 +66,37 @@ router.patch(
   requireRole('admin'),
   async (req: Request, res: Response) => {
     const { id: project_id } = req.params;
-    const {
-      figma_token,
-      basecamp_token,
-      basecamp_account_id,
-      basecamp_project_id,
-      basecamp_todolist_id,
-      slack_webhook_url,
-    } = req.body;
+      const {
+        figma_token,
+        basecamp_token,
+        basecamp_account_id,
+        basecamp_project_id,
+        basecamp_todolist_id,
+        slack_webhook_url,
+        notify_run_complete,
+        notify_critical_finding,
+        notify_sign_off,
+      } = req.body;
 
-    try {
-      const updateData: any = {
-        project_id,
-        updated_at: new Date().toISOString(),
-      };
+      try {
+        const updateData: any = {
+          project_id,
+          updated_at: new Date().toISOString(),
+        };
 
-      if (figma_token !== undefined) {
-        updateData.figma_token = figma_token ? encrypt(figma_token) : null;
-      }
-      if (basecamp_token !== undefined) {
-        updateData.basecamp_token = basecamp_token ? encrypt(basecamp_token) : null;
-      }
-      if (basecamp_account_id !== undefined) updateData.basecamp_account_id = basecamp_account_id;
-      if (basecamp_project_id !== undefined) updateData.basecamp_project_id = basecamp_project_id;
-      if (basecamp_todolist_id !== undefined) updateData.basecamp_todolist_id = basecamp_todolist_id;
-      if (slack_webhook_url !== undefined) updateData.slack_webhook_url = slack_webhook_url;
+        if (figma_token !== undefined) {
+          updateData.figma_token = figma_token ? encrypt(figma_token) : null;
+        }
+        if (basecamp_token !== undefined) {
+          updateData.basecamp_token = basecamp_token ? encrypt(basecamp_token) : null;
+        }
+        if (basecamp_account_id !== undefined) updateData.basecamp_account_id = basecamp_account_id;
+        if (basecamp_project_id !== undefined) updateData.basecamp_project_id = basecamp_project_id;
+        if (basecamp_todolist_id !== undefined) updateData.basecamp_todolist_id = basecamp_todolist_id;
+        if (slack_webhook_url !== undefined) updateData.slack_webhook_url = slack_webhook_url;
+        if (notify_run_complete !== undefined) updateData.notify_run_complete = notify_run_complete;
+        if (notify_critical_finding !== undefined) updateData.notify_critical_finding = notify_critical_finding;
+        if (notify_sign_off !== undefined) updateData.notify_sign_off = notify_sign_off;
 
       const { data, error } = await supabase
         .from('project_settings')
@@ -161,6 +167,43 @@ router.post(
       }
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
+    }
+  }
+);
+
+/**
+ * POST /api/projects/:id/settings/test-slack
+ * Test Slack connection by sending a test message.
+ */
+router.post(
+  '/:id/settings/test-slack',
+  clerkAuth,
+  requireRole('admin'),
+  async (req: Request, res: Response) => {
+    const { webhook_url } = req.body;
+
+    if (!webhook_url) {
+      return res.status(400).json({ error: 'Webhook URL is required' });
+    }
+
+    try {
+      const { sendSlackMessage } = require('../lib/slackNotifier');
+      await sendSlackMessage(webhook_url, {
+        text: '🔔 *QA Command Center Test* - Slack integration verified successfully!',
+        blocks: [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: '🔔 *QA Command Center Test*\nSlack integration verified successfully!',
+            },
+          },
+        ],
+      });
+
+      return res.json({ success: true, message: 'Test message sent' });
+    } catch (apiError: any) {
+      return res.status(400).json({ success: false, error: `Slack error: ${apiError.message}` });
     }
   }
 );

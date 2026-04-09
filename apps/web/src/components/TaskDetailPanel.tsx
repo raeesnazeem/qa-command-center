@@ -3,7 +3,6 @@ import {
   X, 
   Layers, 
   Calendar, 
-  ExternalLink,
   ShieldAlert,
   CheckCircle2,
   Image as ImageIcon,
@@ -18,6 +17,7 @@ import {
 } from '../hooks/useTasks';
 import { useProject } from '../hooks/useProjects';
 import { CanDo } from './CanDo';
+import { BasecampPushButton, BasecampTaskLink } from './BasecampPushButton';
 import { CommentThread } from './CommentThread';
 
 interface TaskDetailPanelProps {
@@ -126,15 +126,7 @@ export const TaskDetailPanel = ({ task, isOpen, onClose }: TaskDetailPanelProps)
                   </div>
                 </CanDo>
 
-                <CanDo role="qa_engineer">
-                  <div className="flex flex-col space-y-1">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Integration</span>
-                    <button className="inline-flex items-center space-x-2 bg-[#F97316] text-white px-4 py-1.5 rounded-md font-bold text-xs hover:bg-[#EA580C] transition-all shadow-sm active:scale-95">
-                      <ExternalLink className="w-3 h-3" />
-                      <span>Push to Basecamp</span>
-                    </button>
-                  </div>
-                </CanDo>
+                <BasecampPushButton task={task} />
               </div>
             </div>
 
@@ -244,13 +236,20 @@ export const TaskDetailPanel = ({ task, isOpen, onClose }: TaskDetailPanelProps)
               Last update: {format(new Date(task.updated_at), 'MMM d, HH:mm')}
             </span>
           </div>
-          <button 
-            disabled
-            className="inline-flex items-center space-x-2 text-slate-400 font-bold text-xs cursor-not-allowed opacity-60"
-          >
-            <CheckCircle2 className="w-4 h-4" />
-            <span>Mark as Resolved</span>
-          </button>
+          <div className="flex items-center space-x-4">
+            {task.basecamp_url && (
+              <div className="animate-in fade-in zoom-in duration-300">
+                <BasecampTaskLink url={task.basecamp_url} />
+              </div>
+            )}
+            <button 
+              disabled
+              className="inline-flex items-center space-x-2 text-slate-400 font-bold text-xs cursor-not-allowed opacity-60"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              <span>Mark as Resolved</span>
+            </button>
+          </div>
         </div>
       </div>
     </>

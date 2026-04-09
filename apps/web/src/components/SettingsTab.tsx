@@ -4,6 +4,7 @@ import { useUpdateProject } from '../hooks/useProjects';
 import { useAuthAxios } from '../lib/useAuthAxios';
 import { Settings, Globe, Layout, ShieldCheck, Database, Eye, EyeOff, Save, TestTube } from 'lucide-react';
 import { CanDo } from './CanDo';
+import { NotificationSettingsPage } from '../pages/NotificationSettingsPage';
 import toast from 'react-hot-toast';
 
 interface SettingsTabProps {
@@ -13,6 +14,7 @@ interface SettingsTabProps {
 export const SettingsTab = ({ project }: SettingsTabProps) => {
   const { mutate: updateProject, isPending: isUpdating } = useUpdateProject(project.id);
   const axios = useAuthAxios();
+  const [activeSection, setActiveSection] = useState<'project' | 'notifications'>('project');
   
   const [formData, setFormData] = useState({
     name: project.name,
@@ -74,8 +76,34 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
 
   return (
     <div className="max-w-4xl space-y-8 animate-in fade-in duration-500 pb-20">
-      {/* Basic Settings */}
-      <section className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-sm">
+      {/* Sub-navigation for Settings */}
+      <div className="flex items-center space-x-1 p-1 bg-slate-100/50 rounded-lg w-fit border border-slate-200 shadow-sm">
+        <button
+          onClick={() => setActiveSection('project')}
+          className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${
+            activeSection === 'project' 
+              ? 'bg-white text-slate-900 shadow-sm border border-slate-200' 
+              : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          Project Settings
+        </button>
+        <button
+          onClick={() => setActiveSection('notifications')}
+          className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${
+            activeSection === 'notifications' 
+              ? 'bg-white text-slate-900 shadow-sm border border-slate-200' 
+              : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          Notification Hub
+        </button>
+      </div>
+
+      {activeSection === 'project' ? (
+        <>
+          {/* Basic Settings */}
+          <section className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-sm">
         <div className="px-6 py-4 border-b border-slate-50 flex items-center space-x-2">
           <Settings className="w-5 h-5 text-slate-400" />
           <h3 className="font-bold text-slate-900">General Settings</h3>
@@ -264,6 +292,10 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
           </CanDo>
         </form>
       </section>
-    </div>
+    </>
+  ) : (
+    <NotificationSettingsPage project={project} />
+  )}
+</div>
   );
 };
