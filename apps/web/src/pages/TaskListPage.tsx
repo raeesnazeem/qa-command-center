@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { 
   Search, 
   Filter, 
@@ -12,6 +12,7 @@ import { useTasks } from '../hooks/useTasks';
 import { TaskDetailPanel } from '../components/TaskDetailPanel';
 import type { Task, TaskStatus, TaskSeverity } from '../api/tasks.api';
 import { format } from 'date-fns';
+import { useRole } from '../hooks/useRole';
 
 const getSeverityStyles = (severity: TaskSeverity) => {
   switch (severity) {
@@ -34,12 +35,21 @@ const getStatusStyles = (status: TaskStatus) => {
 };
 
 export const TaskListPage = () => {
+  const { isDeveloper, profile } = useRole();
   const [filters, setFilters] = useState({
     status: '' as TaskStatus | '',
     severity: '' as TaskSeverity | '',
     assignedTo: '',
     search: ''
   });
+
+  // Force assignedTo filter for developers
+  useEffect(() => {
+    if (isDeveloper && profile?.id && filters.assignedTo !== profile.id) {
+      setFilters(prev => ({ ...prev, assignedTo: profile.id }));
+    }
+  }, [isDeveloper, profile?.id]);
+
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
 
@@ -116,7 +126,8 @@ export const TaskListPage = () => {
           <select 
             value={filters.assignedTo}
             onChange={(e) => setFilters({ ...filters, assignedTo: e.target.value })}
-            className="bg-white border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+            disabled={isDeveloper}
+            className={`bg-white border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all ${isDeveloper ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <option value="">All Assignees</option>
             {/* Mocking unique assignees from tasks for now since no global user list is available */}

@@ -43,9 +43,8 @@ export const OnboardingPage = () => {
       };
       await axios.post('/api/users/onboard', payload);
       
-      // Wait for the 'me' query to be refetched completely before navigating
-      // to avoid the AppLayout redirection loop.
-      await queryClient.refetchQueries({ queryKey: ['me'] });
+      // Invalidate the 'me' query in the background, but don't wait for it
+      queryClient.invalidateQueries({ queryKey: ['me'] });
       
       toast.success('Welcome aboard!');
       navigate('/dashboard');

@@ -126,7 +126,9 @@ export const TaskDetailPanel = ({ task, isOpen, onClose }: TaskDetailPanelProps)
                   </div>
                 </CanDo>
 
-                <BasecampPushButton task={task} />
+                {project?.basecamp_account_id && project?.basecamp_project_id && project?.basecamp_todo_list_id && (
+                  <BasecampPushButton task={task} />
+                )}
               </div>
             </div>
 
