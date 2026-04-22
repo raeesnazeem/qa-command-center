@@ -126,12 +126,14 @@ router.get('/', clerkAuth, async (req: Request, res: Response) => {
     if (effectiveProjectId) query = query.eq('project_id', effectiveProjectId);
     if (status) query = query.eq('status', status);
     if (severity) query = query.eq('severity', severity);
-    if (assigned_to) query = query.eq('assigned_to', assigned_to);
-
+    
     // RBAC: Developer only sees assigned tasks
     if (role === 'developer') {
       query = query.eq('assigned_to', supabaseUserId);
-    } 
+    } else if (assigned_to) {
+      query = query.eq('assigned_to', assigned_to);
+    }
+
     // RBAC: Sub-Admin/QA/PM only see tasks in their project memberships
     else if (role !== 'super_admin' && role !== 'admin') {
       const { data: memberships } = await supabase
@@ -219,9 +221,18 @@ router.patch(
     const { id } = req.params;
     const { status, assigned_to, description } = req.body;
     try {
+      let targetUserId = assigned_to;
+      if (assigned_to) {
+        targetUserId = await getSupabaseUserId(assigned_to);
+      }
+
       const { data: task, error } = await supabase
         .from('tasks')
-        .update({ status, assigned_to, description })
+        .update({ 
+          status, 
+          assigned_to: targetUserId, 
+          description 
+        })
         .eq('id', id)
         .select()
         .single();
@@ -244,13 +255,16 @@ router.post(
   requireRole('qa_engineer'),
   async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { user_id } = req.body;
-    if (!user_id) return res.status(400).json({ error: 'user_id is required' });
+    const { user_id, assigned_to } = req.body;
+    const inputId = user_id || assigned_to;
+    if (!inputId) return res.status(400).json({ error: 'user_id or assigned_to is required' });
 
     try {
+      const targetUserId = await getSupabaseUserId(inputId);
+
       const { data: task, error } = await supabase
         .from('tasks')
-        .update({ assigned_to: user_id })
+        .update({ assigned_to: targetUserId })
         .eq('id', id)
         .select()
         .single();
@@ -262,7 +276,7 @@ router.post(
         const { data: userData } = await supabase
           .from('users')
           .select('full_name, email')
-          .eq('id', user_id)
+          .eq('id', targetUserId)
           .single();
         
         const { data: projectData } = await supabase

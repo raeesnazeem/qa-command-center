@@ -57,6 +57,12 @@ export const ProjectCard = ({ project }: ProjectCardProps) => {
             </h3>
           </div>
           <div className="flex items-center space-x-2">
+            {project.basecamp_project_id && (
+              <div className="flex items-center bg-orange-50 text-orange-600 border border-orange-100 rounded-full px-2 py-0.5" title="Basecamp Linked">
+                <Check className="w-3 h-3 mr-1" />
+                <span className="text-[10px] font-bold uppercase tracking-tight">Basecamp</span>
+              </div>
+            )}
             {canManage && (
               <button
                 onClick={(e) => {
