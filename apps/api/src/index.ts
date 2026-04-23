@@ -102,6 +102,7 @@ app.use('/api/findings', findingsRouter)
 app.use('/api/visual-diff', visualDiffRouter)
 app.use('/api/chat', chatRouter)
 app.use('/api/tasks', basecampIntegrationRouter)
+app.use('/api/basecamp', basecampIntegrationRouter)
 app.use('/debug', debugRouter)
 
 // 404 handler
