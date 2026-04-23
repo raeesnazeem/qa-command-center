@@ -5,6 +5,9 @@ import { CanDo } from './CanDo';
 
 interface BasecampPushButtonProps {
   task: Task;
+  onPush: () => void;
+  isPending: boolean;
+  isSuccess?: boolean;
 }
 
 export const BasecampTaskLink = ({ url }: { url: string | undefined }) => {
@@ -28,10 +31,9 @@ export const BasecampTaskLink = ({ url }: { url: string | undefined }) => {
   );
 };
 
-export const BasecampPushButton = ({ task }: BasecampPushButtonProps) => {
-  const { mutate: push, isPending } = usePushToBasecamp();
-
-  if (task.basecamp_task_id && task.basecamp_url) {
+export const BasecampPushButton = ({ task, onPush, isPending, isSuccess }: BasecampPushButtonProps) => {
+  // If the task already has a basecamp_url in the database, show the link
+  if (task.basecamp_url) {
     return <BasecampTaskLink url={task.basecamp_url} />;
   }
 
@@ -40,18 +42,25 @@ export const BasecampPushButton = ({ task }: BasecampPushButtonProps) => {
       <div className="flex flex-col space-y-1">
         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Integration</span>
         <button 
-          onClick={() => push(task.id)}
-          disabled={isPending}
+          onClick={onPush}
+          disabled={isPending || isSuccess}
           className={`inline-flex items-center justify-center space-x-2 px-4 py-1.5 rounded-md font-bold text-xs transition-all shadow-sm active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed ${
             isPending 
               ? 'bg-slate-100 text-slate-400 border border-slate-200' 
-              : 'bg-[#F97316] text-white hover:bg-[#EA580C]'
+              : isSuccess
+                ? 'bg-emerald-500 text-white'
+                : 'bg-[#F97316] text-white hover:bg-[#EA580C]'
           }`}
         >
           {isPending ? (
             <>
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
               <span>Pushing...</span>
+            </>
+          ) : isSuccess ? (
+            <>
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Success!</span>
             </>
           ) : (
             <>

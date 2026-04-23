@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ExternalLink } from 'lucide-react';
 import { useAuthAxios } from '../lib/useAuthAxios';
 import { 
   getTasks, 
@@ -9,6 +10,7 @@ import {
   addComment, 
   addRebuttal,
   pushToBasecamp,
+  bulkPushToBasecamp,
   TaskFilters
 } from '../api/tasks.api';
 import { CreateTaskInput, UpdateTaskInput, RebuttalInput } from '@qacc/shared';
@@ -123,13 +125,82 @@ export const usePushToBasecamp = () => {
 
   return useMutation({
     mutationFn: (taskId: string) => pushToBasecamp(axios, taskId),
-    onSuccess: (_, taskId) => {
+    onSuccess: (result, taskId) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['tasks', taskId] });
-      toast.success('Pushed to Basecamp');
+      
+      toast.success(
+        (t) => (
+          <div className="flex items-center space-x-3">
+            <div className="flex flex-col">
+              <span className="font-bold text-sm">Pushed to Basecamp</span>
+              <a 
+                href={result.basecampUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-xs text-[#F97316] hover:underline flex items-center mt-1"
+                onClick={() => toast.dismiss(t.id)}
+              >
+                View To-do <ExternalLink className="w-3 h-3 ml-1" />
+              </a>
+            </div>
+          </div>
+        ),
+        {
+          position: 'bottom-left',
+          duration: 5000,
+        }
+      );
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.error || 'Failed to push to Basecamp');
+    },
+  });
+};
+export const useBulkPushToBasecamp = () => {
+  const axios = useAuthAxios();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (taskIds: string[]) => {
+      console.log(`[BasecampSync] Starting push for ${taskIds.length} tasks...`);
+      const toastId = toast.loading('Syncing with Basecamp...', { position: 'bottom-left' });
+      try {
+        const result = await bulkPushToBasecamp(axios, taskIds);
+        console.log(`[BasecampSync] Successfully pushed to Basecamp:`, result.basecampUrl);
+        return { ...result, toastId };
+      } catch (error: any) {
+        console.error(`[BasecampSync] API Call Failed:`, error);
+        toast.error(error.response?.data?.error || 'Basecamp sync failed', { id: toastId });
+        throw error;
+      }
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      
+      toast.success(
+        (t) => (
+          <div className="flex items-center space-x-3">
+            <div className="flex flex-col">
+              <span className="font-bold text-sm">Basecamp Sync Complete</span>
+              <a 
+                href={result.basecampUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-xs text-[#F97316] hover:underline flex items-center mt-1"
+                onClick={() => toast.dismiss(t.id)}
+              >
+                View To-do <ExternalLink className="w-3 h-3 ml-1" />
+              </a>
+            </div>
+          </div>
+        ),
+        {
+          id: result.toastId,
+          position: 'bottom-left',
+          duration: 5000,
+        }
+      );
     },
   });
 };

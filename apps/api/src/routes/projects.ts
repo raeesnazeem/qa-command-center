@@ -82,6 +82,12 @@ router.post(
 
       if (memberError) throw memberError;
 
+      // 3. Initialize project_settings
+      await supabase.from('project_settings').insert({
+        project_id: project.id,
+        notification_prefs: {},
+      });
+
       return res.status(201).json(project);
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
@@ -254,18 +260,29 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
 
     if (projectError || !projectData) throw projectError || new Error('Project not found');
 
-    const totalRuns = projectData.qa_runs?.length || 0;
-    const sortedRuns = projectData.qa_runs?.sort((a: any, b: any) => 
+    const { qa_runs, tasks, project_settings, ...rest } = projectData;
+
+    const totalRuns = qa_runs?.length || 0;
+    const sortedRuns = qa_runs?.sort((a: any, b: any) => 
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) || [];
     const lastRun = sortedRuns[0];
-    const ongoingRun = projectData.qa_runs?.find((r: any) => 
+    const ongoingRun = qa_runs?.find((r: any) => 
       ['running', 'pending', 'paused'].includes(r.status));
 
-    const openIssuesCount = projectData.tasks?.filter((t: any) => t.status === 'open').length || 0;
-    const resolvedIssuesCount = projectData.tasks?.filter((t: any) => 
+    const openIssuesCount = tasks?.filter((t: any) => t.status === 'open').length || 0;
+    const resolvedIssuesCount = tasks?.filter((t: any) => 
       ['resolved', 'closed'].includes(t.status)).length || 0;
 
-    const { qa_runs, tasks, ...rest } = projectData;
+    const settings = (Array.isArray(project_settings)
+      ? project_settings[0]
+      : project_settings) || { 
+        notification_prefs: {},
+        figma_token_encrypted: null,
+        basecamp_account_id: null,
+        basecamp_project_id: null,
+        basecamp_todolist_id: null,
+        basecamp_token_encrypted: null
+      };
 
     return res.json({
       ...rest,
@@ -280,11 +297,11 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
         pages_total: ongoingRun.pages_total,
         created_by_name: ongoingRun.creator?.full_name || ongoingRun.creator?.email || 'System'
       } : null,
-      figma_access_token: projectData.project_settings?.[0]?.figma_token_encrypted,
-      basecamp_account_id: projectData.project_settings?.[0]?.basecamp_account_id,
-      basecamp_project_id: projectData.project_settings?.[0]?.basecamp_project_id,
-      basecamp_todo_list_id: projectData.project_settings?.[0]?.basecamp_todolist_id,
-      basecamp_api_token: projectData.project_settings?.[0]?.basecamp_token_encrypted
+      figma_access_token: settings?.figma_token_encrypted || null,
+      basecamp_account_id: settings?.basecamp_account_id || null,
+      basecamp_project_id: settings?.basecamp_project_id || null,
+      basecamp_todo_list_id: settings?.basecamp_todolist_id || null,
+      basecamp_api_token: settings?.basecamp_token_encrypted || null
     });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });

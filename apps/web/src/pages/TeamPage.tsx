@@ -16,7 +16,7 @@ export const TeamPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMember, setSelectedMember] = useState<any>(null);
   const [isManaging, setIsManaging] = useState(false);
-  const [editForm, setEditForm] = useState({ full_name: '', role: '' });
+  const [editForm, setEditForm] = useState({ full_name: '', role: '', basecamp_person_id: '' });
   const [isSaving, setIsSaving] = useState(false);
 
   const isSuperAdmin = currentUserRole === 'super_admin' || currentUserRole === 'admin';
@@ -29,7 +29,11 @@ export const TeamPage = () => {
 
   const handleManage = (member: any) => {
     setSelectedMember(member);
-    setEditForm({ full_name: member.full_name, role: member.role });
+    setEditForm({ 
+      full_name: member.full_name, 
+      role: member.role,
+      basecamp_person_id: member.basecamp_person_id || '' 
+    });
     setIsManaging(true);
   };
 
@@ -225,6 +229,17 @@ export const TeamPage = () => {
                   <option value="qa_engineer">QA Engineer</option>
                   <option value="developer">Developer</option>
                 </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Basecamp Person ID (Numerical)</label>
+                <input 
+                  type="text"
+                  value={editForm.basecamp_person_id}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, basecamp_person_id: e.target.value }))}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-sm font-medium focus:outline-none focus:border-accent transition-all"
+                  placeholder="e.g. 42235004"
+                />
               </div>
 
               <div className="pt-4 flex items-center justify-between gap-4">

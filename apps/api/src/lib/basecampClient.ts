@@ -1,5 +1,7 @@
 import axios from 'axios';
 
+const pkg = require('../../package.json');
+
 interface CreateBasecampTodoParams {
   token: string;
   accountId: string;
@@ -7,35 +9,49 @@ interface CreateBasecampTodoParams {
   todolistId: string;
   title: string;
   description: string;
-  assigneeId?: number;
+  assigneeIds?: number[];
 }
 
 /**
  * Creates a to-do in Basecamp 3
  */
 export async function createBasecampTodo(params: CreateBasecampTodoParams): Promise<{ id: number; url: string }> {
-  const { token, accountId, projectId, todolistId, title, description, assigneeId } = params;
+  const { token, accountId, projectId, todolistId, title, description, assigneeIds } = params;
 
-  const url = `https://3.basecampapi.com/${accountId}/buckets/${projectId}/todolists/${todolistId}/todos.json`;
+  // Basecamp 3 recommends flat routes where possible. 
+  // We use the todolists endpoint directly to reduce potential 404s from bucket hierarchy mismatches.
+  const url = `https://3.basecampapi.com/${accountId}/todolists/${todolistId}/todos.json`;
+  
+  console.log(`[BasecampClient] Creating todo at URL: ${url}`);
 
-  const response = await axios.post(
-    url,
-    {
-      content: title,
-      description: description,
-      assignee_ids: assigneeId ? [Number(assigneeId)] : [],
-    },
-    {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'User-Agent': 'QACC (your@email.com)',
+  try {
+    const response = await axios.post(
+      url,
+      {
+        content: title,
+        description: description,
+        assignee_ids: assigneeIds || [],
       },
-    }
-  );
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'User-Agent': `${pkg.name} (${process.env.SUPPORT_EMAIL || 'raees.nazeem@growth99.com'}) v${pkg.version}`,
+        },
+      }
+    );
 
-  return {
-    id: response.data.id,
-    url: response.data.app_url,
-  };
+    return {
+      id: response.data.id,
+      url: response.data.app_url,
+    };
+  } catch (error: any) {
+    if (error.response) {
+      const detailedError = new Error(`Basecamp API error: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
+      (detailedError as any).status = error.response.status;
+      (detailedError as any).data = error.response.data;
+      throw detailedError;
+    }
+    throw error;
+  }
 }
