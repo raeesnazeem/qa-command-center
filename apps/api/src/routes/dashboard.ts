@@ -38,7 +38,7 @@ router.get('/stats', clerkAuth, async (req: Request, res: Response) => {
     const normalizedRole = (role || '').toLowerCase().replace(/[\s-]/g, '_');
     const isManagement = ['super_admin', 'admin', 'sub_admin', 'project_manager', 'qa_engineer'].includes(normalizedRole);
     
-    console.log(`[Dashboard] User: ${clerkUserId}, Role: ${role}, Normalized: ${normalizedRole}, Org: ${orgId}, isManagement: ${isManagement}`);
+    console.log(`[Dashboard] User: ${clerkUserId}, Role: ${role}, Org: ${orgId}, isManagement: ${isManagement}`);
 
     let projectsQuery = supabase
       .from('projects')
@@ -46,16 +46,27 @@ router.get('/stats', clerkAuth, async (req: Request, res: Response) => {
       .eq('org_id', orgId);
 
     if (!isManagement) {
-      console.log(`[Dashboard] Non-management user, filtering by project membership...`);
       const { data: memberships } = await supabase
         .from('project_members')
         .select('project_id')
         .eq('user_id', supabaseUserId);
-      const projectIdsFromMembership = memberships?.map(m => m.project_id) || [];
-      console.log(`[Dashboard] Found ${projectIdsFromMembership.length} memberships for user ${supabaseUserId}`);
       
-      if (projectIdsFromMembership.length === 0) {
-        console.log(`[Dashboard] No memberships found, returning empty state`);
+      const projectIds = (memberships?.map(m => m.project_id) || []) as string[];
+      let allAccessibleIds = [...projectIds];
+
+      if (normalizedRole === 'developer') {
+        const { data: preReleaseProjects } = await supabase
+          .from('projects')
+          .select('id')
+          .eq('org_id', orgId)
+          .eq('is_pre_release', true);
+        
+        const preReleaseIds = (preReleaseProjects?.map(p => p.id) || []) as string[];
+        allAccessibleIds = Array.from(new Set([...allAccessibleIds, ...preReleaseIds]));
+      }
+
+      if (allAccessibleIds.length === 0) {
+        console.log(`[Dashboard] Zero accessible projects found for user ${supabaseUserId}`);
         return res.json({
           open_issues: 0,
           total_runs: 0,
@@ -72,7 +83,8 @@ router.get('/stats', clerkAuth, async (req: Request, res: Response) => {
           dev_projects: []
         });
       }
-      projectsQuery = projectsQuery.in('id', projectIdsFromMembership);
+      
+      projectsQuery = projectsQuery.in('id', allAccessibleIds);
     }
 
     const { data: projectsData, error: projectsError } = await projectsQuery;

@@ -1,4 +1,4 @@
-import { useUser } from "@clerk/react"
+import { useUser, useAuth } from "@clerk/react"
 import {
   AlertCircle,
   PlayCircle,
@@ -24,7 +24,7 @@ import { Project } from "../api/projects.api"
 
 export const DashboardPage = () => {
   const { user } = useUser()
-  const { data, isLoading } = useDashboardStats()
+  const { data, isLoading, error } = useDashboardStats()
   const { role } = useRole()
   const [projectSearch, setProjectSearch] = useState("")
   const [editingProject, setEditingProject] = useState<Project | null>(null)
@@ -109,37 +109,37 @@ export const DashboardPage = () => {
                   No pending pre-release projects.
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex overflow-x-auto pb-6 gap-5 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
                   {data?.pre_release_projects?.map((project) => (
                     <Link
                       key={project.id}
                       to={`/projects/${project.id}`}
-                      className="bg-white border-2 border-amber-100 rounded-3xl p-6 shadow-sm hover:shadow-xl hover:border-amber-400 transition-all group relative overflow-hidden"
+                      className="bg-white border-2 border-amber-100 rounded-2xl p-4 shadow-sm hover:shadow-lg hover:border-amber-400 transition-all group relative overflow-hidden min-w-[240px] flex-shrink-0 flex flex-col"
                     >
-                      <div className="absolute top-0 right-0 p-3">
+                      <div className="absolute top-0 right-0 p-2">
                         <Zap
-                          size={16}
+                          size={14}
                           className="text-amber-500 fill-amber-500 opacity-20 group-hover:opacity-100 transition-opacity"
                         />
                       </div>
-                      <h4 className="font-black text-slate-900 text-xl mb-1 group-hover:text-accent transition-colors leading-tight">
+                      <h4 className="font-bold text-slate-900 text-base mb-0.5 group-hover:text-accent transition-colors leading-tight truncate">
                         {project.name}
                       </h4>
-                      <p className="text-xs text-slate-400 font-medium mb-6 uppercase tracking-wider">
+                      <p className="text-[10px] text-slate-400 font-medium mb-4 uppercase tracking-wider">
                         {project.client_name || "Internal"}
                       </p>
 
-                      <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50">
+                      <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-50">
                         <div className="flex flex-col">
-                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                          <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
                             Open Issues
                           </span>
-                          <span className="text-sm font-black text-slate-900">
+                          <span className="text-xs font-black text-slate-900">
                             {project.open_issues_count || 0}
                           </span>
                         </div>
-                        <div className="bg-black text-accent p-2 rounded-xl group-hover:bg-accent group-hover:text-black transition-colors">
-                          <ArrowUpRight size={18} />
+                        <div className="bg-black text-accent p-1.5 rounded-lg group-hover:bg-accent group-hover:text-black transition-colors">
+                          <ArrowUpRight size={14} />
                         </div>
                       </div>
                     </Link>
