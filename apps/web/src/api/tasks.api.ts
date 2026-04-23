@@ -155,3 +155,13 @@ export const bulkPushToBasecamp = async (
   const { data } = await axios.post<{ basecampUrl: string; count: number }>(`/api/tasks/basecamp/bulk-push`, { taskIds });
   return data;
 };
+
+export const getBasecampPeople = async (
+  axios: AxiosInstance,
+  projectId: string
+): Promise<Record<number, { sgid: string; name: string }>> => {
+  const { data } = await axios.get<Record<number, { sgid: string; name: string }>>(`/api/basecamp/people`, {
+    params: { projectId }
+  });
+  return data;
+};

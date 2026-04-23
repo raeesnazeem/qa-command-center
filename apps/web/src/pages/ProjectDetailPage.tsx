@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { useProject } from '../hooks/useProjects';
+import { useBasecampPeople } from '../hooks/useBasecampPeople';
 import { 
   Globe, 
   Calendar, 
@@ -32,6 +33,7 @@ export const ProjectDetailPage = () => {
   const [isRunModalOpen, setIsRunModalOpen] = useState(false);
 
   const { data: project, isLoading, isError, error } = useProject(id!);
+  useBasecampPeople(id);
 
   const setTab = (tab: string) => {
     setSearchParams({ tab });

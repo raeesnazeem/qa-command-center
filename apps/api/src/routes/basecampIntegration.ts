@@ -3,11 +3,45 @@ import { supabase } from "../lib/supabase"
 import { clerkAuth } from "../middleware/clerkAuth"
 import { requireRole } from "../middleware/requireRole"
 import { getProjectSettings } from "../lib/getDecryptedSettings"
-import { createBasecampTodo } from "../lib/basecampClient"
+import { createBasecampTodo, getBasecampPeople, getBasecampPerson, formatBasecampMention } from "../lib/basecampClient"
 import { logger } from "../lib/logger"
 import crypto from "crypto"
 
 const router = Router()
+
+/**
+ * GET /api/basecamp/people
+ * Fetch all people from Basecamp for a specific project.
+ */
+router.get(
+  "/people",
+  clerkAuth,
+  async (req: Request, res: Response) => {
+    const { projectId } = req.query;
+
+    if (!projectId) {
+      return res.status(400).json({ error: "projectId is required" });
+    }
+
+    try {
+      const projectSettings = await getProjectSettings(projectId as string);
+      
+      if (!projectSettings || !projectSettings.basecamp_token || !projectSettings.basecamp_account_id) {
+        return res.status(400).json({ error: "Basecamp not configured for this project" });
+      }
+
+      const people = await getBasecampPeople(
+        projectSettings.basecamp_token,
+        projectSettings.basecamp_account_id
+      );
+
+      return res.json(people);
+    } catch (error: any) {
+      console.error('[BasecampPeople] Error:', error.message);
+      return res.status(500).json({ error: error.message });
+    }
+  }
+);
 
 /**
  * POST /api/tasks/:id/basecamp
@@ -78,14 +112,24 @@ router.post(
         findingUrl
       });
 
-      // 4. Build description
-      const tags = assigneeIds.map((id: number) => `@${id}`).join(" ")
-      const description = `${tags}
-• ${task.title}, Severity: ${task.severity}, URL: ${findingUrl}
+      // 3.5 Fetch Basecamp People for SGIDs
+      const mentionsList = await Promise.all(assigneeIds.map(async (id: number) => {
+        const person = await getBasecampPerson(projectSettings.basecamp_token, projectSettings.basecamp_account_id, id);
+        if (person && person.attachable_sgid) {
+          return formatBasecampMention(person.attachable_sgid, person.name);
+        }
+        return `@${id}`; // Fallback to plain text if not found
+      }));
+      const mentions = mentionsList.join(" ");
 
-Created via QA Command Center`.trim()
+      const description = `<div>${mentions}</div>
+<br/>
+• ${task.title}, Severity: ${task.severity}, URL: ${findingUrl}
+<br/><br/>
+Created via QA Command Center`.trim();
 
       // 5. Call Basecamp
+      console.log(`[BasecampPush] FINAL Description before POST:`, description);
       console.log(`[BasecampPush] Calling Basecamp API...`);
       const { id: basecampTaskId, url: basecampUrl } = await createBasecampTodo({
         token: projectSettings.basecamp_token,
@@ -260,23 +304,28 @@ router.post(
       const assigneeIdsArray = Array.from(allAssigneeIds)
       console.log(`[BasecampBulkPush] Resolved ${assigneeIdsArray.length} Basecamp assignees.`);
 
-      // 4. Build description
-      console.log(`[BasecampBulkPush] 4/6 Constructing Basecamp todo description...`);
-      const tags = assigneeIdsArray.map(id => `@${id}`).join(" ")
+      // 3.7 Fetch Basecamp People for SGIDs
+      const mentionsList = await Promise.all(assigneeIdsArray.map(async (id: number) => {
+        const person = await getBasecampPerson(projectSettings.basecamp_token, projectSettings.basecamp_account_id, id);
+        if (person && person.attachable_sgid) {
+          return formatBasecampMention(person.attachable_sgid, person.name);
+        }
+        return `@${id}`;
+      }));
+      const mentions = mentionsList.join(" ");
+
       const findingsList = tasks.map((t: any) => {
         const findingUrl = t.findings?.page_id ? pageUrlMap.get(t.findings.page_id) : "N/A"
         return `• ${t.title}, Severity: ${t.severity}, URL: ${findingUrl || "N/A"}`
-      }).join("\n")
+      }).join("<br/>")
 
-      const description = `${tags}
-${findingsList}
-
-Created via QA Command Center`.trim()
+      const description = `<div>${mentions}</div><br/>${findingsList}<br/><br/>Created via QA Command Center`.trim()
 
       console.log(`[BasecampBulkPush] Description built. Length: ${description.length} chars`);
       console.log(`[BasecampBulkPush] Assignees to tag:`, assigneeIdsArray);
 
       // 5. Create Basecamp To-Do
+      console.log(`[BasecampBulkPush] FINAL Description before POST:`, description);
       console.log(`[BasecampBulkPush] 5/6 REQUESTING Basecamp API: Create To-do...`);
       const { id: basecampTaskId, url: basecampUrl } = await createBasecampTodo({
         token: projectSettings.basecamp_token,
