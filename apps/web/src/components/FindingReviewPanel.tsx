@@ -31,6 +31,7 @@ interface FindingReviewPanelProps {
   onSingleConfirm?: (id: string) => void;
   onSingleFalsePositive?: (id: string) => void;
   onSingleCreateTask?: (finding: QAFinding) => void;
+  onAddToStage?: (findings: QAFinding[]) => void;
 }
 
 const DonutChart = ({ percentage, size = 120 }: { percentage: number; size?: number }) => {
@@ -87,7 +88,8 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
   onSingleConfirm,
   onSingleFalsePositive,
   onSingleCreateTask,
-  onSingleAssign
+  onSingleAssign,
+  onAddToStage
 }) => {
   const { canDo } = useRole();
   const canAction = canDo('qa_engineer');
@@ -161,7 +163,11 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
 
   const handleBulkCreateTasks = () => {
     const selectedFindings = findings.filter(f => selectedIds.has(f.id));
-    onCreateTasksBulk?.(selectedFindings);
+    if (onAddToStage) {
+      onAddToStage(selectedFindings);
+    } else {
+      onCreateTasksBulk?.(selectedFindings);
+    }
     setSelectedIds(new Set());
   };
 

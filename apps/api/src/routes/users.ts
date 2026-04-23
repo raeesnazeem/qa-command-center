@@ -22,7 +22,7 @@ router.get('/', clerkAuth, async (req: Request, res: Response) => {
 
     const { data, error } = await supabase
       .from('users')
-      .select('id, full_name, email, role')
+      .select('id, full_name, email, role, basecamp_person_id')
       .eq('org_id', orgId)
       .order('full_name', { ascending: true });
 
@@ -53,6 +53,7 @@ router.patch('/:id', clerkAuth, requireRole('admin'), async (req: Request, res: 
       .update({
         ...(full_name && { full_name }),
         ...(role && { role }),
+        ...(req.body.basecamp_person_id !== undefined && { basecamp_person_id: req.body.basecamp_person_id }),
         updated_at: new Date().toISOString()
       })
       .eq('id', id)

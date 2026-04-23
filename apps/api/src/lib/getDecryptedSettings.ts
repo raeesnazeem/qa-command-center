@@ -37,24 +37,24 @@ export async function getProjectSettings(projectId: string): Promise<DecryptedSe
     if (!data) return null;
 
     // Decrypt figma_token if it exists
-    let decryptedFigmaToken = data.figma_token;
-    if (data.figma_token) {
+    let decryptedFigmaToken = null;
+    if (data.figma_token_encrypted) {
       try {
-        decryptedFigmaToken = decrypt(data.figma_token);
+        decryptedFigmaToken = decrypt(data.figma_token_encrypted);
       } catch (e) {
         console.error(`Failed to decrypt figma_token for project ${projectId}:`, e);
-        decryptedFigmaToken = null; // Or handle as error
+        decryptedFigmaToken = null;
       }
     }
 
     // Decrypt basecamp_token if it exists
-    let decryptedBasecampToken = data.basecamp_token;
-    if (data.basecamp_token) {
+    let decryptedBasecampToken = null;
+    if (data.basecamp_token_encrypted) {
       try {
-        decryptedBasecampToken = decrypt(data.basecamp_token);
+        decryptedBasecampToken = decrypt(data.basecamp_token_encrypted);
       } catch (e) {
         console.error(`Failed to decrypt basecamp_token for project ${projectId}:`, e);
-        decryptedBasecampToken = null; // Or handle as error
+        decryptedBasecampToken = null;
       }
     }
 

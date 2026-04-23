@@ -13,7 +13,8 @@ import { Task, TaskStatus, TaskSeverity } from '../api/tasks.api';
 import { 
   useUpdateTask, 
   useAddRebuttal, 
-  useAssignTask 
+  useAssignTask,
+  usePushToBasecamp
 } from '../hooks/useTasks';
 import { useProject } from '../hooks/useProjects';
 import { CanDo } from './CanDo';
@@ -33,10 +34,16 @@ export const TaskDetailPanel = ({ task, isOpen, onClose }: TaskDetailPanelProps)
   const { mutate: updateTask } = useUpdateTask();
   const { mutate: addRebuttal } = useAddRebuttal();
   const { mutate: assignTask } = useAssignTask();
+  const { mutate: pushToBasecamp, isPending: isPushing, isSuccess: pushSuccess } = usePushToBasecamp();
   
   const { data: project } = useProject(task?.project_id || '');
 
   if (!task) return null;
+
+  const handlePush = () => {
+    console.log('Pushing task...', { taskId: task.id });
+    pushToBasecamp(task.id);
+  };
 
   const handleStatusChange = (status: TaskStatus) => {
     updateTask({ id: task.id, data: { status } });
@@ -127,7 +134,12 @@ export const TaskDetailPanel = ({ task, isOpen, onClose }: TaskDetailPanelProps)
                 </CanDo>
 
                 {project?.basecamp_account_id && project?.basecamp_project_id && project?.basecamp_todo_list_id && (
-                  <BasecampPushButton task={task} />
+                  <BasecampPushButton 
+                    task={task} 
+                    onPush={handlePush}
+                    isPending={isPushing}
+                    isSuccess={pushSuccess}
+                  />
                 )}
               </div>
             </div>

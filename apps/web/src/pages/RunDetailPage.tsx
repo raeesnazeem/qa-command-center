@@ -10,6 +10,8 @@ import { useCreateTask } from '../hooks/useTasks';
 import { AssignMemberModal } from '../components/AssignMemberModal';
 import { WooCommerceSection } from '../components/WooCommerceSection';
 import { SignOffButton } from '../components/SignOffButton';
+import { TaskStagingOverlay } from '../components/TaskStagingOverlay';
+import { useTaskStageStore } from '../store/taskStageStore';
 import { startVisualDiff } from '../api/visualDiff.api';
 import { 
   ChevronLeft, 
@@ -42,6 +44,7 @@ export const RunDetailPage = () => {
   const { id: projectId, runId } = useParams<{ id: string; runId: string }>();
   const axios = useAuthAxios();
   const updateStatus = useUpdateRunStatus();
+  const addToStage = useTaskStageStore(state => state.addToStage);
   
   const { 
     run, 
@@ -588,6 +591,7 @@ export const RunDetailPage = () => {
                     onConfirmBulk={handleBulkConfirm}
                     onFalsePositiveBulk={handleBulkFalsePositive}
                     onCreateTasksBulk={handleBulkCreateTasks}
+                    onAddToStage={addToStage}
                     onAssignBulk={handleBulkAssign}
                     onSingleAssign={handleSingleAssign}
                   />
@@ -827,8 +831,10 @@ export const RunDetailPage = () => {
         onClose={() => setIsAssignModalOpen(false)}
         projectId={projectId!}
         onAssign={handleAssignFinding}
-        title={assignTarget.type === 'bulk' ? `Assign ${assignTarget.ids.length} Findings` : 'Assign Finding'}
+        title={assignTarget.type === 'bulk' ? `Assign ${assignTarget.ids.length} Findings` : "Assign Finding"}
       />
+
+      <TaskStagingOverlay projectId={projectId!} />
     </div>
   );
 };
