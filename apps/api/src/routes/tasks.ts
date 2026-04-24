@@ -115,7 +115,8 @@ router.get('/', clerkAuth, async (req: Request, res: Response) => {
       .select(`
         *,
         users:assigned_to (id, full_name, email),
-        projects!inner:project_id (id, name, org_id)
+        creator:created_by (id, full_name, email),
+        projects:project_id (id, name, org_id)
       `, { count: 'exact' });
 
     // Filter by organization
@@ -181,6 +182,8 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
       .from('tasks')
       .select(`
         *,
+        users:assigned_to (id, full_name, email),
+        creator:created_by (id, full_name, email),
         projects (id, name, org_id),
         comments (
           *,

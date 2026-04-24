@@ -75,7 +75,7 @@ export const ProjectDetailPage = () => {
 
   const allTabs = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard, minRole: 'developer' },
-    { id: 'runs', label: 'QA Runs', icon: PlayCircle, minRole: 'developer' },
+    { id: 'runs', label: 'QA Runs', icon: PlayCircle, minRole: 'qa_engineer' },
     { id: 'tasks', label: 'Tasks', icon: CheckSquare, minRole: 'developer' },
     { id: 'team', label: 'Team', icon: Users, minRole: 'developer' },
     { id: 'settings', label: 'Settings', icon: SettingsIcon, minRole: 'admin' },
