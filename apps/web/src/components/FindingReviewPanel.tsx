@@ -1,48 +1,57 @@
-import React, { useState, useMemo } from 'react';
-import { 
-  XCircle, 
-  Plus, 
-  UserPlus, 
-  CheckSquare, 
+import React, { useState, useMemo } from "react"
+import {
+  XCircle,
+  Plus,
+  UserPlus,
+  CheckSquare,
   Square,
   BarChart3,
   Filter,
   CheckCircle,
   ShieldAlert,
-  Activity
-} from 'lucide-react';
-import { useRole } from '../hooks/useRole';
-import { QAFinding } from '../api/runs.api';
-import { FindingCard } from './FindingCard';
-import { CheckFactorFilter, FILTER_TABS, FilterTab } from './CheckFactorFilter';
+  Activity,
+} from "lucide-react"
+import { useRole } from "../hooks/useRole"
+import { QAFinding } from "../api/runs.api"
+import { FindingCard } from "./FindingCard"
+import { CheckFactorFilter, FILTER_TABS, FilterTab } from "./CheckFactorFilter"
 
 interface FindingReviewPanelProps {
-  findings: QAFinding[];
+  findings: QAFinding[]
   pageScreenshots?: {
-    desktop?: string | null;
-    tablet?: string | null;
-    mobile?: string | null;
-  };
-  onConfirmBulk?: (ids: string[]) => void;
-  onFalsePositiveBulk?: (ids: string[]) => void;
-  onCreateTasksBulk?: (findings: QAFinding[]) => void;
-  onAssignBulk?: (ids: string[]) => void;
-  onSingleAssign?: (id: string) => void;
-  onSingleConfirm?: (id: string) => void;
-  onSingleFalsePositive?: (id: string) => void;
-  onSingleCreateTask?: (finding: QAFinding) => void;
-  onAddToStage?: (findings: QAFinding[]) => void;
+    desktop?: string | null
+    tablet?: string | null
+    mobile?: string | null
+  }
+  onConfirmBulk?: (ids: string[]) => void
+  onFalsePositiveBulk?: (ids: string[]) => void
+  onCreateTasksBulk?: (findings: QAFinding[]) => void
+  onAssignBulk?: (ids: string[]) => void
+  onSingleAssign?: (id: string) => void
+  onSingleConfirm?: (id: string) => void
+  onSingleFalsePositive?: (id: string) => void
+  onSingleCreateTask?: (finding: QAFinding) => void
+  onAddToStage?: (findings: QAFinding[]) => void
 }
 
-const DonutChart = ({ percentage, size = 120 }: { percentage: number; size?: number }) => {
-  const radius = 35;
-  const stroke = 8;
-  const normalizedRadius = radius - stroke / 2;
-  const circumference = normalizedRadius * 2 * Math.PI;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+const DonutChart = ({
+  percentage,
+  size = 120,
+}: {
+  percentage: number
+  size?: number
+}) => {
+  const radius = 35
+  const stroke = 8
+  const normalizedRadius = radius - stroke / 2
+  const circumference = normalizedRadius * 2 * Math.PI
+  const strokeDashoffset = circumference - (percentage / 100) * circumference
 
   return (
-    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+    <div
+      className="relative flex items-center justify-center"
+      style={{ width: size, height: size }}
+    >
       <svg
         height={size}
         width={size}
@@ -71,12 +80,16 @@ const DonutChart = ({ percentage, size = 120 }: { percentage: number; size?: num
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-xl font-black text-slate-900 leading-none">{percentage}%</span>
-        <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter mt-1">Resolved</span>
+        <span className="text-xl font-black text-slate-900 leading-none">
+          {percentage}%
+        </span>
+        <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter mt-1">
+          Resolved
+        </span>
       </div>
     </div>
-  );
-};
+  )
+}
 
 export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
   findings,
@@ -89,87 +102,90 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
   onSingleFalsePositive,
   onSingleCreateTask,
   onSingleAssign,
-  onAddToStage
+  onAddToStage,
 }) => {
-  const { canDo } = useRole();
-  const canAction = canDo('qa_engineer');
-  const [selectedFactor, setSelectedFactor] = useState<string | null>(null);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const { canDo } = useRole()
+  const canAction = canDo("qa_engineer")
+  const [selectedFactor, setSelectedFactor] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   // Reset filter and selection when findings change (indicating a page switch)
   React.useEffect(() => {
-    setSelectedFactor(null);
-    setSelectedIds(new Set());
-  }, [findings]);
+    setSelectedFactor(null)
+    setSelectedIds(new Set())
+  }, [findings])
 
   // Summary Stats
   const stats = useMemo(() => {
-    const total = findings.length;
-    const confirmed = findings.filter(f => f.status === 'confirmed').length;
-    const falsePositives = findings.filter(f => f.status === 'false_positive').length;
-    const open = findings.filter(f => f.status === 'open').length;
-    const resolved = confirmed + falsePositives;
-    
+    const total = findings.length
+    const confirmed = findings.filter((f) => f.status === "confirmed").length
+    const falsePositives = findings.filter(
+      (f) => f.status === "false_positive",
+    ).length
+    const open = findings.filter((f) => f.status === "open").length
+    const resolved = confirmed + falsePositives
+
     return {
       open,
       confirmed,
       falsePositives,
-      critical: findings.filter(f => f.severity === 'critical').length,
-      high: findings.filter(f => f.severity === 'high').length,
-      medium: findings.filter(f => f.severity === 'medium').length,
-      low: findings.filter(f => f.severity === 'low').length,
+      critical: findings.filter((f) => f.severity === "critical").length,
+      high: findings.filter((f) => f.severity === "high").length,
+      medium: findings.filter((f) => f.severity === "medium").length,
+      low: findings.filter((f) => f.severity === "low").length,
       total,
-      resolvedPercentage: total > 0 ? Math.round((resolved / total) * 100) : 0
-    };
-  }, [findings]);
+      resolvedPercentage: total > 0 ? Math.round((resolved / total) * 100) : 0,
+    }
+  }, [findings])
 
   // Filtered Findings
   const filteredFindings = useMemo(() => {
-    if (!selectedFactor) return findings;
-    
-    const tab = FILTER_TABS.find((t: FilterTab) => t.id === selectedFactor);
-    if (!tab || tab.factors.length === 0) return findings.filter(f => f.check_factor === selectedFactor);
-    
-    return findings.filter(f => tab.factors.includes(f.check_factor));
-  }, [findings, selectedFactor]);
+    if (!selectedFactor) return findings
+
+    const tab = FILTER_TABS.find((t: FilterTab) => t.id === selectedFactor)
+    if (!tab || tab.factors.length === 0)
+      return findings.filter((f) => f.check_factor === selectedFactor)
+
+    return findings.filter((f) => tab.factors.includes(f.check_factor))
+  }, [findings, selectedFactor])
 
   const toggleSelectAll = () => {
     if (selectedIds.size === filteredFindings.length) {
-      setSelectedIds(new Set());
+      setSelectedIds(new Set())
     } else {
-      setSelectedIds(new Set(filteredFindings.map(f => f.id)));
+      setSelectedIds(new Set(filteredFindings.map((f) => f.id)))
     }
-  };
+  }
 
   const toggleSelect = (id: string) => {
-    const newSelected = new Set(selectedIds);
+    const newSelected = new Set(selectedIds)
     if (newSelected.has(id)) {
-      newSelected.delete(id);
+      newSelected.delete(id)
     } else {
-      newSelected.add(id);
+      newSelected.add(id)
     }
-    setSelectedIds(newSelected);
-  };
+    setSelectedIds(newSelected)
+  }
 
   const handleBulkConfirm = () => {
-    onConfirmBulk?.(Array.from(selectedIds));
-    setSelectedIds(new Set());
-  };
+    onConfirmBulk?.(Array.from(selectedIds))
+    setSelectedIds(new Set())
+  }
 
   const handleBulkFalsePositive = () => {
-    onFalsePositiveBulk?.(Array.from(selectedIds));
-    setSelectedIds(new Set());
-  };
+    onFalsePositiveBulk?.(Array.from(selectedIds))
+    setSelectedIds(new Set())
+  }
 
   const handleBulkCreateTasks = () => {
-    const selectedFindings = findings.filter(f => selectedIds.has(f.id));
+    const selectedFindings = findings.filter((f) => selectedIds.has(f.id))
     if (onAddToStage) {
-      onAddToStage(selectedFindings);
+      onAddToStage(selectedFindings)
     } else {
-      onCreateTasksBulk?.(selectedFindings);
+      onCreateTasksBulk?.(selectedFindings)
     }
-    setSelectedIds(new Set());
-  };
+    setSelectedIds(new Set())
+  }
 
   return (
     <div className="flex flex-col w-full space-y-8">
@@ -190,29 +206,49 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-slate-400">
                 <ShieldAlert size={14} />
-                <h4 className="text-[10px] font-black uppercase tracking-[0.2em]">Audit Summary</h4>
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em]">
+                  Audit Summary
+                </h4>
               </div>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xl font-black text-red-600">{stats.critical}</span>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Critical</span>
+                  <span className="text-xl font-black text-red-600">
+                    {stats.critical}
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
+                    Critical
+                  </span>
                 </div>
                 <div className="h-4 w-px bg-slate-200" />
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xl font-black text-orange-500">{stats.high}</span>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">High</span>
+                  <span className="text-xl font-black text-orange-500">
+                    {stats.high}
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
+                    High
+                  </span>
                 </div>
                 <div className="h-4 w-px bg-slate-200" />
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xl font-black text-amber-500">{stats.medium}</span>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Medium</span>
+                  <span className="text-xl font-black text-amber-500">
+                    {stats.medium}
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
+                    Medium
+                  </span>
                 </div>
                 <div className="h-4 w-px bg-slate-200" />
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xl font-black text-blue-500">{stats.low}</span>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Low</span>
+                  <span className="text-xl font-black text-blue-500">
+                    {stats.low}
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
+                    Low
+                  </span>
                 </div>
-                <span className="text-[10px] font-medium text-slate-400 italic ml-2">findings found</span>
+                <span className="text-[10px] font-medium text-slate-400 italic ml-2">
+                  findings found
+                </span>
               </div>
             </div>
 
@@ -220,23 +256,37 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-slate-400">
                 <Activity size={14} />
-                <h4 className="text-[10px] font-black uppercase tracking-[0.2em]">Status Overview</h4>
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em]">
+                  Status Overview
+                </h4>
               </div>
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                  <span className="text-sm font-black text-slate-900">{stats.confirmed}</span>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Confirmed</span>
+                  <span className="text-sm font-black text-slate-900">
+                    {stats.confirmed}
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
+                    Confirmed
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-slate-400" />
-                  <span className="text-sm font-black text-slate-900">{stats.falsePositives}</span>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">False Positives</span>
+                  <span className="text-sm font-black text-slate-900">
+                    {stats.falsePositives}
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
+                    False Positives
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                  <span className="text-sm font-black text-slate-900">{stats.open}</span>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Open for Review</span>
+                  <span className="text-sm font-black text-slate-900">
+                    {stats.open}
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
+                    Open for Review
+                  </span>
                 </div>
               </div>
             </div>
@@ -246,63 +296,68 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
 
       {/* Filter Tabs */}
       <div className="bg-white border border-slate-100 p-2 rounded-2xl shadow-sm">
-        <CheckFactorFilter 
+        <CheckFactorFilter
           findings={findings}
           selectedFactor={selectedFactor}
           onSelectFactor={(factor) => {
-            setSelectedFactor(factor);
-            setSelectedIds(new Set());
+            setSelectedFactor(factor)
+            setSelectedIds(new Set())
           }}
         />
       </div>
 
       {/* Bulk Action Toolbar */}
       {canAction && (
-        <div className={`sticky top-4 z-20 bg-black rounded-2xl p-4 border border-slate-800 shadow-2xl transition-all duration-300 ${
-          selectedIds.size > 0 ? 'translate-y-0 opacity-100 visible' : '-translate-y-4 opacity-0 invisible h-0 overflow-hidden !p-0 !m-0'
-        }`}>
+        <div
+          className={`sticky top-4 z-20 bg-black rounded-2xl p-4 border border-slate-800 shadow-2xl transition-all duration-300 ${
+            selectedIds.size > 0
+              ? "translate-y-0 opacity-100 visible"
+              : "-translate-y-4 opacity-0 invisible h-0 overflow-hidden !p-0 !m-0"
+          }`}
+        >
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <button 
+              <button
                 onClick={toggleSelectAll}
-                className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
+                className="btn-unified-secondary flex items-center space-x-2 text-white"
               >
-                {selectedIds.size === filteredFindings.length ? <CheckSquare className="text-accent" /> : <Square />}
+                {selectedIds.size === filteredFindings.length ? (
+                  <CheckSquare className="text-accent" />
+                ) : (
+                  <Square />
+                )}
               </button>
               <div>
-                <p className="text-white font-black text-sm leading-none">{selectedIds.size} Selected</p>
-                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Bulk action ready</p>
+                <p className="text-white font-black text-sm leading-none">
+                  {selectedIds.size} Selected
+                </p>
+                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">
+                  Bulk action ready
+                </p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2">
-              <button 
+              <button
                 onClick={handleBulkConfirm}
                 className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-[10px] hover:bg-emerald-600 transition-all active:scale-95"
               >
                 <CheckCircle size={14} />
                 Confirm All
               </button>
-              <button 
+              <button
                 onClick={handleBulkFalsePositive}
                 className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-[10px] hover:bg-white/20 border border-white/10 transition-all active:scale-95"
               >
                 <XCircle size={14} />
                 Mark False Positives
               </button>
-              <button 
+              <button
                 onClick={handleBulkCreateTasks}
                 className="flex items-center gap-2 px-4 py-2 bg-accent text-black text-[10px] font-black uppercase tracking-widest rounded-[10px] hover:bg-accent/90 transition-all active:scale-95"
               >
                 <Plus size={14} />
                 Create Tasks
-              </button>
-              <button 
-                onClick={() => onAssignBulk?.(Array.from(selectedIds))}
-                className="flex items-center gap-2 px-4 py-2 bg-white text-black text-[10px] font-black uppercase tracking-widest rounded-[10px] hover:bg-slate-100 transition-all active:scale-95"
-              >
-                <UserPlus size={14} />
-                Assign
               </button>
             </div>
           </div>
@@ -314,16 +369,22 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
         {filteredFindings.map((finding) => (
           <div key={finding.id} className="relative group/wrapper">
             {canAction && (
-              <div 
+              <div
                 onClick={() => toggleSelect(finding.id)}
                 className={`absolute top-4 left-4 z-10 cursor-pointer p-1 rounded-md transition-all ${
-                  selectedIds.has(finding.id) ? 'bg-black text-accent scale-110 shadow-lg' : 'bg-slate-100 text-slate-300 opacity-0 group-hover/wrapper:opacity-100'
+                  selectedIds.has(finding.id)
+                    ? "bg-black text-accent scale-110 shadow-lg"
+                    : "bg-slate-100 text-slate-300 opacity-0 group-hover/wrapper:opacity-100"
                 }`}
               >
-                {selectedIds.has(finding.id) ? <CheckSquare size={16} /> : <Square size={16} />}
+                {selectedIds.has(finding.id) ? (
+                  <CheckSquare size={16} />
+                ) : (
+                  <Square size={16} />
+                )}
               </div>
             )}
-            <FindingCard 
+            <FindingCard
               finding={finding}
               pageScreenshots={pageScreenshots}
               onConfirm={onSingleConfirm}
@@ -333,17 +394,21 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
             />
           </div>
         ))}
-        
+
         {filteredFindings.length === 0 && (
           <div className="col-span-full py-20 bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl text-center">
             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100">
               <Filter className="w-8 h-8 text-slate-200" />
             </div>
-            <p className="text-slate-900 font-black text-base uppercase tracking-tight">No findings match filter</p>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-2">Try selecting a different check factor</p>
+            <p className="text-slate-900 font-black text-base uppercase tracking-tight">
+              No findings match filter
+            </p>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-2">
+              Try selecting a different check factor
+            </p>
           </div>
         )}
       </div>
     </div>
-  );
-};
+  )
+}

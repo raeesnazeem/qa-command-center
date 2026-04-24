@@ -11,7 +11,9 @@ import { AssignMemberModal } from '../components/AssignMemberModal';
 import { WooCommerceSection } from '../components/WooCommerceSection';
 import { SignOffButton } from '../components/SignOffButton';
 import { TaskStagingOverlay } from '../components/TaskStagingOverlay';
+import { ManualScanOverlay } from '../components/ManualScanOverlay';
 import { useTaskStageStore } from '../store/taskStageStore';
+import { useRole } from '../hooks/useRole';
 import { startVisualDiff } from '../api/visualDiff.api';
 import { 
   ChevronLeft, 
@@ -44,7 +46,12 @@ export const RunDetailPage = () => {
   const { id: projectId, runId } = useParams<{ id: string; runId: string }>();
   const axios = useAuthAxios();
   const updateStatus = useUpdateRunStatus();
+  const { canDo } = useRole();
   const addToStage = useTaskStageStore(state => state.addToStage);
+  
+  const [isManualScanOpen, setIsManualScanOpen] = useState(false);
+  const [selectedManualPageId, setSelectedManualPageId] = useState<string | null>(null);
+  const canActionManual = canDo('qa_engineer');
   
   const { 
     run, 
@@ -330,7 +337,18 @@ export const RunDetailPage = () => {
               </p>
             </div>
             
-            <div className="text-right">
+            <div className="text-right flex items-center gap-4">
+              {canActionManual && (
+                <button 
+                  onClick={() => {
+                    setSelectedManualPageId(null);
+                    setIsManualScanOpen(true);
+                  }}
+                  className="px-2 py-1 border border-red-500 rounded text-red-500 text-[10px] font-black uppercase tracking-tighter hover:bg-red-50 transition-colors"
+                >
+                  Manual Scan
+                </button>
+              )}
               <p className="text-xl font-black text-slate-900">
                 {isDiscovering ? '...' : run.status === 'completed' ? '100%' : `${Math.max(1, Math.round(progress))}%`}
               </p>
@@ -448,7 +466,18 @@ export const RunDetailPage = () => {
                   }
                 </p>
               </div>
-              <div className="text-right">
+              <div className="text-right flex items-center gap-4">
+                {canActionManual && (
+                  <button 
+                    onClick={() => {
+                      setSelectedManualPageId(null);
+                      setIsManualScanOpen(true);
+                    }}
+                    className="px-2 py-1 border border-red-500 rounded text-red-500 text-[10px] font-black uppercase tracking-tighter hover:bg-red-50 transition-colors"
+                  >
+                    Manual Scan
+                  </button>
+                )}
                 <p className="text-2xl font-black text-slate-900">
                   {isDiscovering ? '...' : run.status === 'completed' ? '100%' : `${Math.max(1, Math.round(progress))}%`}
                 </p>
@@ -516,6 +545,10 @@ export const RunDetailPage = () => {
                 setSelectedPageId(page.id);
                 setActiveTab('findings');
               }} 
+              onManualScan={(page) => {
+                setSelectedManualPageId(page.id);
+                setIsManualScanOpen(true);
+              }}
               showVisuals={run.enabled_checks?.includes('visual_regression') && !!run.figma_url}
             />
           </div>
@@ -832,6 +865,16 @@ export const RunDetailPage = () => {
         projectId={projectId!}
         onAssign={handleAssignFinding}
         title={assignTarget.type === 'bulk' ? `Assign ${assignTarget.ids.length} Findings` : "Assign Finding"}
+      />
+
+      <ManualScanOverlay 
+        run={run}
+        isOpen={isManualScanOpen}
+        initialPageId={selectedManualPageId}
+        onClose={() => {
+          setIsManualScanOpen(false);
+          setSelectedManualPageId(null);
+        }}
       />
 
       <TaskStagingOverlay projectId={projectId!} />

@@ -14,10 +14,11 @@ import { QAPage } from '../api/runs.api';
 interface PagesTableProps {
   pages: QAPage[];
   onPageSelect: (page: QAPage) => void;
+  onManualScan?: (page: QAPage) => void;
   showVisuals?: boolean;
 }
 
-export const PagesTable: React.FC<PagesTableProps> = ({ pages, onPageSelect, showVisuals }) => {
+export const PagesTable: React.FC<PagesTableProps> = ({ pages, onPageSelect, onManualScan, showVisuals }) => {
   const parentRef = useRef<HTMLDivElement>(null);
 
   // Use actual pages from the database only - no placeholders
@@ -59,6 +60,7 @@ export const PagesTable: React.FC<PagesTableProps> = ({ pages, onPageSelect, sho
         <div className="w-24 text-center">Status</div>
         <div className="w-32 text-center">Issues</div>
         {showVisuals && <div className="w-20 text-center">Visual</div>}
+        {onManualScan && <div className="w-24 text-center">Actions</div>}
       </div>
 
       {/* Virtualized Body */}
@@ -184,7 +186,6 @@ export const PagesTable: React.FC<PagesTableProps> = ({ pages, onPageSelect, sho
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Clean</span>
                   )}
                 </div>
-
                 {showVisuals && (
                   <div className="w-20 flex justify-center pt-1">
                     {page.screenshot_url_desktop ? (
@@ -200,6 +201,20 @@ export const PagesTable: React.FC<PagesTableProps> = ({ pages, onPageSelect, sho
                         <ImageIcon size={12} className="text-slate-300" />
                       </div>
                     )}
+                  </div>
+                )}
+
+                {onManualScan && (
+                  <div className="w-24 flex justify-center pt-1">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onManualScan(page);
+                      }}
+                      className="px-2 py-1 border border-red-500 rounded text-red-500 text-[8px] font-black uppercase tracking-tighter hover:bg-red-50 transition-colors"
+                    >
+                      Manual Scan
+                    </button>
                   </div>
                 )}
               </div>
