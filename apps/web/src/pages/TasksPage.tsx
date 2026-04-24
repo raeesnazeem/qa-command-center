@@ -10,6 +10,8 @@ import {
   Layers,
   Clock,
   ExternalLink,
+  MessageSquare,
+  CheckCircle2,
 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { useDashboardStats } from "../hooks/useDashboard"
@@ -17,6 +19,9 @@ import { useRole } from "../hooks/useRole"
 import { CreateTaskModal } from "../components/CreateTaskModal"
 import { TasksTab } from "../components/TasksTab"
 import { Skeleton } from "../components/Skeleton"
+import { TaskDetailPanel } from "../components/TaskDetailPanel"
+import { useUpdateTask } from "../hooks/useTasks"
+import { TaskStatus } from "../api/tasks.api"
 
 const ProjectCard = ({ project }: { project: any }) => (
   <Link
@@ -85,13 +90,162 @@ const HorizontalScroll = ({
   )
 }
 
+const getSeverityColor = (severity: string) => {
+  switch (severity) {
+    case "critical":
+      return "bg-red-50 text-red-600 border-red-100"
+    case "high":
+      return "bg-amber-50 text-amber-600 border-amber-100"
+    case "medium":
+      return "bg-amber-50 text-amber-600 border-amber-100"
+    case "low":
+      return "bg-yellow-50 text-yellow-600 border-yellow-100"
+    default:
+      return "bg-slate-50 text-slate-500 border-slate-200"
+  }
+}
+
+const KanbanCard = ({ task, onClick }: { task: any; onClick: any }) => (
+  <div
+    onClick={() => onClick(task)}
+    className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer group relative hover:border-accent/20"
+  >
+    <div className="flex items-center justify-between mb-2">
+      <span
+        className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg border ${getSeverityColor(task.severity)}`}
+      >
+        {task.severity}
+      </span>
+      {task.basecamp_url && (
+        <div className="text-emerald-600" title="Synced with Basecamp">
+          <CheckCircle2 size={12} />
+        </div>
+      )}
+    </div>
+    <h4 className="text-sm font-bold text-slate-900 group-hover:text-accent transition-colors leading-tight mb-4">
+      {task.title}
+    </h4>
+    <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-50">
+      <div className="flex items-center space-x-3 text-slate-400">
+        <div className="flex items-center space-x-1">
+          <MessageSquare className="w-3 h-3" />
+          <span className="text-[10px] font-bold">
+            {task.comments?.length || 0}
+          </span>
+        </div>
+        {task.basecamp_url && (
+          <ExternalLink className="w-3 h-3 text-emerald-500" />
+        )}
+      </div>
+      <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500 border-2 border-white uppercase">
+        {task.users?.full_name?.charAt(0) || "?"}
+      </div>
+    </div>
+  </div>
+)
+
+const KanbanColumn = ({
+  title,
+  tasks,
+  onTaskClick,
+}: {
+  title: string
+  tasks: any[]
+  onTaskClick: any
+}) => (
+  <div className="space-y-4">
+    <div className="flex items-center justify-between px-2">
+      <h3 className="font-black text-slate-900 uppercase tracking-widest text-[11px] flex items-center gap-2">
+        <div className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+        {title}
+      </h3>
+      <span className="bg-slate-100 text-slate-500 text-[10px] font-black px-2 py-0.5 rounded-full">
+        {tasks.length}
+      </span>
+    </div>
+
+    <div className="space-y-4 min-h-[200px] bg-slate-50/50 rounded-2xl p-2 border border-dashed border-slate-200/60">
+      {tasks.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-32 text-center space-y-2 opacity-30 grayscale">
+          <CheckSquare className="w-6 h-6 text-slate-400" />
+          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">
+            No tasks
+          </p>
+        </div>
+      ) : (
+        tasks.map((task) => (
+          <KanbanCard key={task.id} task={task} onClick={onTaskClick} />
+        ))
+      )}
+    </div>
+  </div>
+)
+
+const ProjectKanban = ({
+  project,
+  tasks,
+  onTaskClick,
+}: {
+  project: any
+  tasks: any[]
+  onTaskClick: any
+}) => {
+  const columns = [
+    { id: "open", title: "To Do" },
+    { id: "in_progress", title: "In Progress" },
+    { id: "resolved", title: "Resolved" },
+    { id: "closed", title: "Closed" },
+  ]
+
+  return (
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex items-center justify-between px-2">
+        <div className="flex items-center gap-4">
+          <div className="w-1.5 h-8 bg-accent rounded-full shadow-sm shadow-accent/20" />
+          <div>
+            <h2 className="text-xl font-black text-slate-900 tracking-tight">
+              {project.name}
+            </h2>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-0.5">
+              Project Workflow
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-white px-3 py-1.5 rounded-xl border border-slate-100 shadow-sm">
+            {tasks.length} Total Assigned
+          </span>
+          <Link
+            to={`/projects/${project.id}`}
+            className="p-2 bg-white border border-slate-100 rounded-xl text-slate-400 hover:text-accent hover:border-accent/20 transition-all shadow-sm"
+          >
+            <ArrowUpRight size={16} />
+          </Link>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {columns.map((col) => (
+          <KanbanColumn
+            key={col.id}
+            title={col.title}
+            tasks={tasks.filter((t) => t.status === col.id)}
+            onTaskClick={onTaskClick}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export const TasksPage = () => {
   const { data, isLoading } = useDashboardStats()
   const { role } = useRole()
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
+  const [selectedTask, setSelectedTask] = useState<any>(null)
   const [showAllOther, setShowAllOther] = useState(false)
   const [qaExpanded, setQaExpanded] = useState(true)
   const [devExpanded, setDevExpanded] = useState(true)
+  const { mutate: updateTask } = useUpdateTask()
 
   const isAdmin = role === "super_admin" || role === "admin"
   const isSubAdmin = role === "sub_admin"
@@ -168,10 +322,12 @@ export const TasksPage = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-8">
         <div>
           <h1 className="text-4xl font-black text-slate-900 tracking-tight">
-            Real-time Tasks Monitor
+            {isDev ? "Developer Task Flow" : "Real-time Tasks Monitor"}
           </h1>
           <p className="text-slate-500 mt-2 font-medium">
-            Check currently active workflows across all projects
+            {isDev
+              ? "Consolidated view of all my current tasks"
+              : "Check currently active workflows across all projects"}
           </p>
         </div>
         <button
@@ -191,7 +347,7 @@ export const TasksPage = () => {
       <div className="space-y-16">
         {/* ADMIN & SUB-ADMIN VIEW */}
         {(isAdmin || isSubAdmin) && (
-          <div className="bg-white border border-slate-200 rounded-[32px] overflow-hidden shadow-xl shadow-slate-200/50 flex flex-col animate-in slide-in-from-bottom-4 duration-700">
+          <div className="bg-white border border-slate-200 rounded-[8px] overflow-hidden shadow-xl shadow-slate-200/50 flex flex-col animate-in slide-in-from-bottom-4 duration-700">
             {/* Unified Table Header */}
             <div className="p-8 border-b border-slate-100 bg-slate-50/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
@@ -415,27 +571,71 @@ export const TasksPage = () => {
 
         {/* DEVELOPER VIEW */}
         {isDev && (
-          <>
-            <HorizontalScroll
-              title="Your Pre-release Projects"
-              icon={Zap}
-              projects={data?.pre_release_projects}
-              iconColor="text-amber-500"
-            />
-            <HorizontalScroll
-              title="Your Post-release Projects"
-              icon={Layers}
-              projects={data?.post_release_projects}
-              iconColor="text-emerald-500"
-            />
-            <HorizontalScroll
-              title="Past Projects"
-              icon={Clock}
-              projects={data?.all_projects}
-            />
-          </>
+          <div className="space-y-20">
+            {(() => {
+              const groupedTasks =
+                data?.my_tasks?.reduce(
+                  (acc: Record<string, any[]>, task: any) => {
+                    const projectId = task.project_id
+                    if (!acc[projectId]) acc[projectId] = []
+                    acc[projectId].push(task)
+                    return acc
+                  },
+                  {},
+                ) || {}
+
+              const projectIds = Object.keys(groupedTasks)
+
+              if (projectIds.length === 0) {
+                return (
+                  <div className="bg-white border border-slate-200 rounded-[40px] p-24 text-center space-y-6 shadow-xl shadow-slate-100/50 animate-in zoom-in-95 duration-700">
+                    <div className="w-20 h-20 bg-emerald-50 rounded-[28px] flex items-center justify-center mx-auto border border-emerald-100">
+                      <CheckSquare className="w-10 h-10 text-emerald-500" />
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="text-2xl font-black text-slate-900 tracking-tight">
+                        All Caught Up!
+                      </h3>
+                      <p className="text-slate-500 font-medium max-w-sm mx-auto">
+                        You don't have any active tasks assigned to you right
+                        now. Take a moment to breathe or check other projects.
+                      </p>
+                    </div>
+                    <div className="pt-4">
+                      <button
+                        onClick={() => (window.location.href = "/projects")}
+                        className="btn-unified-secondary"
+                      >
+                        Browse Projects
+                      </button>
+                    </div>
+                  </div>
+                )
+              }
+
+              return projectIds.map((projectId) => (
+                <ProjectKanban
+                  key={projectId}
+                  project={{
+                    id: projectId,
+                    name:
+                      groupedTasks[projectId][0]?.projects?.name ||
+                      "Unknown Project",
+                  }}
+                  tasks={groupedTasks[projectId]}
+                  onTaskClick={setSelectedTask}
+                />
+              ))
+            })()}
+          </div>
         )}
       </div>
+
+      <TaskDetailPanel
+        task={selectedTask}
+        isOpen={!!selectedTask}
+        onClose={() => setSelectedTask(null)}
+      />
     </div>
   )
 }
