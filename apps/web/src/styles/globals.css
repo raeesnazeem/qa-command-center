@@ -91,3 +91,32 @@
   scrollbar-width: thin;
   scrollbar-color: #93C0B1 transparent;
 }
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(226, 232, 240, 0) 0%,
+    rgba(226, 232, 240, 0.5) 50%,
+    rgba(226, 232, 240, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+.skeleton-base {
+  @apply bg-slate-200 rounded relative overflow-hidden;
+}
+
+.skeleton-base::after {
+  content: "";
+  @apply absolute inset-0 animate-shimmer;
+}

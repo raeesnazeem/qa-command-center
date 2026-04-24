@@ -21,6 +21,7 @@ import { format } from "date-fns"
 import { useState, useMemo } from "react"
 import { EditProjectModal } from "../components/EditProjectModal"
 import { Project } from "../api/projects.api"
+import { Skeleton } from "../components/Skeleton"
 
 export const DashboardPage = () => {
   const { user } = useUser()
@@ -44,13 +45,33 @@ export const DashboardPage = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 text-accent animate-spin" />
-          <p className="text-slate-500 font-medium animate-pulse text-sm">
-            Syncing dashboard data...
-          </p>
+      <div className="max-w-7xl mx-auto space-y-10 animate-in fade-in duration-700 pb-12 px-4">
+        <header className="space-y-3">
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-4 w-48" />
+        </header>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-32 w-full rounded-3xl" />
+          ))}
         </div>
+
+        <section className="space-y-6">
+          <Skeleton className="h-4 w-32" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-48 w-full rounded-3xl" />
+            ))}
+          </div>
+        </section>
+
+        <section className="space-y-6">
+          <Skeleton className="h-4 w-32" />
+          <div className="bg-white border border-slate-100 rounded-3xl h-64 overflow-hidden relative">
+             <Skeleton className="absolute inset-0" />
+          </div>
+        </section>
       </div>
     )
   }

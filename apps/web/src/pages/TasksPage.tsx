@@ -15,6 +15,7 @@ import { useDashboardStats } from '../hooks/useDashboard';
 import { useRole } from '../hooks/useRole';
 import { CreateTaskModal } from '../components/CreateTaskModal';
 import { TasksTab } from '../components/TasksTab';
+import { Skeleton } from '../components/Skeleton';
 
 const ProjectCard = ({ project }: { project: any }) => (
   <Link 
@@ -72,17 +73,54 @@ export const TasksPage = () => {
   const [showAllOther, setShowAllOther] = useState(false);
 
   const isAdmin = role === 'super_admin' || role === 'admin';
+  const isSubAdmin = role === 'sub_admin';
   const isQA = role === 'qa_engineer';
   const isDev = role === 'developer';
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <Clock className="w-10 h-10 text-accent animate-spin" />
-        <p className="text-slate-500 font-medium animate-pulse text-sm">Loading task workspace...</p>
+      <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-500 pb-20">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-8">
+          <div className="space-y-3">
+            <Skeleton className="h-10 w-64" />
+            <Skeleton className="h-4 w-96" />
+          </div>
+          <Skeleton className="h-10 w-32 rounded-lg" />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {[1, 2].map((i) => (
+            <div key={i} className="space-y-4">
+              <Skeleton className="h-6 w-48" />
+              <div className="bg-white border border-slate-100 rounded-3xl h-64 overflow-hidden relative">
+                <Skeleton className="absolute inset-0" />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="space-y-8">
+          <Skeleton className="h-6 w-48" />
+          <div className="flex gap-6 overflow-hidden">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-48 w-80 rounded-2xl flex-shrink-0" />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
+
+  const getQAName = (project: any) => {
+    const qaMember = project.project_members?.find((m: any) => m.role === 'qa_engineer');
+    return qaMember?.users?.full_name || 'Unassigned';
+  };
+
+  const getDevNames = (project: any) => {
+    const devMembers = project.project_members?.filter((m: any) => m.role === 'developer');
+    if (!devMembers || devMembers.length === 0) return 'None';
+    return devMembers.map((m: any) => m.users?.full_name).join(', ');
+  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-500 pb-20">
@@ -106,22 +144,105 @@ export const TasksPage = () => {
       />
 
       <div className="space-y-16">
-        {/* ADMIN VIEW */}
-        {isAdmin && (
-          <>
-            <HorizontalScroll 
-              title="Current QA Tasks" 
-              icon={CheckSquare} 
-              projects={data?.qa_projects} 
-              iconColor="text-amber-500"
-            />
-            <HorizontalScroll 
-              title="Current Developer Tasks" 
-              icon={Layers} 
-              projects={data?.dev_projects} 
-              iconColor="text-indigo-500"
-            />
-          </>
+        {/* ADMIN & SUB-ADMIN VIEW */}
+        {(isAdmin || isSubAdmin) && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* QA Tasks Table */}
+            <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm flex flex-col">
+              <div className="p-6 border-b border-slate-50 bg-slate-50/30 flex items-center justify-between">
+                <h3 className="font-black text-slate-900 flex items-center gap-2 uppercase tracking-widest text-xs">
+                  <CheckSquare className="w-4 h-4 text-amber-500" />
+                  Current QA Tasks
+                </h3>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{data?.qa_projects?.length || 0} Total</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-slate-50">
+                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Project Name</th>
+                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
+                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Issues</th>
+                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">QA Name</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {data?.qa_projects?.map((project: any) => (
+                      <tr key={project.id} className="hover:bg-slate-50/50 transition-colors group">
+                        <td className="px-6 py-4">
+                          <Link to={`/projects/${project.id}`} className="font-bold text-slate-900 group-hover:text-accent transition-colors block">
+                            {project.name}
+                          </Link>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${
+                            project.is_pre_release ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                          }`}>
+                            {project.is_pre_release ? 'Pre' : 'Post'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className="text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">
+                            {project.open_issues_count || 0}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-xs font-medium text-slate-500">{getQAName(project)}</span>
+                        </td>
+                      </tr>
+                    ))}
+                    {(!data?.qa_projects || data.qa_projects.length === 0) && (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-12 text-center text-slate-400 text-xs font-medium italic">No active QA tasks</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Developer Tasks Table */}
+            <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm flex flex-col">
+              <div className="p-6 border-b border-slate-50 bg-slate-50/30 flex items-center justify-between">
+                <h3 className="font-black text-slate-900 flex items-center gap-2 uppercase tracking-widest text-xs">
+                  <Layers className="w-4 h-4 text-indigo-500" />
+                  Current Developer Tasks
+                </h3>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{data?.dev_projects?.length || 0} Total</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-slate-50">
+                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Project Name</th>
+                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Assigned Developer(s)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {data?.dev_projects?.map((project: any) => (
+                      <tr key={project.id} className="hover:bg-slate-50/50 transition-colors group">
+                        <td className="px-6 py-4">
+                          <Link to={`/projects/${project.id}`} className="font-bold text-slate-900 group-hover:text-accent transition-colors block">
+                            {project.name}
+                          </Link>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-wrap gap-1">
+                            <span className="text-xs font-medium text-slate-500">{getDevNames(project)}</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {(!data?.dev_projects || data.dev_projects.length === 0) && (
+                      <tr>
+                        <td colSpan={2} className="px-6 py-12 text-center text-slate-400 text-xs font-medium italic">No active developer tasks</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* QA VIEW */}
