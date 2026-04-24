@@ -25,6 +25,18 @@ export interface QARun {
   selected_urls?: string[] | null;
 }
 
+export interface CreateFindingInput {
+  page_id: string;
+  run_id: string;
+  check_factor: string;
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  title: string;
+  description?: string | null;
+  screenshot_url?: string | null;
+  context_text?: string | null;
+  ai_generated?: boolean;
+}
+
 export interface QAPage {
   id: string;
   run_id: string;
@@ -150,5 +162,13 @@ export const updateFinding = async (
   }
   
   const response = await axios.patch<QAFinding>(`/api/findings/${findingId}`, data);
+  return response.data;
+};
+
+export const createFinding = async (
+  axios: AxiosInstance,
+  data: CreateFindingInput
+): Promise<QAFinding> => {
+  const response = await axios.post<QAFinding>('/api/findings', data);
   return response.data;
 };
