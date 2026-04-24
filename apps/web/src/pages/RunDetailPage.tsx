@@ -344,7 +344,7 @@ export const RunDetailPage = () => {
                     setSelectedManualPageId(null);
                     setIsManualScanOpen(true);
                   }}
-                  className="px-2 py-1 border border-red-500 rounded text-red-500 text-[10px] font-black uppercase tracking-tighter hover:bg-red-50 transition-colors"
+                  className="px-2 py-1 border border-accent rounded text-accent text-[10px] font-black uppercase tracking-tighter hover:bg-accent/5 transition-colors"
                 >
                   Manual Scan
                 </button>
@@ -473,7 +473,7 @@ export const RunDetailPage = () => {
                       setSelectedManualPageId(null);
                       setIsManualScanOpen(true);
                     }}
-                    className="px-2 py-1 border border-red-500 rounded text-red-500 text-[10px] font-black uppercase tracking-tighter hover:bg-red-50 transition-colors"
+                    className="px-2 py-1 border border-accent rounded text-accent text-[10px] font-black uppercase tracking-tighter hover:bg-accent/5 transition-colors"
                   >
                     Manual Scan
                   </button>

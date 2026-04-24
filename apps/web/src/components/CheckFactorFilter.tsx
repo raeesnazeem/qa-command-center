@@ -71,7 +71,7 @@ export const CheckFactorFilter: React.FC<CheckFactorFilterProps> = ({
               </span>
               {count > 0 && (
                 <span
-                  className={`px-1.5 py-0.5 rounded-full text-[9px] font-black ${
+                  className={`px-1.5 py-0.5 rounded-15px text-[9px] font-black ${
                     isActive
                       ? "bg-accent text-black"
                       : "bg-slate-100 text-slate-500"
