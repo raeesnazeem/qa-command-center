@@ -31,6 +31,10 @@ export interface Task {
     full_name: string;
     email: string;
   };
+  creator?: {
+    full_name: string;
+    email: string;
+  };
   projects?: {
     name: string;
   };

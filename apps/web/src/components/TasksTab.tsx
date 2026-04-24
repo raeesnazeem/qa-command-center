@@ -99,13 +99,15 @@ export const TasksTab = ({ project }: TasksTabProps) => {
             </>
           )}
 
-          <button 
-            onClick={() => setIsTaskModalOpen(true)}
-            className="btn-unified flex items-center space-x-2"
-          >
-            <Plus className="w-4 h-4" />
-            <span>New Task</span>
-          </button>
+          <CanDo role="qa_engineer">
+            <button 
+              onClick={() => setIsTaskModalOpen(true)}
+              className="btn-unified flex items-center space-x-2"
+            >
+              <Plus className="w-4 h-4" />
+              <span>New Task</span>
+            </button>
+          </CanDo>
         </div>
       </div>
 

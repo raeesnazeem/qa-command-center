@@ -50,6 +50,7 @@ export const ProjectOverviewTab = ({ project, onStartRun }: ProjectOverviewTabPr
       icon: BarChart3,
       color: 'text-accent',
       bg: 'bg-accent/10',
+      hidden: isDeveloper
     },
     {
       label: 'Open Issues',
@@ -71,8 +72,9 @@ export const ProjectOverviewTab = ({ project, onStartRun }: ProjectOverviewTabPr
       icon: Calendar,
       color: 'text-slate-600',
       bg: 'bg-slate-50',
+      hidden: isDeveloper
     },
-  ];
+  ].filter(s => !s.hidden);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -298,39 +300,59 @@ export const ProjectOverviewTab = ({ project, onStartRun }: ProjectOverviewTabPr
               <Loader2 className="w-8 h-8 text-accent animate-spin" />
             </div>
           ) : tasksData?.data && tasksData.data.length > 0 ? (
-            <div className="divide-y divide-slate-50">
-              {tasksData.data.map((task: any) => (
-                <div 
-                  key={task.id}
-                  className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors group"
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className={`w-2 h-2 rounded-full ${
-                      task.severity === 'critical' ? 'bg-red-500' :
-                      task.severity === 'high' ? 'bg-orange-500' :
-                      task.severity === 'medium' ? 'bg-amber-500' : 'bg-blue-500'
-                    }`} />
-                    <div>
-                      <h4 className="text-sm font-bold text-slate-900 tracking-tight group-hover:text-accent transition-colors">{task.title}</h4>
-                      <div className="flex items-center mt-1 space-x-3">
-                        <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 uppercase">
-                          {task.status}
-                        </span>
-                        <div className="flex items-center text-[10px] font-bold text-slate-400 uppercase">
-                          <User size={10} className="mr-1" />
-                          Assignee: {task.users?.full_name || 'You'}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50/50">
+                    <th className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">Issue Assigned</th>
+                    <th className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">Assigned By</th>
+                    <th className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">Assigned On</th>
+                    <th className="px-6 py-3 border-b border-slate-50"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {tasksData.data.map((task: any) => (
+                    <tr 
+                      key={task.id}
+                      className="hover:bg-slate-50/50 transition-colors group cursor-pointer"
+                      onClick={() => window.location.href = `/projects/${project.id}?tab=tasks&taskId=${task.id}`}
+                    >
+                      <td className="px-6 py-4">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-1.5 h-1.5 rounded-full flex-none ${
+                            task.severity === 'critical' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]' :
+                            task.severity === 'high' ? 'bg-orange-500' :
+                            task.severity === 'medium' ? 'bg-amber-500' : 'bg-blue-500'
+                          }`} />
+                          <span className="text-sm font-bold text-slate-900 group-hover:text-accent transition-colors line-clamp-1">
+                            {task.title}
+                          </span>
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-4">
-                    <div className="text-[10px] font-bold text-slate-400 uppercase mr-4">
-                      {formatDistanceToNow(new Date(task.created_at), { addSuffix: true })}
-                    </div>
-                  </div>
-                </div>
-              ))}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-6 h-6 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-[10px] font-black text-slate-500 uppercase">
+                            {task.creator?.full_name?.charAt(0) || <User size={10} />}
+                          </div>
+                          <span className="text-xs font-semibold text-slate-700">{task.creator?.full_name || 'System'}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-xs font-medium text-slate-500">
+                          {new Date(task.created_at).toLocaleDateString(undefined, { 
+                            month: 'short', 
+                            day: 'numeric', 
+                            year: 'numeric' 
+                          })}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-accent group-hover:translate-x-0.5 transition-all inline-block" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           ) : (
             <div className="p-12 text-center">
