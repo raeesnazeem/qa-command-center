@@ -160,7 +160,22 @@ export const bulkPushToBasecamp = async (
   return data;
 };
 
+export const deleteTask = async (
+  axios: AxiosInstance,
+  id: string
+): Promise<void> => {
+  await axios.delete(`/api/tasks/${id}`);
+};
+
+export const bulkDeleteTasks = async (
+  axios: AxiosInstance,
+  ids: string[]
+): Promise<void> => {
+  await axios.post(`/api/tasks/bulk-delete`, { ids });
+};
+
 export const getBasecampPeople = async (
+
   axios: AxiosInstance,
   projectId: string
 ): Promise<Record<number, { sgid: string; name: string }>> => {

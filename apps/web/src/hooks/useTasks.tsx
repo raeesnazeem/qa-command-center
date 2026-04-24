@@ -7,6 +7,8 @@ import {
   createTask, 
   updateTask, 
   assignTask,
+  deleteTask,
+  bulkDeleteTasks,
   addComment, 
   addRebuttal,
   pushToBasecamp,
@@ -204,3 +206,36 @@ export const useBulkPushToBasecamp = () => {
     },
   });
 };
+
+export const useDeleteTask = () => {
+  const axios = useAuthAxios();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteTask(axios, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast.success('Task deleted');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to delete task');
+    },
+  });
+};
+
+export const useBulkDeleteTasks = () => {
+  const axios = useAuthAxios();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (ids: string[]) => bulkDeleteTasks(axios, ids),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast.success('Tasks deleted');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to delete tasks');
+    },
+  });
+};
+

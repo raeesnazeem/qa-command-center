@@ -14,6 +14,7 @@ import { Link } from 'react-router-dom';
 import { useDashboardStats } from '../hooks/useDashboard';
 import { useRole } from '../hooks/useRole';
 import { CreateTaskModal } from '../components/CreateTaskModal';
+import { TasksTab } from '../components/TasksTab';
 
 const ProjectCard = ({ project }: { project: any }) => (
   <Link 
@@ -125,57 +126,9 @@ export const TasksPage = () => {
 
         {/* QA VIEW */}
         {isQA && (
-          <>
-            <HorizontalScroll 
-              title="Current QA Pre-release Projects" 
-              icon={Zap} 
-              projects={data?.pre_release_projects} 
-              iconColor="text-amber-500"
-            />
-            <HorizontalScroll 
-              title="Current QA Post-release Projects" 
-              icon={Layers} 
-              projects={data?.post_release_projects} 
-              iconColor="text-emerald-500"
-            />
-            
-            <section className="space-y-6 pt-8">
-              <div className="flex items-center justify-between border-t border-slate-100 pt-8">
-                <h3 className="font-black text-slate-900 flex items-center gap-2 uppercase tracking-widest text-xs">
-                  <Search className="w-4 h-4 text-slate-400" />
-                  Other Projects
-                </h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {(showAllOther ? data?.all_projects : data?.all_projects?.slice(0, 12))?.map((project: any) => (
-                  <Link 
-                    key={project.id} 
-                    to={`/projects/${project.id}`}
-                    className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all group"
-                  >
-                    <h5 className="font-bold text-slate-900 group-hover:text-accent transition-colors truncate">{project.name}</h5>
-                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">{project.client_name || 'Internal'}</p>
-                  </Link>
-                ))}
-              </div>
-              {data?.all_projects && data.all_projects.length > 12 && (
-                <div className="flex justify-center mt-8">
-                  {showAllOther ? (
-                    <Link to="/projects" className="btn-unified-secondary flex items-center gap-2">
-                      View All in Database <ExternalLink size={14} />
-                    </Link>
-                  ) : (
-                    <button 
-                      onClick={() => setShowAllOther(true)}
-                      className="btn-unified-secondary"
-                    >
-                      See More Projects
-                    </button>
-                  )}
-                </div>
-              )}
-            </section>
-          </>
+          <div className="space-y-8">
+            <TasksTab />
+          </div>
         )}
 
         {/* DEVELOPER VIEW */}
