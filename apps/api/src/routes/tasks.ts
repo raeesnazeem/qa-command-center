@@ -376,4 +376,55 @@ router.post(
   }
 );
 
+/**
+ * DELETE /api/tasks/:id
+ */
+router.delete(
+  '/:id',
+  clerkAuth,
+  requireRole('qa_engineer'),
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      return res.status(204).send();
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+);
+
+/**
+ * POST /api/tasks/bulk-delete
+ */
+router.post(
+  '/bulk-delete',
+  clerkAuth,
+  requireRole('qa_engineer'),
+  async (req: Request, res: Response) => {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'ids array is required' });
+    }
+
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .in('id', ids);
+
+      if (error) throw error;
+      return res.status(204).send();
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+);
+
 export { router as tasksRouter };
+

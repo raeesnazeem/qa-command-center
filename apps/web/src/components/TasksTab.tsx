@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ProjectWithMembers } from '../api/projects.api';
-import { useTasks, useUpdateTask } from '../hooks/useTasks';
+import { useTasks, useUpdateTask, useDeleteTask, useBulkDeleteTasks } from '../hooks/useTasks';
 import { 
   CheckSquare, 
   Clock, 
@@ -10,7 +10,8 @@ import {
   Filter,
   Plus,
   CheckCircle2,
-  ExternalLink
+  ExternalLink,
+  Trash2
 } from 'lucide-react';
 import { TaskStatus } from '@qacc/shared';
 import { CreateTaskModal } from './CreateTaskModal';
@@ -20,16 +21,18 @@ import { TaskDetailPanel } from './TaskDetailPanel';
 import { Task } from '../api/tasks.api';
 
 interface TasksTabProps {
-  project: ProjectWithMembers;
+  project?: ProjectWithMembers;
 }
 
 export const TasksTab = ({ project }: TasksTabProps) => {
-  const { data: tasksData, isLoading } = useTasks({ projectId: project.id });
+  const { data: tasksData, isLoading } = useTasks({ projectId: project?.id });
   const tasks = tasksData?.data || [];
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const { mutate: updateTask } = useUpdateTask();
+  const { mutate: deleteTask } = useDeleteTask();
+  const { mutate: bulkDelete } = useBulkDeleteTasks();
 
   const toggleTaskSelection = (taskId: string) => {
     setSelectedTaskIds(prev => 
@@ -50,6 +53,20 @@ export const TasksTab = ({ project }: TasksTabProps) => {
     updateTask({ id: taskId, data: { status: newStatus } });
   };
 
+  const handleDelete = (taskId: string) => {
+    if (window.confirm('Are you sure you want to delete this task?')) {
+      deleteTask(taskId);
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (window.confirm(`Are you sure you want to delete ${selectedTaskIds.length} tasks?`)) {
+      bulkDelete(selectedTaskIds, {
+        onSuccess: () => setSelectedTaskIds([])
+      });
+    }
+  };
+
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'critical': return 'bg-red-50 text-red-600 border-red-100';
@@ -63,7 +80,9 @@ export const TasksTab = ({ project }: TasksTabProps) => {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h2 className="text-xl font-bold text-slate-900">Project Tasks</h2>
+        <h2 className="text-xl font-bold text-slate-900">
+          {project ? `${project.name} Tasks` : 'All Workspace Tasks'}
+        </h2>
         
         <div className="flex items-center space-x-2">
           <div className="relative">
@@ -76,10 +95,21 @@ export const TasksTab = ({ project }: TasksTabProps) => {
           </div>
           
           {selectedTaskIds.length > 0 ? (
-            <BulkBasecampPush 
-              taskIds={selectedTaskIds} 
-              onComplete={() => setSelectedTaskIds([])} 
-            />
+            <div className="flex items-center space-x-2">
+              <BulkBasecampPush 
+                taskIds={selectedTaskIds} 
+                onComplete={() => setSelectedTaskIds([])} 
+              />
+              <CanDo role="qa_engineer">
+                <button 
+                  onClick={handleBulkDelete}
+                  className="btn-unified-secondary bg-red-50 text-red-600 border-red-100 hover:bg-red-100 p-2"
+                  title="Delete selected tasks"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </CanDo>
+            </div>
           ) : (
             <>
               <button className="btn-unified-secondary p-2">
@@ -112,7 +142,7 @@ export const TasksTab = ({ project }: TasksTabProps) => {
       </div>
 
       <CreateTaskModal 
-        projectId={project.id}
+        projectId={project?.id}
         isOpen={isTaskModalOpen}
         onClose={() => setIsTaskModalOpen(false)}
       />
@@ -181,7 +211,7 @@ export const TasksTab = ({ project }: TasksTabProps) => {
                         )}
                       </div>
                       
-                      <div className="relative group/status">
+                      <div className="relative group/status flex items-center space-x-2">
                         <select
                           value={task.status}
                           onClick={(e) => e.stopPropagation()}
@@ -192,6 +222,18 @@ export const TasksTab = ({ project }: TasksTabProps) => {
                             <option key={col.id} value={col.id}>{col.title}</option>
                           ))}
                         </select>
+                        <CanDo role="qa_engineer">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(task.id);
+                            }}
+                            className="p-1 text-slate-300 hover:text-red-500 transition-colors"
+                            title="Delete task"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </CanDo>
                       </div>
                     </div>
                     <h4 className="text-sm font-bold text-slate-900 group-hover:text-accent transition-colors leading-tight mb-4">
