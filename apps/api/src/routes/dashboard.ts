@@ -42,7 +42,7 @@ router.get('/stats', clerkAuth, async (req: Request, res: Response) => {
 
     let projectsQuery = supabase
       .from('projects')
-      .select('*, qa_runs(id, status, created_at), tasks(id, status, assigned_to)')
+      .select('*, qa_runs(id, status, created_at), tasks(id, status, assigned_to), project_members(role, users(full_name))')
       .eq('org_id', orgId);
 
     if (!isManagement) {
