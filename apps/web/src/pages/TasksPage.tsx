@@ -20,7 +20,7 @@ import { CreateTaskModal } from "../components/CreateTaskModal"
 import { TasksTab } from "../components/TasksTab"
 import { Skeleton } from "../components/Skeleton"
 import { TaskDetailPanel } from "../components/TaskDetailPanel"
-import { useUpdateTask } from "../hooks/useTasks"
+import { useUpdateTask, useTasks } from "../hooks/useTasks"
 import { TaskStatus } from "../api/tasks.api"
 
 const ProjectCard = ({ project }: { project: any }) => (
@@ -105,53 +105,90 @@ const getSeverityColor = (severity: string) => {
   }
 }
 
-const KanbanCard = ({ task, onClick }: { task: any; onClick: any }) => (
-  <div
-    onClick={() => onClick(task)}
-    className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer group relative hover:border-accent/20"
-  >
-    <div className="flex items-center justify-between mb-2">
-      <span
-        className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg border ${getSeverityColor(task.severity)}`}
-      >
-        {task.severity}
-      </span>
-      {task.basecamp_url && (
-        <div className="text-emerald-600" title="Synced with Basecamp">
-          <CheckCircle2 size={12} />
-        </div>
-      )}
-    </div>
-    <h4 className="text-sm font-bold text-slate-900 group-hover:text-accent transition-colors leading-tight mb-4">
-      {task.title}
-    </h4>
-    <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-50">
-      <div className="flex items-center space-x-3 text-slate-400">
-        <div className="flex items-center space-x-1">
-          <MessageSquare className="w-3 h-3" />
-          <span className="text-[10px] font-bold">
-            {task.comments?.length || 0}
-          </span>
-        </div>
+const KanbanCard = ({
+  task,
+  onClick,
+  role,
+}: {
+  task: any
+  onClick: any
+  role: string
+}) => {
+  const isAdmin =
+    role === "super_admin" || role === "admin" || role === "sub_admin"
+  const isQA = role === "qa_engineer"
+  const isDev = role === "developer"
+
+  return (
+    <div
+      onClick={() => onClick(task)}
+      className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer group relative hover:border-accent/20"
+    >
+      <div className="flex items-center justify-between mb-2">
+        <span
+          className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg border ${getSeverityColor(task.severity)}`}
+        >
+          {task.severity}
+        </span>
         {task.basecamp_url && (
-          <ExternalLink className="w-3 h-3 text-emerald-500" />
+          <div className="text-emerald-600" title="Synced with Basecamp">
+            <CheckCircle2 size={12} />
+          </div>
         )}
       </div>
-      <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500 border-2 border-white uppercase">
-        {task.users?.full_name?.charAt(0) || "?"}
+      <h4 className="text-sm font-bold text-slate-900 group-hover:text-accent transition-colors leading-tight mb-4">
+        {task.title}
+      </h4>
+      <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-50">
+        <div className="flex items-center space-x-3 text-slate-400">
+          <div className="flex items-center space-x-1">
+            <MessageSquare className="w-3 h-3" />
+            <span className="text-[10px] font-bold">
+              {task.comments?.length || 0}
+            </span>
+          </div>
+          {task.basecamp_url && (
+            <ExternalLink className="w-3 h-3 text-emerald-500" />
+          )}
+        </div>
+        <div className="flex items-center -space-x-2">
+          {(isAdmin || isDev) && task.creator && (
+            <div
+              className="w-6 h-6 rounded-full bg-[#93c0b1] flex items-center justify-center text-[10px] font-black text-white border-2 border-white uppercase"
+              title={`Assigner: ${task.creator.full_name}`}
+            >
+              {task.creator.full_name.charAt(0)}
+            </div>
+          )}
+          {(isAdmin || isQA) && task.users && (
+            <div
+              className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500 border-2 border-white uppercase"
+              title={`Assigned to: ${task.users.full_name}`}
+            >
+              {task.users.full_name.charAt(0)}
+            </div>
+          )}
+          {!task.users && !task.creator && (
+            <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500 border-2 border-white uppercase">
+              ?
+            </div>
+          )}
+        </div>
       </div>
     </div>
-  </div>
-)
+  )
+}
 
 const KanbanColumn = ({
   title,
   tasks,
   onTaskClick,
+  role,
 }: {
   title: string
   tasks: any[]
   onTaskClick: any
+  role: string
 }) => (
   <div className="space-y-4">
     <div className="flex items-center justify-between px-2">
@@ -174,7 +211,12 @@ const KanbanColumn = ({
         </div>
       ) : (
         tasks.map((task) => (
-          <KanbanCard key={task.id} task={task} onClick={onTaskClick} />
+          <KanbanCard
+            key={task.id}
+            task={task}
+            onClick={onTaskClick}
+            role={role}
+          />
         ))
       )}
     </div>
@@ -185,10 +227,12 @@ const ProjectKanban = ({
   project,
   tasks,
   onTaskClick,
+  role,
 }: {
   project: any
   tasks: any[]
   onTaskClick: any
+  role: string
 }) => {
   const columns = [
     { id: "open", title: "To Do" },
@@ -230,6 +274,7 @@ const ProjectKanban = ({
             title={col.title}
             tasks={tasks.filter((t) => t.status === col.id)}
             onTaskClick={onTaskClick}
+            role={role}
           />
         ))}
       </div>
@@ -238,8 +283,8 @@ const ProjectKanban = ({
 }
 
 export const TasksPage = () => {
-  const { data, isLoading } = useDashboardStats()
-  const { role } = useRole()
+  const { data, isLoading: isStatsLoading } = useDashboardStats()
+  const { role, profile, isLoading: isRoleLoading } = useRole()
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useState<any>(null)
   const [showAllOther, setShowAllOther] = useState(false)
@@ -252,7 +297,12 @@ export const TasksPage = () => {
   const isQA = role === "qa_engineer"
   const isDev = role === "developer"
 
-  if (isLoading) {
+  // Direct fetch for developer tasks to ensure database synchronization
+  const { data: directTasks, isLoading: isTasksLoading } = useTasks({
+    assignedTo: profile?.id,
+  })
+
+  if (isStatsLoading || isRoleLoading || (isDev && isTasksLoading)) {
     return (
       <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-500 pb-20">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-8">
@@ -564,8 +614,22 @@ export const TasksPage = () => {
 
         {/* QA VIEW */}
         {isQA && (
-          <div className="space-y-8">
-            <TasksTab />
+          <div className="space-y-20">
+            {data?.qa_projects?.length === 0 ? (
+              <div className="bg-white border border-slate-100 rounded-2xl p-12 text-center text-slate-400 text-sm font-medium italic">
+                No active QA projects at the moment.
+              </div>
+            ) : (
+              data?.qa_projects?.map((project: any) => (
+                <ProjectKanban
+                  key={project.id}
+                  project={project}
+                  tasks={project.tasks || []}
+                  onTaskClick={setSelectedTask}
+                  role={role!}
+                />
+              ))
+            )}
           </div>
         )}
 
@@ -573,20 +637,9 @@ export const TasksPage = () => {
         {isDev && (
           <div className="space-y-20">
             {(() => {
-              const groupedTasks =
-                data?.my_tasks?.reduce(
-                  (acc: Record<string, any[]>, task: any) => {
-                    const projectId = task.project_id
-                    if (!acc[projectId]) acc[projectId] = []
-                    acc[projectId].push(task)
-                    return acc
-                  },
-                  {},
-                ) || {}
-
-              const projectIds = Object.keys(groupedTasks)
-
-              if (projectIds.length === 0) {
+              const myTasks = directTasks?.data || []
+              
+              if (myTasks.length === 0) {
                 return (
                   <div className="bg-white border border-slate-200 rounded-[40px] p-24 text-center space-y-6 shadow-xl shadow-slate-100/50 animate-in zoom-in-95 duration-700">
                     <div className="w-20 h-20 bg-emerald-50 rounded-[28px] flex items-center justify-center mx-auto border border-emerald-100">
@@ -613,6 +666,18 @@ export const TasksPage = () => {
                 )
               }
 
+              const groupedTasks = myTasks.reduce(
+                (acc: Record<string, any[]>, task: any) => {
+                  const projectId = task.project_id
+                  if (!acc[projectId]) acc[projectId] = []
+                  acc[projectId].push(task)
+                  return acc
+                },
+                {},
+              )
+
+              const projectIds = Object.keys(groupedTasks)
+
               return projectIds.map((projectId) => (
                 <ProjectKanban
                   key={projectId}
@@ -620,10 +685,11 @@ export const TasksPage = () => {
                     id: projectId,
                     name:
                       groupedTasks[projectId][0]?.projects?.name ||
-                      "Unknown Project",
+                      "Active Project",
                   }}
                   tasks={groupedTasks[projectId]}
                   onTaskClick={setSelectedTask}
+                  role={role!}
                 />
               ))
             })()}
