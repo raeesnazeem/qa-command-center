@@ -180,3 +180,8 @@ yarn.lock
 
 # macOS specific
 **/.DS_Store
+
+# Windsurf and Documentation
+.windsurfrules
+explanation.md
+summary.md

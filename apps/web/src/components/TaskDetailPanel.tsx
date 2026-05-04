@@ -11,6 +11,7 @@ import {
 import { format } from "date-fns"
 import { Task, TaskStatus, TaskSeverity } from "../api/tasks.api"
 import {
+  useTask,
   useUpdateTask,
   useAddRebuttal,
   useAssignTask,
@@ -28,12 +29,15 @@ interface TaskDetailPanelProps {
 }
 
 export const TaskDetailPanel = ({
-  task,
+  task: initialTask,
   isOpen,
   onClose,
 }: TaskDetailPanelProps) => {
   const [rebuttalText, setRebuttalText] = useState("")
   const [rebuttalUrl, setRebuttalUrl] = useState("")
+
+  const { data: latestTask } = useTask(initialTask?.id || "")
+  const task = latestTask || initialTask
 
   const { mutate: updateTask } = useUpdateTask()
   const { mutate: addRebuttal } = useAddRebuttal()
@@ -90,7 +94,7 @@ export const TaskDetailPanel = ({
 
       {/* Panel */}
       <div
-        className={`fixed top-0 right-0 h-full w-full max-w-xl bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${isOpen ? "translate-x-0" : "translate-x-full"}`}
+        className={`fixed inset-y-0 right-0 w-full max-w-xl bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col overflow-hidden ${isOpen ? "translate-x-0" : "translate-x-full"}`}
       >
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
@@ -110,7 +114,7 @@ export const TaskDetailPanel = ({
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto min-h-0">
           {/* Main Content */}
           <div className="p-6 space-y-8">
             {/* Title & Status */}
@@ -203,7 +207,11 @@ export const TaskDetailPanel = ({
 
             {/* Comment Thread */}
             <div className="pt-8 border-t border-slate-100">
-              <CommentThread taskId={task.id} comments={task.comments || []} />
+              <CommentThread
+                taskId={task.id}
+                comments={task.comments || []}
+                rebuttals={task.rebuttals || []}
+              />
             </div>
 
             {/* Rebuttal Section (Developer only) */}
