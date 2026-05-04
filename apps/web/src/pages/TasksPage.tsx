@@ -299,10 +299,11 @@ export const TasksPage = () => {
 
   // Direct fetch for developer tasks to ensure database synchronization
   const { data: directTasks, isLoading: isTasksLoading } = useTasks({
-    assignedTo: profile?.id,
+    assignedTo: isDev ? profile?.id : undefined,
+    createdBy: isQA ? profile?.id : undefined,
   })
 
-  if (isStatsLoading || isRoleLoading || (isDev && isTasksLoading)) {
+  if (isStatsLoading || isRoleLoading || ((isDev || isQA) && isTasksLoading)) {
     return (
       <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-500 pb-20">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-8">
@@ -615,21 +616,44 @@ export const TasksPage = () => {
         {/* QA VIEW */}
         {isQA && (
           <div className="space-y-20">
-            {data?.qa_projects?.length === 0 ? (
-              <div className="bg-white border border-slate-100 rounded-2xl p-12 text-center text-slate-400 text-sm font-medium italic">
-                No active QA projects at the moment.
-              </div>
-            ) : (
-              data?.qa_projects?.map((project: any) => (
+            {(() => {
+              const myTasks = directTasks?.data || []
+              
+              if (myTasks.length === 0) {
+                return (
+                  <div className="bg-white border border-slate-100 rounded-2xl p-12 text-center text-slate-400 text-sm font-medium italic">
+                    No active QA projects at the moment.
+                  </div>
+                )
+              }
+
+              const groupedTasks = myTasks.reduce(
+                (acc: Record<string, any[]>, task: any) => {
+                  const projectId = task.project_id
+                  if (!acc[projectId]) acc[projectId] = []
+                  acc[projectId].push(task)
+                  return acc
+                },
+                {},
+              )
+
+              const projectIds = Object.keys(groupedTasks)
+
+              return projectIds.map((projectId) => (
                 <ProjectKanban
-                  key={project.id}
-                  project={project}
-                  tasks={project.tasks || []}
+                  key={projectId}
+                  project={{
+                    id: projectId,
+                    name:
+                      groupedTasks[projectId][0]?.projects?.name ||
+                      "Active Project",
+                  }}
+                  tasks={groupedTasks[projectId]}
                   onTaskClick={setSelectedTask}
                   role={role!}
                 />
               ))
-            )}
+            })()}
           </div>
         )}
 

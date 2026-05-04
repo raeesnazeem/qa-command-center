@@ -127,6 +127,7 @@ router.get('/', clerkAuth, async (req: Request, res: Response) => {
     if (effectiveProjectId) query = query.eq('project_id', effectiveProjectId);
     if (status) query = query.eq('status', status);
     if (severity) query = query.eq('severity', severity);
+    if (req.query.created_by) query = query.eq('created_by', req.query.created_by);
     
     // RBAC: Developer only sees assigned tasks
     if (role === 'developer') {

@@ -71,6 +71,7 @@ export interface TaskFilters {
   status?: TaskStatus;
   severity?: TaskSeverity;
   assignedTo?: string;
+  createdBy?: string;
 }
 
 export const getTasks = async (
@@ -82,6 +83,7 @@ export const getTasks = async (
   if (filters.status) params.append('status', filters.status);
   if (filters.severity) params.append('severity', filters.severity);
   if (filters.assignedTo) params.append('assigned_to', filters.assignedTo);
+  if (filters.createdBy) params.append('created_by', filters.createdBy);
 
   const { data } = await axios.get(`/api/tasks?${params.toString()}`);
   return data;
