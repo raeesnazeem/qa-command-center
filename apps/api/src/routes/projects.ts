@@ -5,7 +5,7 @@ import { requireRole } from '../middleware/requireRole';
 import { zodValidate } from '../middleware/zodValidate';
 import { CreateProjectSchema, UpdateProjectSchema } from '@qacc/shared';
 import { logger } from '../lib/logger';
-import { encrypt } from '../lib/encryption';
+import { encrypt, decrypt } from '../lib/encryption';
 import axios from 'axios';
 
 const router: Router = Router();
@@ -281,6 +281,7 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
         basecamp_account_id: null,
         basecamp_project_id: null,
         basecamp_todolist_id: null,
+        basecamp_post_todolist_id: null,
         basecamp_token_encrypted: null
       };
 
@@ -297,11 +298,12 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
         pages_total: ongoingRun.pages_total,
         created_by_name: ongoingRun.creator?.full_name || ongoingRun.creator?.email || 'System'
       } : null,
-      figma_access_token: settings?.figma_token_encrypted || null,
+      figma_access_token: settings?.figma_token_encrypted ? decrypt(settings.figma_token_encrypted) : null,
       basecamp_account_id: settings?.basecamp_account_id || null,
       basecamp_project_id: settings?.basecamp_project_id || null,
       basecamp_todo_list_id: settings?.basecamp_todolist_id || null,
-      basecamp_api_token: settings?.basecamp_token_encrypted || null
+      basecamp_post_todo_list_id: settings?.basecamp_post_todolist_id || null,
+      basecamp_api_token: settings?.basecamp_token_encrypted ? decrypt(settings.basecamp_token_encrypted) : null
     });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
@@ -338,13 +340,24 @@ router.patch(
       // Handle project_settings upsert
       const settingsUpdate: any = {};
       if (req.body.figma_access_token !== undefined) {
-        settingsUpdate.figma_token_encrypted = req.body.figma_access_token ? encrypt(req.body.figma_access_token) : null;
+        const isEncrypted = typeof req.body.figma_access_token === 'string' && req.body.figma_access_token.split(':').length === 3;
+        if (req.body.figma_access_token && !isEncrypted) {
+          settingsUpdate.figma_token_encrypted = encrypt(req.body.figma_access_token);
+        } else if (!req.body.figma_access_token) {
+          settingsUpdate.figma_token_encrypted = null;
+        }
       }
       if (req.body.basecamp_account_id !== undefined) settingsUpdate.basecamp_account_id = req.body.basecamp_account_id;
       if (req.body.basecamp_project_id !== undefined) settingsUpdate.basecamp_project_id = req.body.basecamp_project_id;
       if (req.body.basecamp_todo_list_id !== undefined) settingsUpdate.basecamp_todolist_id = req.body.basecamp_todo_list_id;
+      if (req.body.basecamp_post_todo_list_id !== undefined) settingsUpdate.basecamp_post_todolist_id = req.body.basecamp_post_todo_list_id;
       if (req.body.basecamp_api_token !== undefined) {
-        settingsUpdate.basecamp_token_encrypted = req.body.basecamp_api_token ? encrypt(req.body.basecamp_api_token) : null;
+        const isEncrypted = typeof req.body.basecamp_api_token === 'string' && req.body.basecamp_api_token.split(':').length === 3;
+        if (req.body.basecamp_api_token && !isEncrypted) {
+          settingsUpdate.basecamp_token_encrypted = encrypt(req.body.basecamp_api_token);
+        } else if (!req.body.basecamp_api_token) {
+          settingsUpdate.basecamp_token_encrypted = null;
+        }
       }
 
       if (Object.keys(settingsUpdate).length > 0) {

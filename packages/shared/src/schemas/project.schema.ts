@@ -14,6 +14,7 @@ export const UpdateProjectSchema = CreateProjectSchema.partial().extend({
   basecamp_account_id: z.string().optional(),
   basecamp_project_id: z.string().optional(),
   basecamp_todo_list_id: z.string().optional(),
+  basecamp_post_todo_list_id: z.string().optional(),
   basecamp_api_token: z.string().optional(),
 });
 

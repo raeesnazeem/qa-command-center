@@ -26,6 +26,7 @@ export interface Project {
   basecamp_account_id?: string;
   basecamp_project_id?: string;
   basecamp_todo_list_id?: string;
+  basecamp_post_todo_list_id?: string;
   basecamp_api_token?: string;
 }
 

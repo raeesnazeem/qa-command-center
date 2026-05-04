@@ -57,5 +57,16 @@ export function decrypt(encryptedText: string): string {
   let decrypted = decipher.update(encrypted, 'base64', 'utf8');
   decrypted += decipher.final('utf8');
 
+  // If the result looks like another encrypted string, try decrypting recursively
+  // format is "ivBase64:authTagBase64:encrypted"
+  if (decrypted.split(':').length === 3) {
+    try {
+      return decrypt(decrypted);
+    } catch (e) {
+      // If nested decryption fails, it's just a string that happens to have colons
+      return decrypted;
+    }
+  }
+
   return decrypted;
 }
