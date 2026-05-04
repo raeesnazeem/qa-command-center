@@ -3,7 +3,7 @@ import { supabase } from "../lib/supabase"
 import { clerkAuth } from "../middleware/clerkAuth"
 import { requireRole } from "../middleware/requireRole"
 import { getProjectSettings } from "../lib/getDecryptedSettings"
-import { createBasecampTodo, getBasecampPeople, getBasecampPerson, formatBasecampMention } from "../lib/basecampClient"
+import { createBasecampTodo, getBasecampPeople, getBasecampPerson, formatBasecampMention, createBasecampComment } from "../lib/basecampClient"
 import { logger } from "../lib/logger"
 import crypto from "crypto"
 
@@ -379,6 +379,102 @@ router.post(
         console.error('Basecamp API Error Data:', JSON.stringify(error.response.data, null, 2));
       }
       logger.error(error, `Error bulk pushing tasks to Basecamp`)
+      return res.status(500).json({ 
+        error: error.message,
+        details: error.response?.data
+      })
+    }
+  }
+)
+
+/**
+ * POST /api/tasks/basecamp/bulk-comment
+ * Push multiple tasks to their respective Basecamp to-dos as comments.
+ */
+router.post(
+  "/basecamp/bulk-comment",
+  clerkAuth,
+  requireRole("qa_engineer"),
+  async (req: Request, res: Response) => {
+    const { taskIds, status: pushStatus } = req.body
+
+    if (!Array.isArray(taskIds) || taskIds.length === 0) {
+      return res.status(400).json({ error: "No task IDs provided" })
+    }
+
+    try {
+      // 1. Load tasks + findings + comments
+      const { data: tasks, error: tasksError } = await supabase
+        .from("tasks")
+        .select(`
+          *,
+          comments (
+            content,
+            created_at
+          )
+        `)
+        .in("id", taskIds)
+
+      if (tasksError || !tasks || tasks.length === 0) {
+        return res.status(404).json({ error: "Tasks not found" })
+      }
+
+      const projectId = tasks[0].project_id
+      const projectSettings = await getProjectSettings(projectId)
+      
+      if (!projectSettings || !projectSettings.basecamp_token || !projectSettings.basecamp_account_id) {
+        return res.status(400).json({ error: "Basecamp not configured for this project" })
+      }
+
+      let successCount = 0;
+      let skippedCount = 0;
+
+      for (const task of tasks) {
+        if (!task.basecamp_task_id) {
+          skippedCount++;
+          continue;
+        }
+
+        // Format content
+        const sortedComments = (task.comments || []).sort(
+          (a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+
+        const commentContent = `
+          <div><strong>[${pushStatus.toUpperCase()}]</strong></div>
+          <br/>
+          <strong>${task.title}</strong>
+          <br/>
+          <div>${task.description || "No description provided."}</div>
+          <br/>
+          <strong>Task Comments:</strong>
+          <ul>
+            ${sortedComments.length > 0 
+              ? sortedComments.map((c: any) => `<li>${c.content}</li>`).join("") 
+              : "<li>No comments</li>"}
+          </ul>
+          <br/>
+          <em>Pushed via QA Command Center</em>
+        `.trim();
+
+        await createBasecampComment({
+          token: projectSettings.basecamp_token,
+          accountId: projectSettings.basecamp_account_id,
+          projectId: projectSettings.basecamp_project_id || projectId,
+          recordingId: task.basecamp_task_id,
+          content: commentContent
+        });
+
+        successCount++;
+      }
+
+      return res.json({ 
+        success: true, 
+        count: successCount, 
+        skipped: skippedCount 
+      });
+    } catch (error: any) {
+      logger.error(error, "Error bulk pushing comments to Basecamp")
       return res.status(500).json({ 
         error: error.message,
         details: error.response?.data

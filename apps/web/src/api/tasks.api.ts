@@ -162,6 +162,15 @@ export const bulkPushToBasecamp = async (
   return data;
 };
 
+export const bulkPushCommentsToBasecamp = async (
+  axios: AxiosInstance,
+  taskIds: string[],
+  status: 'pending' | 'completed'
+): Promise<{ success: boolean; count: number; skipped: number }> => {
+  const { data } = await axios.post<{ success: boolean; count: number; skipped: number }>(`/api/tasks/basecamp/bulk-comment`, { taskIds, status });
+  return data;
+};
+
 export const deleteTask = async (
   axios: AxiosInstance,
   id: string

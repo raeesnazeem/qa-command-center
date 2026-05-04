@@ -99,6 +99,7 @@ export const TasksTab = ({ project }: TasksTabProps) => {
               <BulkBasecampPush 
                 taskIds={selectedTaskIds} 
                 onComplete={() => setSelectedTaskIds([])} 
+                mode="comment"
               />
               <CanDo role="qa_engineer">
                 <button 
