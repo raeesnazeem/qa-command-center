@@ -109,8 +109,8 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
           isFalsePositive ? 'bg-slate-100 text-slate-400' :
           finding.severity === 'critical' ? 'bg-red-50 text-red-600' :
           finding.severity === 'high' ? 'bg-orange-50 text-orange-600' :
-          finding.severity === 'medium' ? 'bg-amber-50 text-amber-600' :
-          'bg-yellow-50 text-yellow-600'
+          finding.severity === 'medium' ? 'bg-yellow-50 text-yellow-600' :
+          'bg-blue-50 text-blue-600'
         }`}>
           {isFalsePositive ? <XCircle size={20} /> : severityIcons[finding.severity]}
         </div>
@@ -124,6 +124,7 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
                 pageId={finding.page_id}
                 currentSeverity={finding.severity}
                 canEdit={canAction && !isFalsePositive}
+                symbolOnly={true}
               />
               <div className="flex items-center gap-1.5 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
                 <FileSearch size={14} />
@@ -143,7 +144,7 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
           </h4>
           {finding.description && (
             <div className="mb-4">
-              <p className={`text-[11px] text-slate-500 font-medium leading-relaxed ${
+              <p className={`text-[11px] text-slate-500 font-medium leading-relaxed break-words ${
                 isFalsePositive ? 'text-slate-400' : ''
               } ${!isExpanded ? 'line-clamp-3' : ''}`}>
                 {finding.description}

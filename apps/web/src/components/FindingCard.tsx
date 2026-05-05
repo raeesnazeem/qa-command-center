@@ -16,6 +16,9 @@ import {
   Monitor,
   Activity,
   User,
+  Square,
+  CheckSquare,
+  Clock,
 } from "lucide-react"
 import { useRole } from "../hooks/useRole"
 import { FindingSeverityEditor } from "./FindingSeverityEditor"
@@ -35,6 +38,8 @@ interface FindingCardProps {
   onFalsePositive?: (id: string) => void
   onCreateTask?: (finding: QAFinding) => void
   onAssign?: (id: string) => void
+  isSelected?: boolean
+  onToggleSelect?: (id: string) => void
 }
 
 const CHECK_FACTOR_ICONS: Record<string, React.ReactNode> = {
@@ -58,9 +63,22 @@ export const FindingCard: React.FC<FindingCardProps> = ({
   onFalsePositive,
   onCreateTask,
   onAssign,
+  isSelected,
+  onToggleSelect,
 }) => {
   const { canDo } = useRole()
   const canAction = canDo("qa_engineer")
+  const [localTitle, setLocalTitle] = React.useState(finding.title)
+  const [isContextModalOpen, setIsContextModalOpen] = React.useState(false)
+
+  React.useEffect(() => {
+    setLocalTitle(finding.title)
+  }, [finding.title])
+
+  const assignees =
+    finding.tasks?.flatMap((t) =>
+      (t as any).users ? [(t as any).users] : [],
+    ) || []
 
   const severityIcons = {
     critical: <ShieldAlert size={20} />,
@@ -86,6 +104,226 @@ export const FindingCard: React.FC<FindingCardProps> = ({
     )
   }
 
+  if (canAction) {
+    return (
+      <div
+        className={`group p-6 bg-white rounded-2xl border transition-all duration-300 shadow-sm hover:shadow-xl relative overflow-hidden flex flex-col gap-6 ${
+          isConfirmed
+            ? "border-emerald-500 ring-1 ring-emerald-500/20"
+            : isFalsePositive
+              ? "opacity-60 border-slate-200"
+              : "border-slate-100 hover:border-accent/40"
+        }`}
+      >
+        {/* Top Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleSelect?.(finding.id)
+              }}
+              className={`p-1 rounded transition-all ${isSelected ? "text-black scale-110" : "text-slate-300 hover:text-slate-400"}`}
+            >
+              {isSelected ? (
+                <CheckSquare size={20} strokeWidth={2.5} />
+              ) : (
+                <Square size={20} strokeWidth={2} />
+              )}
+            </button>
+            <FindingSeverityEditor
+              findingId={finding.id}
+              pageId={finding.page_id}
+              currentSeverity={finding.severity}
+              canEdit={!isFalsePositive}
+              symbolOnly={true}
+            />
+            <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-400 uppercase tracking-[0.1em]">
+              {CHECK_FACTOR_ICONS[finding.check_factor] || (
+                <FileSearch size={14} />
+              )}
+              {finding.check_factor.replace(/_/g, " ")}
+            </div>
+          </div>
+          <div className="flex flex-col items-end">
+            <span className="text-[9px] font-black text-slate-300 uppercase tracking-wider">
+              {new Date(finding.created_at).toLocaleDateString(undefined, {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })}
+            </span>
+            <span className="text-[9px] font-black text-slate-300 uppercase tracking-wider">
+              {new Date(finding.created_at).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
+          </div>
+        </div>
+
+        {/* Heading Input */}
+        <div className="relative group/input">
+          <input
+            value={localTitle}
+            onChange={(e) => setLocalTitle(e.target.value)}
+            className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:ring-2 focus:ring-accent/30 focus:border-accent/50 outline-none transition-all placeholder:text-slate-300"
+            placeholder="Input for Heading to be entered by Admin / QA"
+          />
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover/input:opacity-100 transition-opacity">
+            <Plus size={14} className="text-slate-300" />
+          </div>
+        </div>
+
+        {/* Middle Body Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          {/* Details Column */}
+          <div className="space-y-4">
+            <div>
+              <h5 className="font-black text-slate-900 text-sm uppercase tracking-tight mb-2">
+                {finding.check_factor.replace(/_/g, " ")} found
+              </h5>
+              <div className="space-y-3">
+                <p
+                  className={`text-[11px] text-slate-500 font-medium leading-relaxed break-words ${
+                    isExpanded ? "" : "line-clamp-3"
+                  }`}
+                >
+                  {finding.description}
+                </p>
+                {finding.description && finding.description.length > 150 && (
+                  <button
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="text-[9px] font-black text-accent uppercase tracking-[0.2em] hover:text-black transition-colors"
+                  >
+                    {isExpanded ? "See less" : "See more"}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="pt-2 flex flex-col items-start">
+              <button
+                onClick={() => setIsContextModalOpen(true)}
+                className="text-[9px] font-black text-slate-500 uppercase tracking-widest hover:text-accent transition-colors text-left"
+              >
+                Click to open contextual data
+              </button>
+            </div>
+          </div>
+
+          {/* Screenshot Column */}
+          <div className="relative group/ss">
+            <div className="aspect-video bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 shadow-inner group-hover/ss:shadow-md transition-all">
+              <FindingCardWithScreenshot
+                finding={finding}
+                pageScreenshots={pageScreenshots}
+              />
+            </div>
+            <p className="text-[8px] font-black text-slate-400 uppercase mt-2 tracking-[0.2em] text-center">
+              Click to expand evidence
+            </p>
+          </div>
+        </div>
+
+        {/* Footer Actions & Assignees */}
+        <div className="flex items-center justify-between pt-4 border-t border-slate-50 mt-auto">
+          <div className="flex items-center gap-2">
+            {isFalsePositive ? (
+              <button
+                onClick={() => onConfirm?.(finding.id)}
+                className="btn-unified"
+              >
+                Re-flag as genuine
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => onFalsePositive?.(finding.id)}
+                  className="btn-unified"
+                >
+                  False Positive
+                </button>
+                <button
+                  onClick={() => onCreateTask?.({ ...finding, title: localTitle })}
+                  className="btn-unified"
+                >
+                  Add to Tasks
+                </button>
+              </>
+            )}
+          </div>
+
+          <div className="flex flex-col items-end gap-1.5">
+            <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">
+              Currently Assigned to
+            </span>
+            <div className="flex items-center -space-x-2">
+              {assignees.length > 0 ? (
+                assignees.map((user: any, i: number) => (
+                  <div
+                    key={user.id || i}
+                    className="w-7 h-7 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[10px] font-black text-slate-600 shadow-sm"
+                    title={user.full_name}
+                  >
+                    {user.full_name?.charAt(0) || "U"}
+                  </div>
+                ))
+              ) : (
+                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-tight">
+                  None
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Context Modal */}
+        {isContextModalOpen && (
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setIsContextModalOpen(false)
+            }}
+          >
+            <div className="bg-white w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200">
+              <div className="p-6 border-b flex items-center justify-between bg-slate-50">
+                <div className="flex items-center gap-3">
+                  <div>
+                    <h3 className="font-black text-slate-900 text-sm uppercase tracking-widest">
+                      Contextual Data
+                    </h3>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">
+                      Technical implementation details
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsContextModalOpen(false)}
+                  className="p-2 hover:bg-slate-200 rounded-xl transition-all active:scale-90"
+                >
+                  <XCircle size={24} className="text-slate-400" />
+                </button>
+              </div>
+              <div className="p-8 overflow-y-auto bg-slate-950 font-mono text-[11px] text-slate-300 whitespace-pre-wrap break-words leading-relaxed selection:bg-accent/30">
+                {finding.context_text ||
+                  "No contextual data available for this finding."}
+              </div>
+              <div className="p-4 bg-slate-50 border-t flex justify-end">
+                <button
+                  onClick={() => setIsContextModalOpen(false)}
+                  className="btn-unified"
+                >
+                  Close Viewer
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div
       className={`group p-6 bg-white rounded-2xl border transition-all duration-300 shadow-sm hover:shadow-xl relative overflow-hidden ${
@@ -107,8 +345,8 @@ export const FindingCard: React.FC<FindingCardProps> = ({
                 : finding.severity === "high"
                   ? "bg-orange-50 text-orange-600"
                   : finding.severity === "medium"
-                    ? "bg-amber-50 text-amber-600"
-                    : "bg-yellow-50 text-yellow-600"
+                    ? "bg-yellow-50 text-yellow-600"
+                    : "bg-blue-50 text-blue-600"
           }`}
         >
           {isFalsePositive ? (
@@ -127,6 +365,7 @@ export const FindingCard: React.FC<FindingCardProps> = ({
                 pageId={finding.page_id}
                 currentSeverity={finding.severity}
                 canEdit={canAction && !isFalsePositive}
+                symbolOnly={true}
               />
               <div className="flex items-center gap-1.5 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
                 {CHECK_FACTOR_ICONS[finding.check_factor] || (
@@ -154,7 +393,7 @@ export const FindingCard: React.FC<FindingCardProps> = ({
           {finding.description && (
             <div className="mb-4">
               <p
-                className={`text-[11px] text-slate-500 font-medium leading-relaxed ${
+                className={`text-[11px] text-slate-500 font-medium leading-relaxed break-words ${
                   isFalsePositive ? "text-slate-400" : ""
                 } ${!isExpanded ? "line-clamp-3" : ""}`}
               >

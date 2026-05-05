@@ -368,30 +368,17 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
         {filteredFindings.map((finding) => (
           <div key={finding.id} className="relative group/wrapper">
-            {canAction && (
-              <div
-                onClick={() => toggleSelect(finding.id)}
-                className={`absolute top-4 left-4 z-10 cursor-pointer p-1 rounded-md transition-all ${
-                  selectedIds.has(finding.id)
-                    ? "bg-black text-accent scale-110 shadow-lg"
-                    : "bg-slate-100 text-slate-300 opacity-0 group-hover/wrapper:opacity-100"
-                }`}
-              >
-                {selectedIds.has(finding.id) ? (
-                  <CheckSquare size={16} />
-                ) : (
-                  <Square size={16} />
-                )}
-              </div>
-            )}
-            <FindingCard
-              finding={finding}
-              pageScreenshots={pageScreenshots}
-              onConfirm={onSingleConfirm}
-              onFalsePositive={onSingleFalsePositive}
-              onCreateTask={onSingleCreateTask}
-              onAssign={onSingleAssign}
-            />
+          <FindingCard
+            key={finding.id}
+            finding={finding}
+            pageScreenshots={pageScreenshots}
+            onConfirm={onSingleConfirm}
+            onFalsePositive={onSingleFalsePositive}
+            onCreateTask={onSingleCreateTask}
+            onAssign={onSingleAssign}
+            isSelected={selectedIds.has(finding.id)}
+            onToggleSelect={() => toggleSelect(finding.id)}
+          />
           </div>
         ))}
 
