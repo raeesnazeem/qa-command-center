@@ -1,4 +1,5 @@
-import React from "react"
+import React, { useState } from "react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { QAFinding } from "../api/runs.api"
 
 interface CheckFactorFilterProps {
@@ -40,6 +41,9 @@ export const CheckFactorFilter: React.FC<CheckFactorFilterProps> = ({
   selectedFactor,
   onSelectFactor,
 }) => {
+  const [startIndex, setStartIndex] = useState(0)
+  const VISIBLE_COUNT = 8
+
   const getOpenCount = (factors: string[]) => {
     if (factors.length === 0) {
       return findings.filter((f) => f.status === "open").length
@@ -49,10 +53,36 @@ export const CheckFactorFilter: React.FC<CheckFactorFilterProps> = ({
     ).length
   }
 
+  const handlePrev = () => {
+    setStartIndex((prev) => Math.max(0, prev - 1))
+  }
+
+  const handleNext = () => {
+    setStartIndex((prev) =>
+      Math.min(FILTER_TABS.length - VISIBLE_COUNT, prev + 1),
+    )
+  }
+
+  const visibleTabs = FILTER_TABS.slice(startIndex, startIndex + VISIBLE_COUNT)
+  const canGoPrev = startIndex > 0
+  const canGoNext = startIndex + VISIBLE_COUNT < FILTER_TABS.length
+
   return (
-    <div className="w-full overflow-x-auto pb-4 scrollbar-hide">
-      <div className="flex items-center gap-2 min-w-max">
-        {FILTER_TABS.map((tab) => {
+    <div className="w-full flex items-center gap-2 py-1">
+      <button
+        onClick={handlePrev}
+        disabled={!canGoPrev}
+        className={`p-1.5 rounded-full transition-all ${
+          canGoPrev
+            ? "text-slate-600 hover:bg-slate-100 cursor-pointer"
+            : "text-slate-200 cursor-not-allowed opacity-50"
+        }`}
+      >
+        <ChevronLeft size={18} strokeWidth={3} />
+      </button>
+
+      <div className="flex items-center gap-2 flex-1 justify-center">
+        {visibleTabs.map((tab) => {
           const count = getOpenCount(tab.factors)
           const isActive = selectedFactor === tab.id
 
@@ -84,6 +114,18 @@ export const CheckFactorFilter: React.FC<CheckFactorFilterProps> = ({
           )
         })}
       </div>
+
+      <button
+        onClick={handleNext}
+        disabled={!canGoNext}
+        className={`p-1.5 rounded-full transition-all ${
+          canGoNext
+            ? "text-slate-600 hover:bg-slate-100 cursor-pointer"
+            : "text-slate-200 cursor-not-allowed opacity-50"
+        }`}
+      >
+        <ChevronRight size={18} strokeWidth={3} />
+      </button>
     </div>
   )
 }

@@ -319,7 +319,7 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
             <div className="flex items-center gap-4">
               <button
                 onClick={toggleSelectAll}
-                className="btn-unified-secondary flex items-center space-x-2 text-white"
+                className="btn-unified hover:bg-black hover:text-accent flex items-center space-x-2 text-white"
               >
                 {selectedIds.size === filteredFindings.length ? (
                   <CheckSquare className="text-accent" />
