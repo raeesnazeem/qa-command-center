@@ -8,6 +8,7 @@ export interface DecryptedSettings {
   basecamp_account_id: string | null;
   basecamp_project_id: string | null;
   basecamp_todolist_id: string | null;
+  basecamp_post_todolist_id: string | null;
   slack_webhook_url: string | null;
   created_at: string;
   updated_at: string;

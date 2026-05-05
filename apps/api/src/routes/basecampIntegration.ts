@@ -93,18 +93,48 @@ router.post(
         }
       }
 
+      // 4. Load project state and settings
+      const { data: projectRecord, error: projectError } = await supabase
+        .from("projects")
+        .select("is_pre_release, is_post_release")
+        .eq("id", task.project_id)
+        .single();
+
+      if (projectError || !projectRecord) {
+        console.error(`[BasecampPush] Project ${task.project_id} fetch error:`, projectError);
+        return res.status(404).json({ error: "Project not found" });
+      }
+
       const projectSettings = await getProjectSettings(task.project_id)
       if (
         !projectSettings ||
         !projectSettings.basecamp_token ||
         !projectSettings.basecamp_account_id ||
-        !projectSettings.basecamp_project_id ||
-        !projectSettings.basecamp_todolist_id
+        !projectSettings.basecamp_project_id
       ) {
         console.warn(`[BasecampPush] Integration not configured for project ${task.project_id}`);
         return res.status(400).json({
           error: "Basecamp integration not configured for this project",
         })
+      }
+
+      // Determine the correct to-do list based on project state
+      let todolistId = projectSettings.basecamp_todolist_id;
+      
+      if (projectRecord.is_post_release) {
+        if (!projectSettings.basecamp_post_todolist_id) {
+          return res.status(400).json({ error: "Post-release to-do list not configured" });
+        }
+        todolistId = projectSettings.basecamp_post_todolist_id;
+      } else if (projectRecord.is_pre_release) {
+        if (!projectSettings.basecamp_todolist_id) {
+          return res.status(400).json({ error: "Pre-release to-do list not configured" });
+        }
+        todolistId = projectSettings.basecamp_todolist_id;
+      }
+
+      if (!todolistId) {
+        return res.status(400).json({ error: "Basecamp to-do list not configured" });
       }
 
       console.log(`[BasecampPush] Data resolved:`, {
@@ -135,7 +165,7 @@ Created via QA Command Center`.trim();
         token: projectSettings.basecamp_token,
         accountId: projectSettings.basecamp_account_id,
         projectId: projectSettings.basecamp_project_id,
-        todolistId: projectSettings.basecamp_todolist_id,
+        todolistId: todolistId,
         title: task.title,
         description: description,
         assigneeIds: assigneeIds,
@@ -262,14 +292,29 @@ router.post(
 
       const projectId = tasks[0].project_id
       console.log(`[BasecampBulkPush] Resolving settings for project: ${projectId}`);
+      // 3.5 Load project state
+      const { data: projectRecord, error: projectRecordError } = await supabase
+        .from("projects")
+        .select("is_pre_release, is_post_release")
+        .eq("id", projectId)
+        .single();
+
+      if (projectRecordError || !projectRecord) {
+        console.error(`[BasecampBulkPush] Project ${projectId} fetch error:`, projectRecordError);
+        return res.status(404).json({ error: "Project not found" });
+      }
+
       const projectSettings = await getProjectSettings(projectId)
       
       console.log(`[BasecampBulkPush] 3/6.5 Project settings retrieved:`, {
         projectId,
         hasToken: !!projectSettings?.basecamp_token,
         accountId: projectSettings?.basecamp_account_id,
-        projectId: projectSettings?.basecamp_project_id,
-        todolistId: projectSettings?.basecamp_todolist_id
+        basecampProjectId: projectSettings?.basecamp_project_id,
+        preReleaseList: projectSettings?.basecamp_todolist_id,
+        postReleaseList: projectSettings?.basecamp_post_todolist_id,
+        isPreRelease: projectRecord.is_pre_release,
+        isPostRelease: projectRecord.is_post_release
       });
       
       if (!projectSettings) {
@@ -280,18 +325,35 @@ router.post(
       if (
         !projectSettings.basecamp_token ||
         !projectSettings.basecamp_account_id ||
-        !projectSettings.basecamp_project_id ||
-        !projectSettings.basecamp_todolist_id
+        !projectSettings.basecamp_project_id
       ) {
         console.error(`[BasecampBulkPush] Error: Incomplete Basecamp configuration`, {
           hasToken: !!projectSettings.basecamp_token,
           hasAccount: !!projectSettings.basecamp_account_id,
-          hasProject: !!projectSettings.basecamp_project_id,
-          hasTodoList: !!projectSettings.basecamp_todolist_id
+          hasProject: !!projectSettings.basecamp_project_id
         });
         return res.status(400).json({
           error: "Basecamp integration not configured for this project",
         })
+      }
+
+      // Determine the correct to-do list based on project state
+      let todolistId = projectSettings.basecamp_todolist_id;
+      
+      if (projectRecord.is_post_release) {
+        if (!projectSettings.basecamp_post_todolist_id) {
+          return res.status(400).json({ error: "Post-release to-do list not configured" });
+        }
+        todolistId = projectSettings.basecamp_post_todolist_id;
+      } else if (projectRecord.is_pre_release) {
+        if (!projectSettings.basecamp_todolist_id) {
+          return res.status(400).json({ error: "Pre-release to-do list not configured" });
+        }
+        todolistId = projectSettings.basecamp_todolist_id;
+      }
+
+      if (!todolistId) {
+        return res.status(400).json({ error: "Basecamp to-do list not configured" });
       }
 
       // Collect all unique assignee Basecamp IDs
@@ -331,7 +393,7 @@ router.post(
         token: projectSettings.basecamp_token,
         accountId: projectSettings.basecamp_account_id,
         projectId: projectSettings.basecamp_project_id,
-        todolistId: projectSettings.basecamp_todolist_id,
+        todolistId: todolistId,
         title: `Consolidated Findings (${tasks.length})`,
         description: description,
         assigneeIds: assigneeIdsArray,
