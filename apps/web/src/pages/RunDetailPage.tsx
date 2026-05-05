@@ -6,7 +6,7 @@ import { PagesTable } from '../components/PagesTable';
 import { FindingReviewPanel } from '../components/FindingReviewPanel';
 import { CreateTaskModal } from '../components/CreateTaskModal';
 import { useFindings, useRunFindings, useUpdateRunStatus, useUpdateFinding, } from '../hooks/useRuns';
-import { useCreateTask } from '../hooks/useTasks';
+import { useCreateTask, useTasks } from '../hooks/useTasks';
 import { AssignMemberModal } from '../components/AssignMemberModal';
 import { WooCommerceSection } from '../components/WooCommerceSection';
 import { SignOffButton } from '../components/SignOffButton';
@@ -74,8 +74,27 @@ export const RunDetailPage = () => {
 
   const { data: findings, isLoading: isLoadingFindings } = useFindings(selectedPageId);
   const { data: runFindings, isLoading: isLoadingRunFindings } = useRunFindings(runId!);
+  const { data: tasksData } = useTasks({ projectId: projectId! });
   const updateFindingMutation = useUpdateFinding(selectedPageId);
   const { mutate: createTask } = useCreateTask();
+
+  const findingToTaskMap = useMemo(() => {
+    const map: Record<string, { taskIds: string[], assignedUsers: any[] }> = {};
+    if (!tasksData?.data) return map;
+
+    tasksData.data.forEach(task => {
+      if (task.finding_id) {
+        if (!map[task.finding_id]) {
+          map[task.finding_id] = { taskIds: [], assignedUsers: [] };
+        }
+        map[task.finding_id].taskIds.push(task.id);
+        if (task.users && !map[task.finding_id].assignedUsers.some(u => u.id === task.users.id)) {
+          map[task.finding_id].assignedUsers.push(task.users);
+        }
+      }
+    });
+    return map;
+  }, [tasksData]);
 
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [assignTarget, setAssignTarget] = useState<{ type: 'single' | 'bulk'; ids: string[] }>({ type: 'single', ids: [] });
@@ -627,6 +646,7 @@ export const RunDetailPage = () => {
                     onAddToStage={addToStage}
                     onAssignBulk={handleBulkAssign}
                     onSingleAssign={handleSingleAssign}
+                    findingToTaskMap={findingToTaskMap}
                   />
                 ) : (
                   <div className="py-20 text-center bg-emerald-50/20 rounded-3xl border border-dashed border-emerald-100">

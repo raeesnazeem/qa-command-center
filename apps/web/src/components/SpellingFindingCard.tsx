@@ -30,6 +30,9 @@ interface FindingCardProps {
   onFalsePositive?: (id: string) => void;
   onCreateTask?: (finding: QAFinding) => void;
   onAssign?: (id: string) => void;
+  assignedTaskIds?: string[];
+  assignedUsers?: any[];
+  isAssigned?: boolean;
 }
 
 export const SpellingFindingCard: React.FC<FindingCardProps> = ({ 
@@ -38,7 +41,10 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
   onConfirm, 
   onFalsePositive, 
   onCreateTask,
-  onAssign
+  onAssign,
+  assignedTaskIds = [],
+  assignedUsers = [],
+  isAssigned = false,
 }) => {
   const { canDo } = useRole();
   const axios = useAuthAxios();
@@ -98,7 +104,7 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
 
   return (
     <div className={`group p-6 bg-white rounded-2xl border transition-all duration-300 shadow-sm hover:shadow-xl relative overflow-hidden ${
-      isConfirmed ? 'border-emerald-500 ring-1 ring-emerald-500/20' : 
+      isConfirmed || isAssigned ? 'border-emerald-500 ring-1 ring-emerald-500/20' : 
       isFalsePositive ? 'opacity-60 border-slate-200' : 'border-slate-100 hover:border-accent/40'
     }`}>
       {/* Status Indicators */}
@@ -252,14 +258,29 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
                     {isAddingAllowlist ? 'Adding...' : 'Add to Allowlist'}
                   </button>
                 )}
+
+                {/* Assigned Users Avatars */}
+                {assignedUsers.length > 0 && (
+                  <div className="flex items-center ml-4 -space-x-2">
+                    {assignedUsers.map((user: any, i: number) => (
+                      <div
+                        key={user.id || i}
+                        className="w-6 h-6 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[10px] font-black text-slate-600 shadow-sm"
+                        title={user.full_name}
+                      >
+                        {user.full_name?.charAt(0) || "U"}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <button 
                 onClick={() => onCreateTask?.(finding)}
-                disabled={hasTask}
-                className={`flex items-center gap-1.5 px-3 py-1 bg-black text-accent text-[9px] font-black uppercase tracking-widest rounded-[10px] hover:bg-slate-800 transition-colors shrink-0 ${hasTask ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={hasTask || isAssigned}
+                className={`flex items-center gap-1.5 px-3 py-1 bg-black text-accent text-[9px] font-black uppercase tracking-widest rounded-[10px] hover:bg-slate-800 transition-colors shrink-0 ${hasTask || isAssigned ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <Plus size={12} />
-                {hasTask ? 'Task Linked' : 'Create Task'}
+                {hasTask || isAssigned ? 'Task Linked' : 'Create Task'}
               </button>
             </div>
           )}

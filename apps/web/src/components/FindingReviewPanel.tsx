@@ -32,6 +32,7 @@ interface FindingReviewPanelProps {
   onSingleFalsePositive?: (id: string) => void
   onSingleCreateTask?: (finding: QAFinding) => void
   onAddToStage?: (findings: QAFinding[]) => void
+  findingToTaskMap?: Record<string, { taskIds: string[], assignedUsers: any[] }>
 }
 
 const DonutChart = ({
@@ -103,6 +104,7 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
   onSingleCreateTask,
   onSingleAssign,
   onAddToStage,
+  findingToTaskMap = {},
 }) => {
   const { canDo } = useRole()
   const canAction = canDo("qa_engineer")
@@ -378,6 +380,9 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
             onAssign={onSingleAssign}
             isSelected={selectedIds.has(finding.id)}
             onToggleSelect={() => toggleSelect(finding.id)}
+            assignedTaskIds={findingToTaskMap[finding.id]?.taskIds}
+            assignedUsers={findingToTaskMap[finding.id]?.assignedUsers}
+            isAssigned={!!findingToTaskMap[finding.id]}
           />
           </div>
         ))}

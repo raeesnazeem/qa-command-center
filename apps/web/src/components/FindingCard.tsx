@@ -40,6 +40,9 @@ interface FindingCardProps {
   onAssign?: (id: string) => void
   isSelected?: boolean
   onToggleSelect?: (id: string) => void
+  assignedTaskIds?: string[]
+  assignedUsers?: any[]
+  isAssigned?: boolean
 }
 
 const CHECK_FACTOR_ICONS: Record<string, React.ReactNode> = {
@@ -65,6 +68,9 @@ export const FindingCard: React.FC<FindingCardProps> = ({
   onAssign,
   isSelected,
   onToggleSelect,
+  assignedTaskIds = [],
+  assignedUsers = [],
+  isAssigned = false,
 }) => {
   const { canDo } = useRole()
   const canAction = canDo("qa_engineer")
@@ -100,6 +106,9 @@ export const FindingCard: React.FC<FindingCardProps> = ({
         onConfirm={onConfirm}
         onFalsePositive={onFalsePositive}
         onCreateTask={onCreateTask}
+        assignedTaskIds={assignedTaskIds}
+        assignedUsers={assignedUsers}
+        isAssigned={isAssigned}
       />
     )
   }
@@ -108,7 +117,7 @@ export const FindingCard: React.FC<FindingCardProps> = ({
     return (
       <div
         className={`group p-6 bg-white rounded-2xl border transition-all duration-300 shadow-sm hover:shadow-xl relative overflow-hidden flex flex-col gap-6 ${
-          isConfirmed
+          isConfirmed || isAssigned
             ? "border-emerald-500 ring-1 ring-emerald-500/20"
             : isFalsePositive
               ? "opacity-60 border-slate-200"
@@ -246,9 +255,10 @@ export const FindingCard: React.FC<FindingCardProps> = ({
                 </button>
                 <button
                   onClick={() => onCreateTask?.({ ...finding, title: localTitle })}
-                  className="btn-unified"
+                  disabled={hasTask || isAssigned}
+                  className={`btn-unified ${hasTask || isAssigned ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  Add to Tasks
+                  {hasTask || isAssigned ? 'Task Linked' : 'Add to Tasks'}
                 </button>
               </>
             )}
@@ -259,7 +269,17 @@ export const FindingCard: React.FC<FindingCardProps> = ({
               Currently Assigned to
             </span>
             <div className="flex items-center -space-x-2">
-              {assignees.length > 0 ? (
+              {assignedUsers.length > 0 ? (
+                assignedUsers.map((user: any, i: number) => (
+                  <div
+                    key={user.id || i}
+                    className="w-7 h-7 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[10px] font-black text-slate-600 shadow-sm"
+                    title={user.full_name}
+                  >
+                    {user.full_name?.charAt(0) || "U"}
+                  </div>
+                ))
+              ) : assignees.length > 0 ? (
                 assignees.map((user: any, i: number) => (
                   <div
                     key={user.id || i}
@@ -327,7 +347,7 @@ export const FindingCard: React.FC<FindingCardProps> = ({
   return (
     <div
       className={`group p-6 bg-white rounded-2xl border transition-all duration-300 shadow-sm hover:shadow-xl relative overflow-hidden ${
-        isConfirmed
+        isConfirmed || isAssigned
           ? "border-emerald-500 ring-1 ring-emerald-500/20"
           : isFalsePositive
             ? "opacity-60 border-slate-200"
