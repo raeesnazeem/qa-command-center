@@ -90,6 +90,34 @@ const HorizontalScroll = ({
   )
 }
 
+const groupTasksForUI = (tasks: any[]) => {
+  const groups = new Map<string, any>();
+  tasks.forEach(task => {
+    const groupKey = task.finding_id || task.title;
+    if (!groups.has(groupKey)) {
+      groups.set(groupKey, { 
+        ...task, 
+        assignees: task.users ? [task.users] : [] 
+      });
+    } else {
+      const group = groups.get(groupKey);
+      if (task.users && !group.assignees.some((u: any) => u.id === task.users.id)) {
+        group.assignees.push(task.users);
+      }
+      // Combine comments from duplicates to show total count
+      if (task.comments && task.comments.length > 0) {
+        const existingCommentIds = new Set(group.comments?.map((c: any) => c.id) || []);
+        task.comments.forEach((c: any) => {
+          if (!existingCommentIds.has(c.id)) {
+            group.comments = [...(group.comments || []), c];
+          }
+        });
+      }
+    }
+  });
+  return Array.from(groups.values());
+};
+
 const getSeverityColor = (severity: string) => {
   switch (severity) {
     case "critical":
@@ -160,15 +188,18 @@ const KanbanCard = ({
               {task.creator.full_name.charAt(0)}
             </div>
           )}
-          {(isAdmin || isQA) && task.users && (
-            <div
-              className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500 border-2 border-white uppercase"
-              title={`Assigned to: ${task.users.full_name}`}
-            >
-              {task.users.full_name.charAt(0)}
-            </div>
+          {(isAdmin || isQA) && task.assignees && task.assignees.length > 0 && (
+            task.assignees.map((user: any) => (
+              <div
+                key={user.id}
+                className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500 border-2 border-white uppercase"
+                title={`Assigned to: ${user.full_name}`}
+              >
+                {user.full_name.charAt(0)}
+              </div>
+            ))
           )}
-          {!task.users && !task.creator && (
+          {!task.assignees?.length && !task.users && !task.creator && (
             <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500 border-2 border-white uppercase">
               ?
             </div>
@@ -234,6 +265,7 @@ const ProjectKanban = ({
   onTaskClick: any
   role: string
 }) => {
+  const groupedTasks = groupTasksForUI(tasks)
   const columns = [
     { id: "open", title: "To Do" },
     { id: "in_progress", title: "In Progress" },
@@ -272,7 +304,7 @@ const ProjectKanban = ({
           <KanbanColumn
             key={col.id}
             title={col.title}
-            tasks={tasks.filter((t) => t.status === col.id)}
+            tasks={groupedTasks.filter((t) => t.status === col.id)}
             onTaskClick={onTaskClick}
             role={role}
           />

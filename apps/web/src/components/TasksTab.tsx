@@ -34,13 +34,48 @@ export const TasksTab = ({ project }: TasksTabProps) => {
   const { mutate: deleteTask } = useDeleteTask();
   const { mutate: bulkDelete } = useBulkDeleteTasks();
 
-  const toggleTaskSelection = (taskId: string) => {
-    setSelectedTaskIds(prev => 
-      prev.includes(taskId) 
-        ? prev.filter(id => id !== taskId) 
-        : [...prev, taskId]
-    );
+  const toggleTaskSelection = (taskIds: string[]) => {
+    setSelectedTaskIds(prev => {
+      const allExist = taskIds.every(id => prev.includes(id));
+      if (allExist) {
+        return prev.filter(id => !taskIds.includes(id));
+      } else {
+        return [...new Set([...prev, ...taskIds])];
+      }
+    });
   };
+
+  const groupTasksForUI = (tasks: any[]) => {
+    const groups = new Map<string, any>();
+    tasks.forEach(task => {
+      const groupKey = task.finding_id || task.title;
+      if (!groups.has(groupKey)) {
+        groups.set(groupKey, { 
+          ...task, 
+          assignees: task.users ? [task.users] : [],
+          allIds: [task.id]
+        });
+      } else {
+        const group = groups.get(groupKey);
+        if (task.users && !group.assignees.some((u: any) => u.id === task.users.id)) {
+          group.assignees.push(task.users);
+        }
+        group.allIds.push(task.id);
+        // Combine comments
+        if (task.comments && task.comments.length > 0) {
+          const existingCommentIds = new Set(group.comments?.map((c: any) => c.id) || []);
+          task.comments.forEach((c: any) => {
+            if (!existingCommentIds.has(c.id)) {
+              group.comments = [...(group.comments || []), c];
+            }
+          });
+        }
+      }
+    });
+    return Array.from(groups.values());
+  };
+
+  const groupedTasks = groupTasksForUI(tasks);
 
   const columns: { id: TaskStatus; title: string }[] = [
     { id: 'open', title: 'To Do' },
@@ -155,7 +190,7 @@ export const TasksTab = ({ project }: TasksTabProps) => {
               <div className="flex items-center space-x-2">
                 <h3 className="font-bold text-slate-900">{column.title}</h3>
                 <span className="bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                  {tasks.filter(t => t.status === column.id).length}
+                  {groupedTasks.filter(t => t.status === column.id).length}
                 </span>
               </div>
               <button className="text-slate-400 hover:text-slate-600">
@@ -169,13 +204,13 @@ export const TasksTab = ({ project }: TasksTabProps) => {
                   <Clock className="w-6 h-6 text-accent animate-spin" />
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Loading...</p>
                 </div>
-              ) : tasks.filter(t => t.status === column.id).length === 0 ? (
+              ) : groupedTasks.filter(t => t.status === column.id).length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-40 text-center space-y-2 opacity-50">
                   <CheckSquare className="w-8 h-8 text-slate-200" />
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">No tasks</p>
                 </div>
               ) : (
-                tasks.filter(t => t.status === column.id).map((task) => (
+                groupedTasks.filter(t => t.status === column.id).map((task) => (
                   <div 
                     key={task.id} 
                     onClick={() => setSelectedTask(task)}
@@ -188,11 +223,11 @@ export const TasksTab = ({ project }: TasksTabProps) => {
                       className="absolute -top-2 -left-2 z-10"
                       onClick={(e) => {
                         e.stopPropagation();
-                        toggleTaskSelection(task.id);
+                        toggleTaskSelection(task.allIds || [task.id]);
                       }}
                     >
                       <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${
-                        selectedTaskIds.includes(task.id) 
+                        task.allIds?.every((id: string) => selectedTaskIds.includes(id)) 
                           ? 'bg-accent border-accent text-white shadow-sm' 
                           : 'bg-white border-slate-200 text-transparent hover:border-accent group-hover:text-slate-200'
                       }`}>
@@ -258,8 +293,21 @@ export const TasksTab = ({ project }: TasksTabProps) => {
                           </a>
                         )}
                       </div>
-                      <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border-2 border-white">
-                        {task.users?.full_name ? task.users.full_name.charAt(0) : '?'}
+                      <div className="flex items-center -space-x-2">
+                        {task.assignees?.map((user: any) => (
+                          <div 
+                            key={user.id}
+                            className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border-2 border-white uppercase"
+                            title={`Assigned to: ${user.full_name}`}
+                          >
+                            {user.full_name.charAt(0)}
+                          </div>
+                        ))}
+                        {!task.assignees?.length && (
+                          <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border-2 border-white uppercase">
+                            ?
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

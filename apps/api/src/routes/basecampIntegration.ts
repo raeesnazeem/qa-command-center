@@ -80,19 +80,6 @@ router.post(
         if (page) findingUrl = page.url
       }
 
-      // 3. Load assignee Basecamp mapping separately
-      let assigneeIds: number[] = []
-      if (task.assigned_to) {
-        const { data: user } = await supabase
-          .from("users")
-          .select("basecamp_person_id")
-          .eq("id", task.assigned_to)
-          .maybeSingle()
-        if (user?.basecamp_person_id) {
-          assigneeIds = [Number(user.basecamp_person_id)]
-        }
-      }
-
       // 4. Load project state and settings
       const { data: projectRecord, error: projectError } = await supabase
         .from("projects")
@@ -137,20 +124,33 @@ router.post(
         return res.status(400).json({ error: "Basecamp to-do list not configured" });
       }
 
-      console.log(`[BasecampPush] Data resolved:`, {
-        assigneeIds,
-        findingUrl
-      });
-
-      // 3.5 Fetch Basecamp People for SGIDs
-      const mentionsList = await Promise.all(assigneeIds.map(async (id: number) => {
-        const person = await getBasecampPerson(projectSettings.basecamp_token, projectSettings.basecamp_account_id, id);
-        if (person && person.attachable_sgid) {
-          return formatBasecampMention(person.attachable_sgid, person.name);
-        }
-        return `@${id}`; // Fallback to plain text if not found
-      }));
-      const mentions = mentionsList.join(" ");
+      // 3. Load assignee Basecamp mappings for this task and siblings
+      const { data: siblings } = await supabase
+        .from("tasks")
+        .select("id, assigned_to")
+        .eq("project_id", task.project_id)
+        .or(`finding_id.eq.${task.finding_id}${task.finding_id ? '' : ',title.eq.' + task.title}`);
+      
+      const siblingIds = (siblings || []).map(s => s.id);
+      const allAssignedTo = Array.from(new Set((siblings || []).map(s => s.assigned_to).filter(Boolean)));
+      
+      let mentions = "";
+      if (allAssignedTo.length > 0) {
+        const { data: userList } = await supabase
+          .from("users")
+          .select("basecamp_person_id")
+          .in("id", allAssignedTo);
+        
+        const bpIds = Array.from(new Set(userList?.map(u => u.basecamp_person_id).filter(Boolean) || []));
+        const mentionsList = await Promise.all(bpIds.map(async (id: any) => {
+          const person = await getBasecampPerson(projectSettings.basecamp_token, projectSettings.basecamp_account_id, Number(id));
+          if (person && person.attachable_sgid) {
+            return formatBasecampMention(person.attachable_sgid, person.name);
+          }
+          return null;
+        }));
+        mentions = mentionsList.filter(Boolean).join(" ");
+      }
 
       const description = `<div>${mentions}</div>
 <br/>
@@ -172,17 +172,17 @@ Created via QA Command Center`.trim();
 
       const basecampUrl = `https://3.basecamp.com/${projectSettings.basecamp_account_id}/buckets/${projectSettings.basecamp_project_id}/todolists/${todolistId}`;
 
-      // 6. Update task in Supabase
-      console.log(`[BasecampPush] 6/6 Updating task ${id} in Supabase with Basecamp info...`);
+      // 6. Update all siblings in Supabase
+      console.log(`[BasecampPush] 6/6 Updating ${siblingIds.length} tasks in Supabase with Basecamp info...`);
       const { data: updatedRows, error: updateError } = await supabase
         .from("tasks")
         .update({
           basecamp_task_id: todolistId,
           basecamp_url: basecampUrl,
           status: "in_progress",
-          updated_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         })
-        .eq("id", id)
+        .in("id", siblingIds)
         .select('id');
 
       if (updateError) {
@@ -290,6 +290,17 @@ router.post(
       }
       
       const userMappingMap = new Map(userList?.map(u => [u.id, u.basecamp_person_id]) || [])
+      
+      // 3.2 Group tasks by finding_id or title
+      const taskGroups = new Map<string, any[]>();
+      for (const task of tasks) {
+        const groupKey = task.finding_id || task.title;
+        if (!taskGroups.has(groupKey)) {
+          taskGroups.set(groupKey, []);
+        }
+        taskGroups.get(groupKey).push(task);
+      }
+      console.log(`[BasecampBulkPush] Grouped ${tasks.length} tasks into ${taskGroups.size} conceptual groups.`);
 
       const projectId = tasks[0].project_id
       console.log(`[BasecampBulkPush] Resolving settings for project: ${projectId}`);
@@ -357,51 +368,31 @@ router.post(
         return res.status(400).json({ error: "Basecamp to-do list not configured" });
       }
 
-      // Collect all unique assignee Basecamp IDs
-      const allAssigneeIds = new Set<number>()
-      userIds.forEach(uid => {
-        const bpId = userMappingMap.get(uid)
-        if (bpId) allAssigneeIds.add(Number(bpId))
-      })
-
-      const assigneeIdsArray = Array.from(allAssigneeIds)
-      console.log(`[BasecampBulkPush] Resolved ${assigneeIdsArray.length} Basecamp assignees.`);
-
-      // 3.7 Fetch Basecamp People for SGIDs
-      const mentionsList = await Promise.all(assigneeIdsArray.map(async (id: number) => {
-        const person = await getBasecampPerson(projectSettings.basecamp_token, projectSettings.basecamp_account_id, id);
-        if (person && person.attachable_sgid) {
-          return formatBasecampMention(person.attachable_sgid, person.name);
-        }
-        return `@${id}`;
-      }));
-      const mentions = mentionsList.join(" ");
-
-      const findingsList = tasks.map((t: any) => {
-        const findingUrl = t.findings?.page_id ? pageUrlMap.get(t.findings.page_id) : "N/A"
-        return `• ${t.title}, Severity: ${t.severity}, URL: ${findingUrl || "N/A"}`
-      }).join("<br/>")
-
       // 5. Push as comments to the target to-do (Command Center)
-      console.log(`[BasecampBulkPush] 5/6 Pushing ${tasks.length} tasks as comments to target: ${todolistId}`);
+      console.log(`[BasecampBulkPush] 5/6 Pushing ${taskGroups.size} groups as comments to target: ${todolistId}`);
       
       let successCount = 0;
-      for (const task of tasks) {
-        // Load assignee mapping for this specific task
-        const taskAssigneeId = task.assigned_to ? userMappingMap.get(task.assigned_to) : null;
-        let taskMentions = "";
-        if (taskAssigneeId) {
-          const person = await getBasecampPerson(projectSettings.basecamp_token, projectSettings.basecamp_account_id, Number(taskAssigneeId));
-          if (person?.attachable_sgid) {
-            taskMentions = formatBasecampMention(person.attachable_sgid, person.name);
+      for (const [groupKey, groupTasks] of taskGroups.entries()) {
+        const firstTask = groupTasks[0];
+        
+        // Consolidate mentions for all tasks in the group
+        const groupMentions = await Promise.all(groupTasks.map(async (t) => {
+          const bpId = t.assigned_to ? userMappingMap.get(t.assigned_to) : null;
+          if (bpId) {
+            const person = await getBasecampPerson(projectSettings.basecamp_token, projectSettings.basecamp_account_id, Number(bpId));
+            if (person?.attachable_sgid) {
+              return formatBasecampMention(person.attachable_sgid, person.name);
+            }
           }
-        }
+          return null;
+        }));
+        const mentionsHtml = Array.from(new Set(groupMentions.filter(Boolean))).join(" ");
 
-        const taskFindingUrl = task.findings?.page_id ? pageUrlMap.get(task.findings.page_id) : "N/A";
+        const taskFindingUrl = firstTask.findings?.page_id ? pageUrlMap.get(firstTask.findings.page_id) : "N/A";
         const taskCommentContent = `
-          <div>${taskMentions}</div><br/>
-          <strong>[NEW PUSH]</strong> ${task.title}<br/>
-          Severity: ${task.severity}<br/>
+          <div>${mentionsHtml}</div><br/>
+          <strong>[NEW PUSH]</strong> ${firstTask.title}<br/>
+          Severity: ${firstTask.severity}<br/>
           URL: ${taskFindingUrl || "N/A"}<br/><br/>
           Created via QA Command Center
         `.trim();
@@ -414,37 +405,30 @@ router.post(
             recordingId: todolistId,
             content: taskCommentContent
           });
-          successCount++;
+
+          // Update all tasks in this group in Supabase
+          const groupTaskIds = groupTasks.map(t => t.id);
+          const basecampUrl = `https://3.basecamp.com/${projectSettings.basecamp_account_id}/buckets/${projectSettings.basecamp_project_id}/todolists/${todolistId}`;
+          
+          await supabase
+            .from("tasks")
+            .update({
+              basecamp_task_id: todolistId,
+              basecamp_url: basecampUrl,
+              status: "in_progress",
+              updated_at: new Date().toISOString(),
+            })
+            .in("id", groupTaskIds);
+
+          successCount += groupTasks.length;
         } catch (err: any) {
-          console.error(`[BasecampBulkPush] Individual comment failed for task ${task.id}:`, err.message);
+          console.error(`[BasecampBulkPush] Group comment failed for group ${groupKey}:`, err.message);
         }
       }
 
-      // 6. Update all tasks in Supabase
-      console.log(`[BasecampBulkPush] 6/6 Updating ${tasks.length} tasks in Supabase with target Basecamp ID...`);
-      // Note: Since we are pushing to a shared to-do, we use its ID.
-      // We don't have a unique URL for the comment yet, so we point to the parent.
-      const basecampUrl = `https://3.basecamp.com/${projectSettings.basecamp_account_id}/buckets/${projectSettings.basecamp_project_id}/todolists/${todolistId}`;
-      
-      const { data: updatedRows, error: updateError } = await supabase
-        .from("tasks")
-        .update({
-          basecamp_task_id: todolistId,
-          basecamp_url: basecampUrl,
-          status: "in_progress",
-          updated_at: new Date().toISOString(),
-        })
-        .in("id", taskIds)
-        .select('id');
-
-      if (updateError) {
-        console.error('[BasecampBulkPush] Supabase Update Error:', updateError);
-        return res.json({ basecampUrl, count: successCount, warning: "Supabase update failed" })
-      }
-
-      console.log(`[BasecampBulkPush] Successfully updated ${updatedRows.length} tasks in Supabase.`);
+      console.log(`[BasecampBulkPush] Successfully processed ${successCount} tasks in Supabase.`);
       console.log(`[BasecampBulkPush] <<< FINISHED bulk push successfully.`);
-      return res.json({ basecampUrl, count: successCount })
+      return res.json({ count: successCount })
     } catch (error: any) {
       console.error('--- [BasecampBulkPush] CRITICAL FAILURE ---');
       console.error('Error:', error.message);
@@ -517,49 +501,70 @@ router.post(
 
       if (projectRecordError || !projectRecord) {
         return res.status(404).json({ error: "Project not found" });
+      }      // 3.6 Group tasks by finding_id or title
+      const taskGroups = new Map<string, any[]>();
+      for (const task of tasks) {
+        const groupKey = task.finding_id || task.title;
+        if (!taskGroups.has(groupKey)) {
+          taskGroups.set(groupKey, []);
+        }
+        taskGroups.get(groupKey).push(task);
       }
-
-      // Determine the target recording ID (the Command Center)
-      let targetRecordingId = projectSettings.basecamp_todolist_id;
-      if (projectRecord.is_post_release && projectSettings.basecamp_post_todolist_id) {
-        targetRecordingId = projectSettings.basecamp_post_todolist_id;
-      } else if (projectRecord.is_pre_release && projectSettings.basecamp_todolist_id) {
-        targetRecordingId = projectSettings.basecamp_todolist_id;
-      }
-
-      if (!targetRecordingId) {
-        return res.status(400).json({ error: "Basecamp integration not fully configured for this project state" });
-      }
+      console.log(`[BasecampBulkComment] Grouped ${tasks.length} tasks into ${taskGroups.size} conceptual groups.`);
 
       let successCount = 0;
       let skippedCount = 0;
 
-      for (const task of tasks) {
-        // Use task's own ID if it's already synced, otherwise use the project's target ID
-        const recordingId = task.basecamp_task_id || targetRecordingId;
-
-        // Resolve assignee mention
-        const taskAssigneeId = task.assigned_to ? userMappingMap.get(task.assigned_to) : null;
-        let taskMentions = "";
-        if (taskAssigneeId) {
-          const person = await getBasecampPerson(projectSettings.basecamp_token, projectSettings.basecamp_account_id, Number(taskAssigneeId));
-          if (person?.attachable_sgid) {
-            taskMentions = formatBasecampMention(person.attachable_sgid, person.name);
+      for (const [groupKey, groupTasks] of taskGroups.entries()) {
+        const firstTask = groupTasks[0];
+        
+        // Determine the target recording ID (the Command Center)
+        let groupTargetId = firstTask.basecamp_task_id;
+        if (!groupTargetId) {
+          if (projectRecord.is_post_release && projectSettings.basecamp_post_todolist_id) {
+            groupTargetId = projectSettings.basecamp_post_todolist_id;
+          } else if (projectRecord.is_pre_release && projectSettings.basecamp_todolist_id) {
+            groupTargetId = projectSettings.basecamp_todolist_id;
+          } else {
+            groupTargetId = projectSettings.basecamp_todolist_id;
           }
         }
 
-        // Format content
-        const sortedComments = (task.comments || []).sort(
+        if (!groupTargetId) {
+          console.warn(`[BasecampBulkComment] Skipping group ${groupKey} - no target recording ID`);
+          skippedCount += groupTasks.length;
+          continue;
+        }
+
+        // Consolidate mentions for all tasks in the group
+        const groupMentions = await Promise.all(groupTasks.map(async (t) => {
+          const bpId = t.assigned_to ? userMappingMap.get(t.assigned_to) : null;
+          if (bpId) {
+            const person = await getBasecampPerson(projectSettings.basecamp_token, projectSettings.basecamp_account_id, Number(bpId));
+            if (person?.attachable_sgid) {
+              return formatBasecampMention(person.attachable_sgid, person.name);
+            }
+          }
+          return null;
+        }));
+        const mentionsHtml = Array.from(new Set(groupMentions.filter(Boolean))).join(" ");
+
+        // Consolidate comments from all tasks in the group
+        const allComments: any[] = [];
+        groupTasks.forEach(t => {
+          if (t.comments) allComments.push(...t.comments);
+        });
+        const sortedComments = allComments.sort(
           (a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
         );
 
         const commentContent = `
-          <div>${taskMentions}</div><br/>
+          <div>${mentionsHtml}</div><br/>
           <div><strong>[${pushStatus.toUpperCase()}]</strong></div>
           <br/>
-          <strong>${task.title}</strong>
+          <strong>${firstTask.title}</strong>
           <br/>
-          <div>${task.description || "No description provided."}</div>
+          <div>${firstTask.description || "No description provided."}</div>
           <br/>
           <strong>Task Comments:</strong>
           <ul>
@@ -576,28 +581,28 @@ router.post(
             token: projectSettings.basecamp_token,
             accountId: projectSettings.basecamp_account_id,
             projectId: projectSettings.basecamp_project_id || projectId,
-            recordingId: recordingId,
+            recordingId: groupTargetId,
             content: commentContent
           });
 
-          // Update task in Supabase to mark as synced
-          if (!task.basecamp_task_id) {
-            const basecampUrl = `https://3.basecamp.com/${projectSettings.basecamp_account_id}/buckets/${projectSettings.basecamp_project_id}/todolists/${recordingId}`;
-            await supabase
-              .from("tasks")
-              .update({
-                basecamp_task_id: recordingId,
-                basecamp_url: basecampUrl,
-                status: "in_progress",
-                updated_at: new Date().toISOString()
-              })
-              .eq("id", task.id);
-          }
+          // Update all tasks in this group in Supabase
+          const groupTaskIds = groupTasks.map(t => t.id);
+          const basecampUrl = `https://3.basecamp.com/${projectSettings.basecamp_account_id}/buckets/${projectSettings.basecamp_project_id}/todolists/${groupTargetId}`;
+          
+          await supabase
+            .from("tasks")
+            .update({
+              basecamp_task_id: groupTargetId,
+              basecamp_url: basecampUrl,
+              status: "in_progress",
+              updated_at: new Date().toISOString()
+            })
+            .in("id", groupTaskIds);
 
-          successCount++;
+          successCount += groupTasks.length;
         } catch (err: any) {
-          console.error(`[BasecampBulkComment] Failed for task ${task.id}:`, err.message);
-          skippedCount++;
+          console.error(`[BasecampBulkComment] Failed for group ${groupKey}:`, err.message);
+          skippedCount += groupTasks.length;
         }
       }
 
