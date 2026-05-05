@@ -21,6 +21,7 @@ import {
   Clock,
 } from "lucide-react"
 import { useRole } from "../hooks/useRole"
+import { useParams, Link } from "react-router-dom"
 import { FindingSeverityEditor } from "./FindingSeverityEditor"
 import { SpellingFindingCard } from "./SpellingFindingCard"
 import { FindingCardWithScreenshot } from "./FindingCardWithScreenshot"
@@ -72,6 +73,7 @@ export const FindingCard: React.FC<FindingCardProps> = ({
   assignedUsers = [],
   isAssigned = false,
 }) => {
+  const { id: projectId } = useParams<{ id: string }>()
   const { canDo } = useRole()
   const canAction = canDo("qa_engineer")
   const [localTitle, setLocalTitle] = React.useState(finding.title)
@@ -247,19 +249,32 @@ export const FindingCard: React.FC<FindingCardProps> = ({
               </button>
             ) : (
               <>
-                <button
-                  onClick={() => onFalsePositive?.(finding.id)}
-                  className="btn-unified"
-                >
-                  False Positive
-                </button>
-                <button
-                  onClick={() => onCreateTask?.({ ...finding, title: localTitle })}
-                  disabled={hasTask || isAssigned}
-                  className={`btn-unified ${hasTask || isAssigned ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  {hasTask || isAssigned ? 'Task Linked' : 'Add to Tasks'}
-                </button>
+                {!(hasTask || isAssigned) && (
+                  <button
+                    onClick={() => onFalsePositive?.(finding.id)}
+                    className="btn-unified"
+                  >
+                    False Positive
+                  </button>
+                )}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => onCreateTask?.({ ...finding, title: localTitle })}
+                    disabled={hasTask || isAssigned}
+                    className={`btn-unified ${hasTask || isAssigned ? 'bg-accent text-white cursor-not-allowed' : ''}`}
+                  >
+                    {hasTask || isAssigned ? 'Task Linked' : 'Add to Tasks'}
+                  </button>
+                  {(hasTask || isAssigned) && assignedTaskIds && assignedTaskIds.length > 0 && (
+                    <Link
+                      to={`/projects/${projectId}?tab=tasks&taskId=${assignedTaskIds[0]}`}
+                      className="p-2 text-slate-400 hover:text-accent transition-colors"
+                      title="View Task"
+                    >
+                      <ExternalLink size={18} />
+                    </Link>
+                  )}
+                </div>
               </>
             )}
           </div>

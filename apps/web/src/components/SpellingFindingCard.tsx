@@ -11,7 +11,7 @@ import {
   Activity,
   UserPlus
 } from 'lucide-react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useRole } from '../hooks/useRole';
 import { FindingSeverityEditor } from './FindingSeverityEditor';
 import { RebuttalVerdictCard } from './RebuttalVerdictCard';
@@ -234,13 +234,15 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
                     Confirm
                   </button>
                 )}
-                <button 
-                  onClick={() => onFalsePositive?.(finding.id)}
-                  className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-[10px] hover:bg-slate-50 transition-colors"
-                >
-                  <XCircle size={12} />
-                  False Positive
-                </button>
+                {!(hasTask || isAssigned) && (
+                  <button 
+                    onClick={() => onFalsePositive?.(finding.id)}
+                    className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-[10px] hover:bg-slate-50 transition-colors"
+                  >
+                    <XCircle size={12} />
+                    False Positive
+                  </button>
+                )}
                 <button 
                   onClick={() => onAssign?.(finding.id)}
                   className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-[10px] hover:bg-slate-50 transition-colors"
@@ -274,14 +276,29 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
                   </div>
                 )}
               </div>
-              <button 
-                onClick={() => onCreateTask?.(finding)}
-                disabled={hasTask || isAssigned}
-                className={`flex items-center gap-1.5 px-3 py-1 bg-black text-accent text-[9px] font-black uppercase tracking-widest rounded-[10px] hover:bg-slate-800 transition-colors shrink-0 ${hasTask || isAssigned ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                <Plus size={12} />
-                {hasTask || isAssigned ? 'Task Linked' : 'Create Task'}
-              </button>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => onCreateTask?.(finding)}
+                  disabled={hasTask || isAssigned}
+                  className={`flex items-center gap-1.5 px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-[10px] transition-colors shrink-0 ${
+                    hasTask || isAssigned 
+                      ? 'bg-accent text-white cursor-not-allowed' 
+                      : 'bg-black text-accent hover:bg-slate-800'
+                  }`}
+                >
+                  <Plus size={12} />
+                  {hasTask || isAssigned ? 'Task Linked' : 'Create Task'}
+                </button>
+                {(hasTask || isAssigned) && assignedTaskIds && assignedTaskIds.length > 0 && (
+                  <Link
+                    to={`/projects/${projectId}?tab=tasks&taskId=${assignedTaskIds[0]}`}
+                    className="p-2 text-slate-400 hover:text-accent transition-colors"
+                    title="View Task"
+                  >
+                    <ExternalLink size={14} />
+                  </Link>
+                )}
+              </div>
             </div>
           )}
 
