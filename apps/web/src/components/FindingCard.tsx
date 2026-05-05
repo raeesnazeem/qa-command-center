@@ -27,6 +27,7 @@ import { SpellingFindingCard } from "./SpellingFindingCard"
 import { FindingCardWithScreenshot } from "./FindingCardWithScreenshot"
 import { RebuttalVerdictCard } from "./RebuttalVerdictCard"
 import { QAFinding } from "../api/runs.api"
+import { BrowserOverlay } from "./BrowserOverlay"
 
 interface FindingCardProps {
   finding: QAFinding
@@ -78,6 +79,8 @@ export const FindingCard: React.FC<FindingCardProps> = ({
   const canAction = canDo("qa_engineer")
   const [localTitle, setLocalTitle] = React.useState(finding.title)
   const [isContextModalOpen, setIsContextModalOpen] = React.useState(false)
+  const [isBrowserOpen, setIsBrowserOpen] = React.useState(false)
+  const [galleryImages, setGalleryImages] = React.useState<string[]>([])
 
   React.useEffect(() => {
     setLocalTitle(finding.title)
@@ -234,6 +237,18 @@ export const FindingCard: React.FC<FindingCardProps> = ({
             <p className="text-[8px] font-black text-slate-400 uppercase mt-2 tracking-[0.2em] text-center">
               Click to expand evidence
             </p>
+            <button
+              onClick={() => setIsBrowserOpen(true)}
+              className="btn-unified w-fit ml-auto flex justify-end items-center gap-2 mt-3"
+            >
+              <span>
+                <Globe
+                  size={14}
+                  className="text-slate-400 group-hover/btn:text-black transition-colors"
+                />
+              </span>
+              <span className="text-[11px]">See in Browser</span>
+            </button>
           </div>
         </div>
 
@@ -259,21 +274,29 @@ export const FindingCard: React.FC<FindingCardProps> = ({
                 )}
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => onCreateTask?.({ ...finding, title: localTitle })}
+                    onClick={() =>
+                      onCreateTask?.({
+                        ...finding,
+                        title: localTitle,
+                        gallery_images: galleryImages,
+                      })
+                    }
                     disabled={hasTask || isAssigned}
-                    className={`btn-unified ${hasTask || isAssigned ? 'bg-accent text-white cursor-not-allowed' : ''}`}
+                    className={`btn-unified ${hasTask || isAssigned ? "bg-accent text-white cursor-not-allowed" : ""}`}
                   >
-                    {hasTask || isAssigned ? 'Task Linked' : 'Add to Tasks'}
+                    {hasTask || isAssigned ? "Task Linked" : "Add to Tasks"}
                   </button>
-                  {(hasTask || isAssigned) && assignedTaskIds && assignedTaskIds.length > 0 && (
-                    <Link
-                      to={`/projects/${projectId}?tab=tasks&taskId=${assignedTaskIds[0]}`}
-                      className="p-2 text-slate-400 hover:text-accent transition-colors"
-                      title="View Task"
-                    >
-                      <ExternalLink size={18} />
-                    </Link>
-                  )}
+                  {(hasTask || isAssigned) &&
+                    assignedTaskIds &&
+                    assignedTaskIds.length > 0 && (
+                      <Link
+                        to={`/projects/${projectId}?tab=tasks&taskId=${assignedTaskIds[0]}`}
+                        className="p-2 text-slate-400 hover:text-accent transition-colors"
+                        title="View Task"
+                      >
+                        <ExternalLink size={18} />
+                      </Link>
+                    )}
                 </div>
               </>
             )}
@@ -355,6 +378,15 @@ export const FindingCard: React.FC<FindingCardProps> = ({
             </div>
           </div>
         )}
+        <BrowserOverlay
+          isOpen={isBrowserOpen}
+          onClose={() => setIsBrowserOpen(false)}
+          url={finding.pages?.url || ""}
+          onCapture={(img) =>
+            setGalleryImages((prev) => [...prev, img].slice(0, 3))
+          }
+          galleryCount={galleryImages.length}
+        />
       </div>
     )
   }
@@ -457,6 +489,18 @@ export const FindingCard: React.FC<FindingCardProps> = ({
                   ? "Click to expand evidence"
                   : "Click to view page context"}
               </p>
+              <button
+                onClick={() => setIsBrowserOpen(true)}
+                className="btn-unified w-fit ml-auto flex justify-end items-center gap-2 mt-3"
+              >
+                <span>
+                  <Globe
+                    size={14}
+                    className="text-slate-400 group-hover/btn:text-black transition-colors"
+                  />
+                </span>
+                <span className="text-[11px]">See in Browser</span>
+              </button>
             </div>
           )}
 
@@ -518,6 +562,16 @@ export const FindingCard: React.FC<FindingCardProps> = ({
           )}
         </div>
       </div>
+
+      <BrowserOverlay
+        isOpen={isBrowserOpen}
+        onClose={() => setIsBrowserOpen(false)}
+        url={finding.pages?.url || ""}
+        onCapture={(img) =>
+          setGalleryImages((prev) => [...prev, img].slice(0, 3))
+        }
+        galleryCount={galleryImages.length}
+      />
     </div>
   )
 }

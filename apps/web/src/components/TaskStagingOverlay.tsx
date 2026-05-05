@@ -94,6 +94,7 @@ export const TaskStagingOverlay: React.FC<TaskStagingOverlayProps> = ({
             description: finding.description || "",
             severity: finding.severity,
             assigned_to: userId,
+            gallery_images: finding.gallery_images,
           })
 
           if (task?.id) {

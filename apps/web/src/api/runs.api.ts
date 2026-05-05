@@ -62,6 +62,7 @@ export interface QAFinding {
   description?: string | null;
   context_text?: string | null;
   screenshot_url?: string | null;
+  gallery_images?: string[];
   status: 'open' | 'confirmed' | 'false_positive';
   ai_generated: boolean;
   created_at: string;

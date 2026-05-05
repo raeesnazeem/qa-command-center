@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   Image as ImageIcon,
   Clock,
+  ExternalLink,
 } from "lucide-react"
 import { format } from "date-fns"
 import { Task, TaskStatus, TaskSeverity } from "../api/tasks.api"
@@ -204,6 +205,31 @@ export const TaskDetailPanel = ({
                 {task.description || "No description provided."}
               </div>
             </div>
+
+            {/* Evidence Gallery */}
+            {task.gallery_images && task.gallery_images.length > 0 && (
+              <div className="space-y-3">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center">
+                  <ImageIcon className="w-3 h-3 mr-1" /> Evidence Gallery
+                </span>
+                <div className="grid grid-cols-3 gap-3">
+                  {task.gallery_images.map((img, i) => (
+                    <a
+                      key={i}
+                      href={img}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="aspect-square bg-slate-100 rounded-xl overflow-hidden border border-slate-200 group/img relative"
+                    >
+                      <img src={img} className="w-full h-full object-cover transition-transform group-hover/img:scale-110" alt={`Evidence ${i+1}`} />
+                      <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/20 transition-colors flex items-center justify-center">
+                        <ExternalLink size={16} className="text-white opacity-0 group-hover/img:opacity-100 transition-opacity" />
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Comment Thread */}
             <div className="pt-8 border-t border-slate-100">

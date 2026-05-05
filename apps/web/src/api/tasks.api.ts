@@ -24,6 +24,7 @@ export interface Task {
   updated_at: string;
   basecamp_task_id?: string;
   basecamp_url?: string;
+  gallery_images?: string[];
   findings?: any;
   comments?: TaskComment[];
   rebuttals?: TaskRebuttal[];

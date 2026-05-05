@@ -10,6 +10,7 @@ export const CreateTaskSchema = z.object({
   description: z.string().min(1, 'Description is required'),
   severity: TaskSeveritySchema,
   assigned_to: z.string().uuid().optional(),
+  gallery_images: z.array(z.string()).max(3).optional(),
 });
 
 export const UpdateTaskSchema = CreateTaskSchema.partial().extend({

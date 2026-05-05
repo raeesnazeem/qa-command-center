@@ -46,7 +46,7 @@ router.post(
   requireRole('qa_engineer'),
   zodValidate(CreateTaskSchema),
   async (req: Request, res: Response) => {
-    const { finding_id, project_id, title, description, severity, assigned_to } = req.body;
+    const { finding_id, project_id, title, description, severity, assigned_to, gallery_images } = req.body;
     const { userId: clerkUserId } = req.auth!;
 
     try {
@@ -61,6 +61,7 @@ router.post(
           description,
           severity,
           assigned_to,
+          gallery_images,
           created_by: supabaseUserId,
           status: 'open'
         })

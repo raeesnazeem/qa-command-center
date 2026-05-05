@@ -9,7 +9,9 @@ import {
   Plus,
   FileSearch,
   Activity,
-  UserPlus
+  UserPlus,
+  Globe,
+  ExternalLink
 } from 'lucide-react';
 import { useParams, Link } from 'react-router-dom';
 import { useRole } from '../hooks/useRole';
@@ -17,6 +19,7 @@ import { FindingSeverityEditor } from './FindingSeverityEditor';
 import { RebuttalVerdictCard } from './RebuttalVerdictCard';
 import { FindingCardWithScreenshot } from './FindingCardWithScreenshot';
 import { QAFinding } from '../api/runs.api';
+import { BrowserOverlay } from './BrowserOverlay';
 import { useAuthAxios } from '../lib/useAuthAxios';
 
 interface FindingCardProps {
@@ -52,6 +55,8 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
   const { id: projectId } = useParams<{ id: string }>();
   
   const [isAddingAllowlist, setIsAddingAllowlist] = useState(false);
+  const [isBrowserOpen, setIsBrowserOpen] = useState(false);
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
 
   const severityIcons = {
     critical: <ShieldAlert size={20} />,
@@ -176,6 +181,18 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
               <p className="text-[8px] font-black text-slate-400 uppercase mt-1 tracking-widest">
                 {finding.screenshot_url ? 'Click to expand evidence' : 'Click to view page context'}
               </p>
+              <button
+                onClick={() => setIsBrowserOpen(true)}
+                className="btn-unified w-fit ml-auto flex justify-end items-center gap-2 mt-3"
+              >
+                <span>
+                  <Globe
+                    size={14}
+                    className="text-slate-400 group-hover/btn:text-black transition-colors"
+                  />
+                </span>
+                <span className="text-[11px]">See in Browser</span>
+              </button>
             </div>
           )}
 
@@ -278,7 +295,7 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 <button 
-                  onClick={() => onCreateTask?.(finding)}
+                  onClick={() => onCreateTask?.({ ...finding, gallery_images: galleryImages })}
                   disabled={hasTask || isAssigned}
                   className={`flex items-center gap-1.5 px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-[10px] transition-colors shrink-0 ${
                     hasTask || isAssigned 
@@ -309,6 +326,14 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
           )}
         </div>
       </div>
+      
+      <BrowserOverlay
+        isOpen={isBrowserOpen}
+        onClose={() => setIsBrowserOpen(false)}
+        url={finding.pages?.url || ""}
+        onCapture={(img) => setGalleryImages(prev => [...prev, img].slice(0, 3))}
+        galleryCount={galleryImages.length}
+      />
     </div>
   );
 };
