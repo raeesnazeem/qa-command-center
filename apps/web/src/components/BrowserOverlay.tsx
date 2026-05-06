@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Camera, Image as ImageIcon, ChevronLeft, ChevronRight, RotateCw, ExternalLink, AlertCircle } from 'lucide-react';
 import { useAuthAxios } from '../lib/useAuthAxios';
 
@@ -18,6 +18,7 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
   galleryCount
 }) => {
   const axios = useAuthAxios();
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeUrl, setIframeUrl] = useState<string>('');
   const [currentProxiedUrl, setCurrentProxiedUrl] = useState<string>(url);
   const [loading, setLoading] = useState(true);
@@ -64,12 +65,36 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
   };
 
   const handleCapture = async () => {
-    if (galleryCount >= 3 || error || loading) return;
+    if (galleryCount >= 3 || error || loading || !iframeRef.current) return;
     
     setLoading(true);
     try {
+      let scrollX = 0;
+      let scrollY = 0;
+      let width = 1280;
+      let height = 720;
+
+      // Wrap DOM access in try/catch to handle potential cross-origin security errors
+      try {
+        const iframe = iframeRef.current;
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+        
+        if (iframeDoc) {
+          scrollX = Math.round(iframeDoc.documentElement?.scrollLeft || iframeDoc.body?.scrollLeft || 0);
+          scrollY = Math.round(iframeDoc.documentElement?.scrollTop || iframeDoc.body?.scrollTop || 0);
+          width = Math.max(iframe.clientWidth || 1280, 100);
+          height = Math.max(iframe.clientHeight || 720, 100);
+        }
+      } catch (domErr) {
+        console.warn('[BrowserOverlay] Could not access iframe DOM (likely cross-origin). Using defaults.', domErr);
+      }
+
       const response = await axios.post('/api/proxy-browser/capture', { 
-        url: currentProxiedUrl 
+        url: currentProxiedUrl,
+        scrollX,
+        scrollY,
+        width,
+        height
       });
       
       if (response.data?.imageUrl) {
@@ -77,7 +102,6 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
       }
     } catch (err: any) {
       console.error('[BrowserOverlay] Capture failed:', err);
-      // Optional: Add a toast notification here if available
     } finally {
       setLoading(false);
     }
@@ -158,6 +182,7 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
           </div>
         ) : iframeUrl ? (
           <iframe 
+            ref={iframeRef}
             src={iframeUrl}
             className="w-full h-full border-none bg-white"
             onLoad={() => setLoading(false)}

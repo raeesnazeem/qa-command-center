@@ -13,7 +13,7 @@ const logger = pino({
 });
 
 export async function processCaptureScreenshotJob(job: Job) {
-  const { url, userId } = job.data;
+  const { url, userId, scrollX = 0, scrollY = 0, width = 1280, height = 720 } = job.data;
   
   if (!url) throw new Error('URL is required for capture');
 
@@ -23,19 +23,46 @@ export async function processCaptureScreenshotJob(job: Job) {
   });
 
   try {
+    // Ensure viewport is valid
+    const finalWidth = Math.max(width, 100);
+    const finalHeight = Math.max(height, 100);
+    const finalScrollX = Math.max(0, scrollX);
+    const finalScrollY = Math.max(0, scrollY);
+
     const context = await browser.newContext({
-      viewport: { width: 1280, height: 720 },
+      viewport: { width: finalWidth, height: finalHeight },
       deviceScaleFactor: 1,
     });
     const page = await context.newPage();
 
-    logger.info({ url, userId }, 'Capturing interactive screenshot');
+    logger.info({ 
+      url, 
+      userId, 
+      scrollX: finalScrollX, 
+      scrollY: finalScrollY, 
+      width: finalWidth, 
+      height: finalHeight 
+    }, 'Capturing interactive screenshot with validated parameters');
 
     // Navigate to URL
-    await page.goto(url, { timeout: 30000, waitUntil: 'load' });
+    await page.goto(url, { timeout: 30000, waitUntil: 'domcontentloaded' });
     
     // Wait for content to stabilize
     await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => null);
+
+    // Apply scroll position if provided
+    if (finalScrollX > 0 || finalScrollY > 0) {
+      try {
+        await page.evaluate(({ x, y }) => {
+          window.scrollTo(x, y);
+        }, { x: finalScrollX, y: finalScrollY });
+        
+        // Wait slightly longer for scroll-triggered assets
+        await page.waitForTimeout(1000);
+      } catch (scrollErr) {
+        logger.warn({ url, scrollErr }, 'Failed to apply scroll position to page');
+      }
+    }
 
     // Take viewport screenshot
     const buffer = await page.screenshot({ fullPage: false });

@@ -13,6 +13,49 @@ const WHITELISTED_DOMAINS = [
 ];
 
 /**
+ * POST /proxy-browser/capture
+ * Triggers a screenshot capture of a URL via the worker and returns the URL.
+ * Registered BEFORE the general proxy route to avoid shadowing.
+ */
+router.post(
+  '/proxy-browser/capture',
+  clerkAuth,
+  async (req: Request, res: Response) => {
+    const { url, scrollX, scrollY, width, height } = req.body;
+    const userId = (req as any).auth?.userId;
+
+    if (!url) {
+      return res.status(400).json({ error: 'URL is required' });
+    }
+
+    try {
+      const job = await qaQueue.add('capture_screenshot', { 
+        url, 
+        userId,
+        scrollX: Number(scrollX) || 0,
+        scrollY: Number(scrollY) || 0,
+        width: Number(width) || 1280,
+        height: Number(height) || 720
+      }, {
+        removeOnComplete: true,
+      });
+
+      const result = await job.waitUntilFinished(new (require('bullmq').QueueEvents)('qa-jobs', { 
+        connection: qaQueue.opts.connection 
+      }));
+
+      return res.json(result);
+    } catch (error: any) {
+      console.error('[Capture Proxy Error]:', error.message);
+      return res.status(500).json({ 
+        error: 'Failed to capture screenshot',
+        details: error.message 
+      });
+    }
+  }
+);
+
+/**
  * Helper to resolve relative URLs and rewrite them to go through the proxy
  */
 function rewriteLinks(html: string, baseUrl: string, proxyOrigin: string): string {
@@ -146,41 +189,6 @@ router.all(
       console.error('[Proxy Error]:', error.message);
       return res.status(500).json({ 
         error: 'Failed to load page',
-        details: error.message 
-      });
-    }
-  }
-);
-
-/**
- * POST /api/proxy-browser/capture
- * Triggers a screenshot capture of a URL via the worker and returns the URL.
- */
-router.post(
-  '/proxy-browser/capture',
-  clerkAuth,
-  async (req: Request, res: Response) => {
-    const { url } = req.body;
-    const userId = (req as any).auth?.userId;
-
-    if (!url) {
-      return res.status(400).json({ error: 'URL is required' });
-    }
-
-    try {
-      const job = await qaQueue.add('capture_screenshot', { url, userId }, {
-        removeOnComplete: true,
-      });
-
-      const result = await job.waitUntilFinished(new (require('bullmq').QueueEvents)('qa-jobs', { 
-        connection: qaQueue.opts.connection 
-      }));
-
-      return res.json(result);
-    } catch (error: any) {
-      console.error('[Capture Proxy Error]:', error.message);
-      return res.status(500).json({ 
-        error: 'Failed to capture screenshot',
         details: error.message 
       });
     }
