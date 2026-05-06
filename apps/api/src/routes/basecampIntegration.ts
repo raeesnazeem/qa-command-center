@@ -158,7 +158,9 @@ router.post(
           task.gallery_images.map((url: string) => `<img src="${url}" width="400" />`).join("<br/>");
       }
 
-      const description = `<div>[PENDING]</div><br/>
+      const description = `<div>[PENDING]</div>
+${mentions ? `<div>${mentions}</div>` : ""}
+<br/>
 <strong>${task.title}</strong><br/>
 <div>${task.description || "No description provided."}</div><br/>
 URL: ${findingUrl}${galleryHtml}
@@ -444,7 +446,9 @@ router.post(
         }
 
         const taskCommentContent = `
-          <div>[PENDING]</div><br/>
+          <div>[PENDING]</div>
+          ${mentionsHtml ? `<div>${mentionsHtml}</div>` : ""}
+          <br/>
           <strong>${firstTask.title}</strong><br/>
           <div>${firstTask.description || "No description provided."}</div><br/>
           URL: ${taskFindingUrl || "N/A"}${galleryHtml}<br/><br/>
@@ -654,7 +658,9 @@ router.post(
         }
 
         const commentContent = `
-          <div><strong>[${pushStatus.toUpperCase()}]</strong></div><br/>
+          <div><strong>[${pushStatus.toUpperCase()}]</strong></div>
+          ${mentionsHtml ? `<div>${mentionsHtml}</div>` : ""}
+          <br/>
           <strong>${firstTask.title}</strong><br/>
           <div>${firstTask.description || "No description provided."}</div><br/>
           ${galleryHtml}

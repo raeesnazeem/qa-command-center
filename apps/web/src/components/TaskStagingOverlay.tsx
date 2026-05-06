@@ -123,52 +123,17 @@ export const TaskStagingOverlay: React.FC<TaskStagingOverlayProps> = ({
         list: project?.basecamp_todo_list_id,
       })
 
-      // Automatically push to Basecamp if configured
-      const basecampConfig = {
-        hasBasecamp: Boolean(project?.basecamp_account_id),
-        accountId: !!project?.basecamp_account_id,
-        projectId: !!project?.basecamp_project_id,
-        todoListId: !!project?.basecamp_todo_list_id
-      }
-      console.log("[TaskStage] Basecamp config detected:", basecampConfig)
-      
-      const isConfigured = 
-        basecampConfig.accountId && 
-        basecampConfig.projectId && 
-        basecampConfig.todoListId;
+      toast.success(`Successfully created ${totalTasks} tasks`, {
+        id: toastId,
+      });
 
-      if (isConfigured && createdTaskIds.length > 0) {
-        console.log(
-          `[TaskStage] Triggering Basecamp bulk push for ${createdTaskIds.length} tasks...`,
-        )
-        console.log(`[TaskStage] IDs being sent:`, createdTaskIds)
-        toast.loading("Pushing tasks to Basecamp...", { id: toastId })
-
-        try {
-          // The hook will handle its own toast, so we dismiss the current one
-          toast.dismiss(toastId)
-          await pushToBasecamp(createdTaskIds)
-          console.log("[TaskStage] Basecamp push request completed")
-        } catch (bcError) {
-          console.error("[TaskStage] Basecamp push failed:", bcError)
-          // Error is handled by the hook's toast
-        }
-      } else {
-        console.log(
-          "[TaskStage] Skipping Basecamp push (not configured or no tasks)",
-        )
-        toast.success(`Successfully created ${totalTasks} tasks`, {
-          id: toastId,
-        })
-      }
-
-      clearStage()
-      setSelectedUserIds(new Set())
+      clearStage();
+      setSelectedUserIds(new Set());
     } catch (error) {
-      console.error("[TaskStage] Critical failure during assignment:", error)
-      toast.error("Failed to create some tasks", { id: toastId })
+      console.error("[TaskStage] Critical failure during assignment:", error);
+      toast.error("Failed to create some tasks", { id: toastId });
     }
-  }
+  };
 
   if (!isOpen || stagedFindings.length === 0) return null
 
