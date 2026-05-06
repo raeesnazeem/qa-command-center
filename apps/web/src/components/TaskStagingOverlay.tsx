@@ -22,7 +22,7 @@ interface TaskStagingOverlayProps {
 export const TaskStagingOverlay: React.FC<TaskStagingOverlayProps> = ({
   projectId,
 }) => {
-  const { stagedFindings, isOpen, removeFromStage, clearStage, setIsOpen } =
+  const { stagedFindings, isOpen, removeFromStage, updateStagedFinding, clearStage, setIsOpen } =
     useTaskStageStore()
   const { galleryImages: allGalleryImages } = useGalleryStore();
   const { data: project, isLoading: isLoadingProject } = useProject(projectId)
@@ -207,14 +207,30 @@ export const TaskStagingOverlay: React.FC<TaskStagingOverlayProps> = ({
             {stagedFindings.map((finding) => (
               <div
                 key={finding.id}
-                className="group p-3 bg-slate-50 border border-slate-100 rounded-xl hover:border-slate-200 transition-all"
+                className="group p-4 bg-slate-50 border border-slate-100 rounded-2xl hover:border-accent/20 transition-all space-y-3"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-slate-900 truncate">
-                      {finding.title}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="space-y-1">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Heading</p>
+                      <input 
+                        value={finding.title}
+                        onChange={(e) => updateStagedFinding(finding.id, { title: e.target.value })}
+                        className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-accent/10 focus:border-accent outline-none transition-all"
+                      />
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Description</p>
+                      <textarea 
+                        value={finding.description || ""}
+                        onChange={(e) => updateStagedFinding(finding.id, { description: e.target.value })}
+                        rows={2}
+                        className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-[11px] font-medium text-slate-600 focus:ring-2 focus:ring-accent/10 focus:border-accent outline-none transition-all resize-none"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2">
                       <span
                         className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-tighter ${
                           finding.severity === "critical"
@@ -232,7 +248,7 @@ export const TaskStagingOverlay: React.FC<TaskStagingOverlayProps> = ({
                   </div>
                   <button
                     onClick={() => removeFromStage(finding.id)}
-                    className="p-1 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                    className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
                   >
                     <Trash2 size={14} />
                   </button>

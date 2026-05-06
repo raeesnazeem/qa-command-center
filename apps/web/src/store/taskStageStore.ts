@@ -6,6 +6,7 @@ interface TaskStageState {
   isOpen: boolean;
   addToStage: (findings: QAFinding[]) => void;
   removeFromStage: (id: string) => void;
+  updateStagedFinding: (id: string, updates: Partial<QAFinding>) => void;
   clearStage: () => void;
   setIsOpen: (isOpen: boolean) => void;
 }
@@ -24,6 +25,9 @@ export const useTaskStageStore = create<TaskStageState>((set) => ({
   removeFromStage: (id) => set((state) => ({
     stagedFindings: state.stagedFindings.filter(f => f.id !== id),
     isOpen: state.stagedFindings.length > 1 ? state.isOpen : false
+  })),
+  updateStagedFinding: (id, updates) => set((state) => ({
+    stagedFindings: state.stagedFindings.map(f => f.id === id ? { ...f, ...updates } : f)
   })),
   clearStage: () => set({ stagedFindings: [], isOpen: false }),
   setIsOpen: (isOpen) => set({ isOpen })

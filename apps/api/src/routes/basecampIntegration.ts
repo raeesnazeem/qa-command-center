@@ -125,11 +125,11 @@ router.post(
       }
 
       // 3. Load assignee Basecamp mappings for this task and siblings
-      const { data: siblings } = await supabase
-        .from("tasks")
-        .select("id, assigned_to")
-        .eq("project_id", task.project_id)
-        .or(`finding_id.eq.${task.finding_id}${task.finding_id ? '' : ',title.eq.' + task.title}`);
+        const { data: siblings } = await supabase
+          .from("tasks")
+          .select("id, assigned_to")
+          .eq("project_id", task.project_id)
+          .or(`finding_id.eq.${(task as any).finding_id}${task.finding_id ? "" : ",title.eq." + task.title}`);
       
       const siblingIds = (siblings || []).map(s => s.id);
       const allAssignedTo = Array.from(new Set((siblings || []).map(s => s.assigned_to).filter(Boolean)));
@@ -143,7 +143,7 @@ router.post(
         
         const bpIds = Array.from(new Set(userList?.map(u => u.basecamp_person_id).filter(Boolean) || []));
         const mentionsList = await Promise.all(bpIds.map(async (id: any) => {
-          const person = await getBasecampPerson(projectSettings.basecamp_token, projectSettings.basecamp_account_id, Number(id));
+          const person = await getBasecampPerson(projectSettings!.basecamp_token, projectSettings!.basecamp_account_id, Number(id));
           if (person && person.attachable_sgid) {
             return formatBasecampMention(person.attachable_sgid, person.name);
           }
@@ -158,9 +158,10 @@ router.post(
           task.gallery_images.map((url: string) => `<img src="${url}" width="400" />`).join("<br/>");
       }
 
-      const description = `<div>${mentions}</div>
-<br/>
-• ${task.title}, Severity: ${task.severity}, URL: ${findingUrl}${galleryHtml}
+      const description = `<div>[PENDING]</div><br/>
+<strong>${task.title}</strong><br/>
+<div>${task.description || "No description provided."}</div><br/>
+URL: ${findingUrl}${galleryHtml}
 <br/><br/>
 Created via QA Command Center`.trim();
 
@@ -169,12 +170,52 @@ Created via QA Command Center`.trim();
       console.log(`[BasecampPush] Calling Basecamp API: Create Comment...`);
       
       await createBasecampComment({
-        token: projectSettings.basecamp_token,
-        accountId: projectSettings.basecamp_account_id,
-        projectId: projectSettings.basecamp_project_id || task.project_id,
+        token: projectSettings!.basecamp_token,
+        accountId: projectSettings!.basecamp_account_id,
+        projectId: projectSettings!.basecamp_project_id || task.project_id,
         recordingId: todolistId,
         content: description
       });
+
+      // 5.2 Push existing thread items as separate comments
+      const { data: siblingTasks } = await supabase
+        .from("tasks")
+        .select("id")
+        .eq("finding_id", task.finding_id);
+      
+      const siblingIdsForThread = siblingTasks?.map(t => t.id) || [id];
+
+      const { data: threadComments } = await supabase
+        .from("comments")
+        .select("content, created_at, users:author_id (full_name)")
+        .in("task_id", siblingIdsForThread);
+
+      const { data: threadRebuttals } = await supabase
+        .from("rebuttals")
+        .select("text, created_at, users:submitted_by (full_name)")
+        .in("task_id", siblingIdsForThread);
+
+      const mergedThread = [
+        ...(threadComments || []).map((c: any) => ({ 
+          content: `${c.users?.full_name || 'Unknown'}: ${c.content}`, 
+          created_at: c.created_at 
+        })),
+        ...(threadRebuttals || []).map((r: any) => ({ 
+          content: `Developer (Rebuttal) - ${r.users?.full_name || 'Unknown'}: ${r.text}`, 
+          created_at: r.created_at 
+        }))
+      ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+      for (const item of mergedThread) {
+        if (!projectSettings) continue;
+        await createBasecampComment({
+          token: projectSettings!.basecamp_token,
+          accountId: projectSettings!.basecamp_account_id,
+          projectId: projectSettings!.basecamp_project_id || task.project_id,
+          recordingId: todolistId,
+          content: item.content
+        });
+      }
 
       const basecampUrl = `https://3.basecamp.com/${projectSettings.basecamp_account_id}/buckets/${projectSettings.basecamp_project_id}/todolists/${todolistId}`;
 
@@ -403,21 +444,56 @@ router.post(
         }
 
         const taskCommentContent = `
-          <div>${mentionsHtml}</div><br/>
-          <strong>[NEW PUSH]</strong> ${firstTask.title}<br/>
-          Severity: ${firstTask.severity}<br/>
+          <div>[PENDING]</div><br/>
+          <strong>${firstTask.title}</strong><br/>
+          <div>${firstTask.description || "No description provided."}</div><br/>
           URL: ${taskFindingUrl || "N/A"}${galleryHtml}<br/><br/>
           Created via QA Command Center
         `.trim();
 
         try {
           await createBasecampComment({
-            token: projectSettings.basecamp_token,
-            accountId: projectSettings.basecamp_account_id,
-            projectId: projectSettings.basecamp_project_id || projectId,
+            token: projectSettings!.basecamp_token,
+            accountId: projectSettings!.basecamp_account_id,
+            projectId: projectSettings!.basecamp_project_id || projectId,
             recordingId: todolistId,
             content: taskCommentContent
           });
+
+          // 5.2 Push thread items as separate comments
+          const groupTaskIdsForThread = groupTasks.map(t => t.id);
+          
+          const { data: groupComments } = await supabase
+            .from("comments")
+            .select("content, created_at, users:author_id (full_name)")
+            .in("task_id", groupTaskIdsForThread);
+
+          const { data: groupRebuttals } = await supabase
+            .from("rebuttals")
+            .select("text, created_at, users:submitted_by (full_name)")
+            .in("task_id", groupTaskIdsForThread);
+
+          const groupMergedThread = [
+            ...(groupComments || []).map((c: any) => ({ 
+              content: `${c.users?.full_name || 'Unknown'}: ${c.content}`, 
+              created_at: c.created_at 
+            })),
+            ...(groupRebuttals || []).map((r: any) => ({ 
+              content: `Developer (Rebuttal) - ${r.users?.full_name || 'Unknown'}: ${r.text}`, 
+              created_at: r.created_at 
+            }))
+          ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+          for (const item of groupMergedThread) {
+            if (!projectSettings) continue;
+            await createBasecampComment({
+              token: projectSettings!.basecamp_token,
+              accountId: projectSettings!.basecamp_account_id,
+              projectId: projectSettings!.basecamp_project_id || projectId,
+              recordingId: todolistId,
+              content: item.content
+            });
+          }
 
           // Update all tasks in this group in Supabase
           const groupTaskIds = groupTasks.map(t => t.id);
@@ -578,31 +654,44 @@ router.post(
         }
 
         const commentContent = `
-          <div>${mentionsHtml}</div><br/>
-          <div><strong>[${pushStatus.toUpperCase()}]</strong></div>
-          <br/>
-          <strong>${firstTask.title}</strong>
-          <br/>
-          <div>${firstTask.description || "No description provided."}</div>
-          <br/>
-          <strong>Task Comments:</strong>
-          <ul>
-            ${sortedComments.length > 0 
-              ? sortedComments.map((c: any) => `<li>${c.content}</li>`).join("") 
-              : "<li>No comments</li>"}
-          </ul>${galleryHtml}
+          <div><strong>[${pushStatus.toUpperCase()}]</strong></div><br/>
+          <strong>${firstTask.title}</strong><br/>
+          <div>${firstTask.description || "No description provided."}</div><br/>
+          ${galleryHtml}
           <br/>
           <em>Pushed via QA Command Center</em>
         `.trim();
 
         try {
           await createBasecampComment({
-            token: projectSettings.basecamp_token,
-            accountId: projectSettings.basecamp_account_id,
-            projectId: projectSettings.basecamp_project_id || projectId,
+            token: projectSettings!.basecamp_token,
+            accountId: projectSettings!.basecamp_account_id,
+            projectId: projectSettings!.basecamp_project_id || projectId,
             recordingId: groupTargetId,
             content: commentContent
           });
+
+          // Post each comment in thread as a separate comment in Basecamp
+          const groupTaskIdsForThread = groupTasks.map(t => t.id);
+          const { data: threadComments } = await supabase
+            .from("comments")
+            .select("content, created_at, users:author_id (full_name)")
+            .in("task_id", groupTaskIdsForThread);
+
+          const sortedComments = (threadComments || []).sort(
+            (a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          );
+
+          for (const c of sortedComments) {
+            if (!projectSettings) continue;
+            await createBasecampComment({
+              token: projectSettings!.basecamp_token,
+              accountId: projectSettings!.basecamp_account_id,
+              projectId: projectSettings!.basecamp_project_id || projectId,
+              recordingId: groupTargetId,
+              content: `${(c as any).users?.full_name || 'Unknown'}: ${c.content}`
+            });
+          }
 
           // Update all tasks in this group in Supabase
           const groupTaskIds = groupTasks.map(t => t.id);
