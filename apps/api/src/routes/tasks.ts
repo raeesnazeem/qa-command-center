@@ -11,6 +11,8 @@ import {
   CreateCommentSchema, 
   RebuttalSchema 
 } from '@qacc/shared';
+import * as emailNotifier from '../lib/emailNotifier';
+import { logger } from '../lib/logger';
 
 const router: Router = Router();
 
@@ -44,7 +46,7 @@ router.post(
   requireRole('qa_engineer'),
   zodValidate(CreateTaskSchema),
   async (req: Request, res: Response) => {
-    const { finding_id, project_id, title, description, severity, assigned_to } = req.body;
+    const { finding_id, project_id, title, description, severity, assigned_to, gallery_images } = req.body;
     const { userId: clerkUserId } = req.auth!;
 
     try {
@@ -59,6 +61,7 @@ router.post(
           description,
           severity,
           assigned_to,
+          gallery_images,
           created_by: supabaseUserId,
           status: 'open'
         })
@@ -66,6 +69,29 @@ router.post(
         .single();
 
       if (error) throw error;
+
+      // If task is assigned on creation, notify the user
+      if (assigned_to) {
+        try {
+          const { data: userData } = await supabase
+            .from('users')
+            .select('full_name, email')
+            .eq('id', assigned_to)
+            .single();
+          
+          const { data: projectData } = await supabase
+            .from('projects')
+            .select('name')
+            .eq('id', project_id)
+            .single();
+          
+          if (userData && projectData) {
+            await emailNotifier.emailTaskAssigned(userData, task, projectData.name);
+          }
+        } catch (err: any) {
+          logger.error(err, `Failed to send assignment email for new task ${task.id}`);
+        }
+      }
 
       return res.status(201).json(task);
     } catch (error: any) {
@@ -90,7 +116,8 @@ router.get('/', clerkAuth, async (req: Request, res: Response) => {
       .select(`
         *,
         users:assigned_to (id, full_name, email),
-        projects!inner:project_id (id, name, org_id)
+        creator:created_by (id, full_name, email),
+        projects:project_id (id, name, org_id)
       `, { count: 'exact' });
 
     // Filter by organization
@@ -101,12 +128,15 @@ router.get('/', clerkAuth, async (req: Request, res: Response) => {
     if (effectiveProjectId) query = query.eq('project_id', effectiveProjectId);
     if (status) query = query.eq('status', status);
     if (severity) query = query.eq('severity', severity);
-    if (assigned_to) query = query.eq('assigned_to', assigned_to);
-
+    if (req.query.created_by) query = query.eq('created_by', req.query.created_by);
+    
     // RBAC: Developer only sees assigned tasks
     if (role === 'developer') {
       query = query.eq('assigned_to', supabaseUserId);
-    } 
+    } else if (assigned_to) {
+      query = query.eq('assigned_to', assigned_to);
+    }
+
     // RBAC: Sub-Admin/QA/PM only see tasks in their project memberships
     else if (role !== 'super_admin' && role !== 'admin') {
       const { data: memberships } = await supabase
@@ -150,11 +180,13 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
   try {
     const supabaseUserId = await getSupabaseUserId(clerkUserId);
 
-    const { data: task, error } = await supabase
+    const { data, error } = await supabase
       .from('tasks')
       .select(`
         *,
-        projects!inner:project_id (id, name, org_id),
+        users:assigned_to (id, full_name, email),
+        creator:created_by (id, full_name, email),
+        projects (id, name, org_id),
         comments (
           *,
           users:author_id (full_name, email)
@@ -168,11 +200,48 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
       .eq('projects.org_id', orgId)
       .single();
 
+    const task = data as any;
+
     if (error || !task) return res.status(404).json({ error: 'Task not found' });
 
     // RBAC Check
     if (role === 'developer' && task.assigned_to !== supabaseUserId) {
       return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // Unify comments and rebuttals across all tasks sharing the same finding_id
+    if (task.finding_id) {
+      const { data: siblingTasks } = await supabase
+        .from('tasks')
+        .select('id')
+        .eq('finding_id', task.finding_id);
+      
+      const siblingIds = siblingTasks?.map(t => t.id) || [id];
+
+      if (siblingIds.length > 1) {
+        // Fetch unified comments
+        const { data: unifiedComments } = await supabase
+          .from('comments')
+          .select(`
+            *,
+            users:author_id (full_name, email)
+          `)
+          .in('task_id', siblingIds)
+          .order('created_at', { ascending: true });
+        
+        // Fetch unified rebuttals
+        const { data: unifiedRebuttals } = await supabase
+          .from('rebuttals')
+          .select(`
+            *,
+            users:submitted_by (full_name, email)
+          `)
+          .in('task_id', siblingIds)
+          .order('created_at', { ascending: true });
+        
+        task.comments = unifiedComments || [];
+        task.rebuttals = unifiedRebuttals || [];
+      }
     }
 
     return res.json(task);
@@ -190,11 +259,21 @@ router.patch(
   zodValidate(UpdateTaskSchema),
   async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { status, assigned_to, description } = req.body;
+    const { status, assigned_to, description, gallery_images } = req.body;
     try {
+      let targetUserId = assigned_to;
+      if (assigned_to) {
+        targetUserId = await getSupabaseUserId(assigned_to);
+      }
+
       const { data: task, error } = await supabase
         .from('tasks')
-        .update({ status, assigned_to, description })
+        .update({ 
+          status, 
+          assigned_to: targetUserId, 
+          description,
+          gallery_images
+        })
         .eq('id', id)
         .select()
         .single();
@@ -217,18 +296,43 @@ router.post(
   requireRole('qa_engineer'),
   async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { user_id } = req.body;
-    if (!user_id) return res.status(400).json({ error: 'user_id is required' });
+    const { user_id, assigned_to } = req.body;
+    const inputId = user_id || assigned_to;
+    if (!inputId) return res.status(400).json({ error: 'user_id or assigned_to is required' });
 
     try {
+      const targetUserId = await getSupabaseUserId(inputId);
+
       const { data: task, error } = await supabase
         .from('tasks')
-        .update({ assigned_to: user_id })
+        .update({ assigned_to: targetUserId })
         .eq('id', id)
         .select()
         .single();
 
       if (error) throw error;
+
+      // Notify the user via email
+      try {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('full_name, email')
+          .eq('id', targetUserId)
+          .single();
+        
+        const { data: projectData } = await supabase
+          .from('projects')
+          .select('name')
+          .eq('id', task.project_id)
+          .single();
+        
+        if (userData && projectData) {
+          await emailNotifier.emailTaskAssigned(userData, task, projectData.name);
+        }
+      } catch (err: any) {
+        logger.error(err, `Failed to send assignment email for task ${id}`);
+      }
+
       await broadcastTaskUpdate(id, task);
       return res.json(task);
     } catch (error: any) {
@@ -262,6 +366,7 @@ router.post(
         .single();
 
       if (error) throw error;
+      await broadcastTaskUpdate(id, { id }); // Notify that task has new activity
       return res.status(201).json(comment);
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
@@ -297,6 +402,8 @@ router.post(
 
       if (error) throw error;
 
+      await broadcastTaskUpdate(id, { id }); // Notify that task has new activity
+      
       await qaQueue.add('analyze_rebuttal', { rebuttalId: rebuttal.id, taskId: id }, {
         removeOnComplete: true,
         attempts: 3,
@@ -310,4 +417,55 @@ router.post(
   }
 );
 
+/**
+ * DELETE /api/tasks/:id
+ */
+router.delete(
+  '/:id',
+  clerkAuth,
+  requireRole('qa_engineer'),
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      return res.status(204).send();
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+);
+
+/**
+ * POST /api/tasks/bulk-delete
+ */
+router.post(
+  '/bulk-delete',
+  clerkAuth,
+  requireRole('qa_engineer'),
+  async (req: Request, res: Response) => {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'ids array is required' });
+    }
+
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .in('id', ids);
+
+      if (error) throw error;
+      return res.status(204).send();
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+);
+
 export { router as tasksRouter };
+

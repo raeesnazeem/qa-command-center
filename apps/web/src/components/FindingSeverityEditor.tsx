@@ -8,20 +8,22 @@ interface FindingSeverityEditorProps {
   pageId: string;
   currentSeverity: FindingSeverity;
   canEdit: boolean;
+  symbolOnly?: boolean;
 }
 
 const SEVERITY_OPTIONS: { value: FindingSeverity; label: string; icon: React.ReactNode; color: string }[] = [
   { value: 'critical', label: 'Critical', icon: <ShieldAlert size={12} />, color: 'text-red-600 bg-red-50' },
   { value: 'high', label: 'High', icon: <AlertTriangle size={12} />, color: 'text-orange-600 bg-orange-50' },
-  { value: 'medium', label: 'Medium', icon: <AlertCircle size={12} />, color: 'text-amber-600 bg-amber-50' },
-  { value: 'low', label: 'Low', icon: <Info size={12} />, color: 'text-yellow-600 bg-yellow-50' },
+  { value: 'medium', label: 'Medium', icon: <AlertCircle size={12} />, color: 'text-yellow-600 bg-yellow-50' },
+  { value: 'low', label: 'Low', icon: <Info size={12} />, color: 'text-blue-600 bg-blue-50' },
 ];
 
 export const FindingSeverityEditor: React.FC<FindingSeverityEditorProps> = ({
   findingId,
   pageId,
   currentSeverity,
-  canEdit
+  canEdit,
+  symbolOnly
 }) => {
   const updateFinding = useUpdateFinding(pageId);
 
@@ -38,22 +40,30 @@ export const FindingSeverityEditor: React.FC<FindingSeverityEditorProps> = ({
   if (!canEdit) {
     const option = SEVERITY_OPTIONS.find(opt => opt.value === currentSeverity);
     return (
-      <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-wider ${option?.color || ''}`}>
+      <div 
+        title={currentSeverity}
+        className={`flex items-center justify-center p-1.5 rounded-lg border transition-all ${option?.color || ''}`}
+      >
         {option?.icon}
-        {currentSeverity}
+        {!symbolOnly && <span className="ml-1.5">{currentSeverity}</span>}
       </div>
     );
   }
 
+  const currentOption = SEVERITY_OPTIONS.find(opt => opt.value === currentSeverity);
+
   return (
-    <div className="relative inline-block">
+    <div className="relative inline-block group/sev">
       <select
         value={currentSeverity}
         onChange={handleChange}
         disabled={updateFinding.isPending}
-        className={`appearance-none pl-2 pr-6 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-wider cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all ${
-          SEVERITY_OPTIONS.find(opt => opt.value === currentSeverity)?.color || ''
-        }`}
+        title={currentSeverity}
+        className={`appearance-none rounded-lg border font-black uppercase tracking-wider cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all ${
+          symbolOnly 
+            ? 'w-8 h-8 flex items-center justify-center p-0 text-center text-[0px]' 
+            : 'pl-2 pr-6 py-0.5 text-[9px]'
+        } ${currentOption?.color || ''}`}
       >
         {SEVERITY_OPTIONS.map((opt) => (
           <option key={opt.value} value={opt.value} className="bg-white text-slate-900">
@@ -61,11 +71,17 @@ export const FindingSeverityEditor: React.FC<FindingSeverityEditorProps> = ({
           </option>
         ))}
       </select>
-      <div className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none text-current opacity-50">
-        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-          <path d="m6 9 6 6 6-6"/>
-        </svg>
-      </div>
+      {symbolOnly ? (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          {currentOption?.icon}
+        </div>
+      ) : (
+        <div className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none text-current opacity-50">
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </div>
+      )}
     </div>
   );
 };

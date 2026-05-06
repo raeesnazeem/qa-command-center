@@ -1,15 +1,21 @@
 import { useParams, Link } from 'react-router-dom';
 import { useProject } from '../hooks/useProjects';
-import { useRunProgress } from '../hooks/useRunProgress';
+import { QAFinding, QAPage } from '../api/runs.api';
 import { useAuthAxios } from '../lib/useAuthAxios';
+import { useGalleryStore } from '../store/galleryStore';
 import { PagesTable } from '../components/PagesTable';
 import { FindingReviewPanel } from '../components/FindingReviewPanel';
 import { CreateTaskModal } from '../components/CreateTaskModal';
+import { useRunProgress } from '../hooks/useRunProgress';
 import { useFindings, useRunFindings, useUpdateRunStatus, useUpdateFinding, } from '../hooks/useRuns';
-import { useCreateTask } from '../hooks/useTasks';
+import { useCreateTask, useTasks } from '../hooks/useTasks';
 import { AssignMemberModal } from '../components/AssignMemberModal';
 import { WooCommerceSection } from '../components/WooCommerceSection';
 import { SignOffButton } from '../components/SignOffButton';
+import { TaskStagingOverlay } from '../components/TaskStagingOverlay';
+import { ManualScanOverlay } from '../components/ManualScanOverlay';
+import { useTaskStageStore } from '../store/taskStageStore';
+import { useRole } from '../hooks/useRole';
 import { startVisualDiff } from '../api/visualDiff.api';
 import { 
   ChevronLeft, 
@@ -35,13 +41,24 @@ import {
   Send
 } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
-import { QAFinding } from '../api/runs.api';
 import toast from 'react-hot-toast';
 
 export const RunDetailPage = () => {
   const { id: projectId, runId } = useParams<{ id: string; runId: string }>();
   const axios = useAuthAxios();
   const updateStatus = useUpdateRunStatus();
+  const { canDo } = useRole();
+  const { clearAllGalleries, galleryImages: allGalleryImages } = useGalleryStore();
+
+  // Clear galleries on mount or when switching runs
+  useEffect(() => {
+    clearAllGalleries();
+  }, [runId, clearAllGalleries]);
+  const addToStage = useTaskStageStore(state => state.addToStage);
+  
+  const [isManualScanOpen, setIsManualScanOpen] = useState(false);
+  const [selectedManualPageId, setSelectedManualPageId] = useState<string | null>(null);
+  const canActionManual = canDo('qa_engineer');
   
   const { 
     run, 
@@ -64,8 +81,27 @@ export const RunDetailPage = () => {
 
   const { data: findings, isLoading: isLoadingFindings } = useFindings(selectedPageId);
   const { data: runFindings, isLoading: isLoadingRunFindings } = useRunFindings(runId!);
+  const { data: tasksData } = useTasks({ projectId: projectId! });
   const updateFindingMutation = useUpdateFinding(selectedPageId);
   const { mutate: createTask } = useCreateTask();
+
+  const findingToTaskMap = useMemo(() => {
+    const map: Record<string, { taskIds: string[], assignedUsers: any[] }> = {};
+    if (!tasksData?.data) return map;
+
+    tasksData.data.forEach(task => {
+      if (task.finding_id) {
+        if (!map[task.finding_id]) {
+          map[task.finding_id] = { taskIds: [], assignedUsers: [] };
+        }
+        map[task.finding_id].taskIds.push(task.id);
+        if (task.users && !map[task.finding_id].assignedUsers.some(u => u.id === task.users.id)) {
+          map[task.finding_id].assignedUsers.push(task.users);
+        }
+      }
+    });
+    return map;
+  }, [tasksData]);
 
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [assignTarget, setAssignTarget] = useState<{ type: 'single' | 'bulk'; ids: string[] }>({ type: 'single', ids: [] });
@@ -161,7 +197,12 @@ export const RunDetailPage = () => {
   };
 
   const handleCreateTaskForFinding = (finding: QAFinding) => {
-    setPrefillFinding(finding);
+    // Merge gallery images from store at the entry point
+    const mergedFinding = {
+      ...finding,
+      gallery_images: allGalleryImages[finding.id] || finding.gallery_images
+    };
+    setPrefillFinding(mergedFinding);
     setIsCreateTaskModalOpen(true);
   };
 
@@ -191,13 +232,17 @@ export const RunDetailPage = () => {
     try {
       const targets = (findings || []).filter(f => assignTarget.ids.includes(f.id));
       for (const finding of targets) {
+        // Merge gallery images from store
+        const galleryImages = allGalleryImages[finding.id] || [];
+        
         createTask({
           project_id: projectId!,
           finding_id: finding.id,
           title: finding.title,
           description: finding.description || '',
           severity: finding.severity,
-          assigned_to: userId
+          assigned_to: userId,
+          gallery_images: galleryImages.length > 0 ? galleryImages : finding.gallery_images
         });
       }
       setIsAssignModalOpen(false);
@@ -208,12 +253,16 @@ export const RunDetailPage = () => {
 
   const handleBulkCreateTasks = (selectedFindings: QAFinding[]) => {
     selectedFindings.forEach(finding => {
+      // Merge gallery images from store
+      const galleryImages = allGalleryImages[finding.id] || [];
+
       createTask({
         project_id: projectId!,
         finding_id: finding.id,
         title: finding.title,
         description: finding.description || '',
-        severity: finding.severity
+        severity: finding.severity,
+        gallery_images: galleryImages.length > 0 ? galleryImages : finding.gallery_images
       });
     });
   };
@@ -327,7 +376,18 @@ export const RunDetailPage = () => {
               </p>
             </div>
             
-            <div className="text-right">
+            <div className="text-right flex items-center gap-4">
+              {canActionManual && (
+                <button 
+                  onClick={() => {
+                    setSelectedManualPageId(null);
+                    setIsManualScanOpen(true);
+                  }}
+                  className="px-2 py-1 border border-accent rounded text-accent text-[10px] font-black uppercase tracking-tighter hover:bg-accent/5 transition-colors"
+                >
+                  Manual Scan
+                </button>
+              )}
               <p className="text-xl font-black text-slate-900">
                 {isDiscovering ? '...' : run.status === 'completed' ? '100%' : `${Math.max(1, Math.round(progress))}%`}
               </p>
@@ -445,7 +505,18 @@ export const RunDetailPage = () => {
                   }
                 </p>
               </div>
-              <div className="text-right">
+              <div className="text-right flex items-center gap-4">
+                {canActionManual && (
+                  <button 
+                    onClick={() => {
+                      setSelectedManualPageId(null);
+                      setIsManualScanOpen(true);
+                    }}
+                    className="px-2 py-1 border border-accent rounded text-accent text-[10px] font-black uppercase tracking-tighter hover:bg-accent/5 transition-colors"
+                  >
+                    Manual Scan
+                  </button>
+                )}
                 <p className="text-2xl font-black text-slate-900">
                   {isDiscovering ? '...' : run.status === 'completed' ? '100%' : `${Math.max(1, Math.round(progress))}%`}
                 </p>
@@ -513,6 +584,10 @@ export const RunDetailPage = () => {
                 setSelectedPageId(page.id);
                 setActiveTab('findings');
               }} 
+              onManualScan={(page) => {
+                setSelectedManualPageId(page.id);
+                setIsManualScanOpen(true);
+              }}
               showVisuals={run.enabled_checks?.includes('visual_regression') && !!run.figma_url}
             />
           </div>
@@ -588,8 +663,16 @@ export const RunDetailPage = () => {
                     onConfirmBulk={handleBulkConfirm}
                     onFalsePositiveBulk={handleBulkFalsePositive}
                     onCreateTasksBulk={handleBulkCreateTasks}
+                    onAddToStage={(findings) => {
+                      const mergedFindings = findings.map(f => ({
+                        ...f,
+                        gallery_images: allGalleryImages[f.id] || f.gallery_images
+                      }));
+                      addToStage(mergedFindings);
+                    }}
                     onAssignBulk={handleBulkAssign}
                     onSingleAssign={handleSingleAssign}
+                    findingToTaskMap={findingToTaskMap}
                   />
                 ) : (
                   <div className="py-20 text-center bg-emerald-50/20 rounded-3xl border border-dashed border-emerald-100">
@@ -818,7 +901,8 @@ export const RunDetailPage = () => {
           finding_id: prefillFinding.id,
           title: prefillFinding.title,
           description: prefillFinding.description || '',
-          severity: prefillFinding.severity
+          severity: prefillFinding.severity,
+          gallery_images: prefillFinding.gallery_images
         } : undefined}
       />
       
@@ -827,8 +911,20 @@ export const RunDetailPage = () => {
         onClose={() => setIsAssignModalOpen(false)}
         projectId={projectId!}
         onAssign={handleAssignFinding}
-        title={assignTarget.type === 'bulk' ? `Assign ${assignTarget.ids.length} Findings` : 'Assign Finding'}
+        title={assignTarget.type === 'bulk' ? `Assign ${assignTarget.ids.length} Findings` : "Assign Finding"}
       />
+
+      <ManualScanOverlay 
+        run={run}
+        isOpen={isManualScanOpen}
+        initialPageId={selectedManualPageId}
+        onClose={() => {
+          setIsManualScanOpen(false);
+          setSelectedManualPageId(null);
+        }}
+      />
+
+      <TaskStagingOverlay projectId={projectId!} />
     </div>
   );
 };

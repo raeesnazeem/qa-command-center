@@ -18,11 +18,18 @@ import {
   RefreshCw
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useGalleryStore } from '../store/galleryStore';
 
 export const VisualDiffPage: React.FC = () => {
   const { id: projectId, runId } = useParams<{ id: string; runId: string }>();
   const navigate = useNavigate();
   const axios = useAuthAxios();
+  const { clearAllGalleries } = useGalleryStore();
+  
+  // Clear galleries on mount or when switching pages/runs
+  useEffect(() => {
+    clearAllGalleries();
+  }, [runId, clearAllGalleries]);
   
   const { data: run, isLoading: runLoading } = useRun(runId!);
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
@@ -83,14 +90,15 @@ export const VisualDiffPage: React.FC = () => {
     toast.success('Issue confirmed');
   };
 
-  const handleCreateTask = async (finding: QAFinding) => {
+  const handleCreateTask = async (finding: QAFinding & { gallery_images?: string[] }) => {
     try {
       await createTask(axios, {
         project_id: projectId!,
         title: finding.title,
         description: finding.description || '',
         severity: finding.severity,
-        finding_id: finding.id
+        finding_id: finding.id,
+        gallery_images: finding.gallery_images
       });
       toast.success('Task created successfully');
     } catch (err) {

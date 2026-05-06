@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { useProject } from '../hooks/useProjects';
+import { useBasecampPeople } from '../hooks/useBasecampPeople';
 import { 
   Globe, 
   Calendar, 
@@ -23,6 +24,7 @@ import { SettingsTab } from '../components/SettingsTab';
 import { CanDo } from '../components/CanDo';
 import { useRole } from '../hooks/useRole';
 import { StartRunModal } from '../components/StartRunModal';
+import { Skeleton } from '../components/Skeleton';
 
 export const ProjectDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -32,6 +34,7 @@ export const ProjectDetailPage = () => {
   const [isRunModalOpen, setIsRunModalOpen] = useState(false);
 
   const { data: project, isLoading, isError, error } = useProject(id!);
+  useBasecampPeople(id);
 
   const setTab = (tab: string) => {
     setSearchParams({ tab });
@@ -39,10 +42,32 @@ export const ProjectDetailPage = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="w-10 h-10 text-accent animate-spin" />
-          <p className="text-slate-500 font-medium animate-pulse">Loading project details...</p>
+      <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+        <div className="flex items-center space-x-4">
+          <Skeleton className="h-8 w-8 rounded-full" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+
+        <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-sm space-y-6">
+          <div className="flex justify-between items-start">
+            <div className="space-y-4">
+              <Skeleton className="h-10 w-64" />
+              <div className="flex gap-4">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+            </div>
+            <Skeleton className="h-10 w-32 rounded-lg" />
+          </div>
+          <div className="flex gap-4 pt-4 border-t border-slate-50">
+            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-6 w-24" />)}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <Skeleton className="h-64 col-span-2 rounded-2xl" />
+          <Skeleton className="h-64 rounded-2xl" />
         </div>
       </div>
     );
@@ -73,7 +98,7 @@ export const ProjectDetailPage = () => {
 
   const allTabs = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard, minRole: 'developer' },
-    { id: 'runs', label: 'QA Runs', icon: PlayCircle, minRole: 'developer' },
+    { id: 'runs', label: 'QA Runs', icon: PlayCircle, minRole: 'qa_engineer' },
     { id: 'tasks', label: 'Tasks', icon: CheckSquare, minRole: 'developer' },
     { id: 'team', label: 'Team', icon: Users, minRole: 'developer' },
     { id: 'settings', label: 'Settings', icon: SettingsIcon, minRole: 'admin' },

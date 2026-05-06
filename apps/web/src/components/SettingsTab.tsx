@@ -4,6 +4,7 @@ import { useUpdateProject } from '../hooks/useProjects';
 import { useAuthAxios } from '../lib/useAuthAxios';
 import { Settings, Globe, Layout, ShieldCheck, Database, Eye, EyeOff, Save, TestTube } from 'lucide-react';
 import { CanDo } from './CanDo';
+import { NotificationSettingsPage } from '../pages/NotificationSettingsPage';
 import toast from 'react-hot-toast';
 
 interface SettingsTabProps {
@@ -13,6 +14,7 @@ interface SettingsTabProps {
 export const SettingsTab = ({ project }: SettingsTabProps) => {
   const { mutate: updateProject, isPending: isUpdating } = useUpdateProject(project.id);
   const axios = useAuthAxios();
+  const [activeSection, setActiveSection] = useState<'project' | 'notifications'>('project');
   
   const [formData, setFormData] = useState({
     name: project.name,
@@ -27,8 +29,27 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
     accountId: project.basecamp_account_id || '',
     projectId: project.basecamp_project_id || '',
     todoListId: project.basecamp_todo_list_id || '',
+    postTodoListId: project.basecamp_post_todo_list_id || '',
     apiToken: project.basecamp_api_token || '',
   });
+  const [preReleaseLink, setPreReleaseLink] = useState('');
+  const [postReleaseLink, setPostReleaseLink] = useState('');
+
+  const handleLinkChange = (type: 'pre' | 'post', url: string) => {
+    if (type === 'pre') setPreReleaseLink(url);
+    else setPostReleaseLink(url);
+
+    const match = url.match(/basecamp\.com\/(\d+)\/buckets\/(\d+)\/todolists\/(\d+)/);
+    if (match) {
+      const [, accountId, projectId, todoListId] = match;
+      setBasecamp(prev => ({
+        ...prev,
+        accountId,
+        projectId,
+        [type === 'pre' ? 'todoListId' : 'postTodoListId']: todoListId
+      }));
+    }
+  };
   const [showBasecamp, setShowBasecamp] = useState(false);
 
   const maskValue = (value: string, showLast = 0) => {
@@ -56,6 +77,7 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
       basecamp_account_id: basecamp.accountId,
       basecamp_project_id: basecamp.projectId,
       basecamp_todo_list_id: basecamp.todoListId,
+      basecamp_post_todo_list_id: basecamp.postTodoListId,
       basecamp_api_token: basecamp.apiToken,
     });
   };
@@ -74,8 +96,34 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
 
   return (
     <div className="max-w-4xl space-y-8 animate-in fade-in duration-500 pb-20">
-      {/* Basic Settings */}
-      <section className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-sm">
+      {/* Sub-navigation for Settings */}
+      <div className="flex items-center space-x-1 p-1 bg-slate-100/50 rounded-lg w-fit border border-slate-200 shadow-sm">
+        <button
+          onClick={() => setActiveSection('project')}
+          className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${
+            activeSection === 'project' 
+              ? 'bg-white text-slate-900 shadow-sm border border-slate-200' 
+              : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          Project Settings
+        </button>
+        <button
+          onClick={() => setActiveSection('notifications')}
+          className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${
+            activeSection === 'notifications' 
+              ? 'bg-white text-slate-900 shadow-sm border border-slate-200' 
+              : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          Notification Hub
+        </button>
+      </div>
+
+      {activeSection === 'project' ? (
+        <>
+          {/* Basic Settings */}
+          <section className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-sm">
         <div className="px-6 py-4 border-b border-slate-50 flex items-center space-x-2">
           <Settings className="w-5 h-5 text-slate-400" />
           <h3 className="font-bold text-slate-900">General Settings</h3>
@@ -190,6 +238,30 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
           <p className="text-sm text-slate-500 leading-relaxed">
             Automatically sync QA issues to your Basecamp project's to-do list.
           </p>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Pre-release to-do task link</label>
+                <input
+                  type="url"
+                  value={preReleaseLink}
+                  onChange={(e) => handleLinkChange('pre', e.target.value)}
+                  placeholder="Paste Basecamp to-do list URL"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Post-release to-do task link</label>
+                <input
+                  type="url"
+                  value={postReleaseLink}
+                  onChange={(e) => handleLinkChange('post', e.target.value)}
+                  placeholder="Paste Basecamp to-do list URL"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+                />
+              </div>
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Account ID</label>
@@ -212,12 +284,22 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">To-Do List ID</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Pre-release To-Do List ID</label>
               <input
                 type={showBasecamp ? "text" : "password"}
                 value={basecamp.todoListId}
                 onChange={(e) => setBasecamp({ ...basecamp, todoListId: e.target.value })}
                 placeholder="Enter To-Do List ID"
+                className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">Post-release To-Do List ID</label>
+              <input
+                type={showBasecamp ? "text" : "password"}
+                value={basecamp.postTodoListId}
+                onChange={(e) => setBasecamp({ ...basecamp, postTodoListId: e.target.value })}
+                placeholder="Enter Post-release To-Do List ID"
                 className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
               />
             </div>
@@ -264,6 +346,10 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
           </CanDo>
         </form>
       </section>
-    </div>
+    </>
+  ) : (
+    <NotificationSettingsPage project={project} />
+  )}
+</div>
   );
 };

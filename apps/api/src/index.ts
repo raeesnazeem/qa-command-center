@@ -10,6 +10,7 @@ import { webhookRouter } from './routes/webhooks'
 import { meRouter } from './routes/me'
 import { projectsRouter } from './routes/projects'
 import { usersRouter } from './routes/users'
+import { userSettingsRouter } from './routes/userSettings'
 import { runsRouter } from './routes/runs'
 import { tasksRouter } from './routes/tasks'
 import { statsRouter } from './routes/stats'
@@ -22,6 +23,9 @@ import { adminRouter } from './routes/admin'
 import { findingsRouter } from './routes/findings'
 import { visualDiffRouter } from './routes/visualDiff'
 import { chatRouter } from './routes/chat'
+import { basecampIntegrationRouter } from './routes/basecampIntegration'
+import { onboardingRouter } from './routes/onboarding'
+import { proxyRouter } from './routes/proxy'
 import { clerkMiddleware, getAuth } from '@clerk/express'
 import { createBullBoard } from '@bull-board/api'
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter'
@@ -50,6 +54,7 @@ app.use(
 // Webhook mount BEFORE express.json() and BEFORE Clerk middleware
 // We use express.raw to get the exact bytes needed for signature verification
 app.use('/webhooks', express.raw({ type: 'application/json' }), webhookRouter)
+app.use('/webhooks', express.raw({ type: 'application/json' }), basecampIntegrationRouter)
 
 app.use(express.json())
 app.use(defaultRateLimiter)
@@ -78,21 +83,28 @@ app.use((req, res, next) => {
   next();
 });
 
-// Routes
-app.use('/api/health', healthRouter)
+// Core Routes
 app.use('/api/me', meRouter)
+app.use('/api/dashboard', dashboardRouter)
+app.use('/api', proxyRouter)
+
+// Resource Routes
+app.use('/api/health', healthRouter)
 app.use('/api/projects', projectsRouter)
+app.use('/api/users', onboardingRouter)
 app.use('/api/users', usersRouter)
+app.use('/api/users', userSettingsRouter)
 app.use('/api/runs', runsRouter)
 app.use('/api/runs', signOffRouter)
 app.use('/api/tasks', tasksRouter)
 app.use('/api/stats', statsRouter)
-app.use('/api/dashboard', dashboardRouter)
 app.use('/api/admin', adminRouter)
 app.use('/api/projects', projectSettingsRouter)
 app.use('/api/findings', findingsRouter)
 app.use('/api/visual-diff', visualDiffRouter)
 app.use('/api/chat', chatRouter)
+app.use('/api/tasks', basecampIntegrationRouter)
+app.use('/api/basecamp', basecampIntegrationRouter)
 app.use('/debug', debugRouter)
 
 // 404 handler

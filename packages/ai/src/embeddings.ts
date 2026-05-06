@@ -76,11 +76,8 @@ export async function embedText(text: string): Promise<number[]> {
     // 2. Generate embedding using the RETRIEVAL_QUERY task type
     // This informs Gemini the vector is for a chatbot search context.
     const result = await model.embedContent({
-      content: { parts: [{ text }] },
+      content: { role: 'user', parts: [{ text }] },
       taskType: TaskType.RETRIEVAL_QUERY,
-      // text-embedding-005 defaults to 768, but we explicitly set it 
-      // here to ensure strict compatibility with 005_rag.sql.
-      outputDimensionality: 768,
     });
 
     const embedding = result.embedding.values;

@@ -7,6 +7,56 @@ import { logger } from '../lib/logger';
 const router: Router = Router();
 
 /**
+ * POST /api/findings
+ * Create a new manual finding.
+ */
+router.post('/', clerkAuth, requireRole('qa_engineer'), async (req: Request, res: Response) => {
+  const { 
+    page_id, 
+    run_id, 
+    check_factor, 
+    severity, 
+    title, 
+    description, 
+    screenshot_url,
+    context_text,
+    ai_generated = false
+  } = req.body;
+
+  if (!page_id || !run_id || !title || !check_factor || !severity) {
+    return res.status(400).json({ error: 'Missing required fields: page_id, run_id, title, check_factor, severity' });
+  }
+
+  try {
+    const { data: newFinding, error } = await supabase
+      .from('findings')
+      .insert({
+        page_id,
+        run_id,
+        check_factor,
+        severity,
+        title,
+        description,
+        screenshot_url,
+        context_text,
+        ai_generated,
+        status: 'open',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return res.status(201).json(newFinding);
+  } catch (error: any) {
+    logger.error({ error: error.message }, 'Error creating manual finding');
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+/**
  * PATCH /api/findings/:id/status
  * Update the status of a finding (confirmed, false_positive, open).
  */

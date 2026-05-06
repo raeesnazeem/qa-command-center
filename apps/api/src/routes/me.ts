@@ -13,10 +13,11 @@ router.get('/', clerkAuth, async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
+    const clerkUserId = (req.auth as any).clerkUserId;
     const { data: user, error } = await supabase
       .from('users')
       .select('*')
-      .eq('id', userId)
+      .eq('clerk_user_id', clerkUserId)
       .single();
 
     if (error || !user) {

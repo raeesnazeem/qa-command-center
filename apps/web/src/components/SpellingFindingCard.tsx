@@ -9,15 +9,19 @@ import {
   Plus,
   FileSearch,
   Activity,
-  UserPlus
+  UserPlus,
+  Globe,
+  ExternalLink
 } from 'lucide-react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useRole } from '../hooks/useRole';
 import { FindingSeverityEditor } from './FindingSeverityEditor';
 import { RebuttalVerdictCard } from './RebuttalVerdictCard';
 import { FindingCardWithScreenshot } from './FindingCardWithScreenshot';
 import { QAFinding } from '../api/runs.api';
+import { BrowserOverlay } from './BrowserOverlay';
 import { useAuthAxios } from '../lib/useAuthAxios';
+import { useGalleryStore } from '../store/galleryStore';
 
 interface FindingCardProps {
   finding: QAFinding;
@@ -30,6 +34,9 @@ interface FindingCardProps {
   onFalsePositive?: (id: string) => void;
   onCreateTask?: (finding: QAFinding) => void;
   onAssign?: (id: string) => void;
+  assignedTaskIds?: string[];
+  assignedUsers?: any[];
+  isAssigned?: boolean;
 }
 
 export const SpellingFindingCard: React.FC<FindingCardProps> = ({ 
@@ -38,7 +45,10 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
   onConfirm, 
   onFalsePositive, 
   onCreateTask,
-  onAssign
+  onAssign,
+  assignedTaskIds = [],
+  assignedUsers = [],
+  isAssigned = false,
 }) => {
   const { canDo } = useRole();
   const axios = useAuthAxios();
@@ -46,6 +56,9 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
   const { id: projectId } = useParams<{ id: string }>();
   
   const [isAddingAllowlist, setIsAddingAllowlist] = useState(false);
+  const [isBrowserOpen, setIsBrowserOpen] = useState(false);
+  const { galleryImages: allGalleryImages, addImage } = useGalleryStore();
+  const galleryImages = allGalleryImages[finding.id] || [];
 
   const severityIcons = {
     critical: <ShieldAlert size={20} />,
@@ -98,7 +111,7 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
 
   return (
     <div className={`group p-6 bg-white rounded-2xl border transition-all duration-300 shadow-sm hover:shadow-xl relative overflow-hidden ${
-      isConfirmed ? 'border-emerald-500 ring-1 ring-emerald-500/20' : 
+      isConfirmed || isAssigned ? 'border-emerald-500 ring-1 ring-emerald-500/20' : 
       isFalsePositive ? 'opacity-60 border-slate-200' : 'border-slate-100 hover:border-accent/40'
     }`}>
       {/* Status Indicators */}
@@ -109,8 +122,8 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
           isFalsePositive ? 'bg-slate-100 text-slate-400' :
           finding.severity === 'critical' ? 'bg-red-50 text-red-600' :
           finding.severity === 'high' ? 'bg-orange-50 text-orange-600' :
-          finding.severity === 'medium' ? 'bg-amber-50 text-amber-600' :
-          'bg-yellow-50 text-yellow-600'
+          finding.severity === 'medium' ? 'bg-yellow-50 text-yellow-600' :
+          'bg-blue-50 text-blue-600'
         }`}>
           {isFalsePositive ? <XCircle size={20} /> : severityIcons[finding.severity]}
         </div>
@@ -124,6 +137,7 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
                 pageId={finding.page_id}
                 currentSeverity={finding.severity}
                 canEdit={canAction && !isFalsePositive}
+                symbolOnly={true}
               />
               <div className="flex items-center gap-1.5 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
                 <FileSearch size={14} />
@@ -143,7 +157,7 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
           </h4>
           {finding.description && (
             <div className="mb-4">
-              <p className={`text-[11px] text-slate-500 font-medium leading-relaxed ${
+              <p className={`text-[11px] text-slate-500 font-medium leading-relaxed break-words ${
                 isFalsePositive ? 'text-slate-400' : ''
               } ${!isExpanded ? 'line-clamp-3' : ''}`}>
                 {finding.description}
@@ -169,6 +183,18 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
               <p className="text-[8px] font-black text-slate-400 uppercase mt-1 tracking-widest">
                 {finding.screenshot_url ? 'Click to expand evidence' : 'Click to view page context'}
               </p>
+              <button
+                onClick={() => setIsBrowserOpen(true)}
+                className="btn-unified w-fit ml-auto flex justify-end items-center gap-2 mt-3"
+              >
+                <span>
+                  <Globe
+                    size={14}
+                    className="text-slate-400 group-hover/btn:text-black transition-colors"
+                  />
+                </span>
+                <span className="text-[11px]">See in Browser</span>
+              </button>
             </div>
           )}
 
@@ -227,13 +253,15 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
                     Confirm
                   </button>
                 )}
-                <button 
-                  onClick={() => onFalsePositive?.(finding.id)}
-                  className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-[10px] hover:bg-slate-50 transition-colors"
-                >
-                  <XCircle size={12} />
-                  False Positive
-                </button>
+                {!(hasTask || isAssigned) && (
+                  <button 
+                    onClick={() => onFalsePositive?.(finding.id)}
+                    className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-[10px] hover:bg-slate-50 transition-colors"
+                  >
+                    <XCircle size={12} />
+                    False Positive
+                  </button>
+                )}
                 <button 
                   onClick={() => onAssign?.(finding.id)}
                   className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-[10px] hover:bg-slate-50 transition-colors"
@@ -251,15 +279,45 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
                     {isAddingAllowlist ? 'Adding...' : 'Add to Allowlist'}
                   </button>
                 )}
+
+                {/* Assigned Users Avatars */}
+                {assignedUsers.length > 0 && (
+                  <div className="flex items-center ml-4 -space-x-2">
+                    {assignedUsers.map((user: any, i: number) => (
+                      <div
+                        key={user.id || i}
+                        className="w-6 h-6 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[10px] font-black text-slate-600 shadow-sm"
+                        title={user.full_name}
+                      >
+                        {user.full_name?.charAt(0) || "U"}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              <button 
-                onClick={() => onCreateTask?.(finding)}
-                disabled={hasTask}
-                className={`flex items-center gap-1.5 px-3 py-1 bg-black text-accent text-[9px] font-black uppercase tracking-widest rounded-[10px] hover:bg-slate-800 transition-colors shrink-0 ${hasTask ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                <Plus size={12} />
-                {hasTask ? 'Task Linked' : 'Create Task'}
-              </button>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => onCreateTask?.({ ...finding, gallery_images: galleryImages })}
+                  disabled={hasTask || isAssigned}
+                  className={`flex items-center gap-1.5 px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-[10px] transition-colors shrink-0 ${
+                    hasTask || isAssigned 
+                      ? 'bg-accent text-white cursor-not-allowed' 
+                      : 'bg-black text-accent hover:bg-slate-800'
+                  }`}
+                >
+                  <Plus size={12} />
+                  {hasTask || isAssigned ? 'Task Linked' : 'Create Task'}
+                </button>
+                {(hasTask || isAssigned) && assignedTaskIds && assignedTaskIds.length > 0 && (
+                  <Link
+                    to={`/projects/${projectId}?tab=tasks&taskId=${assignedTaskIds[0]}`}
+                    className="p-2 text-slate-400 hover:text-accent transition-colors"
+                    title="View Task"
+                  >
+                    <ExternalLink size={14} />
+                  </Link>
+                )}
+              </div>
             </div>
           )}
 
@@ -270,6 +328,14 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
           )}
         </div>
       </div>
+      
+      <BrowserOverlay
+        isOpen={isBrowserOpen}
+        onClose={() => setIsBrowserOpen(false)}
+        url={finding.pages?.url || ""}
+        onCapture={(img) => addImage(finding.id, img)}
+        galleryCount={galleryImages.length}
+      />
     </div>
   );
 };

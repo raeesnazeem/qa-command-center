@@ -22,9 +22,17 @@ export interface Task {
   created_by: string;
   created_at: string;
   updated_at: string;
+  basecamp_task_id?: string;
+  basecamp_url?: string;
+  gallery_images?: string[];
+  findings?: any;
   comments?: TaskComment[];
   rebuttals?: TaskRebuttal[];
   users?: {
+    full_name: string;
+    email: string;
+  };
+  creator?: {
     full_name: string;
     email: string;
   };
@@ -64,6 +72,7 @@ export interface TaskFilters {
   status?: TaskStatus;
   severity?: TaskSeverity;
   assignedTo?: string;
+  createdBy?: string;
 }
 
 export const getTasks = async (
@@ -75,6 +84,7 @@ export const getTasks = async (
   if (filters.status) params.append('status', filters.status);
   if (filters.severity) params.append('severity', filters.severity);
   if (filters.assignedTo) params.append('assigned_to', filters.assignedTo);
+  if (filters.createdBy) params.append('created_by', filters.createdBy);
 
   const { data } = await axios.get(`/api/tasks?${params.toString()}`);
   return data;
@@ -134,5 +144,55 @@ export const updateFindingStatus = async (
   status: 'confirmed' | 'false_positive'
 ): Promise<any> => {
   const { data } = await axios.patch(`/api/findings/${findingId}/status`, { status });
+  return data;
+};
+
+export const pushToBasecamp = async (
+  axios: AxiosInstance,
+  taskId: string
+): Promise<{ basecampUrl: string }> => {
+  const { data } = await axios.post<{ basecampUrl: string }>(`/api/tasks/${taskId}/basecamp`);
+  return data;
+};
+
+export const bulkPushToBasecamp = async (
+  axios: AxiosInstance,
+  taskIds: string[]
+): Promise<{ basecampUrl: string; count: number }> => {
+  const { data } = await axios.post<{ basecampUrl: string; count: number }>(`/api/tasks/basecamp/bulk-push`, { taskIds });
+  return data;
+};
+
+export const bulkPushCommentsToBasecamp = async (
+  axios: AxiosInstance,
+  taskIds: string[],
+  status: 'pending' | 'completed'
+): Promise<{ success: boolean; count: number; skipped: number }> => {
+  const { data } = await axios.post<{ success: boolean; count: number; skipped: number }>(`/api/tasks/basecamp/bulk-comment`, { taskIds, status });
+  return data;
+};
+
+export const deleteTask = async (
+  axios: AxiosInstance,
+  id: string
+): Promise<void> => {
+  await axios.delete(`/api/tasks/${id}`);
+};
+
+export const bulkDeleteTasks = async (
+  axios: AxiosInstance,
+  ids: string[]
+): Promise<void> => {
+  await axios.post(`/api/tasks/bulk-delete`, { ids });
+};
+
+export const getBasecampPeople = async (
+
+  axios: AxiosInstance,
+  projectId: string
+): Promise<Record<number, { sgid: string; name: string }>> => {
+  const { data } = await axios.get<Record<number, { sgid: string; name: string }>>(`/api/basecamp/people`, {
+    params: { projectId }
+  });
   return data;
 };

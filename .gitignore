@@ -153,3 +153,35 @@ apps/api/src/routes/admin.ts
 apps/worker/src/jobs/testJob.ts
 scripts/
 apps/worker/scripts/
+
+
+# Agent rules
+.agents
+.agents/*
+
+# Local SQL Backups
+*.sql
+!supabase/migrations/*.sql
+!supabase/seed.sql
+!supabase/verify_schema.sql
+
+# Scratch and Temporary Development Notes
+scratch/
+**/scratch/
+basecamp-push-debug-report.md
+newfixes.md
+fixes.md
+task-pending.md
+task_assignment_basecamp_flow.md
+
+# Redundant Lockfiles (pnpm is the primary package manager)
+package-lock.json
+yarn.lock
+
+# macOS specific
+**/.DS_Store
+
+# Windsurf and Documentation
+.windsurfrules
+explanation.md
+summary.md
