@@ -19,6 +19,7 @@ import {
   usePushToBasecamp,
 } from "../hooks/useTasks"
 import { useProject } from "../hooks/useProjects"
+import { useRealtimeTasks } from "../hooks/useRealtimeTasks"
 import { CanDo } from "./CanDo"
 import { BasecampPushButton, BasecampTaskLink } from "./BasecampPushButton"
 import { CommentThread } from "./CommentThread"
@@ -36,7 +37,8 @@ export const TaskDetailPanel = ({
 }: TaskDetailPanelProps) => {
   const [rebuttalText, setRebuttalText] = useState("")
   const [rebuttalUrl, setRebuttalUrl] = useState("")
-
+  
+  useRealtimeTasks()
   const { data: latestTask } = useTask(initialTask?.id || "")
   const task = latestTask || initialTask
 

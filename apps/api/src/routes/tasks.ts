@@ -209,6 +209,41 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
+    // Unify comments and rebuttals across all tasks sharing the same finding_id
+    if (task.finding_id) {
+      const { data: siblingTasks } = await supabase
+        .from('tasks')
+        .select('id')
+        .eq('finding_id', task.finding_id);
+      
+      const siblingIds = siblingTasks?.map(t => t.id) || [id];
+
+      if (siblingIds.length > 1) {
+        // Fetch unified comments
+        const { data: unifiedComments } = await supabase
+          .from('comments')
+          .select(`
+            *,
+            users:author_id (full_name, email)
+          `)
+          .in('task_id', siblingIds)
+          .order('created_at', { ascending: true });
+        
+        // Fetch unified rebuttals
+        const { data: unifiedRebuttals } = await supabase
+          .from('rebuttals')
+          .select(`
+            *,
+            users:submitted_by (full_name, email)
+          `)
+          .in('task_id', siblingIds)
+          .order('created_at', { ascending: true });
+        
+        task.comments = unifiedComments || [];
+        task.rebuttals = unifiedRebuttals || [];
+      }
+    }
+
     return res.json(task);
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
@@ -331,6 +366,7 @@ router.post(
         .single();
 
       if (error) throw error;
+      await broadcastTaskUpdate(id, { id }); // Notify that task has new activity
       return res.status(201).json(comment);
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
@@ -366,6 +402,8 @@ router.post(
 
       if (error) throw error;
 
+      await broadcastTaskUpdate(id, { id }); // Notify that task has new activity
+      
       await qaQueue.add('analyze_rebuttal', { rebuttalId: rebuttal.id, taskId: id }, {
         removeOnComplete: true,
         attempts: 3,
