@@ -63,10 +63,24 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
     loadProxyUrl(currentProxiedUrl);
   };
 
-  const handleCapture = () => {
-    if (galleryCount >= 3 || error) return;
-    const mockImageUrl = `https://picsum.photos/seed/${Date.now()}/800/600`;
-    onCapture(mockImageUrl);
+  const handleCapture = async () => {
+    if (galleryCount >= 3 || error || loading) return;
+    
+    setLoading(true);
+    try {
+      const response = await axios.post('/api/proxy-browser/capture', { 
+        url: currentProxiedUrl 
+      });
+      
+      if (response.data?.imageUrl) {
+        onCapture(response.data.imageUrl);
+      }
+    } catch (err: any) {
+      console.error('[BrowserOverlay] Capture failed:', err);
+      // Optional: Add a toast notification here if available
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

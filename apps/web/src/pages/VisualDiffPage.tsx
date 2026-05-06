@@ -18,11 +18,18 @@ import {
   RefreshCw
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useGalleryStore } from '../store/galleryStore';
 
 export const VisualDiffPage: React.FC = () => {
   const { id: projectId, runId } = useParams<{ id: string; runId: string }>();
   const navigate = useNavigate();
   const axios = useAuthAxios();
+  const { clearAllGalleries } = useGalleryStore();
+  
+  // Clear galleries on mount or when switching pages/runs
+  useEffect(() => {
+    clearAllGalleries();
+  }, [runId, clearAllGalleries]);
   
   const { data: run, isLoading: runLoading } = useRun(runId!);
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);

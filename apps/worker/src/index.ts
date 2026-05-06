@@ -9,6 +9,7 @@ import { processRunChecksJob } from './jobs/runChecksJob';
 import { processAnalyzeRebuttalJob } from './jobs/analyzeRebuttalJob';
 import { processVisualDiffJob } from './jobs/visualDiffJob';
 import { processGenerateEmbeddingsJob } from './jobs/generateEmbeddingsJob';
+import { processCaptureScreenshotJob } from './jobs/captureScreenshotJob';
 
 import { processRunAiChecksJob } from './jobs/runAiChecksJob';
 
@@ -88,6 +89,8 @@ const worker = new Worker(
         case 'generate_embeddings':
           await processGenerateEmbeddingsJob(job);
           break;
+        case 'capture_screenshot':
+          return await processCaptureScreenshotJob(job);
         case 'test':
           await processTestJob();
           break;

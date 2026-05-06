@@ -28,6 +28,7 @@ import { FindingCardWithScreenshot } from "./FindingCardWithScreenshot"
 import { RebuttalVerdictCard } from "./RebuttalVerdictCard"
 import { QAFinding } from "../api/runs.api"
 import { BrowserOverlay } from "./BrowserOverlay"
+import { useGalleryStore } from "../store/galleryStore"
 
 interface FindingCardProps {
   finding: QAFinding
@@ -80,7 +81,8 @@ export const FindingCard: React.FC<FindingCardProps> = ({
   const [localTitle, setLocalTitle] = React.useState(finding.title)
   const [isContextModalOpen, setIsContextModalOpen] = React.useState(false)
   const [isBrowserOpen, setIsBrowserOpen] = React.useState(false)
-  const [galleryImages, setGalleryImages] = React.useState<string[]>([])
+  const { galleryImages: allGalleryImages, addImage } = useGalleryStore()
+  const galleryImages = allGalleryImages[finding.id] || []
 
   React.useEffect(() => {
     setLocalTitle(finding.title)
@@ -383,7 +385,7 @@ export const FindingCard: React.FC<FindingCardProps> = ({
           onClose={() => setIsBrowserOpen(false)}
           url={finding.pages?.url || ""}
           onCapture={(img) =>
-            setGalleryImages((prev) => [...prev, img].slice(0, 3))
+            addImage(finding.id, img)
           }
           galleryCount={galleryImages.length}
         />
@@ -568,7 +570,7 @@ export const FindingCard: React.FC<FindingCardProps> = ({
         onClose={() => setIsBrowserOpen(false)}
         url={finding.pages?.url || ""}
         onCapture={(img) =>
-          setGalleryImages((prev) => [...prev, img].slice(0, 3))
+          addImage(finding.id, img)
         }
         galleryCount={galleryImages.length}
       />

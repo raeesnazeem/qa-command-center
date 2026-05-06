@@ -21,6 +21,7 @@ import { FindingCardWithScreenshot } from './FindingCardWithScreenshot';
 import { QAFinding } from '../api/runs.api';
 import { BrowserOverlay } from './BrowserOverlay';
 import { useAuthAxios } from '../lib/useAuthAxios';
+import { useGalleryStore } from '../store/galleryStore';
 
 interface FindingCardProps {
   finding: QAFinding;
@@ -56,7 +57,8 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
   
   const [isAddingAllowlist, setIsAddingAllowlist] = useState(false);
   const [isBrowserOpen, setIsBrowserOpen] = useState(false);
-  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const { galleryImages: allGalleryImages, addImage } = useGalleryStore();
+  const galleryImages = allGalleryImages[finding.id] || [];
 
   const severityIcons = {
     critical: <ShieldAlert size={20} />,
@@ -331,7 +333,7 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
         isOpen={isBrowserOpen}
         onClose={() => setIsBrowserOpen(false)}
         url={finding.pages?.url || ""}
-        onCapture={(img) => setGalleryImages(prev => [...prev, img].slice(0, 3))}
+        onCapture={(img) => addImage(finding.id, img)}
         galleryCount={galleryImages.length}
       />
     </div>

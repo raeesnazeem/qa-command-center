@@ -1,10 +1,12 @@
 import { useParams, Link } from 'react-router-dom';
 import { useProject } from '../hooks/useProjects';
-import { useRunProgress } from '../hooks/useRunProgress';
+import { QAFinding, QAPage } from '../api/runs.api';
 import { useAuthAxios } from '../lib/useAuthAxios';
+import { useGalleryStore } from '../store/galleryStore';
 import { PagesTable } from '../components/PagesTable';
 import { FindingReviewPanel } from '../components/FindingReviewPanel';
 import { CreateTaskModal } from '../components/CreateTaskModal';
+import { useRunProgress } from '../hooks/useRunProgress';
 import { useFindings, useRunFindings, useUpdateRunStatus, useUpdateFinding, } from '../hooks/useRuns';
 import { useCreateTask, useTasks } from '../hooks/useTasks';
 import { AssignMemberModal } from '../components/AssignMemberModal';
@@ -39,7 +41,6 @@ import {
   Send
 } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
-import { QAFinding } from '../api/runs.api';
 import toast from 'react-hot-toast';
 
 export const RunDetailPage = () => {
@@ -47,6 +48,12 @@ export const RunDetailPage = () => {
   const axios = useAuthAxios();
   const updateStatus = useUpdateRunStatus();
   const { canDo } = useRole();
+  const { clearAllGalleries, galleryImages: allGalleryImages } = useGalleryStore();
+
+  // Clear galleries on mount or when switching runs
+  useEffect(() => {
+    clearAllGalleries();
+  }, [runId, clearAllGalleries]);
   const addToStage = useTaskStageStore(state => state.addToStage);
   
   const [isManualScanOpen, setIsManualScanOpen] = useState(false);
@@ -190,7 +197,12 @@ export const RunDetailPage = () => {
   };
 
   const handleCreateTaskForFinding = (finding: QAFinding) => {
-    setPrefillFinding(finding);
+    // Merge gallery images from store at the entry point
+    const mergedFinding = {
+      ...finding,
+      gallery_images: allGalleryImages[finding.id] || finding.gallery_images
+    };
+    setPrefillFinding(mergedFinding);
     setIsCreateTaskModalOpen(true);
   };
 
@@ -220,6 +232,9 @@ export const RunDetailPage = () => {
     try {
       const targets = (findings || []).filter(f => assignTarget.ids.includes(f.id));
       for (const finding of targets) {
+        // Merge gallery images from store
+        const galleryImages = allGalleryImages[finding.id] || [];
+        
         createTask({
           project_id: projectId!,
           finding_id: finding.id,
@@ -227,7 +242,7 @@ export const RunDetailPage = () => {
           description: finding.description || '',
           severity: finding.severity,
           assigned_to: userId,
-          gallery_images: finding.gallery_images
+          gallery_images: galleryImages.length > 0 ? galleryImages : finding.gallery_images
         });
       }
       setIsAssignModalOpen(false);
@@ -238,13 +253,16 @@ export const RunDetailPage = () => {
 
   const handleBulkCreateTasks = (selectedFindings: QAFinding[]) => {
     selectedFindings.forEach(finding => {
+      // Merge gallery images from store
+      const galleryImages = allGalleryImages[finding.id] || [];
+
       createTask({
         project_id: projectId!,
         finding_id: finding.id,
         title: finding.title,
         description: finding.description || '',
         severity: finding.severity,
-        gallery_images: finding.gallery_images
+        gallery_images: galleryImages.length > 0 ? galleryImages : finding.gallery_images
       });
     });
   };
@@ -645,7 +663,13 @@ export const RunDetailPage = () => {
                     onConfirmBulk={handleBulkConfirm}
                     onFalsePositiveBulk={handleBulkFalsePositive}
                     onCreateTasksBulk={handleBulkCreateTasks}
-                    onAddToStage={addToStage}
+                    onAddToStage={(findings) => {
+                      const mergedFindings = findings.map(f => ({
+                        ...f,
+                        gallery_images: allGalleryImages[f.id] || f.gallery_images
+                      }));
+                      addToStage(mergedFindings);
+                    }}
                     onAssignBulk={handleBulkAssign}
                     onSingleAssign={handleSingleAssign}
                     findingToTaskMap={findingToTaskMap}
@@ -877,7 +901,8 @@ export const RunDetailPage = () => {
           finding_id: prefillFinding.id,
           title: prefillFinding.title,
           description: prefillFinding.description || '',
-          severity: prefillFinding.severity
+          severity: prefillFinding.severity,
+          gallery_images: prefillFinding.gallery_images
         } : undefined}
       />
       

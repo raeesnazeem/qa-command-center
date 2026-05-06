@@ -10,6 +10,7 @@ import {
   Trash2,
 } from "lucide-react"
 import { useTaskStageStore } from "../store/taskStageStore"
+import { useGalleryStore } from "../store/galleryStore"
 import { useProject } from "../hooks/useProjects"
 import { useCreateTask, useBulkPushToBasecamp } from "../hooks/useTasks"
 import toast from "react-hot-toast"
@@ -23,6 +24,7 @@ export const TaskStagingOverlay: React.FC<TaskStagingOverlayProps> = ({
 }) => {
   const { stagedFindings, isOpen, removeFromStage, clearStage, setIsOpen } =
     useTaskStageStore()
+  const { galleryImages: allGalleryImages } = useGalleryStore();
   const { data: project, isLoading: isLoadingProject } = useProject(projectId)
   const { mutateAsync: createTask, isPending: isCreatingTasks } =
     useCreateTask()
@@ -87,6 +89,9 @@ export const TaskStagingOverlay: React.FC<TaskStagingOverlayProps> = ({
             { id: toastId },
           )
 
+          // Merge gallery images from store
+          const galleryImages = allGalleryImages[finding.id] || [];
+
           const task = await createTask({
             project_id: projectId,
             finding_id: finding.id,
@@ -94,7 +99,7 @@ export const TaskStagingOverlay: React.FC<TaskStagingOverlayProps> = ({
             description: finding.description || "",
             severity: finding.severity,
             assigned_to: userId,
-            gallery_images: finding.gallery_images,
+            gallery_images: galleryImages.length > 0 ? galleryImages : finding.gallery_images,
           })
 
           if (task?.id) {

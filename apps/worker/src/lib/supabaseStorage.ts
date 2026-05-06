@@ -9,12 +9,12 @@ const logger = pino({
   },
 });
 
-const BUCKET_NAME = 'screenshots';
+const DEFAULT_BUCKET = 'screenshots';
 
 /**
- * Ensures the screenshots bucket exists.
+ * Ensures a bucket exists with specified privacy.
  */
-async function ensureBucketExists() {
+async function ensureBucketExists(bucketName: string, isPublic: boolean = false) {
   const { data: buckets, error: listError } = await supabase.storage.listBuckets();
   
   if (listError) {
@@ -22,13 +22,13 @@ async function ensureBucketExists() {
     return;
   }
 
-  const exists = buckets.some(b => b.name === BUCKET_NAME);
+  const exists = buckets.some(b => b.name === bucketName);
   
   if (!exists) {
-    logger.info({ bucket: BUCKET_NAME }, 'Creating storage bucket');
-    const { error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
-      public: false,
-      allowedMimeTypes: ['image/png', 'image/jpeg'],
+    logger.info({ bucket: bucketName, isPublic }, 'Creating storage bucket');
+    const { error: createError } = await supabase.storage.createBucket(bucketName, {
+      public: isPublic,
+      allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg'],
     });
 
     if (createError) {
@@ -38,17 +38,25 @@ async function ensureBucketExists() {
 }
 
 /**
- * Uploads a screenshot buffer to Supabase Storage and returns a signed URL.
+ * Uploads a screenshot buffer to Supabase Storage.
+ * Returns a permanent public URL if isPublic is true, otherwise a signed URL.
  */
-export async function uploadScreenshot(buffer: Buffer, path: string): Promise<string> {
-  await ensureBucketExists();
+export async function uploadScreenshot(
+  buffer: Buffer, 
+  path: string, 
+  options: { bucket?: string; isPublic?: boolean } = {}
+): Promise<string> {
+  const bucketName = options.bucket || DEFAULT_BUCKET;
+  const isPublic = options.isPublic ?? false;
 
-  logger.info({ path }, 'Uploading screenshot to storage');
+  await ensureBucketExists(bucketName, isPublic);
+
+  logger.info({ path, bucketName }, 'Uploading screenshot to storage');
 
   const { error: uploadError } = await supabase.storage
-    .from(BUCKET_NAME)
+    .from(bucketName)
     .upload(path, buffer, {
-      contentType: 'image/png',
+      contentType: path.endsWith('.jpg') ? 'image/jpeg' : 'image/png',
       upsert: true,
     });
 
@@ -57,9 +65,17 @@ export async function uploadScreenshot(buffer: Buffer, path: string): Promise<st
     throw new Error(`Upload failed: ${uploadError.message}`);
   }
 
-  // Generate signed URL (1 hour expiry)
+  if (isPublic) {
+    const { data } = supabase.storage
+      .from(bucketName)
+      .getPublicUrl(path);
+    
+    return data.publicUrl;
+  }
+
+  // Generate signed URL (1 hour expiry) for private buckets
   const { data, error: signedUrlError } = await supabase.storage
-    .from(BUCKET_NAME)
+    .from(bucketName)
     .createSignedUrl(path, 3600);
 
   if (signedUrlError || !data?.signedUrl) {

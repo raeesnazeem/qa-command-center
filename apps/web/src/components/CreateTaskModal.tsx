@@ -32,24 +32,36 @@ export const CreateTaskModal = ({ projectId, isOpen, onClose, prefillData }: Cre
     },
   });
 
-  // Update form when prefillData changes
   React.useEffect(() => {
     if (isOpen && prefillData) {
       reset({
         project_id: projectId || '',
         severity: 'medium',
-        ...prefillData
+        ...prefillData,
+        gallery_images: prefillData.gallery_images || []
       } as CreateTaskInput);
     }
   }, [isOpen, prefillData, reset, projectId]);
 
   const onSubmit = (data: CreateTaskInput) => {
-    createTask(data, {
-      onSuccess: () => {
-        reset();
-        onClose();
+    // Explicitly use gallery_images from prefillData if available, 
+    // as it might not be registered in the form
+    const finalGalleryImages = (prefillData?.gallery_images && prefillData.gallery_images.length > 0)
+      ? prefillData.gallery_images
+      : data.gallery_images;
+
+    createTask(
+      {
+        ...data,
+        gallery_images: finalGalleryImages,
       },
-    });
+      {
+        onSuccess: () => {
+          reset();
+          onClose();
+        },
+      }
+    );
   };
 
   if (!isOpen) return null;

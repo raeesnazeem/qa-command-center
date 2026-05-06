@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import axios from 'axios';
 import { clerkAuth } from '../middleware/clerkAuth';
+import { qaQueue } from '../lib/queue';
 
 const router: Router = Router();
 
@@ -145,6 +146,41 @@ router.all(
       console.error('[Proxy Error]:', error.message);
       return res.status(500).json({ 
         error: 'Failed to load page',
+        details: error.message 
+      });
+    }
+  }
+);
+
+/**
+ * POST /api/proxy-browser/capture
+ * Triggers a screenshot capture of a URL via the worker and returns the URL.
+ */
+router.post(
+  '/proxy-browser/capture',
+  clerkAuth,
+  async (req: Request, res: Response) => {
+    const { url } = req.body;
+    const userId = (req as any).auth?.userId;
+
+    if (!url) {
+      return res.status(400).json({ error: 'URL is required' });
+    }
+
+    try {
+      const job = await qaQueue.add('capture_screenshot', { url, userId }, {
+        removeOnComplete: true,
+      });
+
+      const result = await job.waitUntilFinished(new (require('bullmq').QueueEvents)('qa-jobs', { 
+        connection: qaQueue.opts.connection 
+      }));
+
+      return res.json(result);
+    } catch (error: any) {
+      console.error('[Capture Proxy Error]:', error.message);
+      return res.status(500).json({ 
+        error: 'Failed to capture screenshot',
         details: error.message 
       });
     }

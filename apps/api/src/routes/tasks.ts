@@ -224,7 +224,7 @@ router.patch(
   zodValidate(UpdateTaskSchema),
   async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { status, assigned_to, description } = req.body;
+    const { status, assigned_to, description, gallery_images } = req.body;
     try {
       let targetUserId = assigned_to;
       if (assigned_to) {
@@ -236,7 +236,8 @@ router.patch(
         .update({ 
           status, 
           assigned_to: targetUserId, 
-          description 
+          description,
+          gallery_images
         })
         .eq('id', id)
         .select()

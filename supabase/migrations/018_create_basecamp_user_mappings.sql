@@ -23,5 +23,5 @@ CREATE POLICY "Mappings are readable by all authenticated users"
 CREATE POLICY "Users can manage their own mapping"
   ON basecamp_user_mappings FOR ALL
   TO authenticated
-  USING (auth.uid() = (SELECT clerk_user_id FROM users WHERE id = user_id))
-  WITH CHECK (auth.uid() = (SELECT clerk_user_id FROM users WHERE id = user_id));
+  USING (auth.uid()::text = (SELECT clerk_user_id FROM users WHERE id = user_id))
+  WITH CHECK (auth.uid()::text = (SELECT clerk_user_id FROM users WHERE id = user_id));
