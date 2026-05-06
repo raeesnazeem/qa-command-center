@@ -226,7 +226,8 @@ export const RunDetailPage = () => {
           title: finding.title,
           description: finding.description || '',
           severity: finding.severity,
-          assigned_to: userId
+          assigned_to: userId,
+          gallery_images: finding.gallery_images
         });
       }
       setIsAssignModalOpen(false);
@@ -242,7 +243,8 @@ export const RunDetailPage = () => {
         finding_id: finding.id,
         title: finding.title,
         description: finding.description || '',
-        severity: finding.severity
+        severity: finding.severity,
+        gallery_images: finding.gallery_images
       });
     });
   };

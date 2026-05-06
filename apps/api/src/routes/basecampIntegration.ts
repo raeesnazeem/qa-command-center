@@ -152,9 +152,15 @@ router.post(
         mentions = mentionsList.filter(Boolean).join(" ");
       }
 
+      let galleryHtml = "";
+      if (task.gallery_images && Array.isArray(task.gallery_images) && task.gallery_images.length > 0) {
+        galleryHtml = "<br/><br/><strong>Captured Evidence:</strong><br/>" + 
+          task.gallery_images.map((url: string) => `<img src="${url}" width="400" />`).join("<br/>");
+      }
+
       const description = `<div>${mentions}</div>
 <br/>
-• ${task.title}, Severity: ${task.severity}, URL: ${findingUrl}
+• ${task.title}, Severity: ${task.severity}, URL: ${findingUrl}${galleryHtml}
 <br/><br/>
 Created via QA Command Center`.trim();
 
@@ -389,11 +395,18 @@ router.post(
         const mentionsHtml = Array.from(new Set(groupMentions.filter(Boolean))).join(" ");
 
         const taskFindingUrl = firstTask.findings?.page_id ? pageUrlMap.get(firstTask.findings.page_id) : "N/A";
+
+        let galleryHtml = "";
+        if (firstTask.gallery_images && Array.isArray(firstTask.gallery_images) && firstTask.gallery_images.length > 0) {
+          galleryHtml = "<br/><br/><strong>Captured Evidence:</strong><br/>" + 
+            firstTask.gallery_images.map((url: string) => `<img src="${url}" width="400" />`).join("<br/>");
+        }
+
         const taskCommentContent = `
           <div>${mentionsHtml}</div><br/>
           <strong>[NEW PUSH]</strong> ${firstTask.title}<br/>
           Severity: ${firstTask.severity}<br/>
-          URL: ${taskFindingUrl || "N/A"}<br/><br/>
+          URL: ${taskFindingUrl || "N/A"}${galleryHtml}<br/><br/>
           Created via QA Command Center
         `.trim();
 
@@ -558,6 +571,12 @@ router.post(
           (a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
         );
 
+        let galleryHtml = "";
+        if (firstTask.gallery_images && Array.isArray(firstTask.gallery_images) && firstTask.gallery_images.length > 0) {
+          galleryHtml = "<br/><br/><strong>Captured Evidence:</strong><br/>" + 
+            firstTask.gallery_images.map((url: string) => `<img src="${url}" width="400" />`).join("<br/>");
+        }
+
         const commentContent = `
           <div>${mentionsHtml}</div><br/>
           <div><strong>[${pushStatus.toUpperCase()}]</strong></div>
@@ -571,7 +590,7 @@ router.post(
             ${sortedComments.length > 0 
               ? sortedComments.map((c: any) => `<li>${c.content}</li>`).join("") 
               : "<li>No comments</li>"}
-          </ul>
+          </ul>${galleryHtml}
           <br/>
           <em>Pushed via QA Command Center</em>
         `.trim();
