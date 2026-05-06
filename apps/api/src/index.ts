@@ -25,6 +25,7 @@ import { visualDiffRouter } from './routes/visualDiff'
 import { chatRouter } from './routes/chat'
 import { basecampIntegrationRouter } from './routes/basecampIntegration'
 import { onboardingRouter } from './routes/onboarding'
+import { proxyRouter } from './routes/proxy'
 import { clerkMiddleware, getAuth } from '@clerk/express'
 import { createBullBoard } from '@bull-board/api'
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter'
@@ -85,6 +86,7 @@ app.use((req, res, next) => {
 // Core Routes
 app.use('/api/me', meRouter)
 app.use('/api/dashboard', dashboardRouter)
+app.use('/api', proxyRouter)
 
 // Resource Routes
 app.use('/api/health', healthRouter)

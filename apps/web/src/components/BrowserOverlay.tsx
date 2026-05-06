@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Camera, Image as ImageIcon, ChevronLeft, ChevronRight, RotateCw, ExternalLink } from 'lucide-react';
+import { X, Camera, Image as ImageIcon, ChevronLeft, ChevronRight, RotateCw, ExternalLink, AlertCircle } from 'lucide-react';
+import { useAuthAxios } from '../lib/useAuthAxios';
 
 interface BrowserOverlayProps {
   url: string;
@@ -16,22 +17,54 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
   onCapture,
   galleryCount
 }) => {
-  const [iframeUrl, setIframeUrl] = useState(url);
+  const axios = useAuthAxios();
+  const [iframeUrl, setIframeUrl] = useState<string>('');
+  const [currentProxiedUrl, setCurrentProxiedUrl] = useState<string>(url);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadProxyUrl = async (targetUrl: string = url) => {
+    if (!targetUrl) return;
+    setLoading(true);
+    setError(null);
+    setCurrentProxiedUrl(targetUrl);
+    try {
+      const response = await axios.post('/api/proxy-browser', { url: targetUrl }, {
+        responseType: 'blob'
+      });
+      
+      const blob = new Blob([response.data], { type: 'text/html' });
+      const dataUrl = URL.createObjectURL(blob);
+      setIframeUrl(dataUrl);
+    } catch (err: any) {
+      console.error('[BrowserOverlay] Proxy load failed:', err);
+      setError(err.response?.data?.error || 'Failed to load page through secure proxy');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
-      setIframeUrl(url);
-      setLoading(true);
+      loadProxyUrl(url);
     }
+    
+    // Cleanup data URL
+    return () => {
+      if (iframeUrl && iframeUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(iframeUrl);
+      }
+    };
   }, [url, isOpen]);
 
   if (!isOpen) return null;
 
+  const handleRefresh = () => {
+    loadProxyUrl(currentProxiedUrl);
+  };
+
   const handleCapture = () => {
-    if (galleryCount >= 3) return;
-    // For now, we simulate a capture by using a placeholder or the original finding screenshot logic
-    // In a real scenario with CORS, this would use html-to-image or a backend service
+    if (galleryCount >= 3 || error) return;
     const mockImageUrl = `https://picsum.photos/seed/${Date.now()}/800/600`;
     onCapture(mockImageUrl);
   };
@@ -49,12 +82,7 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
               <ChevronRight size={18} />
             </button>
             <button 
-              onClick={() => {
-                setLoading(true);
-                const current = iframeUrl;
-                setIframeUrl('');
-                setTimeout(() => setIframeUrl(current), 10);
-              }}
+              onClick={handleRefresh}
               className="p-2 hover:bg-slate-200 rounded-md transition-colors text-slate-400"
             >
               <RotateCw size={16} className={loading ? 'animate-spin' : ''} />
@@ -67,7 +95,7 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
             </div>
             <input 
               type="text" 
-              value={iframeUrl}
+              value={currentProxiedUrl}
               readOnly
               className="w-full bg-white border border-slate-200 rounded-lg py-1.5 pl-9 pr-4 text-xs text-slate-600 focus:outline-none focus:ring-1 focus:ring-accent/20"
             />
@@ -88,16 +116,40 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
           <div className="absolute inset-0 flex items-center justify-center bg-white/50 backdrop-blur-sm z-10">
             <div className="flex flex-col items-center gap-3">
               <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Loading Browser...</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Securing Connection...</p>
             </div>
           </div>
         )}
-        <iframe 
-          src={iframeUrl}
-          className="w-full h-full border-none bg-white"
-          onLoad={() => setLoading(false)}
-          title="Lightweight Browser"
-        />
+
+        {error ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-white z-20">
+            <div className="max-w-md w-full p-8 text-center flex flex-col items-center gap-4">
+              <div className="p-4 bg-red-50 rounded-full text-red-500">
+                <AlertCircle size={40} />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-2">Proxy Connection Blocked</h3>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                  {error}. For security reasons, some domains cannot be displayed in the in-app browser.
+                </p>
+              </div>
+              <button 
+                onClick={() => window.open(url, '_blank')}
+                className="mt-2 btn-unified flex items-center gap-2 px-6 py-2 bg-black text-white rounded-xl hover:bg-accent hover:text-black transition-all"
+              >
+                <ExternalLink size={14} />
+                <span className="text-[10px] font-black uppercase tracking-widest">Open in New Tab Instead</span>
+              </button>
+            </div>
+          </div>
+        ) : iframeUrl ? (
+          <iframe 
+            src={iframeUrl}
+            className="w-full h-full border-none bg-white"
+            onLoad={() => setLoading(false)}
+            title="Proxied Browser"
+          />
+        ) : null}
       </div>
 
       {/* Sticky Bottom Toolbar */}
@@ -117,7 +169,7 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
         <div className="flex items-center gap-3">
           <button
             onClick={handleCapture}
-            disabled={galleryCount >= 3}
+            disabled={galleryCount >= 3 || !!error}
             className="btn-unified flex items-center gap-2 px-6 py-2 bg-black text-white rounded-xl hover:bg-accent hover:text-black transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <Camera size={16} />
