@@ -21,7 +21,6 @@ import { TaskStagingOverlay } from "../components/TaskStagingOverlay"
 import { ManualScanOverlay } from "../components/ManualScanOverlay"
 import { useTaskStageStore } from "../store/taskStageStore"
 import { useRole } from "../hooks/useRole"
-import { useRealtimeTasks } from "../hooks/useRealtimeTasks"
 import { startVisualDiff } from "../api/visualDiff.api"
 import {
   ChevronLeft,
@@ -52,7 +51,6 @@ import { useEffect, useState, useMemo } from "react"
 import toast from "react-hot-toast"
 
 export const RunDetailPage = () => {
-  useRealtimeTasks()
   const { id: projectId, runId } = useParams<{ id: string; runId: string }>()
   const axios = useAuthAxios()
   const updateStatus = useUpdateRunStatus()

@@ -11,25 +11,25 @@ import {
   Plus,
   CheckCircle2,
   ExternalLink,
-  Trash2
+  Trash2,
+  Bell
 } from 'lucide-react';
 import { TaskStatus } from '@qacc/shared';
 import { CreateTaskModal } from './CreateTaskModal';
 import { CanDo } from './CanDo';
 import { BulkBasecampPush } from './BulkBasecampPush';
+import { PendingReminderModal } from './PendingReminderModal';
 import { TaskDetailPanel } from './TaskDetailPanel';
 import { NotResolvedModal } from './NotResolvedModal';
 import { ResolveTaskModal } from './ResolveTaskModal';
 import { useRole } from '../hooks/useRole';
 import { Task } from '../api/tasks.api';
-import { useRealtimeTasks } from '../hooks/useRealtimeTasks';
 
 interface TasksTabProps {
   project?: ProjectWithMembers;
 }
 
 export const TasksTab = ({ project }: TasksTabProps) => {
-  useRealtimeTasks();
   const { data: tasksData, isLoading } = useTasks({ projectId: project?.id });
   const tasks = tasksData?.data || [];
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -37,6 +37,7 @@ export const TasksTab = ({ project }: TasksTabProps) => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [notResolvedTask, setNotResolvedTask] = useState<Task | null>(null);
   const [resolveTaskData, setResolveTaskData] = useState<Task | null>(null);
+  const [isPendingReminderOpen, setIsPendingReminderOpen] = useState(false);
   const { isDeveloper } = useRole();
   const { mutate: updateTask } = useUpdateTask();
   const { mutate: deleteTask } = useDeleteTask();
@@ -84,6 +85,10 @@ export const TasksTab = ({ project }: TasksTabProps) => {
   };
 
   const groupedTasks = groupTasksForUI(tasks);
+
+  const selectedInProgressTasks = tasks.filter(t => 
+    selectedTaskIds.includes(t.id) && t.status === 'in_progress'
+  );
 
   const columns: { id: TaskStatus; title: string }[] = [
     { id: 'open', title: 'To Do' },
@@ -148,6 +153,15 @@ export const TasksTab = ({ project }: TasksTabProps) => {
                 onComplete={() => setSelectedTaskIds([])} 
                 mode="comment"
               />
+              {selectedInProgressTasks.length > 1 && (
+                <button 
+                  onClick={() => setIsPendingReminderOpen(true)}
+                  className="inline-flex items-center space-x-2 px-4 py-2 rounded-md font-bold text-sm bg-amber-50 text-amber-600 border border-amber-100 hover:bg-amber-100 transition-all shadow-sm active:scale-95"
+                >
+                  <Bell className="w-4 h-4" />
+                  <span>Pending reminder</span>
+                </button>
+              )}
               <CanDo role="qa_engineer">
                 <button 
                   onClick={handleBulkDelete}
@@ -372,6 +386,14 @@ export const TasksTab = ({ project }: TasksTabProps) => {
         task={resolveTaskData}
         isOpen={!!resolveTaskData}
         onClose={() => setResolveTaskData(null)}
+      />
+
+      <PendingReminderModal 
+        tasks={selectedInProgressTasks}
+        project={project}
+        isOpen={isPendingReminderOpen}
+        onClose={() => setIsPendingReminderOpen(false)}
+        onSuccess={() => setSelectedTaskIds([])}
       />
     </div>
   );

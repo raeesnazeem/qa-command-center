@@ -22,7 +22,6 @@ import {
   useDeleteTask,
 } from "../hooks/useTasks"
 import { useProject } from "../hooks/useProjects"
-import { useRealtimeTasks } from "../hooks/useRealtimeTasks"
 import { useRole } from "../hooks/useRole"
 import { CanDo } from "./CanDo"
 import { BasecampPushButton, BasecampTaskLink } from "./BasecampPushButton"
@@ -44,7 +43,6 @@ export const TaskDetailPanel = ({
   const [rebuttalUrl, setRebuttalUrl] = useState("")
   const [isResolveModalOpen, setIsResolveModalOpen] = useState(false)
   
-  useRealtimeTasks()
   const { data: latestTask } = useTask(initialTask?.id || "")
   const task = latestTask || initialTask
   const { isDeveloper } = useRole()

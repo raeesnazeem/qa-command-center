@@ -5,12 +5,16 @@ import { useRole } from '../hooks/useRole'
 import { useEffect } from 'react'
 import { ChatSidebar } from '../components/ChatSidebar'
 import { AdminRedisWidget } from '../components/AdminRedisWidget'
+import { useRealtimeTasks } from '../hooks/useRealtimeTasks'
 
 export const AppLayout = () => {
   const { user } = useUser()
   const { role, profile, isLoading } = useRole()
   const navigate = useNavigate()
   const location = useLocation()
+
+  // Initialize global real-time listeners
+  useRealtimeTasks()
 
   useEffect(() => {
     // Redirect to onboarding if profile is incomplete in Supabase

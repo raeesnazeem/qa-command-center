@@ -761,6 +761,128 @@ router.post(
 )
 
 /**
+ * POST /api/basecamp/pending-reminder
+ * Push a consolidated reminder for multiple tasks to Basecamp.
+ */
+router.post(
+  "/pending-reminder",
+  clerkAuth,
+  requireRole("qa_engineer"),
+  async (req: Request, res: Response) => {
+    const { taskIds, assigneeIds, comment, projectId } = req.body;
+
+    if (!Array.isArray(taskIds) || taskIds.length === 0) {
+      return res.status(400).json({ error: "No task IDs provided" });
+    }
+
+    try {
+      // 1. Load tasks
+      const { data: tasks, error: tasksError } = await supabase
+        .from("tasks")
+        .select("title")
+        .in("id", taskIds);
+
+      if (tasksError || !tasks) {
+        throw new Error("Failed to fetch tasks");
+      }
+
+      // 2. Load project settings
+      const projectSettings = await getProjectSettings(projectId);
+      if (
+        !projectSettings ||
+        !projectSettings.basecamp_token ||
+        !projectSettings.basecamp_account_id ||
+        !projectSettings.basecamp_project_id
+      ) {
+        return res.status(400).json({
+          error: "Basecamp integration not configured for this project",
+        });
+      }
+
+      // 3. Resolve mentions for assignees
+      let mentions = "";
+      if (Array.isArray(assigneeIds) && assigneeIds.length > 0) {
+        const { data: userList } = await supabase
+          .from("users")
+          .select("basecamp_person_id")
+          .in("id", assigneeIds);
+        
+        const bpIds = Array.from(new Set(userList?.map(u => u.basecamp_person_id).filter(Boolean) || []));
+        const mentionsList = await Promise.all(bpIds.map(async (id: any) => {
+          const person = await getBasecampPerson(projectSettings.basecamp_token, projectSettings.basecamp_account_id, Number(id));
+          if (person && person.attachable_sgid) {
+            return formatBasecampMention(person.attachable_sgid, person.name);
+          }
+          return null;
+        }));
+        mentions = mentionsList.filter(Boolean).join(" ");
+      }
+
+      // 4. Determine target to-do list (Command Center)
+      // We use the same logic as push - use the configured to-do list
+      const { data: projectRecord } = await supabase
+        .from("projects")
+        .select("is_pre_release, is_post_release")
+        .eq("id", projectId)
+        .single();
+
+      let todolistId = projectSettings.basecamp_todolist_id;
+      if (projectRecord?.is_post_release && projectSettings.basecamp_post_todolist_id) {
+        todolistId = projectSettings.basecamp_post_todolist_id;
+      }
+
+      if (!todolistId) {
+        return res.status(400).json({ error: "Basecamp to-do list not configured" });
+      }
+
+      // 5. Format the reminder message
+      const taskListHtml = tasks.map(t => {
+        const match = t.title.match(/^(Issue #\d+):?\s*(.*)$/);
+        if (match) {
+          return `<li><strong style="color: #EAB308;">${match[1]}</strong>: ${match[2]}</li>`;
+        }
+        return `<li>${t.title}</li>`;
+      }).join("");
+
+      const reminderContent = `
+        <div style="padding: 16px;">
+          <h2 style="margin-top: 0; color: #854D0E;">🕒 PENDING REMINDER</h2>
+          ${mentions ? `<div style="margin-bottom: 12px;">${mentions}</div>` : ""}
+          
+          <p>The following tasks are currently <strong>In Progress</strong> and need your attention:</p>
+          <ul style="margin-bottom: 16px;">
+            ${taskListHtml}
+          </ul>
+
+          ${comment ? `
+            <div style="border-top: 1px solid #FEF08A; pt: 12px;">
+              <strong>Note from QA:</strong><br/>
+              <em>${comment}</em>
+            </div>
+          ` : ""}
+          <br/>
+          <small style="color: #A16207;">Pushed via QA Command Center</small>
+        </div>
+      `.trim();
+
+      // 6. Post to Basecamp
+      await createBasecampComment({
+        token: projectSettings.basecamp_token,
+        accountId: projectSettings.basecamp_account_id,
+        projectId: projectSettings.basecamp_project_id,
+        recordingId: todolistId,
+        content: reminderContent
+      });
+
+      return res.json({ success: true });
+    } catch (error: any) {
+      console.error('[PendingReminder] Error:', error);
+      return res.status(500).json({ error: error.message });
+    }
+  }
+);
+
+/**
  * POST /webhooks/basecamp
  * Handle Basecamp webhooks.
  */

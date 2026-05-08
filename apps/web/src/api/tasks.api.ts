@@ -224,3 +224,19 @@ export const resolveTask = async (
   );
   return response;
 };
+
+export const pushPendingReminder = async (
+  axios: AxiosInstance,
+  data: { 
+    taskIds: string[], 
+    assigneeIds: string[], 
+    comment: string,
+    projectId: string
+  }
+): Promise<{ success: boolean }> => {
+  const { data: response } = await axios.post<{ success: boolean }>(
+    `/api/basecamp/pending-reminder`,
+    data
+  );
+  return response;
+};

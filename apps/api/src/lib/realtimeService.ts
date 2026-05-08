@@ -5,20 +5,27 @@ import { supabase } from './supabase';
  * Channel: "tasks"
  */
 export async function broadcastTaskUpdate(taskId: string, payload: any): Promise<void> {
-  try {
-    const channel = supabase.channel('tasks');
-    await channel.send({
-      type: 'broadcast',
-      event: 'task_updated',
-      payload: {
-        taskId,
-        ...payload,
-        timestamp: new Date().toISOString(),
-      },
-    });
-  } catch (error) {
-    console.error(`[RealtimeService] Failed to broadcast task update for ${taskId}:`, error);
-  }
+  const channel = supabase.channel(`task_update_${Date.now()}_${Math.random().toString(36).substring(7)}`);
+  
+  channel.subscribe(async (status) => {
+    if (status === 'SUBSCRIBED') {
+      try {
+        await channel.send({
+          type: 'broadcast',
+          event: 'task_updated',
+          payload: {
+            taskId,
+            ...payload,
+            timestamp: new Date().toISOString(),
+          },
+        });
+      } catch (error) {
+        console.error(`[RealtimeService] Failed to send broadcast for ${taskId}:`, error);
+      } finally {
+        supabase.removeChannel(channel);
+      }
+    }
+  });
 }
 
 /**

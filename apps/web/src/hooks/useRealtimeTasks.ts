@@ -30,10 +30,21 @@ export const useRealtimeTasks = () => {
           }
 
           // 2. Invalidate all task lists
-          // This ensures that the main TaskListPage and any Project-specific TaskTabs are refreshed
           queryClient.invalidateQueries({
             queryKey: ['tasks'],
-            exact: false // Invalidate all query keys starting with ['tasks']
+            exact: false
+          });
+
+          // 3. Invalidate dashboard stats (ensure counts like "Open Issues" update)
+          queryClient.invalidateQueries({
+            queryKey: ['dashboard-stats'],
+            exact: false
+          });
+
+          // 4. Invalidate projects (ensure project-level issue counts update)
+          queryClient.invalidateQueries({
+            queryKey: ['projects'],
+            exact: false
           });
         }
       )
