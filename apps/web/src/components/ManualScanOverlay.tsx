@@ -218,95 +218,19 @@ export const ManualScanOverlay: React.FC<ManualScanOverlayProps> = ({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-white animate-in fade-in duration-300">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-slate-100 rounded-sm flex items-center justify-center border border-slate-200">
-              <ImageIcon className="text-slate-900" size={20} />
-            </div>
-            <div>
-              <h2 className="text-slate-900 font-bold uppercase tracking-wide text-sm">
-                Manual Inspector
-              </h2>
-              <p className="text-slate-500 text-[10px] font-bold uppercase tracking-tighter">
-                Run #{run.id.substring(0, 8)}
-              </p>
-            </div>
-          </div>
+    <div className="fixed inset-0 z-50 bg-white animate-in fade-in duration-300 overflow-hidden">
+      {/* Floating Close Button */}
+      <button
+        onClick={onClose}
+        className="fixed top-6 right-6 z-[70] p-2 bg-white border border-slate-200 shadow-sm hover:bg-slate-50 text-slate-400 hover:text-slate-900 rounded-sm transition-all"
+      >
+        <X size={20} />
+      </button>
 
-          {/* Page Dropdown */}
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setIsPageDropdownOpen(!isPageDropdownOpen)}
-              className="flex items-center gap-3 px-4 py-2 bg-white hover:bg-accent text-black hover:text-white border border-slate-200 rounded-sm transition-all group h-[30px]"
-            >
-              <div className="max-w-[240px] truncate text-left flex items-center gap-2">
-                <span className="text-xs truncate">
-                  {selectedPage?.url || "Select a page"}
-                </span>
-              </div>
-              <ChevronDown
-                className={`transition-transform ${isPageDropdownOpen ? "rotate-180" : ""}`}
-                size={14}
-              />
-            </button>
-
-            {isPageDropdownOpen && (
-              <div className="absolute top-full left-0 mt-2 w-[400px] bg-white border border-slate-200 rounded-sm shadow-2xl overflow-hidden z-50 animate-in slide-in-from-top-2 duration-200">
-                <div className="p-3 border-b border-slate-100 bg-slate-50">
-                  <div className="relative">
-                    <Search
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
-                      size={14}
-                    />
-                    <input
-                      type="text"
-                      placeholder="Search pages..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-sm py-2 pl-9 pr-4 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-400"
-                    />
-                  </div>
-                </div>
-                <div className="max-h-[400px] overflow-y-auto py-2">
-                  {filteredPages.map((page) => (
-                    <button
-                      key={page.id}
-                      onClick={() => {
-                        setSelectedPageId(page.id)
-                        setIsPageDropdownOpen(false)
-                        setSelection(null)
-                      }}
-                      className={`w-full px-4 py-3 flex flex-col gap-1 text-left hover:bg-slate-50 transition-colors ${selectedPageId === page.id ? "bg-slate-100 border-l-2 border-slate-900" : ""}`}
-                    >
-                      <span className="text-xs font-bold text-slate-900 truncate">
-                        {page.url}
-                      </span>
-                      <span className="text-[10px] text-slate-500">
-                        {page.title || "No title"}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <button
-          onClick={onClose}
-          className="p-2 hover:bg-slate-200 text-slate-400 hover:text-slate-900 rounded-sm transition-all"
-        >
-          <X size={24} />
-        </button>
-      </div>
-
-      <div className="flex-1 flex overflow-hidden">
+      <div className="absolute inset-0 flex overflow-hidden">
         {/* Main Viewport Area */}
         <div className="flex-1 flex flex-col min-w-0 bg-slate-50 relative">
-          {/* Viewport Toggles */}
+          {/* Viewport Toggles & Page Selector */}
           <div className="absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-1 p-1 bg-white border border-slate-200 rounded-sm z-10 shadow-sm">
             {[
               { id: "desktop", icon: Monitor, label: "Desktop" },
@@ -318,7 +242,6 @@ export const ManualScanOverlay: React.FC<ManualScanOverlayProps> = ({
                 key={v.id}
                 onClick={() => {
                   setViewport(v.id as Viewport)
-                  setSelection(null)
                 }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-sm text-[10px] font-bold uppercase tracking-widest transition-all ${
                   viewport === v.id
@@ -333,6 +256,62 @@ export const ManualScanOverlay: React.FC<ManualScanOverlayProps> = ({
 
             <div className="w-px h-4 bg-slate-200 mx-2" />
 
+            {/* Page Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setIsPageDropdownOpen(!isPageDropdownOpen)}
+                className="flex items-center gap-3 px-4 py-2 bg-white hover:bg-slate-50 text-black border-none rounded-sm transition-all group h-[30px]"
+              >
+                <div className="max-w-[200px] truncate text-left flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-widest truncate">
+                    {selectedPage?.url || "Select Page"}
+                  </span>
+                </div>
+                <ChevronDown
+                  className={`transition-transform ${isPageDropdownOpen ? "rotate-180" : ""}`}
+                  size={12}
+                />
+              </button>
+
+              {isPageDropdownOpen && (
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[400px] bg-white border border-slate-200 rounded-sm shadow-2xl overflow-hidden z-50 animate-in slide-in-from-top-2 duration-200">
+                  <div className="p-3 border-b border-slate-100 bg-slate-50">
+                    <div className="relative">
+                      <Search
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+                        size={14}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Search pages..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-sm py-2 pl-9 pr-4 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-400"
+                      />
+                    </div>
+                  </div>
+                  <div className="max-h-[300px] overflow-y-auto py-2">
+                    {filteredPages.map((page) => (
+                      <button
+                        key={page.id}
+                        onClick={() => {
+                          setSelectedPageId(page.id)
+                          setIsPageDropdownOpen(false)
+                        }}
+                        className={`w-full px-4 py-3 flex flex-col gap-1 text-left hover:bg-slate-50 transition-colors ${selectedPageId === page.id ? "bg-slate-100 border-l-2 border-slate-900" : ""}`}
+                      >
+                        <span className="text-xs font-bold text-slate-900 truncate">
+                          {page.url}
+                        </span>
+                        <span className="text-[10px] text-slate-500">
+                          {page.title || "No title"}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Screenshot Container */}
@@ -371,132 +350,133 @@ export const ManualScanOverlay: React.FC<ManualScanOverlayProps> = ({
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Sidebar - Form & Staged Issues */}
-        <div className="w-[400px] bg-slate-50 border-l border-slate-200 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto p-6 space-y-8">
-            {/* New Issue Form */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-2">
-                <Plus className="text-slate-900" size={18} />
-                <h3 className="text-slate-900 font-bold uppercase tracking-widest text-xs">
-                  Add New Issue
-                </h3>
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
-                    Issue Title
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Broken image on header"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-sm px-4 py-3 text-xs text-slate-900 placeholder:text-slate-300 focus:outline-none focus:border-slate-400 transition-all"
-                  />
+      {/* Floating Sidebar - Form & Staged Issues */}
+      {capturedImages.length > 0 && (
+        <div className="fixed right-6 top-20 bottom-6 w-[400px] bg-white border border-slate-200 rounded-sm shadow-2xl flex flex-col overflow-hidden z-[60] animate-in slide-in-from-right duration-300">
+            <div className="flex-1 overflow-y-auto p-6 space-y-8">
+              {/* New Issue Form */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-2">
+                  <Plus className="text-slate-900" size={18} />
+                  <h3 className="text-slate-900 font-bold uppercase tracking-widest text-xs">
+                    Add New Issue
+                  </h3>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
-                    Description
-                  </label>
-                  <textarea
-                    placeholder="Describe the issue in detail..."
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={3}
-                    className="w-full bg-white border border-slate-200 rounded-sm px-4 py-3 text-xs text-slate-900 placeholder:text-slate-300 focus:outline-none focus:border-slate-400 transition-all resize-none"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4">
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
-                      Severity
+                      Issue Title
                     </label>
-                    <select
-                      value={severity}
-                      onChange={(e) => setSeverity(e.target.value as any)}
-                      className="w-full bg-white border border-slate-200 rounded-sm px-3 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-slate-400 transition-all appearance-none cursor-pointer"
-                    >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                      <option value="critical">Critical</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
-                      Type
-                    </label>
-                    <select
-                      value={checkFactor}
-                      onChange={(e) => setCheckFactor(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-sm px-3 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-slate-400 transition-all appearance-none cursor-pointer"
-                    >
-                      {ISSUE_TYPES.map((type) => (
-                        <option key={type.id} value={type.id}>
-                          {type.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Developer Assignment */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
-                      Assign Developer(s)
-                    </label>
-                    <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest bg-white border border-slate-100 px-2 py-0.5 rounded-full">
-                      {selectedUserIds.size} selected
-                    </span>
-                  </div>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
                     <input
                       type="text"
-                      placeholder="Search team members..."
-                      value={userSearchQuery}
-                      onChange={(e) => setUserSearchQuery(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-sm py-2.5 pl-9 pr-4 text-xs text-slate-900 focus:outline-none focus:border-slate-400 transition-all"
+                      placeholder="e.g. Broken image on header"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-sm px-4 py-3 text-xs text-slate-900 placeholder:text-slate-300 focus:outline-none focus:border-slate-400 transition-all"
                     />
                   </div>
-                  <div className="max-h-48 overflow-y-auto border border-slate-100 rounded-sm bg-white divide-y divide-slate-50">
-                    {filteredMembers.length > 0 ? (
-                      filteredMembers.map((member) => (
-                        <button
-                          key={member.user_id}
-                          onClick={() => {
-                            const newSet = new Set(selectedUserIds)
-                            if (newSet.has(member.user_id)) newSet.delete(member.user_id)
-                            else newSet.add(member.user_id)
-                            setSelectedUserIds(newSet)
-                          }}
-                          className={`w-full flex items-center gap-3 p-2.5 hover:bg-slate-50 transition-colors ${selectedUserIds.has(member.user_id) ? "bg-slate-50" : ""}`}
-                        >
-                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-bold transition-colors ${selectedUserIds.has(member.user_id) ? "bg-black text-white" : "bg-slate-100 text-slate-500"}`}>
-                            {member.users.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                          </div>
-                          <div className="flex-1 text-left min-w-0">
-                            <p className="text-xs font-bold text-slate-900 truncate leading-tight">{member.users.full_name}</p>
-                            <p className="text-[9px] text-slate-400 truncate uppercase font-bold tracking-tight mt-0.5">{member.role.replace('_', ' ')}</p>
-                          </div>
-                          {selectedUserIds.has(member.user_id) && <Check size={14} className="text-black" />}
-                        </button>
-                      ))
-                    ) : (
-                      <div className="p-4 text-center">
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">No members found</p>
-                      </div>
-                    )}
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
+                      Description
+                    </label>
+                    <textarea
+                      placeholder="Describe the issue in detail..."
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      rows={3}
+                      className="w-full bg-white border border-slate-200 rounded-sm px-4 py-3 text-xs text-slate-900 placeholder:text-slate-300 focus:outline-none focus:border-slate-400 transition-all resize-none"
+                    />
                   </div>
-                </div>
-                {/* Captured crops gallery */}
-                {capturedImages.length > 0 && (
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
+                        Severity
+                      </label>
+                      <select
+                        value={severity}
+                        onChange={(e) => setSeverity(e.target.value as any)}
+                        className="w-full bg-white border border-slate-200 rounded-sm px-3 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-slate-400 transition-all appearance-none cursor-pointer"
+                      >
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="critical">Critical</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
+                        Type
+                      </label>
+                      <select
+                        value={checkFactor}
+                        onChange={(e) => setCheckFactor(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-sm px-3 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-slate-400 transition-all appearance-none cursor-pointer"
+                      >
+                        {ISSUE_TYPES.map((type) => (
+                          <option key={type.id} value={type.id}>
+                            {type.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Developer Assignment */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
+                        Assign Developer(s)
+                      </label>
+                      <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest bg-white border border-slate-100 px-2 py-0.5 rounded-full">
+                        {selectedUserIds.size} selected
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                      <input
+                        type="text"
+                        placeholder="Search team members..."
+                        value={userSearchQuery}
+                        onChange={(e) => setUserSearchQuery(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-sm py-2.5 pl-9 pr-4 text-xs text-slate-900 focus:outline-none focus:border-slate-400 transition-all"
+                      />
+                    </div>
+                    <div className="max-h-48 overflow-y-auto border border-slate-100 rounded-sm bg-white divide-y divide-slate-50">
+                      {filteredMembers.length > 0 ? (
+                        filteredMembers.map((member) => (
+                          <button
+                            key={member.user_id}
+                            onClick={() => {
+                              const newSet = new Set(selectedUserIds)
+                              if (newSet.has(member.user_id)) newSet.delete(member.user_id)
+                              else newSet.add(member.user_id)
+                              setSelectedUserIds(newSet)
+                            }}
+                            className={`w-full flex items-center gap-3 p-2.5 hover:bg-slate-50 transition-colors ${selectedUserIds.has(member.user_id) ? "bg-slate-50" : ""}`}
+                          >
+                            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-bold transition-colors ${selectedUserIds.has(member.user_id) ? "bg-black text-white" : "bg-slate-100 text-slate-500"}`}>
+                              {member.users.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                            </div>
+                            <div className="flex-1 text-left min-w-0">
+                              <p className="text-xs font-bold text-slate-900 truncate leading-tight">{member.users.full_name}</p>
+                              <p className="text-[9px] text-slate-400 truncate uppercase font-bold tracking-tight mt-0.5">{member.role.replace('_', ' ')}</p>
+                            </div>
+                            {selectedUserIds.has(member.user_id) && <Check size={14} className="text-black" />}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="p-4 text-center">
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">No members found</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {/* Captured crops gallery */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
@@ -532,27 +512,26 @@ export const ManualScanOverlay: React.FC<ManualScanOverlayProps> = ({
                       )}
                     </div>
                   </div>
-                )}
 
-                <button
-                  onClick={handleCreateTask}
-                  disabled={isUploading}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-sm hover:bg-accent hover:text-black transition-all disabled:opacity-40 disabled:pointer-events-none"
-                >
-                  {isUploading ? (
-                    <Loader2 size={16} className="animate-spin" />
-                  ) : (
-                    <><Check size={14} /> Create Task</>
-                  )}
-                </button>
-                <p className="text-[9px] text-slate-400 text-center uppercase font-bold tracking-tight px-4">
-                  Freeze and crop areas, then create task
-                </p>
+                  <button
+                    onClick={handleCreateTask}
+                    disabled={isUploading}
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-sm hover:bg-accent hover:text-black transition-all disabled:opacity-40 disabled:pointer-events-none"
+                  >
+                    {isUploading ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <><Check size={14} /> Create Task</>
+                    )}
+                  </button>
+                  <p className="text-[9px] text-slate-400 text-center uppercase font-bold tracking-tight px-4">
+                    Freeze and crop areas, then create task
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
-    </div>
   )
 }
