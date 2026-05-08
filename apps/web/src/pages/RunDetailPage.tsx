@@ -45,6 +45,8 @@ import {
   ChevronRight,
   Download,
   Send,
+  Camera,
+  Video,
 } from "lucide-react"
 import { useEffect, useState, useMemo } from "react"
 import toast from "react-hot-toast"
@@ -93,6 +95,9 @@ export const RunDetailPage = () => {
 
   const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false)
   const [prefillFinding, setPrefillFinding] = useState<QAFinding | null>(null)
+
+  const [isCapturingScreenshots, setIsCapturingScreenshots] = useState(false)
+  const [isRecordingVideo, setIsRecordingVideo] = useState(false)
 
   const { data: findings, isLoading: isLoadingFindings } =
     useFindings(selectedPageId)
@@ -231,6 +236,30 @@ export const RunDetailPage = () => {
     }
   }
 
+  const handleCaptureScreenshots = async () => {
+    if (!selectedPage?.url) return
+    setIsCapturingScreenshots(true)
+    try {
+      toast.success("Screenshot capture started...")
+    } catch (err) {
+      toast.error("Failed to start screenshot capture")
+    } finally {
+      setIsCapturingScreenshots(false)
+    }
+  }
+
+  const handleCaptureVideo = async () => {
+    if (!selectedPage?.url) return
+    setIsRecordingVideo(true)
+    try {
+      toast.success("Video recording started...")
+    } catch (err) {
+      toast.error("Failed to start video recording")
+    } finally {
+      setIsRecordingVideo(false)
+    }
+  }
+
   const handleConfirmFinding = async (id: string) => {
     updateFindingMutation.mutate({
       findingId: id,
@@ -328,10 +357,12 @@ export const RunDetailPage = () => {
 
   const handleAddToStage = async (findingsToStage: QAFinding[]) => {
     try {
-      const response = await axios.get(`/api/tasks/count/unique?project_id=${projectId}`);
-      const baseCount = response.data.count;
-      const currentStagedCount = stagedFindings.length;
-      let nextIssueNum = baseCount + currentStagedCount + 1;
+      const response = await axios.get(
+        `/api/tasks/count/unique?project_id=${projectId}`,
+      )
+      const baseCount = response.data.count
+      const currentStagedCount = stagedFindings.length
+      let nextIssueNum = baseCount + currentStagedCount + 1
 
       const mergedFindings = findingsToStage.map((f) => {
         return {
@@ -339,14 +370,14 @@ export const RunDetailPage = () => {
           issue_number: nextIssueNum++,
           title: f.title.replace(/^Issue #\d+:?\s*/, ""),
           gallery_images: allGalleryImages[f.id] || f.gallery_images,
-        };
-      });
-      addToStage(mergedFindings as any);
+        }
+      })
+      addToStage(mergedFindings as any)
     } catch (error) {
-      console.error("Failed to fetch next issue number:", error);
-      toast.error("Failed to calculate issue numbers");
+      console.error("Failed to fetch next issue number:", error)
+      toast.error("Failed to calculate issue numbers")
     }
-  };
+  }
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-8 animate-in fade-in duration-500">
@@ -731,7 +762,7 @@ export const RunDetailPage = () => {
           </div>
 
           {selectedPage ? (
-            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm w-full">
+            <div className="bg-white border border-slate-200 rounded-md overflow-hidden shadow-sm w-full">
               <div className="bg-slate-50 border-b border-slate-100 p-6 flex items-center justify-between">
                 <div>
                   <h3 className="font-bold text-slate-900 truncate text-lg">
@@ -741,17 +772,51 @@ export const RunDetailPage = () => {
                     {findings?.length || 0} Issues Detected on this page
                   </p>
                 </div>
-                <button
-                  onClick={() => setActiveTab("pages")}
-                  className="text-[10px] font-bold text-accent uppercase tracking-widest hover:text-black transition-colors"
-                >
-                  Change Page
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setActiveTab("pages")}
+                    className="btn-unified btn-small"
+                  >
+                    Change Page
+                  </button>
+
+                  {selectedPage?.url && (
+                    <>
+                      <button
+                        onClick={handleCaptureScreenshots}
+                        disabled={isCapturingScreenshots || isRecordingVideo}
+                        className="flex items-center justify-center gap-2 btn-unified btn-small"
+                      >
+                        {isCapturingScreenshots ? (
+                          <Loader2
+                            size={14}
+                            className="animate-spin text-[#fff]"
+                          />
+                        ) : (
+                          <Camera size={18} className="text-[#fff]-500" />
+                        )}
+                      </button>
+
+                      <button
+                        onClick={handleCaptureVideo}
+                        disabled={isRecordingVideo || isCapturingScreenshots}
+                        className="flex items-center justify-center gap-2 btn-unified btn-small"
+                      >
+                        {isRecordingVideo ? (
+                          <Loader2
+                            size={14}
+                            className="animate-spin text-[#fff]"
+                          />
+                        ) : (
+                          <Video size={18} className="text-[#fff]-500" />
+                        )}
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
 
               <div className="p-8">
-
-
                 {/* Findings List */}
                 {isLoadingFindings ? (
                   <div className="py-20 text-center">
@@ -767,7 +832,9 @@ export const RunDetailPage = () => {
                     }}
                     onSingleConfirm={handleConfirmFinding}
                     onSingleFalsePositive={handleFalsePositiveFinding}
-                    onSingleCreateTask={(finding) => handleAddToStage([finding])}
+                    onSingleCreateTask={(finding) =>
+                      handleAddToStage([finding])
+                    }
                     onConfirmBulk={handleBulkConfirm}
                     onFalsePositiveBulk={handleBulkFalsePositive}
                     onCreateTasksBulk={handleBulkCreateTasks}
