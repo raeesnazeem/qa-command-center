@@ -339,14 +339,8 @@ export const DashboardPage = () => {
                 <Link
                   key={project.id}
                   to={`/projects/${project.id}`}
-                  className="bg-white border-2 border-amber-100 rounded-md p-6 shadow-sm hover:shadow-xl hover:border-amber-400 transition-all group relative overflow-hidden min-w-[300px] flex-shrink-0"
+                  className="bg-white border-2 border-slate-100 rounded-md p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group relative overflow-hidden min-w-[300px] flex-shrink-0"
                 >
-                  <div className="absolute top-0 right-0 p-3">
-                    <Zap
-                      size={16}
-                      className="text-amber-500 fill-amber-500 opacity-20 group-hover:opacity-100 transition-opacity"
-                    />
-                  </div>
                   <h4 className="text-xl font-bold text-slate-900 group-hover:text-accent transition-colors truncate pr-2">
                     {project.name}
                   </h4>

@@ -836,17 +836,19 @@ router.post(
       }
 
       // 5. Format the reminder message
-      const taskListHtml = tasks.map(t => {
-        const match = t.title.match(/^(Issue #\d+):?\s*(.*)$/);
+      // Deduplicate by title to avoid repeating the same finding/issue
+      const uniqueTitles = Array.from(new Set(tasks.map(t => t.title)));
+
+      const taskListHtml = uniqueTitles.map(title => {
+        const match = title.match(/^(Issue #\d+):?\s*(.*)$/);
         if (match) {
           return `<li><strong style="color: #EAB308;">${match[1]}</strong>: ${match[2]}</li>`;
         }
-        return `<li>${t.title}</li>`;
+        return `<li>${title}</li>`;
       }).join("");
 
       const reminderContent = `
-        <div style="padding: 16px;">
-          <h2 style="margin-top: 0; color: #854D0E;">🕒 PENDING REMINDER</h2>
+        <div>
           ${mentions ? `<div style="margin-bottom: 12px;">${mentions}</div>` : ""}
           
           <p>The following tasks are currently <strong>In Progress</strong> and need your attention:</p>
@@ -855,7 +857,7 @@ router.post(
           </ul>
 
           ${comment ? `
-            <div style="border-top: 1px solid #FEF08A; pt: 12px;">
+            <div style="border-top: 1px solid #eee; padding-top: 12px; margin-top: 12px;">
               <strong>Note from QA:</strong><br/>
               <em>${comment}</em>
             </div>

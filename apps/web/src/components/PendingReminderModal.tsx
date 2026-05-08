@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { X, Loader2, Users, Bell, ChevronDown } from 'lucide-react';
 import { Task, pushPendingReminder } from '../api/tasks.api';
 import { ProjectWithMembers } from '../api/projects.api';
@@ -24,6 +24,16 @@ export const PendingReminderModal = ({
   const [isPushing, setIsPushing] = useState(false);
   const [comment, setComment] = useState('');
   const [selectedAssigneeIds, setSelectedAssigneeIds] = useState<string[]>([]);
+
+  // Deduplicate tasks by title for the UI list
+  const uniqueTasks = useMemo(() => {
+    const seen = new Set<string>();
+    return tasks.filter(task => {
+      if (seen.has(task.title)) return false;
+      seen.add(task.title);
+      return true;
+    });
+  }, [tasks]);
 
   if (!isOpen) return null;
 
@@ -90,10 +100,10 @@ export const PendingReminderModal = ({
           {/* Selected Tasks List */}
           <div className="space-y-3">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
-              Tasks to Include ({tasks.length})
+              Tasks to Include ({uniqueTasks.length})
             </span>
             <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 space-y-2">
-              {tasks.map(task => (
+              {uniqueTasks.map(task => (
                 <div key={task.id} className="flex items-start gap-3 text-sm">
                   {(() => {
                     const match = task.title.match(/^(Issue #\d+):?\s*(.*)$/);
