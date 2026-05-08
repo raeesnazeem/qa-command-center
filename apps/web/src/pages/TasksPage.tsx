@@ -12,6 +12,7 @@ import {
   ExternalLink,
   MessageSquare,
   CheckCircle2,
+  Trash2,
 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { useDashboardStats } from "../hooks/useDashboard"
@@ -20,7 +21,7 @@ import { CreateTaskModal } from "../components/CreateTaskModal"
 import { TasksTab } from "../components/TasksTab"
 import { Skeleton } from "../components/Skeleton"
 import { TaskDetailPanel } from "../components/TaskDetailPanel"
-import { useUpdateTask, useTasks } from "../hooks/useTasks"
+import { useUpdateTask, useTasks, useDeleteTask } from "../hooks/useTasks"
 import { TaskStatus } from "../api/tasks.api"
 
 const ProjectCard = ({ project }: { project: any }) => (
@@ -142,10 +143,12 @@ const KanbanCard = ({
   task,
   onClick,
   role,
+  onDelete,
 }: {
   task: any
   onClick: any
   role: string
+  onDelete: (taskId: string) => void
 }) => {
   const isAdmin =
     role === "super_admin" || role === "admin" || role === "sub_admin"
@@ -167,6 +170,18 @@ const KanbanCard = ({
           <div className="text-emerald-600" title="Synced with Basecamp">
             <CheckCircle2 size={12} />
           </div>
+        )}
+        {isQA && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onDelete(task.id)
+            }}
+            className="p-1 text-slate-300 hover:text-red-500 transition-colors"
+            title="Delete task"
+          >
+            <Trash2 size={12} />
+          </button>
         )}
       </div>
       <h4 className="text-sm font-bold text-slate-900 group-hover:text-accent transition-colors leading-tight mb-4">
@@ -221,11 +236,13 @@ const KanbanColumn = ({
   tasks,
   onTaskClick,
   role,
+  onDelete,
 }: {
   title: string
   tasks: any[]
   onTaskClick: any
   role: string
+  onDelete: (taskId: string) => void
 }) => (
   <div className="space-y-4">
     <div className="flex items-center justify-between px-2">
@@ -253,6 +270,7 @@ const KanbanColumn = ({
             task={task}
             onClick={onTaskClick}
             role={role}
+            onDelete={onDelete}
           />
         ))
       )}
@@ -265,11 +283,13 @@ const ProjectKanban = ({
   tasks,
   onTaskClick,
   role,
+  onDelete,
 }: {
   project: any
   tasks: any[]
   onTaskClick: any
   role: string
+  onDelete: (taskId: string) => void
 }) => {
   const groupedTasks = groupTasksForUI(tasks)
   const columns = [
@@ -313,6 +333,7 @@ const ProjectKanban = ({
             tasks={groupedTasks.filter((t) => t.status === col.id)}
             onTaskClick={onTaskClick}
             role={role}
+            onDelete={onDelete}
           />
         ))}
       </div>
@@ -329,6 +350,7 @@ export const TasksPage = () => {
   const [qaExpanded, setQaExpanded] = useState(true)
   const [devExpanded, setDevExpanded] = useState(true)
   const { mutate: updateTask } = useUpdateTask()
+  const { mutate: deleteTask } = useDeleteTask()
 
   const isAdmin = role === "super_admin" || role === "admin"
   const isSubAdmin = role === "sub_admin"
@@ -340,6 +362,12 @@ export const TasksPage = () => {
     assignedTo: isDev ? profile?.id : undefined,
     createdBy: isQA ? profile?.id : undefined,
   })
+  
+  const handleDeleteTask = (taskId: string) => {
+    if (window.confirm("Are you sure you want to delete this task?")) {
+      deleteTask(taskId)
+    }
+  }
 
   if (isStatsLoading || isRoleLoading || ((isDev || isQA) && isTasksLoading)) {
     return (
@@ -689,6 +717,7 @@ export const TasksPage = () => {
                   tasks={groupedTasks[projectId]}
                   onTaskClick={setSelectedTask}
                   role={role!}
+                  onDelete={handleDeleteTask}
                 />
               ))
             })()}
@@ -752,6 +781,7 @@ export const TasksPage = () => {
                   tasks={groupedTasks[projectId]}
                   onTaskClick={setSelectedTask}
                   role={role!}
+                  onDelete={handleDeleteTask}
                 />
               ))
             })()}

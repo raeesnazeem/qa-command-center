@@ -116,7 +116,7 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
 
     try {
       const res = RESOLUTIONS[deviceMode]
-      
+
       const response = await axios.post("/api/proxy-browser/capture", {
         url: currentProxiedUrl,
         fullPage: true,
@@ -266,7 +266,10 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
                 <div className="absolute inset-0 z-30 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center gap-6 text-white animate-in fade-in duration-300">
                   <div className="relative">
                     <div className="w-20 h-20 border-4 border-white/10 rounded-full" />
-                    <Scan className="absolute inset-0 m-auto text-white animate-pulse" size={28} />
+                    <Scan
+                      className="absolute inset-0 m-auto text-white animate-pulse"
+                      size={28}
+                    />
                   </div>
                   <div className="text-center max-w-xs w-full px-6">
                     <p className="text-xs font-bold uppercase tracking-[0.2em] mb-1">
@@ -275,10 +278,10 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
                     <p className="text-[10px] text-white/60 font-medium uppercase tracking-widest mb-6">
                       Waking up pixels and widgets...
                     </p>
-                    
+
                     <div className="space-y-3">
                       <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                        <div 
+                        <div
                           className="h-full bg-accent transition-all duration-300 ease-out"
                           style={{ width: `${captureProgress}%` }}
                         />
@@ -288,7 +291,9 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
                           {Math.round(captureProgress)}% Complete
                         </p>
                         <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest">
-                          {captureProgress < 90 ? "Processing..." : "Finalizing..."}
+                          {captureProgress < 90
+                            ? "Processing..."
+                            : "Finalizing..."}
                         </p>
                       </div>
                     </div>
@@ -344,11 +349,11 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
           <button
             onClick={handleCapture}
             disabled={galleryCount >= 3 || !!error}
-            className="btn-unified flex items-center gap-2 px-6 py-2 bg-black text-white rounded-xl hover:bg-accent hover:text-black transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
+            className="btn-unified flex items-center gap-2 text-white rounded-md hover:bg-accent hover:text-black transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <Camera size={16} />
             <span className="text-[10px] font-bold uppercase tracking-widest">
-              Capture Evidence
+              Capture Reference
             </span>
           </button>
         </div>

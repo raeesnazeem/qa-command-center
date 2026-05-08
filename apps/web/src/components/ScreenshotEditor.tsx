@@ -42,20 +42,28 @@ export const ScreenshotEditor: React.FC<ScreenshotEditorProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [img, setImg] = useState<HTMLImageElement | null>(null)
-  const [tool, setTool] = useState<"select" | "rect" | "arrow" | "text">("select")
-  const [annotations, setAnnotations] = useState<Annotation[]>([])
-  const [currentAnnotation, setCurrentAnnotation] = useState<Partial<Annotation> | null>(null)
-  const [isDrawing, setIsDrawing] = useState(false)
-  const [selection, setSelection] = useState<{ x: number; y: number; w: number; h: number } | null>(
-    null,
+  const [tool, setTool] = useState<"select" | "rect" | "arrow" | "text">(
+    "select",
   )
+  const [annotations, setAnnotations] = useState<Annotation[]>([])
+  const [currentAnnotation, setCurrentAnnotation] =
+    useState<Partial<Annotation> | null>(null)
+  const [isDrawing, setIsDrawing] = useState(false)
+  const [selection, setSelection] = useState<{
+    x: number
+    y: number
+    w: number
+    h: number
+  } | null>(null)
   const [clips, setClips] = useState<string[]>([])
   const [zoom, setZoom] = useState(1)
   const [isUploading, setIsUploading] = useState(false)
   const [selectedColor, setSelectedColor] = useState("#ef4444")
   const [activeTextId, setActiveTextId] = useState<string | null>(null)
   const [textInput, setTextInput] = useState("")
-  const [typingPos, setTypingPos] = useState<{ x: number; y: number } | null>(null)
+  const [typingPos, setTypingPos] = useState<{ x: number; y: number } | null>(
+    null,
+  )
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useLayoutEffect(() => {
@@ -245,7 +253,11 @@ export const ScreenshotEditor: React.FC<ScreenshotEditorProps> = ({
     const pos = getMousePos(e)
 
     if (tool === "select" && selection) {
-      setSelection({ ...selection, w: pos.x - selection.x, h: pos.y - selection.y })
+      setSelection({
+        ...selection,
+        w: pos.x - selection.x,
+        h: pos.y - selection.y,
+      })
     } else if (currentAnnotation) {
       setCurrentAnnotation({
         ...currentAnnotation,
@@ -276,7 +288,7 @@ export const ScreenshotEditor: React.FC<ScreenshotEditorProps> = ({
       // Draw the image + annotations within the selection
       const sourceX = selection.w > 0 ? selection.x : selection.x + selection.w
       const sourceY = selection.h > 0 ? selection.y : selection.y + selection.h
-      
+
       tempCtx.drawImage(
         canvasRef.current,
         sourceX,
@@ -290,7 +302,7 @@ export const ScreenshotEditor: React.FC<ScreenshotEditorProps> = ({
       )
 
       const base64 = tempCanvas.toDataURL("image/jpeg", 0.9)
-      
+
       // Upload to API
       const response = await axios.post("/api/proxy-browser/upload-clip", {
         base64,
@@ -300,7 +312,7 @@ export const ScreenshotEditor: React.FC<ScreenshotEditorProps> = ({
       if (response.data?.imageUrl) {
         const clipUrl = response.data.imageUrl
         setClips([...clips, clipUrl])
-        
+
         if (clips.length + 1 >= maxClips) {
           onSave([...clips, clipUrl])
         }
@@ -358,21 +370,26 @@ export const ScreenshotEditor: React.FC<ScreenshotEditorProps> = ({
           <div className="h-8 w-px bg-slate-200" />
 
           <div className="flex items-center gap-2 bg-slate-100 rounded-xl p-1.5">
-            {["#ef4444", "#3b82f6", "#22c55e", "#eab308", "#000000", "#ffffff"].map(
-              (c) => (
-                <button
-                  key={c}
-                  onClick={() => setSelectedColor(c)}
-                  className={`w-6 h-6 rounded-full border-2 transition-all ${
-                    selectedColor === c
-                      ? "border-white ring-2 ring-blue-500 scale-110 shadow-sm"
-                      : "border-transparent opacity-50 hover:opacity-100"
-                  }`}
-                  style={{ backgroundColor: c }}
-                  title={c}
-                />
-              ),
-            )}
+            {[
+              "#ef4444",
+              "#3b82f6",
+              "#22c55e",
+              "#eab308",
+              "#000000",
+              "#ffffff",
+            ].map((c) => (
+              <button
+                key={c}
+                onClick={() => setSelectedColor(c)}
+                className={`w-6 h-6 rounded-full border-2 transition-all ${
+                  selectedColor === c
+                    ? "border-white ring-2 ring-blue-500 scale-110 shadow-sm"
+                    : "border-transparent opacity-50 hover:opacity-100"
+                }`}
+                style={{ backgroundColor: c }}
+                title={c}
+              />
+            ))}
           </div>
 
           <button
@@ -386,8 +403,12 @@ export const ScreenshotEditor: React.FC<ScreenshotEditorProps> = ({
 
         <div className="flex items-center gap-3">
           <div className="text-right mr-4">
-            <p className="text-[10px] font-bold text-slate-400 uppercase">Clips Ready</p>
-            <p className="text-xs font-bold text-slate-900">{clips.length} / {maxClips}</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase">
+              Clips Ready
+            </p>
+            <p className="text-xs font-bold text-slate-900">
+              {clips.length} / {maxClips}
+            </p>
           </div>
           <button
             onClick={onClose}
@@ -398,9 +419,13 @@ export const ScreenshotEditor: React.FC<ScreenshotEditorProps> = ({
           <button
             onClick={handleCaptureClip}
             disabled={!selection || clips.length >= maxClips || isUploading}
-            className="btn-unified flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-30"
+            className="btn-unified flex items-center gap-2 px-6 py-2 bg-black text-white rounded-md hover:bg-accent hover:text-black transition-all active:scale-95 disabled:opacity-30"
           >
-            {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+            {isUploading ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Plus size={16} />
+            )}
             <span className="text-[10px] font-bold uppercase tracking-widest">
               {isUploading ? "Uploading..." : "Capture Clip"}
             </span>
@@ -408,7 +433,7 @@ export const ScreenshotEditor: React.FC<ScreenshotEditorProps> = ({
           <button
             onClick={() => onSave(clips)}
             disabled={clips.length === 0}
-            className="btn-unified flex items-center gap-2 px-6 py-2 bg-black text-white rounded-xl hover:bg-accent hover:text-black transition-all active:scale-95 disabled:opacity-30"
+            className="btn-unified flex items-center gap-2 px-6 py-2 bg-black text-white rounded-md hover:bg-accent hover:text-black transition-all active:scale-95 disabled:opacity-30"
           >
             <Check size={16} />
             <span className="text-[10px] font-bold uppercase tracking-widest">
@@ -442,10 +467,9 @@ export const ScreenshotEditor: React.FC<ScreenshotEditorProps> = ({
           {activeTextId && typingPos && (
             <textarea
               ref={textareaRef}
-              className="absolute bg-white border-2 border-blue-600 shadow-2xl p-2 m-0 resize-none font-bold overflow-hidden rounded-lg outline-none text-slate-900 ring-4 ring-blue-500/20"
+              className="absolute bg-white border-2 border-slate-600 shadow-2xl p-2 m-0 resize-none font-bold overflow-hidden rounded-lg outline-none text-slate-900 ring-4 ring-slate-500/20"
               value={textInput}
               onChange={(e) => setTextInput(e.target.value)}
-
               onMouseDown={(e) => e.stopPropagation()}
               placeholder="Type here..."
               onKeyDown={(e) => {
@@ -503,10 +527,14 @@ const ToolButton: React.FC<{
   <button
     onClick={onClick}
     className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-      active ? "bg-white shadow-sm text-blue-600" : "text-slate-400 hover:text-slate-600"
+      active
+        ? "bg-white shadow-sm text-blue-600"
+        : "text-slate-400 hover:text-slate-600"
     }`}
   >
     {icon}
-    <span className="text-[10px] font-bold uppercase tracking-widest">{label}</span>
+    <span className="text-[10px] font-bold uppercase tracking-widest">
+      {label}
+    </span>
   </button>
 )
