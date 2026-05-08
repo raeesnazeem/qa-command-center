@@ -237,10 +237,49 @@ export const RunDetailPage = () => {
   const handleCaptureScreenshots = async () => {
     if (!selectedPage?.url) return
     setIsCapturingScreenshots(true)
+    const toastId = toast.loading(
+      "Capturing multiview screenshots... (20s wait/view)",
+    )
     try {
-      toast.success("Screenshot capture started...")
+      const response = await axios.post("/api/proxy-browser/capture-multiview", {
+        url: selectedPage.url,
+        type: "screenshots",
+      })
+
+      const results = response.data // { desktop, laptop, tablet, mobile }
+      const galleryImages = [
+        results.desktop,
+        results.laptop,
+        results.tablet,
+        results.mobile,
+      ].filter(Boolean)
+
+      const urlObj = new URL(selectedPage.url)
+      const pageName = `${urlObj.hostname}${urlObj.pathname}`
+      const dateStr = new Date().toLocaleDateString("en-US", {
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
+      })
+      const timeStr = new Date().toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+
+      const taskTitle = `Screenshots for ${pageName} on ${dateStr} at ${timeStr}`
+
+      createTask({
+        project_id: projectId!,
+        title: taskTitle,
+        description: `Automated multiview screenshots for ${selectedPage.url}`,
+        severity: "medium",
+        gallery_images: galleryImages,
+      })
+
+      toast.success("Screenshots captured and staged as a task", { id: toastId })
     } catch (err) {
-      toast.error("Failed to start screenshot capture")
+      console.error(err)
+      toast.error("Failed to capture multiview screenshots", { id: toastId })
     } finally {
       setIsCapturingScreenshots(false)
     }

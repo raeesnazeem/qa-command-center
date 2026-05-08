@@ -12,6 +12,7 @@ import { processCaptureScreenshotJob } from './jobs/captureScreenshotJob';
 
 import { processRunAiChecksJob } from './jobs/runAiChecksJob';
 import { processCrawlBatchJob } from './jobs/crawlBatchJob';
+import { processCaptureMultiviewScreenshotsJob } from './jobs/captureMultiviewScreenshotsJob';
 
 import { qaQueue, connection } from './lib/queue';
 
@@ -64,6 +65,8 @@ const worker = new Worker(
           break;
         case 'capture_screenshot':
           return await processCaptureScreenshotJob(job);
+        case 'capture_multiview_screenshots':
+          return await processCaptureMultiviewScreenshotsJob(job);
         case 'test':
           await processTestJob();
           break;

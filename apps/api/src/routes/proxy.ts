@@ -101,6 +101,43 @@ router.post(
 );
 
 /**
+ * POST /proxy-browser/capture-multiview
+ * Triggers multiple screenshot captures (Desktop, Laptop, Tablet, Mobile) of a URL.
+ */
+router.post(
+  '/proxy-browser/capture-multiview',
+  clerkAuth,
+  async (req: Request, res: Response) => {
+    const { url, type } = req.body;
+    const userId = (req as any).auth?.userId;
+
+    if (!url) {
+      return res.status(400).json({ error: 'URL is required' });
+    }
+
+    try {
+      const job = await qaQueue.add('capture_multiview_screenshots', { 
+        url, 
+        userId,
+        type: type || 'screenshots'
+      }, {
+        removeOnComplete: true,
+      });
+
+      const result = await job.waitUntilFinished(qaQueueEvents);
+
+      return res.json(result);
+    } catch (error: any) {
+      console.error('[Capture Multiview Error]:', error.message);
+      return res.status(500).json({ 
+        error: 'Failed to capture multiview screenshots',
+        details: error.message 
+      });
+    }
+  }
+);
+
+/**
  * Helper to resolve relative URLs and rewrite them to go through the proxy
  */
 function rewriteLinks(html: string, baseUrl: string, proxyOrigin: string): string {

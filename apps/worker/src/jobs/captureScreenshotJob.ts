@@ -1,4 +1,4 @@
-import { chromium } from 'playwright';
+import { launchBrowser, injectPopupKiller, disableAnimations, wakeUpLazyImages, delay } from '../lib/puppeteerBrowser';
 import sharp from 'sharp';
 import { uploadScreenshot } from '../lib/supabaseStorage';
 import pino from 'pino';
@@ -27,10 +27,7 @@ export async function processCaptureScreenshotJob(job: Job) {
   
   if (!url) throw new Error('URL is required for capture');
 
-  const browser = await chromium.launch({ 
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
-  });
+  const browser = await launchBrowser();
 
   try {
     // Use provided viewport dimensions or fallback to width/height
@@ -40,11 +37,11 @@ export async function processCaptureScreenshotJob(job: Job) {
     const finalScrollX = Math.max(0, Math.floor(Number(scrollX)) || 0);
     const finalScrollY = Math.max(0, Math.floor(Number(scrollY)) || 0);
 
-    const context = await browser.newContext({
-      viewport: { width: vWidth, height: vHeight },
-      deviceScaleFactor: 1,
-    });
-    const page = await context.newPage();
+    const page = await browser.newPage();
+    await page.setViewport({ width: vWidth, height: vHeight, deviceScaleFactor: 1 });
+
+    // Inject popup/cookie killer BEFORE navigation
+    await injectPopupKiller(page);
 
     logger.info({ 
       url, 
@@ -57,93 +54,27 @@ export async function processCaptureScreenshotJob(job: Job) {
     await page.goto(url, { timeout: 45000, waitUntil: 'load' });
     
     // Wait for content to stabilize and initial animations to settle
-    await page.waitForTimeout(3000);
+    await delay(3000);
 
     // Apply lazy-load wakeup logic ONLY if it's a full page capture
     if (fullPage) {
       logger.info({ url }, 'Waking up lazy loaders for full-page capture');
       
-      // 1. Force all images to eager load and resolve lazy attributes
-      await page.evaluate(() => {
-        const images = document.querySelectorAll('img');
-        images.forEach(img => {
-          // Force eager loading
-          img.setAttribute('loading', 'eager');
-          
-          // Swap common lazy-load attributes if they exist
-          const lazyAttributes = ['data-src', 'data-srcset', 'data-original', 'lazy-src'];
-          lazyAttributes.forEach(attr => {
-            if (img.hasAttribute(attr)) {
-              if (attr === 'data-srcset') {
-                img.srcset = img.getAttribute(attr)!;
-              } else {
-                img.src = img.getAttribute(attr)!;
-              }
-            }
-          });
-        });
-        
-        // Disable animations/transitions and hide skeletons
-        const style = document.createElement('style');
-        style.textContent = `
-          *, *::before, *::after {
-            transition: none !important;
-            animation: none !important;
-            scroll-behavior: auto !important;
-          }
-          [class*="skeleton"], [class*="loading-placeholder"], [class*="shimmer"] {
-            opacity: 0 !important;
-            visibility: hidden !important;
-          }
-        `;
-        document.head.appendChild(style);
-      });
-
-      // 2. Scroll to bottom in smaller increments to trigger lazy loading
-      await page.evaluate(async () => {
-        await new Promise<void>((resolve) => {
-          let totalHeight = 0;
-          const distance = 300; // Smaller steps
-          const timer = setInterval(() => {
-            const scrollHeight = document.body.scrollHeight;
-            window.scrollBy(0, distance);
-            totalHeight += distance;
-
-            if (totalHeight >= scrollHeight || totalHeight > 15000) { // Cap at 15k for performance
-              clearInterval(timer);
-              resolve();
-            }
-          }, 150); // Slower interval
-        });
-      });
-
-      // 3. Scroll back to top
-      await page.evaluate(() => window.scrollTo(0, 0));
+      await disableAnimations(page);
+      await wakeUpLazyImages(page);
       
-      // 4. Wait for all images to be fully loaded and decoded
-      await page.evaluate(async () => {
-        const images = Array.from(document.querySelectorAll('img'));
-        await Promise.all(images.map(img => {
-          if (img.complete) return (img as any).decode?.().catch(() => null);
-          return new Promise((resolve) => {
-            img.addEventListener('load', () => (img as any).decode?.().then(resolve).catch(resolve));
-            img.addEventListener('error', resolve);
-          });
-        }));
-      });
-      
-      // 5. Wait for network to settle and final stabilize
-      await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => null);
-      await page.waitForTimeout(10000); // 10 second rest
+      // Wait for network to settle and final stabilize
+      await page.waitForNetworkIdle({ timeout: 10000 }).catch(() => null);
+      await delay(5000);
     }
- else if (finalScrollX > 0 || finalScrollY > 0) {
+    else if (finalScrollX > 0 || finalScrollY > 0) {
       // Apply scroll position ONLY if not a full page capture
       try {
         await page.evaluate(({ x, y }) => {
           window.scrollTo(x, y);
         }, { x: finalScrollX, y: finalScrollY });
         
-        await page.waitForTimeout(1000);
+        await delay(1000);
       } catch (scrollErr) {
         logger.warn({ url, scrollErr }, 'Failed to apply scroll position');
       }
@@ -152,7 +83,7 @@ export async function processCaptureScreenshotJob(job: Job) {
     // Take screenshot (fullPage if requested)
     const buffer = await page.screenshot({ 
       fullPage: !!fullPage,
-      animations: 'disabled'
+      captureBeyondViewport: true,
     });
 
     // Compress with sharp

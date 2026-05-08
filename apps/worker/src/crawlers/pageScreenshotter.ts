@@ -1,4 +1,4 @@
-import { chromium } from 'playwright';
+import { launchBrowser, injectPopupKiller, disableAnimations, wakeUpLazyImages, delay } from '../lib/puppeteerBrowser';
 import sharp from 'sharp';
 import { uploadScreenshot } from '../lib/supabaseStorage';
 import pino from 'pino';
@@ -53,10 +53,7 @@ export async function screenshotPage(
         `Capturing ${viewport.name} screenshot...`
       );
     }
-    const browser = await chromium.launch({ 
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
-    });
+    const browser = await launchBrowser();
     try {
       if (onProgress) {
         await onProgress(
@@ -64,11 +61,8 @@ export async function screenshotPage(
           `Opening browser (${viewport.name})...`
         );
       }
-      const context = await browser.newContext({
-        viewport: { width: viewport.width, height: viewport.height },
-        deviceScaleFactor: 1,
-      });
-      const page = await context.newPage();
+      const page = await browser.newPage();
+      await page.setViewport({ width: viewport.width, height: viewport.height, deviceScaleFactor: 1 });
 
       logger.info({ url, viewport: viewport.name }, `Taking screenshot`);
 
@@ -78,6 +72,10 @@ export async function screenshotPage(
           `Navigating to URL (${viewport.name})...`
         );
       }
+
+      // Inject popup/cookie killer BEFORE navigation
+      await injectPopupKiller(page);
+
       // Navigate to URL
       await page.goto(url, { timeout: 30000, waitUntil: 'load' });
 
@@ -95,7 +93,7 @@ export async function screenshotPage(
         logger.debug({ url, viewport: viewport.name }, 'Elementor detected');
       } catch (e) {
         logger.debug({ url, viewport: viewport.name }, 'Elementor not detected, waiting for networkidle');
-        await page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => null);
+        await page.waitForNetworkIdle({ timeout: 20000 }).catch(() => null);
       }
 
       if (onProgress) {
@@ -105,78 +103,12 @@ export async function screenshotPage(
         );
       }
 
-      // 1. Force all images to eager load and resolve lazy attributes
-      await page.evaluate(() => {
-        const images = document.querySelectorAll('img');
-        images.forEach(img => {
-          // Force eager loading
-          img.setAttribute('loading', 'eager');
-          
-          // Swap common lazy-load attributes if they exist
-          const lazyAttributes = ['data-src', 'data-srcset', 'data-original', 'lazy-src'];
-          lazyAttributes.forEach(attr => {
-            if (img.hasAttribute(attr)) {
-              if (attr === 'data-srcset') {
-                img.srcset = img.getAttribute(attr)!;
-              } else {
-                img.src = img.getAttribute(attr)!;
-              }
-            }
-          });
-        });
-        
-        // Disable animations/transitions and hide skeletons
-        const style = document.createElement('style');
-        style.textContent = `
-          *, *::before, *::after {
-            transition: none !important;
-            animation: none !important;
-            scroll-behavior: auto !important;
-          }
-          [class*="skeleton"], [class*="loading-placeholder"], [class*="shimmer"] {
-            opacity: 0 !important;
-            visibility: hidden !important;
-          }
-        `;
-        document.head.appendChild(style);
-      });
-
-      // 2. Scroll to bottom in smaller increments to trigger lazy loading
-      await page.evaluate(async () => {
-        await new Promise<void>((resolve) => {
-          let totalHeight = 0;
-          const distance = 300; // Smaller steps
-          const timer = setInterval(() => {
-            const scrollHeight = document.body.scrollHeight;
-            window.scrollBy(0, distance);
-            totalHeight += distance;
-
-            if (totalHeight >= scrollHeight || totalHeight > 15000) { // Cap at 15k for performance
-              clearInterval(timer);
-              resolve();
-            }
-          }, 150); // Slower interval
-        });
-      });
-
-      // 3. Scroll back to top
-      await page.evaluate(() => window.scrollTo(0, 0));
+      await disableAnimations(page);
+      await wakeUpLazyImages(page);
       
-      // 4. Wait for all images to be fully loaded and decoded
-      await page.evaluate(async () => {
-        const images = Array.from(document.querySelectorAll('img'));
-        await Promise.all(images.map(img => {
-          if (img.complete) return (img as any).decode?.().catch(() => null);
-          return new Promise((resolve) => {
-            img.addEventListener('load', () => (img as any).decode?.().then(resolve).catch(resolve));
-            img.addEventListener('error', resolve);
-          });
-        }));
-      });
-      
-      // 5. Wait for network to settle and final stabilize
-      await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => null);
-      await page.waitForTimeout(10000); // 10 second rest
+      // Wait for network to settle and final stabilize
+      await page.waitForNetworkIdle({ timeout: 10000 }).catch(() => null);
+      await delay(5000);
 
       if (onProgress) {
         await onProgress(
@@ -187,7 +119,7 @@ export async function screenshotPage(
       // Take full-page screenshot
       const buffer = await page.screenshot({ 
         fullPage: true,
-        animations: 'disabled'
+        captureBeyondViewport: true,
       });
 
       if (onProgress) {
