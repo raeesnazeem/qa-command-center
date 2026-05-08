@@ -121,13 +121,13 @@ export const DashboardPage = () => {
             <section className="space-y-6">
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-slate-900 flex items-center gap-2 uppercase tracking-widest text-xs">
-                  <Zap className="w-4 h-4 text-amber-500" />
+                  <Zap className="w-4 h-4 text-slate-500" />
                   Pre-release Audits
                 </h3>
               </div>
 
               {data?.pre_release_projects?.length === 0 ? (
-                <div className="bg-slate-50 border border-slate-100 rounded-3xl p-8 text-center text-slate-500 text-sm">
+                <div className="bg-slate-50 border border-slate-100 rounded-md p-8 text-center text-slate-500 text-sm">
                   No pending pre-release projects.
                 </div>
               ) : (
@@ -136,14 +136,8 @@ export const DashboardPage = () => {
                     <Link
                       key={project.id}
                       to={`/projects/${project.id}`}
-                      className="bg-white border-2 border-amber-100 rounded-2xl p-4 shadow-sm hover:shadow-lg hover:border-amber-400 transition-all group relative overflow-hidden min-w-[240px] flex-shrink-0 flex flex-col"
+                      className="bg-white border-2 rounded-md p-4 shadow-sm hover:shadow-lg hover:border-accent transition-all group relative overflow-hidden min-w-[240px] flex-shrink-0 flex flex-col"
                     >
-                      <div className="absolute top-0 right-0 p-2">
-                        <Zap
-                          size={14}
-                          className="text-amber-500 fill-amber-500 opacity-20 group-hover:opacity-100 transition-opacity"
-                        />
-                      </div>
                       <h4 className="font-bold text-slate-900 text-base mb-0.5 group-hover:text-accent transition-colors leading-tight truncate">
                         {project.name}
                       </h4>
@@ -160,7 +154,7 @@ export const DashboardPage = () => {
                             {project.open_issues_count || 0}
                           </span>
                         </div>
-                        <div className="bg-black text-accent p-1.5 rounded-lg group-hover:bg-accent group-hover:text-black transition-colors">
+                        <div className="bg-[#fff] text-[#000] p-1.5 rounded-lg group-hover:bg-[#fff] group-hover:text-[#933] transition-colors">
                           <ArrowUpRight size={14} />
                         </div>
                       </div>
@@ -180,7 +174,7 @@ export const DashboardPage = () => {
               </div>
 
               {data?.post_release_projects?.length === 0 ? (
-                <div className="bg-slate-50 border border-slate-100 rounded-3xl p-8 text-center text-slate-500 text-sm">
+                <div className="bg-slate-50 border border-slate-100 rounded-md p-8 text-center text-slate-500 text-sm">
                   No post-release projects found.
                 </div>
               ) : (
@@ -189,7 +183,7 @@ export const DashboardPage = () => {
                     <Link
                       key={project.id}
                       to={`/projects/${project.id}`}
-                      className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group relative overflow-hidden"
+                      className="bg-white border border-slate-100 rounded-md p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group relative overflow-hidden"
                     >
                       <h4 className="font-bold text-slate-900 text-xl mb-1 group-hover:text-accent transition-colors leading-tight">
                         {project.name}
@@ -207,7 +201,7 @@ export const DashboardPage = () => {
                             {project.open_issues_count || 0}
                           </span>
                         </div>
-                        <div className="bg-slate-900 text-white p-2 rounded-xl group-hover:bg-accent group-hover:text-black transition-colors">
+                        <div className="bg-[#fff] text-[#000] p-1.5 rounded-lg group-hover:bg-[#fff] group-hover:text-[#933] transition-colors">
                           <ArrowUpRight size={18} />
                         </div>
                       </div>
@@ -221,7 +215,7 @@ export const DashboardPage = () => {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-slate-900 flex items-center gap-2 uppercase tracking-widest text-xs">
-                  <Zap className="w-4 h-4 text-amber-500" />
+                  <Zap className="w-4 h-4 text-slate-500" />
                   Your Active Tasks
                 </h3>
               </div>
@@ -229,7 +223,7 @@ export const DashboardPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {data?.my_tasks.length === 0 ? (
                   <div className="md:col-span-2 bg-white border-2 border-dashed border-slate-200 rounded-3xl p-12 text-center">
-                    <div className="bg-slate-50 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <div className="bg-slate-50 w-16 h-16 rounded-md flex items-center justify-center mx-auto mb-4">
                       <CheckCircle2 className="w-8 h-8 text-slate-300" />
                     </div>
                     <h4 className="font-bold text-slate-900">All caught up!</h4>
@@ -286,7 +280,7 @@ export const DashboardPage = () => {
               <Clock className="w-4 h-4 text-slate-400" />
               Quick Stats
             </h3>
-            <div className="bg-slate-900 rounded-3xl p-6 text-white space-y-6 shadow-xl">
+            <div className="bg-white rounded-md p-6 text-slate-900 space-y-6 shadow-xl">
               <div>
                 <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">
                   Total Assigned
