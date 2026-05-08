@@ -750,56 +750,7 @@ export const RunDetailPage = () => {
               </div>
 
               <div className="p-8">
-                {/* Visual Evidence */}
-                {run.enabled_checks?.includes("visual_regression") &&
-                  selectedPage && (
-                    <div className="mb-12">
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-                        <div className="space-y-2">
-                          <span className="text-[10px] font-bold uppercase text-slate-400">
-                            Desktop
-                          </span>
-                          <div className="aspect-[16/10] bg-slate-100 rounded-xl overflow-hidden">
-                            {selectedPage.screenshot_url_desktop && (
-                              <img
-                                src={selectedPage.screenshot_url_desktop}
-                                className="w-full h-full object-cover object-top"
-                                alt="Desktop"
-                              />
-                            )}
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <span className="text-[10px] font-bold uppercase text-slate-400">
-                            Tablet
-                          </span>
-                          <div className="aspect-[3/4] bg-slate-100 rounded-xl overflow-hidden">
-                            {selectedPage.screenshot_url_tablet && (
-                              <img
-                                src={selectedPage.screenshot_url_tablet}
-                                className="w-full h-full object-cover object-top"
-                                alt="Tablet"
-                              />
-                            )}
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <span className="text-[10px] font-bold uppercase text-slate-400">
-                            Mobile
-                          </span>
-                          <div className="aspect-[9/16] bg-slate-100 rounded-xl overflow-hidden">
-                            {selectedPage.screenshot_url_mobile && (
-                              <img
-                                src={selectedPage.screenshot_url_mobile}
-                                className="w-full h-full object-cover object-top"
-                                alt="Mobile"
-                              />
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+
 
                 {/* Findings List */}
                 {isLoadingFindings ? (
