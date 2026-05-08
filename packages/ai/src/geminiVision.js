@@ -1,0 +1,95 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.analyzeImage = analyzeImage;
+exports.inspectPageScreenshot = inspectPageScreenshot;
+exports.analyzeScreenshot = analyzeScreenshot;
+const generative_ai_1 = require("@google/generative-ai");
+require("dotenv/config");
+const p_queue_1 = __importDefault(require("p-queue"));
+const genAI = new generative_ai_1.GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+// Rate limit: 15 calls per minute (60000ms)
+const queue = new p_queue_1.default({
+    intervalCap: 15,
+    interval: 60000,
+    carryoverConcurrencyCount: true
+});
+/**
+ * analyzeImage
+ * Sends an image buffer and a prompt to Gemini 1.5 Flash.
+ * Returns the raw text response from the model.
+ * Handles errors gracefully and adheres to rate limits.
+ */
+async function analyzeImage(imageBuffer, prompt) {
+    return queue.add(async () => {
+        try {
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const imageParts = Array.isArray(imageBuffer)
+                ? imageBuffer.map(buf => ({
+                    inlineData: {
+                        data: buf.toString("base64"),
+                        mimeType: "image/png",
+                    },
+                }))
+                : [
+                    {
+                        inlineData: {
+                            data: imageBuffer.toString("base64"),
+                            mimeType: "image/png",
+                        },
+                    },
+                ];
+            const result = await model.generateContent([prompt, ...imageParts]);
+            const response = await result.response;
+            return response.text();
+        }
+        catch (error) {
+            console.error("Gemini Vision API error:", error);
+            return "";
+        }
+    });
+}
+/**
+ * inspectPageScreenshot
+ * Specialized vision check for common UI/UX issues.
+ */
+async function inspectPageScreenshot(screenshotBuffer) {
+    const prompt = `Inspect this website screenshot. Return a JSON array of ONLY clear, definite issues: [{issue: string, severity: 'critical'|'high'|'medium'|'low', area: string}]. Look for: visible image watermarks, clearly blurry/pixelated images, text overlapping other elements, buttons/links cut off, obvious broken layout. Return [] if no clear issues. Return ONLY JSON, no markdown.`;
+    const text = await analyzeImage(screenshotBuffer, prompt);
+    try {
+        // Attempt to extract JSON if the model included any conversational text or markdown blocks
+        const jsonMatch = text.match(/\[.*\]/s);
+        if (jsonMatch) {
+            return JSON.parse(jsonMatch[0]);
+        }
+        // Fallback to parsing whole text if no brackets found
+        return JSON.parse(text);
+    }
+    catch (error) {
+        // If it's not valid JSON, we return an empty array as instructed for no clear issues
+        return [];
+    }
+}
+/**
+ * analyzeScreenshot (Legacy/Helper)
+ * Specialized helper that uses analyzeImage with a predefined prompt
+ * and parses the resulting JSON.
+ */
+async function analyzeScreenshot(imageBuffer) {
+    const prompt = `Inspect this website screenshot carefully. Identify ONLY: (1) images that have visible watermarks, (2) images that are clearly blurry or pixelated at this resolution, (3) obvious layout breaks where content is overlapping. Return a JSON array: [{issue: string, severity: 'high'|'medium'|'low', area: string}]. Return empty array [] if no issues found.`;
+    const text = await analyzeImage(imageBuffer, prompt);
+    try {
+        const jsonMatch = text.match(/\[.*\]/s);
+        if (jsonMatch) {
+            return JSON.parse(jsonMatch[0]);
+        }
+        return [];
+    }
+    catch (error) {
+        console.error("Failed to parse Gemini Vision response:", error);
+        return [];
+    }
+}
+//# sourceMappingURL=geminiVision.js.map
