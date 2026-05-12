@@ -40,6 +40,10 @@ router.post('/', clerkAuth, aiRateLimiter, async (req: Request, res: Response) =
         case 'get_issues_by_qa': return await queries.getIssueCountsByQA(args.project_id);
         case 'get_all_users': return await queries.getAllOrgUsers(orgId);
         case 'find_user': return await queries.getUserByEmail(args.email, orgId);
+        case 'find_user_by_name': return await queries.findUserByName(args.name, orgId);
+        case 'get_user_tasks': return await queries.getTasksByUserId(args.user_id);
+        case 'get_user_task_stats': return await queries.getUserTaskStats(args.user_id);
+        case 'get_org_task_stats': return await queries.getOrgTaskStats(orgId);
         case 'list_projects': return await queries.listProjects(orgId);
         
         case 'create_project': return await mutations.createProject(args, orgId);
@@ -63,18 +67,23 @@ router.post('/', clerkAuth, aiRateLimiter, async (req: Request, res: Response) =
 
     const systemPrompt = `You are a concise QA assistant.
 IMPORTANT MAPPINGS:
-- "issues" = tasks (use get_task_stats)
-- "working on issues" = tasks assigned to developers (use get_issues_by_developer)
+- "issues" = tasks
+- "tasks for [user]" = tasks assigned to that user (use find_user_by_name then get_user_tasks)
+- "how many [status] tasks for [user]" = status counts for a user (use find_user_by_name then get_user_task_stats)
+- "how many [status] tasks" = status counts for the organization (use get_org_task_stats)
+- "working on issues" = tasks assigned to developers (use get_issues_by_developer for project-wide or get_user_tasks for specific user)
 - "who is working on" = show developers with their task counts
 - "resolved/to-do/in-progress/closed" = task statuses
-- "find project" does fuzzy matching
+
+ENTITY DISCOVERY:
+- If a project name is mentioned, ALWAYS call find_project FIRST to get the project_id.
+- If a person's name is mentioned, ALWAYS call find_user_by_name FIRST to get the user_id.
+- If it's ambiguous whether a name refers to a project or a user, try find_project first. If it returns no results, try find_user_by_name.
 
 RULES:
-- ALWAYS call find_project FIRST when a project name is mentioned to get the project_id
-- After find_project returns a result, extract the id field and use it immediately
-- NEVER use placeholder strings like "result_of_find_project" as project_id
-- Once you have the data you need, STOP calling tools and write your final answer
-- Keep responses short and focused`;
+- After finding an entity (project or user), extract the id field and use it in subsequent tool calls.
+- Once you have the data you need, STOP calling tools and write your final answer.
+- Keep responses short and focused.`;
 
     const fullHistory = history || [];
     const formattedMessages = [

@@ -126,6 +126,48 @@ export const TOOL_DEFINITIONS = [
       required: ['email']
     }
   },
+  {
+    name: 'find_user_by_name',
+    description: 'Find a user by their full name using fuzzy matching. Use this when a person name is mentioned.',
+    parameters: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'The name of the user to search for' }
+      },
+      required: ['name']
+    }
+  },
+  {
+    name: 'get_user_tasks',
+    description: 'Get all active (non-closed) tasks assigned to a specific user across all projects.',
+    parameters: {
+      type: 'object',
+      properties: {
+        user_id: { type: 'string', description: 'The UUID of the user' }
+      },
+      required: ['user_id']
+    }
+  },
+  {
+    name: 'get_user_task_stats',
+    description: 'Get counts of tasks grouped by status (open, in_progress, resolved, closed) for a specific user. Use this when asked for "number of" or "how many" tasks a user has.',
+    parameters: {
+      type: 'object',
+      properties: {
+        user_id: { type: 'string', description: 'The UUID of the user' }
+      },
+      required: ['user_id']
+    }
+  },
+  {
+    name: 'get_org_task_stats',
+    description: 'Get counts of tasks grouped by status (open, in_progress, resolved, closed) for the entire organization across all projects. Use this for global statistics.',
+    parameters: {
+      type: 'object',
+      properties: {},
+      required: []
+    }
+  },
 
   // --- Mutation Tools ---
   {
@@ -335,6 +377,8 @@ export const ORG_ID_PARAMS = [
   'find_project',
   'list_projects',
   'get_all_users',
+  'find_user_by_name',
+  'get_org_task_stats',
   'create_project',
   'search_issues'
 ];

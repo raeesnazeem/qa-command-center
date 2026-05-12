@@ -219,3 +219,78 @@ export async function listProjects(orgId: string) {
   return data;
 }
 
+/**
+ * Find a user by name using fuzzy matching.
+ */
+export async function findUserByName(name: string, orgId: string) {
+  const { data, error } = await supabase
+    .from('users')
+    .select('id, full_name, email, role')
+    .eq('org_id', orgId)
+    .ilike('full_name', `%${name}%`)
+    .limit(5);
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Get all tasks assigned to a specific user.
+ */
+export async function getTasksByUserId(userId: string) {
+  const { data, error } = await supabase
+    .from('tasks')
+    .select(`
+      id, 
+      title, 
+      status, 
+      severity, 
+      project_id, 
+      projects (
+        name
+      )
+    `)
+    .eq('assigned_to', userId)
+    .neq('status', 'closed')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data;
+}
+/**
+ * Get task counts by status for a specific user.
+ */
+export async function getUserTaskStats(userId: string) {
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('status')
+    .eq('assigned_to', userId);
+
+  if (error) throw error;
+
+  const stats = data.reduce((acc: Record<string, number>, t: any) => {
+    acc[t.status] = (acc[t.status] || 0) + 1;
+    return acc;
+  }, {});
+
+  return stats;
+}
+
+/**
+ * Get task counts by status for the whole organization.
+ */
+export async function getOrgTaskStats(orgId: string) {
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('status, projects!inner(org_id)')
+    .eq('projects.org_id', orgId);
+
+  if (error) throw error;
+
+  const stats = data.reduce((acc: Record<string, number>, t: any) => {
+    acc[t.status] = (acc[t.status] || 0) + 1;
+    return acc;
+  }, {});
+
+  return stats;
+}
