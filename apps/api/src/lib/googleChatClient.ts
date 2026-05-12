@@ -55,56 +55,151 @@ export async function sendGoogleChatMessage(
 }
 
 /**
- * Build a formatted notification card for new issue assignment
+ * Build a formatted notification card for new issue assignment based on wireframe
  */
 export function buildIssueNotificationCard(params: {
   issueNumber: number;
   projectName: string;
+  projectUrl?: string;
+  isPreRelease?: boolean;
+  category?: string;
+  description?: string;
   issueHeading: string;
   findingsUrl: string;
   tagIds: string[];
+  thumbnails?: string[];
 }): GoogleChatMessage {
-  const { issueNumber, projectName, issueHeading, findingsUrl, tagIds } = params;
+  const { 
+    issueNumber, 
+    projectName, 
+    projectUrl, 
+    isPreRelease, 
+    category, 
+    description, 
+    issueHeading, 
+    findingsUrl, 
+    tagIds,
+    thumbnails 
+  } = params;
 
-  // Create mentions string: <users/12345> <users/67890>
+  // Create mentions string
   const mentions = tagIds.map(id => `<users/${id}>`).join(' ');
 
+  // Truncate description to 25 chars
+  const truncatedDesc = description 
+    ? (description.length > 25 ? description.substring(0, 25) + '...' : description)
+    : '';
+
+  const sections: any[] = [
+    {
+      widgets: [
+        {
+          columns: {
+            columnItems: [
+              {
+                horizontalSizeStyle: "FILL_AVAILABLE_SPACE",
+                widgets: [
+                  {
+                    textParagraph: {
+                      text: `<b>New Issue Assigned</b><br><font color=\"#666666\">${projectName}${projectUrl ? ` - <a href=\"${projectUrl}\">${projectUrl}</a>` : ""}</font>`
+                    }
+                  }
+                ]
+              },
+              {
+                horizontalAlignment: "END",
+                widgets: [
+                  {
+                    textParagraph: {
+                      text: `<font color=\"#888888\">${isPreRelease ? "pre-release" : "post-release"}</font>`
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          columns: {
+            columnItems: [
+              {
+                horizontalSizeStyle: "FILL_AVAILABLE_SPACE",
+                widgets: [
+                  {
+                    textParagraph: {
+                      text: `<b>Issue #${issueNumber}</b>`
+                    }
+                  }
+                ]
+              },
+              {
+                horizontalAlignment: "END",
+                widgets: [
+                  {
+                    textParagraph: {
+                      text: `<b>${category || "Finding"}</b>`
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          textParagraph: {
+            text: `<b>${issueHeading}</b><br><font color=\"#444444\">${truncatedDesc}</font>`
+          }
+        }
+      ]
+    }
+  ];
+
+  // Add thumbnails grid if any
+  if (thumbnails && thumbnails.length > 0) {
+    sections.push({
+      widgets: [
+        {
+          grid: {
+            columnCount: 3,
+            items: thumbnails.slice(0, 3).map(url => ({
+              image: {
+                imageUrl: url,
+                onClick: { openLink: { url } }
+              }
+            }))
+          }
+        }
+      ]
+    });
+  }
+
+  // Add Action Section
+  sections.push({
+    widgets: [
+      {
+        buttonList: {
+          buttons: [
+            {
+              text: 'View task',
+              onClick: {
+                openLink: {
+                  url: findingsUrl,
+                },
+              },
+            },
+          ],
+        },
+      },
+    ]
+  });
+
   return {
-    // We include the text field for the @mentions to trigger notifications
     text: mentions ? `Attention: ${mentions}` : undefined,
     cardsV2: [
       {
         cardId: `issue-${issueNumber}-${Date.now()}`,
         card: {
-          header: {
-            title: '🔔 New Issue Assigned',
-            subtitle: projectName,
-          },
-          sections: [
-            {
-              widgets: [
-                {
-                  textParagraph: {
-                    text: `<b>Issue #${issueNumber}</b><br>${issueHeading}`,
-                  },
-                },
-                {
-                  buttonList: {
-                    buttons: [
-                      {
-                        text: 'View in Tool',
-                        onClick: {
-                          openLink: {
-                            url: findingsUrl,
-                          },
-                        },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          ],
+          sections: sections
         },
       },
     ],

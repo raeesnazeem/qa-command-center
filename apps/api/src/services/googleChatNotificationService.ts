@@ -11,6 +11,9 @@ interface NotificationParams {
   issueHeading: string;
   findingsUrl: string;
   assignedUserIds: string[];
+  category?: string;
+  description?: string;
+  thumbnails?: string[];
 }
 
 /**
@@ -22,8 +25,15 @@ export async function notifyOnGoogleChat(
   const errors: string[] = [];
 
   try {
-    // 1. Get project-level webhook configuration
-    const projectSettings = await getProjectSettings(params.projectId);
+    // 1. Get project-level configuration and metadata
+    const [projectSettings, { data: projectMetadata }] = await Promise.all([
+      getProjectSettings(params.projectId),
+      supabase
+        .from('projects')
+        .select('site_url, is_pre_release')
+        .eq('id', params.projectId)
+        .single()
+    ]);
 
     const projectWebhookUrl = projectSettings?.google_chat_webhook_url;
     const notificationsEnabled = projectSettings?.google_chat_enabled ?? false;
@@ -34,12 +44,6 @@ export async function notifyOnGoogleChat(
     }
 
     // 2. Get assigned users' Google Chat IDs for tagging
-    if (!params.assignedUserIds || params.assignedUserIds.length === 0) {
-      logger.warn(`[GoogleChatNotification] No assigned users for task ${params.taskId}, skipping tagging`);
-      // We can still send the notification without tags if desired, or skip. 
-      // The doc says "only if anyone's tagged", so let's send it anyway but without mentions.
-    }
-
     const { data: users, error: userError } = await supabase
       .from('users')
       .select('id, google_chat_user_id')
@@ -47,7 +51,6 @@ export async function notifyOnGoogleChat(
 
     if (userError) {
       logger.error(`[GoogleChatNotification] Failed to fetch users: ${userError.message}`);
-      // Non-blocking error, we continue with empty tag list
     }
 
     const tagIds = users
@@ -60,7 +63,12 @@ export async function notifyOnGoogleChat(
       projectName: params.projectName,
       issueHeading: params.issueHeading,
       findingsUrl: params.findingsUrl,
-      tagIds: tagIds
+      tagIds: tagIds,
+      projectUrl: projectMetadata?.site_url,
+      isPreRelease: projectMetadata?.is_pre_release,
+      category: params.category,
+      description: params.description,
+      thumbnails: params.thumbnails
     });
 
     // 4. Send to project webhook

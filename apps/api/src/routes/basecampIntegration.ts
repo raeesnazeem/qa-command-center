@@ -234,10 +234,13 @@ Created via QA Command Center`.trim();
         taskId: task.id,
         projectId: task.project_id,
         issueNumber: task.findings?.issue_number || 0,
-        projectName: (projectSettings as any)?.name || "Unknown Project", // fallback name
-        issueHeading: task.title,
-        findingsUrl: findingUrl,
-        assignedUserIds: allAssignedTo
+        projectName: (projectSettings as any)?.name || "Unknown Project",
+        issueHeading: task.title.replace(/Issue\s+#\d+[:\s-]*/i, "").trim(), // Robustly strip "Issue #123"
+        findingsUrl: `${process.env.FRONTEND_URL}/projects/${task.project_id}/runs/${task.findings?.run_id}/findings?findingId=${task.findings?.id}`,
+        assignedUserIds: allAssignedTo,
+        category: (task.findings?.severity || "Finding").toUpperCase(), // Uppercase for badge style
+        description: task.description || "No description provided",
+        thumbnails: Array.isArray(task.gallery_images) ? task.gallery_images : []
       });
 
       // 5.4 Rollback if notification fails
