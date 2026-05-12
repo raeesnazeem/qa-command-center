@@ -96,7 +96,7 @@ export function buildIssueNotificationCard(params: {
   // Truncate stripped description to 25 chars
   const cleanDescription = stripHtml(description || '');
   const truncatedDesc = cleanDescription 
-    ? (cleanDescription.length > 25 ? cleanDescription.substring(0, 25) + '...' : cleanDescription)
+    ? (cleanDescription.length > 300 ? cleanDescription.substring(0, 300) + '...' : cleanDescription)
     : '';
 
   const cleanHeading = stripHtml(issueHeading || '');
@@ -175,7 +175,10 @@ export function buildIssueNotificationCard(params: {
             items: thumbnails.slice(0, 3).map((url, i) => ({
               id: `thumb-${i}`,
               image: {
-                imageUri: url
+                imageUri: url,
+                cropStyle: {
+                  type: "RECTANGLE_4_3"
+                }
               }
             }))
           }

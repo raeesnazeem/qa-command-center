@@ -71,30 +71,53 @@ router.post(
         return res.status(404).json({ error: "Task not found" })
       }
 
-      // 2. Load page URL separately
-      let findingUrl = "N/A"
-      if (task.findings?.page_id) {
-        const { data: page } = await supabase
-          .from("pages")
-          .select("url")
-          .eq("id", task.findings.page_id)
-          .single()
-        if (page) findingUrl = page.url
+      // 2. Parallel data fetching for settings, project, page URL, and siblings
+      const siblingsQuery = supabase
+        .from("tasks")
+        .select("id, assigned_to")
+        .eq("project_id", task.project_id);
+      
+      if (task.finding_id) {
+        siblingsQuery.eq("finding_id", task.finding_id);
+      } else {
+        siblingsQuery.eq("title", task.title);
       }
 
-      // 4. Load project state and settings
-      const { data: projectRecord, error: projectError } = await supabase
-        .from("projects")
-        .select("is_pre_release, is_post_release")
-        .eq("id", task.project_id)
-        .single();
+      const [projectSettings, projectRecordResult, pageResult, siblingsResult] = await Promise.all([
+        getProjectSettings(task.project_id),
+        supabase.from("projects").select("is_pre_release, is_post_release, name").eq("id", task.project_id).single(),
+        task.findings?.page_id 
+          ? supabase.from("pages").select("url").eq("id", task.findings.page_id).single()
+          : Promise.resolve({ data: null }),
+        siblingsQuery
+      ]);
 
-      if (projectError || !projectRecord) {
-        console.error(`[BasecampPush] Project ${task.project_id} fetch error:`, projectError);
+      const projectRecord = projectRecordResult.data;
+      if (projectRecordResult.error || !projectRecord) {
+        console.error(`[BasecampPush] Project ${task.project_id} fetch error:`, projectRecordResult.error);
         return res.status(404).json({ error: "Project not found" });
       }
 
-      const projectSettings = await getProjectSettings(task.project_id)
+      let findingUrl = (pageResult.data as any)?.url || "N/A";
+      const siblings = siblingsResult.data;
+      const siblingIds = (siblings || []).map(s => s.id);
+      const siblingIdsForThread = siblingIds.length > 0 ? siblingIds : [id];
+
+      // 2.2 Parallel fetch for thread comments and rebuttals
+      const [threadCommentsResult, threadRebuttalsResult] = await Promise.all([
+        supabase
+          .from("comments")
+          .select("content, created_at, users:author_id (full_name)")
+          .in("task_id", siblingIdsForThread),
+        supabase
+          .from("rebuttals")
+          .select("text, created_at, users:submitted_by (full_name)")
+          .in("task_id", siblingIdsForThread)
+      ]);
+
+      const threadComments = threadCommentsResult.data;
+      const threadRebuttals = threadRebuttalsResult.data;
+
       if (
         !projectSettings ||
         !projectSettings.basecamp_token ||
@@ -109,7 +132,6 @@ router.post(
 
       // Determine the correct to-do list based on project state
       let todolistId = projectSettings.basecamp_todolist_id;
-      
       if (projectRecord.is_post_release) {
         if (!projectSettings.basecamp_post_todolist_id) {
           return res.status(400).json({ error: "Post-release to-do list not configured" });
@@ -125,22 +147,7 @@ router.post(
       if (!todolistId) {
         return res.status(400).json({ error: "Basecamp to-do list not configured" });
       }
-
-      // 3. Load assignee Basecamp mappings for this task and siblings
-      let query = supabase
-        .from("tasks")
-        .select("id, assigned_to")
-        .eq("project_id", task.project_id);
-
-      if (task.finding_id) {
-        query = query.eq("finding_id", task.finding_id);
-      } else {
-        query = query.eq("title", task.title);
-      }
       
-      const { data: siblings } = await query;
-      
-      const siblingIds = (siblings || []).map(s => s.id);
       const allAssignedTo = Array.from(new Set((siblings || []).map(s => s.assigned_to).filter(Boolean)));
       
       let mentions = "";
@@ -196,24 +203,6 @@ Created via QA Command Center`.trim();
 
       const mainCommentId = mainCommentResult?.id;
 
-      // 5.2 Push existing thread items as separate comments
-      const { data: siblingTasks } = await supabase
-        .from("tasks")
-        .select("id")
-        .eq("finding_id", task.finding_id);
-      
-      const siblingIdsForThread = siblingTasks?.map(t => t.id) || [id];
-
-      const { data: threadComments } = await supabase
-        .from("comments")
-        .select("content, created_at, users:author_id (full_name)")
-        .in("task_id", siblingIdsForThread);
-
-      const { data: threadRebuttals } = await supabase
-        .from("rebuttals")
-        .select("text, created_at, users:submitted_by (full_name)")
-        .in("task_id", siblingIdsForThread);
-
       const mergedThread = [
         ...(threadComments || []).map((c: any) => ({ 
           content: `${c.users?.full_name || 'Unknown'}: ${c.content}`, 
@@ -225,32 +214,32 @@ Created via QA Command Center`.trim();
         }))
       ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
-      for (const item of mergedThread) {
-        if (!projectSettings) continue;
-        await createBasecampComment({
-          token: projectSettings!.basecamp_token,
-          accountId: projectSettings!.basecamp_account_id,
-          projectId: projectSettings!.basecamp_project_id || task.project_id,
-          recordingId: todolistId,
-          content: item.content
-        });
-      }
-
-      // 5.3 Send Google Chat notification
-      const notificationResult = await notifyOnGoogleChat({
-        taskId: task.id,
-        projectId: task.project_id,
-        issueNumber: task.findings?.issue_number || 0,
-        projectName: (projectSettings as any)?.name || "Unknown Project",
-        issueHeading: (task.title || "").replace(/Issue\s+#\d+[:\s-]*/i, "").trim(), // Robustly strip "Issue #123"
-        findingsUrl: task.findings?.run_id 
-          ? `${process.env.FRONTEND_URL}/projects/${task.project_id}/runs/${task.findings.run_id}/findings?findingId=${task.findings.id}`
-          : `${process.env.FRONTEND_URL}/projects/${task.project_id}`,
-        assignedUserIds: allAssignedTo,
-        category: (task.findings?.severity || "Finding").toUpperCase(), // Uppercase for badge style
-        description: task.description || "No description provided",
-        thumbnails: Array.isArray(task.gallery_images) ? task.gallery_images : []
-      });
+      // 5.2 & 5.3 Parallel push for thread comments and Google Chat notification
+      const [threadResults, notificationResult] = await Promise.all([
+        Promise.all(mergedThread.map(item => 
+          createBasecampComment({
+            token: projectSettings!.basecamp_token,
+            accountId: projectSettings!.basecamp_account_id,
+            projectId: projectSettings!.basecamp_project_id || task.project_id,
+            recordingId: todolistId,
+            content: item.content
+          })
+        )),
+        notifyOnGoogleChat({
+          taskId: task.id,
+          projectId: task.project_id,
+          issueNumber: task.findings?.issue_number || 0,
+          projectName: projectRecord?.name || (projectSettings as any)?.name || "Unknown Project",
+          issueHeading: (task.title || "").replace(/Issue\s+#\d+[:\s-]*/i, "").trim(), // Robustly strip "Issue #123"
+          findingsUrl: task.findings?.run_id 
+            ? `${process.env.FRONTEND_URL}/projects/${task.project_id}/runs/${task.findings.run_id}/findings?findingId=${task.findings.id}`
+            : `${process.env.FRONTEND_URL}/projects/${task.project_id}`,
+          assignedUserIds: allAssignedTo,
+          category: (task.findings?.severity || "Finding").toUpperCase(), // Uppercase for badge style
+          description: task.description || "No description provided",
+          thumbnails: Array.isArray(task.gallery_images) ? task.gallery_images : []
+        })
+      ]);
 
       // 5.4 Rollback if notification fails
       if (!notificationResult.success && mainCommentId) {
