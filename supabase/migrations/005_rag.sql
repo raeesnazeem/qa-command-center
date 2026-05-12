@@ -11,7 +11,7 @@ CREATE TABLE embeddings (
   id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   org_id       uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   source_type  text NOT NULL
-                 CHECK (source_type IN ('finding','comment','rebuttal','sign_off')),
+                 CHECK (source_type IN ('finding','comment','rebuttal','sign_off','task')),
   source_id    uuid NOT NULL,
   content      text NOT NULL,
   embedding    vector(768) NOT NULL,

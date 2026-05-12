@@ -40,6 +40,7 @@ export const useChat = () => {
           message: text,
           project_id: projectId,
           run_id: runId,
+          history: messages.map(m => ({ role: m.role, content: m.content })),
         }),
       });
 
@@ -58,6 +59,7 @@ export const useChat = () => {
         role: 'assistant',
         content: '',
         timestamp: new Date(),
+
         isStreaming: true,
       };
 
@@ -79,7 +81,7 @@ export const useChat = () => {
         for (const line of lines) {
           if (!line.trim() || !line.startsWith('data: ')) continue;
           
-          const data = line.slice(6).trim();
+          const data = line.slice(6);
 
           if (data === '[DONE]') {
             setIsStreaming(false);

@@ -1,0 +1,340 @@
+export const TOOL_DEFINITIONS = [
+  // --- Query Tools ---
+  {
+    name: 'find_project',
+    description: 'Find a project by name using fuzzy matching. Always call this FIRST when a project name is mentioned to get the project_id.',
+    parameters: {
+      type: 'object',
+      properties: {
+        project_name: { type: 'string', description: 'The name of the project to search for' }
+      },
+      required: ['project_name']
+    }
+  },
+  {
+    name: 'get_project_stats',
+    description: 'Get project findings statistics grouped by status and severity.',
+    parameters: {
+      type: 'object',
+      properties: {
+        project_id: { type: 'string', description: 'The UUID of the project' }
+      },
+      required: ['project_id']
+    }
+  },
+  {
+    name: 'get_task_stats',
+    description: 'Get project task statistics grouped by status.',
+    parameters: {
+      type: 'object',
+      properties: {
+        project_id: { type: 'string', description: 'The UUID of the project' }
+      },
+      required: ['project_id']
+    }
+  },
+  {
+    name: 'get_developers',
+    description: 'List all developers assigned to a project.',
+    parameters: {
+      type: 'object',
+      properties: {
+        project_id: { type: 'string', description: 'The UUID of the project' }
+      },
+      required: ['project_id']
+    }
+  },
+  {
+    name: 'get_qa_engineers',
+    description: 'List all QA engineers assigned to a project.',
+    parameters: {
+      type: 'object',
+      properties: {
+        project_id: { type: 'string', description: 'The UUID of the project' }
+      },
+      required: ['project_id']
+    }
+  },
+  {
+    name: 'get_project_members',
+    description: 'List all members of a project with their roles.',
+    parameters: {
+      type: 'object',
+      properties: {
+        project_id: { type: 'string', description: 'The UUID of the project' }
+      },
+      required: ['project_id']
+    }
+  },
+  {
+    name: 'get_project_status',
+    description: 'Get the pre-release or post-release status of a project.',
+    parameters: {
+      type: 'object',
+      properties: {
+        project_id: { type: 'string', description: 'The UUID of the project' }
+      },
+      required: ['project_id']
+    }
+  },
+  {
+    name: 'get_basecamp_link',
+    description: 'Get the Basecamp project link for a project.',
+    parameters: {
+      type: 'object',
+      properties: {
+        project_id: { type: 'string', description: 'The UUID of the project' }
+      },
+      required: ['project_id']
+    }
+  },
+  {
+    name: 'get_issues_by_developer',
+    description: 'Get the count of open tasks assigned to each developer in a project.',
+    parameters: {
+      type: 'object',
+      properties: {
+        project_id: { type: 'string', description: 'The UUID of the project' }
+      },
+      required: ['project_id']
+    }
+  },
+  {
+    name: 'get_issues_by_qa',
+    description: 'Get the count of findings reported by each QA engineer in a project.',
+    parameters: {
+      type: 'object',
+      properties: {
+        project_id: { type: 'string', description: 'The UUID of the project' }
+      },
+      required: ['project_id']
+    }
+  },
+  {
+    name: 'get_all_users',
+    description: 'List all users in the organization.',
+    parameters: { type: 'object', properties: {} }
+  },
+  {
+    name: 'find_user',
+    description: 'Find a user by their email address.',
+    parameters: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', description: 'The email address of the user' }
+      },
+      required: ['email']
+    }
+  },
+
+  // --- Mutation Tools ---
+  {
+    name: 'create_project',
+    description: 'Create a new QA project.',
+    parameters: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        site_url: { type: 'string' },
+        client_name: { type: 'string' },
+        is_pre_release: { type: 'boolean' }
+      },
+      required: ['name', 'site_url']
+    }
+  },
+  {
+    name: 'update_project',
+    description: 'Update an existing project details.',
+    parameters: {
+      type: 'object',
+      properties: {
+        project_id: { type: 'string' },
+        name: { type: 'string' },
+        site_url: { type: 'string' },
+        client_name: { type: 'string' },
+        is_pre_release: { type: 'boolean' },
+        status: { type: 'string', enum: ['active', 'archived', 'paused'] }
+      },
+      required: ['project_id']
+    }
+  },
+  {
+    name: 'add_project_member',
+    description: 'Add a user to a project with a specific role.',
+    parameters: {
+      type: 'object',
+      properties: {
+        project_id: { type: 'string' },
+        user_id: { type: 'string' },
+        role: { type: 'string', enum: ['developer', 'qa_engineer', 'project_manager'] }
+      },
+      required: ['project_id', 'user_id', 'role']
+    }
+  },
+  {
+    name: 'remove_project_member',
+    description: 'Remove a user from a project.',
+    parameters: {
+      type: 'object',
+      properties: {
+        project_id: { type: 'string' },
+        user_id: { type: 'string' }
+      },
+      required: ['project_id', 'user_id']
+    }
+  },
+  {
+    name: 'create_task',
+    description: 'Create a new task for a project.',
+    parameters: {
+      type: 'object',
+      properties: {
+        project_id: { type: 'string' },
+        title: { type: 'string' },
+        description: { type: 'string' },
+        severity: { type: 'string', enum: ['critical', 'high', 'medium', 'low'] },
+        assigned_to: { type: 'string', description: 'User UUID' },
+        finding_id: { type: 'string', description: 'Optional finding UUID to link' }
+      },
+      required: ['project_id', 'title']
+    }
+  },
+  {
+    name: 'update_task',
+    description: 'Update task details or status.',
+    parameters: {
+      type: 'object',
+      properties: {
+        task_id: { type: 'string' },
+        project_id: { type: 'string' },
+        title: { type: 'string' },
+        description: { type: 'string' },
+        severity: { type: 'string', enum: ['critical', 'high', 'medium', 'low'] },
+        status: { type: 'string', enum: ['open', 'in_progress', 'resolved', 'closed'] },
+        assigned_to: { type: 'string' }
+      },
+      required: ['task_id', 'project_id']
+    }
+  },
+  {
+    name: 'delete_task',
+    description: 'Delete a task.',
+    parameters: {
+      type: 'object',
+      properties: {
+        task_id: { type: 'string' },
+        project_id: { type: 'string' }
+      },
+      required: ['task_id', 'project_id']
+    }
+  },
+  {
+    name: 'update_finding',
+    description: 'Update a finding status or severity.',
+    parameters: {
+      type: 'object',
+      properties: {
+        finding_id: { type: 'string' },
+        run_id: { type: 'string' },
+        status: { type: 'string', enum: ['open', 'confirmed', 'false_positive'] },
+        severity: { type: 'string', enum: ['critical', 'high', 'medium', 'low'] },
+        title: { type: 'string' },
+        description: { type: 'string' }
+      },
+      required: ['finding_id', 'run_id']
+    }
+  },
+  {
+    name: 'delete_finding',
+    description: 'Delete a finding.',
+    parameters: {
+      type: 'object',
+      properties: {
+        finding_id: { type: 'string' },
+        run_id: { type: 'string' }
+      },
+      required: ['finding_id', 'run_id']
+    }
+  },
+  {
+    name: 'update_user_role',
+    description: 'Update a users role in the organization.',
+    parameters: {
+      type: 'object',
+      properties: {
+        user_id: { type: 'string' },
+        role: { type: 'string', enum: ['admin', 'project_manager', 'qa_engineer', 'developer'] }
+      },
+      required: ['user_id', 'role']
+    }
+  },
+  {
+    name: 'create_qa_run',
+    description: 'Start a new QA run for a project.',
+    parameters: {
+      type: 'object',
+      properties: {
+        project_id: { type: 'string' },
+        urls: { type: 'array', items: { type: 'string' } },
+        device_matrix: { type: 'array', items: { type: 'string' } },
+        start_immediately: { type: 'boolean' }
+      },
+      required: ['project_id']
+    }
+  },
+  {
+    name: 'cancel_qa_run',
+    description: 'Cancel an active QA run.',
+    parameters: {
+      type: 'object',
+      properties: {
+        run_id: { type: 'string' },
+        project_id: { type: 'string' }
+      },
+      required: ['run_id', 'project_id']
+    }
+  },
+
+  {
+    name: 'list_projects',
+    description: 'Lists all projects in the current organization with their IDs and names. Use this when you need to compare projects or don\'t have a specific project name.',
+    parameters: {
+      type: 'object',
+      properties: {},
+      required: []
+    }
+  },
+
+  // --- RAG Tool ---
+  {
+    name: 'search_issues',
+    description: 'Semantic search across finding descriptions and task descriptions. Use this when the user asks about issues by topic, concept, or symptom — e.g. "login issues", "checkout bugs", "performance problems", "accessibility", "mobile responsiveness", "image issues", "form validation". Do NOT use for counting or status queries — use get_task_stats for those.',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description: 'The search query in natural language'
+        },
+        project_id: {
+          type: 'string',
+          description: 'Optional: limit search to a specific project'
+        },
+        source_type: {
+          type: 'string',
+          enum: ['finding', 'task'],
+          description: 'Optional: limit to findings or tasks only'
+        }
+      },
+      required: ['query']
+    }
+  }
+];
+
+export const ORG_ID_PARAMS = [
+  'find_project',
+  'list_projects',
+  'get_all_users',
+  'create_project',
+  'search_issues'
+];
