@@ -10,6 +10,8 @@ export interface DecryptedSettings {
   basecamp_todolist_id: string | null;
   basecamp_post_todolist_id: string | null;
   slack_webhook_url: string | null;
+  google_chat_webhook_url: string | null;
+  google_chat_enabled: boolean;
   created_at: string;
   updated_at: string;
 }

@@ -3,7 +3,8 @@ import { supabase } from "../lib/supabase"
 import { clerkAuth } from "../middleware/clerkAuth"
 import { requireRole } from "../middleware/requireRole"
 import { getProjectSettings } from "../lib/getDecryptedSettings"
-import { createBasecampTodo, getBasecampPeople, getBasecampPerson, formatBasecampMention, createBasecampComment } from "../lib/basecampClient"
+import { createBasecampTodo, getBasecampPeople, getBasecampPerson, formatBasecampMention, createBasecampComment, deleteBasecampComment } from "../lib/basecampClient"
+import { notifyOnGoogleChat } from "../services/googleChatNotificationService"
 import { logger } from "../lib/logger"
 import { broadcastTaskUpdate } from "../lib/realtimeService"
 import crypto from "crypto"
@@ -178,13 +179,15 @@ Created via QA Command Center`.trim();
       console.log(`[BasecampPush] FINAL Description before POST:`, description);
       console.log(`[BasecampPush] Calling Basecamp API: Create Comment...`);
       
-      await createBasecampComment({
+      const mainCommentResult = await createBasecampComment({
         token: projectSettings!.basecamp_token,
         accountId: projectSettings!.basecamp_account_id,
         projectId: projectSettings!.basecamp_project_id || task.project_id,
         recordingId: todolistId,
         content: description
       });
+
+      const mainCommentId = mainCommentResult?.id;
 
       // 5.2 Push existing thread items as separate comments
       const { data: siblingTasks } = await supabase
@@ -223,6 +226,39 @@ Created via QA Command Center`.trim();
           projectId: projectSettings!.basecamp_project_id || task.project_id,
           recordingId: todolistId,
           content: item.content
+        });
+      }
+
+      // 5.3 Send Google Chat notification
+      const notificationResult = await notifyOnGoogleChat({
+        taskId: task.id,
+        projectId: task.project_id,
+        issueNumber: task.findings?.issue_number || 0,
+        projectName: (projectSettings as any)?.name || "Unknown Project", // fallback name
+        issueHeading: task.title,
+        findingsUrl: findingUrl,
+        assignedUserIds: allAssignedTo
+      });
+
+      // 5.4 Rollback if notification fails
+      if (!notificationResult.success && mainCommentId) {
+        logger.error(`[BasecampPush] Google Chat notification failed, rolling back Basecamp comment`);
+        try {
+          await deleteBasecampComment({
+            token: projectSettings!.basecamp_token,
+            accountId: projectSettings!.basecamp_account_id,
+            projectId: projectSettings!.basecamp_project_id || task.project_id,
+            recordingId: todolistId,
+            commentId: mainCommentId
+          });
+          logger.info(`[BasecampPush] Rolled back Basecamp comment ${mainCommentId}`);
+        } catch (rollbackError: any) {
+          logger.error(`[BasecampPush] Rollback failed: ${rollbackError.message}`);
+        }
+
+        return res.status(500).json({
+          error: "Failed to send Google Chat notification, Basecamp push rolled back",
+          details: notificationResult.errors
         });
       }
 

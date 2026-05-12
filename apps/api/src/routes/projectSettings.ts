@@ -73,6 +73,8 @@ router.patch(
         basecamp_project_id,
         basecamp_todolist_id,
         slack_webhook_url,
+        google_chat_webhook_url,
+        google_chat_enabled,
         notify_run_complete,
         notify_critical_finding,
         notify_sign_off,
@@ -94,6 +96,8 @@ router.patch(
         if (basecamp_project_id !== undefined) updateData.basecamp_project_id = basecamp_project_id;
         if (basecamp_todolist_id !== undefined) updateData.basecamp_todolist_id = basecamp_todolist_id;
         if (slack_webhook_url !== undefined) updateData.slack_webhook_url = slack_webhook_url;
+        if (google_chat_webhook_url !== undefined) updateData.google_chat_webhook_url = google_chat_webhook_url;
+        if (google_chat_enabled !== undefined) updateData.google_chat_enabled = google_chat_enabled;
         if (notify_run_complete !== undefined) updateData.notify_run_complete = notify_run_complete;
         if (notify_critical_finding !== undefined) updateData.notify_critical_finding = notify_critical_finding;
         if (notify_sign_off !== undefined) updateData.notify_sign_off = notify_sign_off;

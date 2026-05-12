@@ -140,14 +140,14 @@ export async function createBasecampComment(params: {
   projectId: string;
   recordingId: string;
   content: string;
-}): Promise<void> {
+}): Promise<{ id: number; url: string }> {
   const { token, accountId, projectId, recordingId, content } = params;
   const url = `https://3.basecampapi.com/${accountId}/buckets/${projectId}/recordings/${recordingId}/comments.json`;
   
   console.log(`[BasecampClient] Creating comment at URL: ${url}`);
 
   try {
-    await axios.post(
+    const response = await axios.post(
       url,
       { content },
       {
@@ -158,6 +158,44 @@ export async function createBasecampComment(params: {
         },
       }
     );
+
+    return {
+      id: response.data.id,
+      url: response.data.app_url
+    };
+  } catch (error: any) {
+    if (error.response) {
+      const detailedError = new Error(`Basecamp API error: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
+      (detailedError as any).status = error.response.status;
+      (detailedError as any).data = error.response.data;
+      throw detailedError;
+    }
+    throw error;
+  }
+}
+
+/**
+ * Deletes a comment from a recording in Basecamp 3
+ * Used for rollback when notification fails
+ */
+export async function deleteBasecampComment(params: {
+  token: string;
+  accountId: string;
+  projectId: string;
+  recordingId: string;
+  commentId: number;
+}): Promise<void> {
+  const { token, accountId, projectId, recordingId, commentId } = params;
+  const url = `https://3.basecampapi.com/${accountId}/buckets/${projectId}/recordings/${recordingId}/comments/${commentId}.json`;
+
+  try {
+    await axios.delete(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'User-Agent': `${pkg.name} (${process.env.SUPPORT_EMAIL || 'raees.nazeem@growth99.com'}) v${pkg.version}`,
+      },
+    });
   } catch (error: any) {
     if (error.response) {
       const detailedError = new Error(`Basecamp API error: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
