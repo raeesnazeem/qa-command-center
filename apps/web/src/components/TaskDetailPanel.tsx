@@ -43,7 +43,9 @@ export const TaskDetailPanel = ({
   const [rebuttalUrl, setRebuttalUrl] = useState("")
   const [isResolveModalOpen, setIsResolveModalOpen] = useState(false)
   
-  const { data: latestTask } = useTask(initialTask?.id || "")
+  // Ensure we only fetch if we have a valid task and the panel is open
+  const isValidTask = initialTask && (initialTask as any).project_id;
+  const { data: latestTask } = useTask(isValidTask && isOpen ? initialTask.id : "");
   const task = latestTask || initialTask
   const { isDeveloper } = useRole()
   const hasRebuttals = (task?.rebuttals?.length || 0) > 0
@@ -241,7 +243,7 @@ export const TaskDetailPanel = ({
 
                 {project?.basecamp_account_id &&
                   project?.basecamp_project_id &&
-                  project?.basecamp_todo_list_id && (
+                  (project?.basecamp_todo_list_id || project?.basecamp_post_todo_list_id) && (
                     <BasecampPushButton
                       task={task}
                       onPush={handlePush}

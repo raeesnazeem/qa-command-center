@@ -254,6 +254,12 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
   const { id } = req.params;
   const { userId: clerkUserId, role, orgId } = req.auth!;
 
+  // Validate UUID format to prevent invalid input errors
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidPattern.test(id)) {
+    return res.status(404).json({ error: 'Task not found' });
+  }
+
   try {
     const supabaseUserId = await getSupabaseUserId(clerkUserId);
 

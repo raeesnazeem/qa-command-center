@@ -55,6 +55,14 @@ export async function sendGoogleChatMessage(
 }
 
 /**
+ * Simple helper to strip HTML tags from a string
+ */
+function stripHtml(html: string): string {
+  if (!html) return '';
+  return html.replace(/<[^>]*>?/gm, '').trim();
+}
+
+/**
  * Build a formatted notification card for new issue assignment based on wireframe
  */
 export function buildIssueNotificationCard(params: {
@@ -85,10 +93,13 @@ export function buildIssueNotificationCard(params: {
   // Create mentions string
   const mentions = tagIds.map(id => `<users/${id}>`).join(' ');
 
-  // Truncate description to 25 chars
-  const truncatedDesc = description 
-    ? (description.length > 25 ? description.substring(0, 25) + '...' : description)
+  // Truncate stripped description to 25 chars
+  const cleanDescription = stripHtml(description || '');
+  const truncatedDesc = cleanDescription 
+    ? (cleanDescription.length > 25 ? cleanDescription.substring(0, 25) + '...' : cleanDescription)
     : '';
+
+  const cleanHeading = stripHtml(issueHeading || '');
 
   const sections: any[] = [
     {
@@ -147,7 +158,7 @@ export function buildIssueNotificationCard(params: {
         },
         {
           textParagraph: {
-            text: `<b>${issueHeading}</b><br><font color=\"#444444\">${truncatedDesc}</font>`
+            text: `<b>${cleanHeading}</b><br><font color=\"#444444\">${truncatedDesc}</font>`
           }
         }
       ]
@@ -161,10 +172,10 @@ export function buildIssueNotificationCard(params: {
         {
           grid: {
             columnCount: 3,
-            items: thumbnails.slice(0, 3).map(url => ({
+            items: thumbnails.slice(0, 3).map((url, i) => ({
+              id: `thumb-${i}`,
               image: {
-                imageUrl: url,
-                onClick: { openLink: { url } }
+                imageUri: url
               }
             }))
           }

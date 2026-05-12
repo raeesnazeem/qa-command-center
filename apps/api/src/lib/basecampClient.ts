@@ -186,10 +186,10 @@ export async function deleteBasecampComment(params: {
   commentId: number;
 }): Promise<void> {
   const { token, accountId, projectId, recordingId, commentId } = params;
-  const url = `https://3.basecampapi.com/${accountId}/buckets/${projectId}/recordings/${recordingId}/comments/${commentId}.json`;
+  const url = `https://3.basecampapi.com/${accountId}/buckets/${projectId}/recordings/${commentId}/status/trashed.json`;
 
   try {
-    await axios.delete(url, {
+    await axios.put(url, {}, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',

@@ -290,7 +290,8 @@ export const FindingCard: React.FC<FindingCardProps> = ({
                   </button>
                   {(hasTask || isAssigned) &&
                     assignedTaskIds &&
-                    assignedTaskIds.length > 0 && (
+                    assignedTaskIds.length > 0 && 
+                    assignedTaskIds[0] !== finding.id && (
                       <Link
                         to={`/projects/${projectId}?tab=tasks&taskId=${assignedTaskIds[0]}`}
                         className="p-2 text-slate-400 hover:text-accent transition-colors"

@@ -127,11 +127,18 @@ router.post(
       }
 
       // 3. Load assignee Basecamp mappings for this task and siblings
-        const { data: siblings } = await supabase
-          .from("tasks")
-          .select("id, assigned_to")
-          .eq("project_id", task.project_id)
-          .or(`finding_id.eq.${(task as any).finding_id}${task.finding_id ? "" : ",title.eq." + task.title}`);
+      let query = supabase
+        .from("tasks")
+        .select("id, assigned_to")
+        .eq("project_id", task.project_id);
+
+      if (task.finding_id) {
+        query = query.eq("finding_id", task.finding_id);
+      } else {
+        query = query.eq("title", task.title);
+      }
+      
+      const { data: siblings } = await query;
       
       const siblingIds = (siblings || []).map(s => s.id);
       const allAssignedTo = Array.from(new Set((siblings || []).map(s => s.assigned_to).filter(Boolean)));
@@ -235,8 +242,10 @@ Created via QA Command Center`.trim();
         projectId: task.project_id,
         issueNumber: task.findings?.issue_number || 0,
         projectName: (projectSettings as any)?.name || "Unknown Project",
-        issueHeading: task.title.replace(/Issue\s+#\d+[:\s-]*/i, "").trim(), // Robustly strip "Issue #123"
-        findingsUrl: `${process.env.FRONTEND_URL}/projects/${task.project_id}/runs/${task.findings?.run_id}/findings?findingId=${task.findings?.id}`,
+        issueHeading: (task.title || "").replace(/Issue\s+#\d+[:\s-]*/i, "").trim(), // Robustly strip "Issue #123"
+        findingsUrl: task.findings?.run_id 
+          ? `${process.env.FRONTEND_URL}/projects/${task.project_id}/runs/${task.findings.run_id}/findings?findingId=${task.findings.id}`
+          : `${process.env.FRONTEND_URL}/projects/${task.project_id}`,
         assignedUserIds: allAssignedTo,
         category: (task.findings?.severity || "Finding").toUpperCase(), // Uppercase for badge style
         description: task.description || "No description provided",
