@@ -51,31 +51,23 @@
 //     throw error;
 //   }
 // }
-import { GoogleGenerativeAI, TaskType } from '@google/generative-ai';
-
-let _genAI: GoogleGenerativeAI | null = null;
-
-function getClient() {
-  if (!_genAI) {
-    _genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!);
-  }
-  return _genAI;
-}
+import { genAI } from './geminiClient';
 
 export async function generateEmbedding(text: string): Promise<number[]> {
-  const client = getClient();
-  const models = ['gemini-embedding-2', 'gemini-embedding-001', 'gemini-embedding-2-preview'];
+  const models = ['text-embedding-004', 'gemini-embedding-2-preview'];
   let lastError: any = null;
 
   for (const modelName of models) {
     try {
-      const model = client.getGenerativeModel({ model: modelName });
-      const result = await model.embedContent({
+      const result = await genAI.models.embedContent({
+        model: modelName,
         content: { role: 'user', parts: [{ text }] },
-        taskType: TaskType.RETRIEVAL_QUERY,
-        outputDimensionality: 768,
-      } as any);
-      return result.embedding.values;
+        config: {
+          taskType: 'RETRIEVAL_QUERY',
+          outputDimensionality: 768,
+        }
+      });
+      return result.embeddings ? result.embeddings[0].values : (result as any).embedding.values;
     } catch (e: any) {
       lastError = e;
       console.warn(`Failed to generate embedding with ${modelName}: ${e.message}`);

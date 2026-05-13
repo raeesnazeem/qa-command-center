@@ -6,7 +6,7 @@ import { TOOL_DEFINITIONS } from '@qacc/ai';
 import * as queries from '../tools/queries';
 import * as mutations from '../tools/mutations';
 import * as ragSearch from '../tools/ragSearch';
-import { chatWithFallback } from '../lib/aiProviders';
+import { chatWithFallback, transcribeAudio } from '../lib/aiProviders';
 
 import { logger } from '../lib/logger';
 
@@ -54,6 +54,7 @@ router.post('/', clerkAuth, aiRateLimiter, async (req: Request, res: Response) =
           case 'get_user_task_stats': return await queries.getUserTaskStats(userId);
           case 'get_org_task_stats': return await queries.getOrgTaskStats(orgId);
           case 'list_projects': return await queries.listProjects(orgId);
+          case 'get_user_projects': return await queries.getUserProjects(userId);
           
           case 'create_project': return await mutations.createProject(args, orgId);
           case 'update_project': return await mutations.updateProject({ ...args, project_id: projectId }, orgId);
@@ -82,6 +83,7 @@ router.post('/', clerkAuth, aiRateLimiter, async (req: Request, res: Response) =
 IMPORTANT MAPPINGS:
 - "issues" = tasks
 - "tasks for [user]" = tasks assigned to that user (use find_user_by_name then get_user_tasks)
+- "projects for [user]" = projects assigned to that user (use find_user_by_name then get_user_projects)
 - "how many [status] tasks for [user]" = status counts for a user (use find_user_by_name then get_user_task_stats)
 - "how many [status] tasks" = status counts for the organization (use get_org_task_stats)
 - "working on issues" = tasks assigned to developers (use get_issues_by_developer for project-wide or get_user_tasks for specific user)
@@ -107,16 +109,24 @@ RULES:
       { role: 'user', content: message }
     ];
 
-    const result = await chatWithFallback(formattedMessages as any, TOOL_DEFINITIONS, executeToolCall);
-
     // Stream the final response using SSE
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
+    const result = await chatWithFallback(formattedMessages as any, TOOL_DEFINITIONS, executeToolCall, (provider, stats) => {
+      // Stream intermediate status updates
+      res.write(`data: [METADATA]${JSON.stringify({ intermediate: true, provider, stats })}\n\n`);
+    });
+    
+    const { content, provider, failedProviders, allStats } = result;
+
+    // Final metadata sync (optional but good for consistency)
+    res.write(`data: [METADATA]${JSON.stringify({ provider, failedProviders, allStats })}\n\n`);
+
     // Simulate streaming for better UX, handling newlines correctly
-    const content = result.content || '';
-    const lines = content.split('\n');
+    const textContent = content || '';
+    const lines = textContent.split('\n');
     
     for (let i = 0; i < lines.length; i++) {
       const words = lines[i].split(' ');
@@ -136,12 +146,36 @@ RULES:
     res.end();
 
   } catch (error: any) {
+    console.error('FULL CHAT ERROR:', error);
     logger.error({ error: error.message }, 'Error in chat route');
     if (!res.headersSent) {
-      return res.status(500).json({ error: 'Failed to process chat message' });
+      return res.status(500).json({ error: 'Failed to process chat message', details: error.message });
     }
     res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
     res.end();
+  }
+});
+
+/**
+ * POST /api/chat/transcribe
+ * Transcribe audio from base64 string using Groq Whisper.
+ */
+router.post('/transcribe', clerkAuth, aiRateLimiter, async (req: Request, res: Response) => {
+  const { audio } = req.body;
+
+  if (!audio) {
+    return res.status(400).json({ error: 'Audio data is required' });
+  }
+
+  try {
+    const base64Data = audio.includes('base64,') ? audio.split('base64,')[1] : audio;
+    const buffer = Buffer.from(base64Data, 'base64');
+    
+    const text = await transcribeAudio(buffer);
+    res.json({ text });
+  } catch (error: any) {
+    logger.error({ error: error.message }, 'Transcription route failed');
+    res.status(500).json({ error: 'Failed to transcribe audio' });
   }
 });
 

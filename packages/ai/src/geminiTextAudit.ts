@@ -1,4 +1,4 @@
-import { geminiFlash } from './geminiClient';
+import { genAI } from './geminiClient';
 
 interface AuditResult {
   type: 'spelling' | 'dummy' | 'brand_voice';
@@ -23,8 +23,11 @@ ${truncatedText}
 """`;
 
   try {
-    const response = await geminiFlash.generateContent(prompt);
-    const resultText = response.response.text();
+    const response = await genAI.models.generateContent({
+      model: "gemini-1.5-flash",
+      contents: [{ role: 'user', parts: [{ text: prompt }] }]
+    });
+    const resultText = response.text();
     
     // Attempt to strip out markdown JSON wrappers if Gemini still returns them
     let cleanJsonText = resultText.trim();

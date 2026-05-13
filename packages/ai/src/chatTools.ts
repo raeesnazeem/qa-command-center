@@ -168,6 +168,18 @@ export const TOOL_DEFINITIONS = [
       required: []
     }
   },
+  {
+    name: 'get_user_projects',
+    description: 'Get all projects a specific user is assigned to. Use this when asked "which projects" or "how many projects" a person has. ALWAYS use snake_case for parameters.',
+    parameters: {
+      type: 'object',
+      properties: {
+        user_id: { type: 'string', description: 'The UUID of the user' }
+      },
+      required: ['user_id']
+    }
+  },
+
 
   // --- Mutation Tools ---
   {

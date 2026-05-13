@@ -14,6 +14,11 @@ export const useChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [providerMetadata, setProviderMetadata] = useState<{ 
+    provider: string, 
+    failedProviders: string[],
+    allStats?: Record<string, { latencyMs: number, status: string, error?: string }>
+  } | null>(null);
   const { getToken } = useAuth();
 
   const sendMessage = useCallback(async (text: string, projectId?: string, runId?: string) => {
@@ -96,6 +101,29 @@ export const useChat = () => {
             continue;
           }
 
+          if (data.startsWith('[METADATA]')) {
+            try {
+              const meta = JSON.parse(data.slice(10));
+              if (meta.intermediate) {
+                setProviderMetadata((prev) => {
+                  const newStats = { ...(prev?.allStats || {}), [meta.provider]: meta.stats };
+                  return {
+                    provider: meta.stats.status === 'success' ? meta.provider : (prev?.provider || ''),
+                    failedProviders: Object.entries(newStats)
+                      .filter(([_, s]) => s.status === 'failed')
+                      .map(([name]) => name),
+                    allStats: newStats
+                  };
+                });
+              } else {
+                setProviderMetadata(meta);
+              }
+            } catch (e) {
+              console.error('Error parsing metadata:', e);
+            }
+            continue;
+          }
+
           try {
             // Check if it's a JSON object (citations or error)
             if (data.startsWith('{')) {
@@ -150,6 +178,7 @@ export const useChat = () => {
     messages,
     isLoading,
     isStreaming,
+    providerMetadata,
     sendMessage,
   };
 };

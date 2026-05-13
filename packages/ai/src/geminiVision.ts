@@ -1,8 +1,6 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { genAI } from "./geminiClient";
 import 'dotenv/config';
 import PQueue from 'p-queue';
-
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || "");
 
 // Rate limit: 15 calls per minute (60000ms)
 const queue = new PQueue({
@@ -20,8 +18,6 @@ const queue = new PQueue({
 export async function analyzeImage(imageBuffer: Buffer | Buffer[], prompt: string): Promise<string> {
   return queue.add(async () => {
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
-
       const imageParts = Array.isArray(imageBuffer) 
       ? imageBuffer.map(buf => ({
           inlineData: {
@@ -38,8 +34,17 @@ export async function analyzeImage(imageBuffer: Buffer | Buffer[], prompt: strin
           },
         ];
 
-      const result = await model.generateContent([prompt, ...imageParts]);
-      const response = await result.response;
+      const response = await genAI.models.generateContent({
+        model: "gemini-1.5-flash",
+        contents: [{
+          role: 'user',
+          parts: [
+            { text: prompt },
+            ...imageParts as any
+          ]
+        }]
+      });
+
       return response.text();
     } catch (error) {
       console.error("Gemini Vision API error:", error);

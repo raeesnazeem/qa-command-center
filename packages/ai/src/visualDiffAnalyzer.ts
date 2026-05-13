@@ -1,4 +1,4 @@
-import { geminiFlash } from './geminiClient';
+import { genAI } from './geminiClient';
 
 export interface VisualDiffIssue {
   issue: string;
@@ -29,7 +29,7 @@ Compare them precisely. List ALL visual discrepancies as JSON:
 Be specific. Return [] if designs match. Return ONLY JSON. Do not include markdown formatting.`;
 
   const promptParts: any[] = [
-    prompt,
+    { text: prompt },
     {
       inlineData: {
         data: figmaBuffer.toString('base64'),
@@ -45,8 +45,10 @@ Be specific. Return [] if designs match. Return ONLY JSON. Do not include markdo
   ];
 
   try {
-    const result = await geminiFlash.generateContent(promptParts);
-    const response = await result.response;
+    const response = await genAI.models.generateContent({
+      model: "gemini-1.5-flash",
+      contents: [{ role: 'user', parts: promptParts }]
+    });
     const resultText = response.text().trim();
 
     // Attempt to parse JSON. Sometimes Gemini might still include markdown JSON fences.

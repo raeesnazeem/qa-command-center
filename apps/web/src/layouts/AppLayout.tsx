@@ -9,7 +9,7 @@ import { useRealtimeTasks } from '../hooks/useRealtimeTasks'
 
 export const AppLayout = () => {
   const { user } = useUser()
-  const { role, profile, isLoading } = useRole()
+  const { role, profile, isLoading, isAdmin } = useRole()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -105,7 +105,7 @@ export const AppLayout = () => {
         <main className="flex-1 overflow-auto p-8 bg-slate-50/30">
           <Outlet />
         </main>
-        <ChatSidebar />
+        {isAdmin && <ChatSidebar />}
         <AdminRedisWidget />
       </div>
     </div>

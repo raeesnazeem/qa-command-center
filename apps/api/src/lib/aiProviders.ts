@@ -1,10 +1,18 @@
 import Groq from 'groq-sdk';
 import axios from 'axios';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import { logger } from './logger';
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || '' });
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
+const genAI = new GoogleGenAI({ apiKey: process.env.GOOGLE_AI_API_KEY || '' });
+
+logger.info({ 
+  hasGroqKey: !!process.env.GROQ_API_KEY,
+  hasGeminiKey: !!process.env.GOOGLE_AI_API_KEY 
+}, 'AI Providers Initialized');
 
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant' | 'tool';
@@ -14,32 +22,125 @@ export interface ChatMessage {
   tool_calls?: any[];
 }
 
+export interface ProviderStats {
+  latencyMs: number;
+  status: 'success' | 'failed';
+  error?: string;
+}
+
+/**
+ * Helper to truncate tool descriptions to reduce token usage (TPM).
+ */
+function truncateTools(tools: any[], maxLength = 120) {
+  return tools.map(t => ({
+    ...t,
+    description: t.description?.slice(0, maxLength) ?? ''
+  }));
+}
+
+/**
+ * Selective tool loading to reduce token footprint for rate-limited providers.
+ */
+function getRelevantTools(message: string, allTools: any[]) {
+  const query = message.toLowerCase();
+  
+  // Core tools that are almost always needed for entity discovery
+  const coreTools = ['find_project', 'find_user_by_name', 'list_projects', 'get_all_users'];
+  
+  const mutationKeywords = ['create', 'update', 'delete', 'add', 'remove', 'cancel', 'start', 'assign', 'set'];
+  const statsKeywords = ['stats', 'count', 'how many', 'total', 'summary', 'status'];
+  const ragKeywords = ['search', 'about', 'issue', 'task', 'bug', 'problem', 'performance', 'login'];
+
+  const categories = {
+    mutation: mutationKeywords.some(k => query.includes(k)),
+    stats: statsKeywords.some(k => query.includes(k)),
+    rag: query.includes('search') || ragKeywords.some(k => query.includes(k))
+  };
+
+  return allTools.filter(t => {
+    if (coreTools.includes(t.name)) return true;
+    
+    // Mutation tools
+    if (t.name.startsWith('create_') || t.name.startsWith('update_') || t.name.startsWith('delete_') || 
+        t.name.startsWith('add_') || t.name.startsWith('remove_') || t.name.startsWith('cancel_')) {
+      return categories.mutation;
+    }
+    
+    // Stats tools
+    if (t.name.includes('_stats') || t.name.includes('_status') || t.name.includes('_issues_by_')) {
+      return categories.stats;
+    }
+
+    // RAG tools
+    if (t.name === 'search_issues') return categories.rag;
+
+    // Default to including it if we can't categorize it, but we want to be aggressive
+    return true; 
+  });
+}
+
+/**
+ * Helper to sanitize tools for Gemini (removes empty parameters).
+ */
+function sanitizeToolsForGemini(tools: any[]) {
+  return tools.map(t => {
+    const hasProps = t.parameters?.properties &&
+      Object.keys(t.parameters.properties).length > 0;
+    return {
+      name: t.name,
+      description: t.description?.slice(0, 120) ?? '',
+      ...(hasProps ? { parameters: t.parameters } : {}),
+    };
+  });
+}
+
 /**
  * Main entry point for chat with fallback and agentic loop.
  */
 export async function chatWithFallback(
   messages: ChatMessage[],
   tools: any[],
-  toolCallHandler: (name: string, args: any) => Promise<any>
+  toolCallHandler: (name: string, args: any) => Promise<any>,
+  onUpdate?: (provider: string, stats: ProviderStats) => void
 ) {
   const providers = [
     { name: 'groq', fn: groqChat },
-    { name: 'openrouter', fn: openrouterChat },
     { name: 'gemini', fn: geminiChat },
+    { name: 'openrouter', fn: openrouterChat },
     { name: 'mistral', fn: mistralChat },
     { name: 'cohere', fn: cohereChat },
     { name: 'cerebras', fn: cerebrasChat }
   ];
 
+  const failedProviders: string[] = [];
+  const allStats: Record<string, ProviderStats> = {};
   let lastError: any = null;
 
   for (const provider of providers) {
+    const startTime = Date.now();
     try {
       logger.info({ provider: provider.name }, 'Attempting AI completion');
-      return await provider.fn(messages, tools, toolCallHandler);
+      const result = await provider.fn(messages, tools, toolCallHandler);
+      const latencyMs = Date.now() - startTime;
+      
+      allStats[provider.name] = { latencyMs, status: 'success' };
+      if (onUpdate) onUpdate(provider.name, allStats[provider.name]);
+
+      return {
+        ...result,
+        provider: provider.name,
+        failedProviders,
+        allStats
+      };
     } catch (error: any) {
-      lastError = error;
+      const latencyMs = Date.now() - startTime;
+      failedProviders.push(provider.name);
+      
       const errorMsg = error.response?.data?.error?.message || error.message;
+      allStats[provider.name] = { latencyMs, status: 'failed', error: errorMsg };
+      if (onUpdate) onUpdate(provider.name, allStats[provider.name]);
+      
+      lastError = error;
       logger.warn({ provider: provider.name, error: errorMsg }, 'AI provider failed, falling back');
       
       if (error.isToolError) throw error;
@@ -114,7 +215,15 @@ async function openAiCompatibleChat(
  * Groq Provider (Primary)
  */
 async function groqChat(messages: ChatMessage[], tools: any[], toolCallHandler: (name: string, args: any) => Promise<any>) {
-  return openAiCompatibleChat('Groq', 'https://api.groq.com/openai/v1', process.env.GROQ_API_KEY || '', 'llama-3.3-70b-versatile', messages, tools, toolCallHandler);
+  try {
+    const userMessage = messages[messages.length - 1].content;
+    const relevantTools = getRelevantTools(userMessage, tools);
+    const optimizedTools = truncateTools(relevantTools);
+    return await openAiCompatibleChat('Groq', 'https://api.groq.com/openai/v1', process.env.GROQ_API_KEY || '', 'llama-3.3-70b-versatile', messages, optimizedTools, toolCallHandler);
+  } catch (error: any) {
+    logger.error({ error: error.message, stack: error.stack }, 'Groq Chat specifically failed');
+    throw error;
+  }
 }
 
 /**
@@ -122,58 +231,98 @@ async function groqChat(messages: ChatMessage[], tools: any[], toolCallHandler: 
  */
 async function openrouterChat(messages: ChatMessage[], tools: any[], toolCallHandler: (name: string, args: any) => Promise<any>) {
   const models = [
-    'meta-llama/llama-3.3-70b-instruct:free',
+    'nvidia/nemotron-3-nano-30b-a3b:free',
     'google/gemma-4-31b-it:free',
-    'openai/gpt-oss-120b:free',
-    'meta-llama/llama-3.2-3b-instruct:free',
-    'liquid/lfm-2.5-1.2b-instruct:free',
-    'qwen/qwen3-coder:free'
+    'qwen/qwen3-coder:free',
+    'meta-llama/llama-3.3-70b-instruct:free',
+    'nvidia/nemotron-3-super-120b-a12b:free'
   ];
 
-  let lastError = null;
+  const optimizedTools = truncateTools(tools);
   for (const model of models) {
     try {
-      return await openAiCompatibleChat('OpenRouter', 'https://openrouter.ai/api/v1', process.env.OPENROUTER_API_KEY || '', model, messages, tools, toolCallHandler);
+      return await openAiCompatibleChat('OpenRouter', 'https://openrouter.ai/api/v1', process.env.OPENROUTER_API_KEY || '', model, messages, optimizedTools, toolCallHandler);
     } catch (err: any) {
-      lastError = err;
-      logger.warn({ model, error: err.message }, 'OpenRouter model failed, trying next...');
-      continue;
+      const isNoEndpoints = err?.message?.includes('No endpoints found');
+      // Support both native HTTP status and axios response status
+      const isRateLimit = err?.status === 429 || err?.response?.status === 429;
+      const isNotFound = err?.status === 404 || err?.response?.status === 404;
+
+      if (isNoEndpoints || isRateLimit || isNotFound) {
+        logger.warn({ model, error: err.message }, `OpenRouter model ${model} unavailable, trying next...`);
+        continue; // move to next model in list
+      }
+      throw err; // hard error, don't swallow it
     }
   }
-  throw lastError || new Error('All OpenRouter models failed');
+  throw new Error('All OpenRouter free models exhausted');
 }
 
 /**
  * Gemini Provider (Fallback 2)
  */
 async function geminiChat(messages: ChatMessage[], tools: any[], toolCallHandler: (name: string, args: any) => Promise<any>) {
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-1.5-flash',
-    tools: [{ functionDeclarations: tools }]
-  });
+  const systemMessage = messages.find(m => m.role === 'system')?.content || '';
+  const safeTools = sanitizeToolsForGemini(tools);
+  
+  // Map history to Gemini format (user/model roles)
+  const contents: any[] = [];
 
-  const chat = model.startChat({
-    history: messages.filter(m => m.role !== 'system' && m.role !== 'tool').map(m => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }]
-    }))
-  });
+  for (const msg of messages) {
+    if (msg.role === 'system') continue;
 
-  const userMessage = messages[messages.length - 1].content;
+    if (msg.role === 'user') {
+      contents.push({ role: 'user', parts: [{ text: msg.content }] });
+    } else if (msg.role === 'assistant') {
+      const parts: any[] = [];
+      if (msg.content) parts.push({ text: msg.content });
+      if (msg.tool_calls) {
+        parts.push(...msg.tool_calls.map(tc => ({
+          functionCall: { name: tc.function.name, args: JSON.parse(tc.function.arguments) }
+        })));
+      }
+      contents.push({ role: 'model', parts });
+    } else if (msg.role === 'tool') {
+      // Tool responses must follow a model turn with functionCalls
+      const lastTurn = contents[contents.length - 1];
+      if (lastTurn && lastTurn.role === 'user' && lastTurn.parts[0].functionResponse) {
+        lastTurn.parts.push({
+          functionResponse: { name: msg.name, response: { content: msg.content } }
+        });
+      } else {
+        contents.push({
+          role: 'user',
+          parts: [{ functionResponse: { name: msg.name, response: { content: msg.content } } }]
+        });
+      }
+    }
+  }
+
   let rounds = 0;
   const MAX_ROUNDS = 6;
-  let currentPrompt = userMessage;
 
   while (rounds < MAX_ROUNDS) {
-    const result = await chat.sendMessage(currentPrompt);
-    const response = result.response;
-    const calls = response.candidates?.[0]?.content?.parts?.filter(p => p.functionCall);
+    const response: any = await genAI.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: contents,
+      config: {
+        systemInstruction: systemMessage,
+        tools: [{ functionDeclarations: safeTools }],
+        toolConfig: { functionCallingConfig: { mode: 'AUTO' } },
+      }
+    });
+
+    const parts = response.candidates?.[0]?.content?.parts || [];
+    const calls = parts.filter((p: any) => p.functionCall);
 
     if (!calls || calls.length === 0) {
-      return { content: response.text(), history: [] };
+      return { content: response.text || parts.map((p: any) => p.text).join(''), history: [] };
     }
 
-    const toolResponses = [];
+    // Append the model's tool calls to contents
+    contents.push({ role: 'model', parts });
+
+    const toolResponses: any[] = [];
     for (const call of calls) {
       const name = call.functionCall!.name;
       const args = call.functionCall!.args;
@@ -189,13 +338,10 @@ async function geminiChat(messages: ChatMessage[], tools: any[], toolCallHandler
       }
     }
 
-    const nextResult = await chat.sendMessage(toolResponses as any);
-    if (!nextResult.response.candidates?.[0]?.content?.parts?.some(p => p.functionCall)) {
-      return { content: nextResult.response.text(), history: [] };
-    }
+    contents.push({ role: 'user', parts: toolResponses });
     rounds++;
   }
-  throw new Error('Max tool calling rounds exceeded');
+  throw new Error('Max tool calling rounds exceeded in Gemini');
 }
 
 /**
@@ -216,5 +362,32 @@ async function cohereChat(messages: ChatMessage[], tools: any[], toolCallHandler
  * Cerebras Provider (Fallback 5)
  */
 async function cerebrasChat(messages: ChatMessage[], tools: any[], toolCallHandler: (name: string, args: any) => Promise<any>) {
-  return openAiCompatibleChat('Cerebras', 'https://api.cerebras.ai/v1', process.env.CEREBRAS_API_KEY || '', 'llama3.1-70b', messages, tools, toolCallHandler);
+  const optimizedTools = truncateTools(tools);
+  return await openAiCompatibleChat('Cerebras', 'https://api.cerebras.ai/v1', process.env.CEREBRAS_API_KEY || '', 'llama-3.3-70b', messages, optimizedTools, toolCallHandler);
+}
+/**
+ * Transcribe audio using Groq Whisper
+ */
+export async function transcribeAudio(audioBuffer: Buffer) {
+  const tempFilePath = path.join(os.tmpdir(), `audio_${Date.now()}.webm`);
+  fs.writeFileSync(tempFilePath, audioBuffer);
+  
+  try {
+    const transcription = await groq.audio.transcriptions.create({
+      file: fs.createReadStream(tempFilePath),
+      model: 'whisper-large-v3',
+    });
+    return transcription.text;
+  } catch (error: any) {
+    logger.error({ error: error.message }, 'Groq transcription failed');
+    throw error;
+  } finally {
+    if (fs.existsSync(tempFilePath)) {
+      try {
+        fs.unlinkSync(tempFilePath);
+      } catch (err) {
+        // Ignore unlink errors
+      }
+    }
+  }
 }

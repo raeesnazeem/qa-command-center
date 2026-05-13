@@ -294,3 +294,27 @@ export async function getOrgTaskStats(orgId: string) {
 
   return stats;
 }
+
+/**
+ * Get all projects assigned to a specific user.
+ */
+export async function getUserProjects(userId: string) {
+  const { data, error } = await supabase
+    .from('project_members')
+    .select(`
+      role,
+      projects (
+        id,
+        name,
+        site_url
+      )
+    `)
+    .eq('user_id', userId);
+
+  if (error) throw error;
+  return data.map((m: any) => ({
+    role: m.role,
+    ...m.projects
+  }));
+}
+

@@ -25,8 +25,22 @@ export const CreateProjectModal = ({ isOpen, onClose }: CreateProjectModalProps)
     },
   });
 
+  const toPascalCase = (str: string) => {
+    return str
+      .replace(/[^a-zA-Z0-9\s_]/g, '')
+      .split(/[\s_]+/)
+      .filter(Boolean)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join('');
+  };
+
   const onSubmit = (data: CreateProjectInput) => {
-    createProject(data, {
+    const formattedData = {
+      ...data,
+      name: toPascalCase(data.name)
+    };
+
+    createProject(formattedData, {
       onSuccess: () => {
         reset();
         onClose();

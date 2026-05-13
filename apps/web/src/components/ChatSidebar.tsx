@@ -14,7 +14,7 @@ export const ChatSidebar: React.FC = () => {
   const location = useLocation();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { messages, isLoading, isStreaming, sendMessage } = useChat();
+  const { messages, isLoading, isStreaming, sendMessage, providerMetadata } = useChat();
 
   // Simple logic to determine if we are on a project-specific page
   const isProjectPage = location.pathname.includes('/projects/') && currentProjectId;
@@ -109,6 +109,50 @@ export const ChatSidebar: React.FC = () => {
 
         {/* Input */}
         <div className="shrink-0">
+          {providerMetadata && (
+            <div className="px-4 pb-1.5 flex justify-end">
+              <div className="flex items-center bg-white/40 backdrop-blur-md border border-slate-200/50 rounded-full px-2.5 py-0.5 shadow-sm space-x-2 overflow-hidden transition-all duration-500 animate-in fade-in slide-in-from-bottom-1">
+                {/* Active Model */}
+                <div className="flex items-center space-x-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                  <span className="text-[9px] font-bold text-slate-700 uppercase tracking-tight">
+                    {providerMetadata.provider}
+                  </span>
+                  {providerMetadata.allStats?.[providerMetadata.provider] && (
+                    <span className="text-[8px] font-mono text-accent/80 font-medium">
+                      {(providerMetadata.allStats[providerMetadata.provider].latencyMs / 1000).toFixed(1)}s
+                    </span>
+                  )}
+                </div>
+
+                {/* Separator if there are failed providers */}
+                {providerMetadata.failedProviders.length > 0 && (
+                  <div className="w-px h-2.5 bg-slate-200" />
+                )}
+
+                {/* Failed Providers */}
+                {providerMetadata.failedProviders.length > 0 && (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Exhausted:</span>
+                    <div className="flex items-center space-x-2">
+                      {providerMetadata.failedProviders.map(p => (
+                        <div key={p} className="flex items-center space-x-1 group">
+                          <span className="text-[8px] font-bold text-red-400/80 uppercase tracking-tighter group-hover:text-red-500 transition-colors">
+                            {p}
+                          </span>
+                          {providerMetadata.allStats?.[p] && (
+                            <span className="text-[7px] font-mono text-red-300/60 font-medium">
+                              {(providerMetadata.allStats[p].latencyMs / 1000).toFixed(1)}s
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           <ChatInput 
             value={inputValue}
             onChange={setInputValue}
