@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import 'dotenv/config';
 import PQueue from 'p-queue';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || "");
 
 // Rate limit: 15 calls per minute (60000ms)
 const queue = new PQueue({
@@ -20,7 +20,7 @@ const queue = new PQueue({
 export async function analyzeImage(imageBuffer: Buffer | Buffer[], prompt: string): Promise<string> {
   return queue.add(async () => {
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
       const imageParts = Array.isArray(imageBuffer) 
       ? imageBuffer.map(buf => ({

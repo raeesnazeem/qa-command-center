@@ -79,7 +79,7 @@ export const useChat = () => {
         partialLine = lines.pop() || '';
 
         for (const line of lines) {
-          if (!line.trim() || !line.startsWith('data: ')) continue;
+          if (!line.startsWith('data: ')) continue;
           
           const data = line.slice(6);
 
@@ -114,7 +114,7 @@ export const useChat = () => {
               }
             } else {
               // It's a plain text chunk
-              accumulatedContent += data;
+              accumulatedContent += data || '\n';
               setMessages((prev) => {
                 const newMessages = [...prev];
                 const lastMessage = newMessages[newMessages.length - 1];
@@ -144,7 +144,7 @@ export const useChat = () => {
       setIsStreaming(false);
       // Optionally handle error in UI
     }
-  }, [getToken]);
+  }, [getToken, messages]);
 
   return {
     messages,

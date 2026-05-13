@@ -27,42 +27,55 @@ router.post('/', clerkAuth, aiRateLimiter, async (req: Request, res: Response) =
   try {
     const executeToolCall = async (name: string, args: any) => {
       logger.info({ name, args }, 'Executing tool call');
-      switch (name) {
-        case 'find_project': return await queries.findProjectByName(args.project_name, orgId);
-        case 'get_project_stats': return await queries.getProjectStats(args.project_id);
-        case 'get_task_stats': return await queries.getTaskStats(args.project_id);
-        case 'get_developers': return await queries.getDevelopersForProject(args.project_id);
-        case 'get_qa_engineers': return await queries.getQAForProject(args.project_id);
-        case 'get_project_members': return await queries.getProjectMembers(args.project_id);
-        case 'get_project_status': return await queries.getProjectPreReleaseStatus(args.project_id);
-        case 'get_basecamp_link': return await queries.getProjectBasecampLink(args.project_id);
-        case 'get_issues_by_developer': return await queries.getIssueCountsByDeveloper(args.project_id);
-        case 'get_issues_by_qa': return await queries.getIssueCountsByQA(args.project_id);
-        case 'get_all_users': return await queries.getAllOrgUsers(orgId);
-        case 'find_user': return await queries.getUserByEmail(args.email, orgId);
-        case 'find_user_by_name': return await queries.findUserByName(args.name, orgId);
-        case 'get_user_tasks': return await queries.getTasksByUserId(args.user_id);
-        case 'get_user_task_stats': return await queries.getUserTaskStats(args.user_id);
-        case 'get_org_task_stats': return await queries.getOrgTaskStats(orgId);
-        case 'list_projects': return await queries.listProjects(orgId);
-        
-        case 'create_project': return await mutations.createProject(args, orgId);
-        case 'update_project': return await mutations.updateProject(args, orgId);
-        case 'add_project_member': return await mutations.addProjectMember(args);
-        case 'remove_project_member': return await mutations.removeProjectMember(args);
-        case 'create_task': return await mutations.createTask(args, orgId);
-        case 'update_task': return await mutations.updateTask(args, orgId);
-        case 'delete_task': return await mutations.deleteTask(args);
-        case 'update_finding': return await mutations.updateFinding(args, orgId);
-        case 'delete_finding': return await mutations.deleteFinding(args);
-        case 'update_user_role': return await mutations.updateUserRole(args);
-        case 'create_qa_run': return await mutations.createRun(args);
-        case 'cancel_qa_run': return await mutations.cancelRun(args);
-        
-        case 'search_issues': return await ragSearch.semanticSearch(args.query, orgId, args.project_id, args.source_type);
-        
-        default: throw new Error(`Unknown tool: ${name}`);
-      }
+      
+      // Normalize common parameters that AI models often swap between snake_case and camelCase
+      const projectId = args.project_id || args.projectId;
+      const userId = args.user_id || args.userId;
+      const taskId = args.task_id || args.taskId;
+      const runId = args.run_id || args.runId;
+      const findingId = args.finding_id || args.findingId;
+
+      const result = await (async () => {
+        switch (name) {
+          case 'find_project': return await queries.findProjectByName(args.project_name || args.projectName, orgId);
+          case 'get_project_stats': return await queries.getProjectStats(projectId);
+          case 'get_task_stats': return await queries.getTaskStats(projectId);
+          case 'get_developers': return await queries.getDevelopersForProject(projectId);
+          case 'get_qa_engineers': return await queries.getQAForProject(projectId);
+          case 'get_project_members': return await queries.getProjectMembers(projectId);
+          case 'get_project_status': return await queries.getProjectPreReleaseStatus(projectId);
+          case 'get_basecamp_link': return await queries.getProjectBasecampLink(projectId);
+          case 'get_issues_by_developer': return await queries.getIssueCountsByDeveloper(projectId);
+          case 'get_issues_by_qa': return await queries.getIssueCountsByQA(projectId);
+          case 'get_all_users': return await queries.getAllOrgUsers(orgId);
+          case 'find_user': return await queries.getUserByEmail(args.email, orgId);
+          case 'find_user_by_name': return await queries.findUserByName(args.name, orgId);
+          case 'get_user_tasks': return await queries.getTasksByUserId(userId);
+          case 'get_user_task_stats': return await queries.getUserTaskStats(userId);
+          case 'get_org_task_stats': return await queries.getOrgTaskStats(orgId);
+          case 'list_projects': return await queries.listProjects(orgId);
+          
+          case 'create_project': return await mutations.createProject(args, orgId);
+          case 'update_project': return await mutations.updateProject({ ...args, project_id: projectId }, orgId);
+          case 'add_project_member': return await mutations.addProjectMember({ ...args, project_id: projectId, user_id: userId });
+          case 'remove_project_member': return await mutations.removeProjectMember({ ...args, project_id: projectId, user_id: userId });
+          case 'create_task': return await mutations.createTask({ ...args, project_id: projectId, assigned_to: userId || args.assignedTo }, orgId);
+          case 'update_task': return await mutations.updateTask({ ...args, task_id: taskId, project_id: projectId, assigned_to: userId || args.assignedTo }, orgId);
+          case 'delete_task': return await mutations.deleteTask({ ...args, task_id: taskId, project_id: projectId });
+          case 'update_finding': return await mutations.updateFinding({ ...args, finding_id: findingId, run_id: runId }, orgId);
+          case 'delete_finding': return await mutations.deleteFinding({ ...args, finding_id: findingId, run_id: runId });
+          case 'update_user_role': return await mutations.updateUserRole({ ...args, user_id: userId });
+          case 'create_qa_run': return await mutations.createRun({ ...args, project_id: projectId });
+          case 'cancel_qa_run': return await mutations.cancelRun({ ...args, run_id: runId, project_id: projectId });
+          
+          case 'search_issues': return await ragSearch.semanticSearch(args.query, orgId, projectId, args.source_type || args.sourceType);
+          
+          default: throw new Error(`Unknown tool: ${name}`);
+        }
+      })();
+
+      logger.info({ name, result }, 'Tool call result');
+      return result;
     };
 
     const systemPrompt = `You are a concise QA assistant.
@@ -83,6 +96,8 @@ ENTITY DISCOVERY:
 RULES:
 - After finding an entity (project or user), extract the id field and use it in subsequent tool calls.
 - Once you have the data you need, STOP calling tools and write your final answer.
+- ALWAYS use the designated tool calling mechanism. Do NOT attempt to call tools using manual text tags like <function>.
+- Use line breaks and bullet points for better readability.
 - Keep responses short and focused.`;
 
     const fullHistory = history || [];
@@ -99,11 +114,22 @@ RULES:
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
-    // Simulate streaming for better UX
-    const chunks = (result.content || '').split(' ');
-    for (const chunk of chunks) {
-      res.write(`data: ${chunk} \n\n`);
-      await new Promise(resolve => setTimeout(resolve, 30));
+    // Simulate streaming for better UX, handling newlines correctly
+    const content = result.content || '';
+    const lines = content.split('\n');
+    
+    for (let i = 0; i < lines.length; i++) {
+      const words = lines[i].split(' ');
+      for (let j = 0; j < words.length; j++) {
+        const word = words[j];
+        if (!word && j > 0 && j < words.length - 1) continue; // Skip extra spaces but keep intentional ones
+        const suffix = j < words.length - 1 ? ' ' : '';
+        res.write(`data: ${word}${suffix}\n\n`);
+        await new Promise(resolve => setTimeout(resolve, 20));
+      }
+      if (i < lines.length - 1) {
+        res.write(`data: \n\n`); // This results in an empty data line on the frontend, interpreted as \n
+      }
     }
     
     res.write('data: [DONE]\n\n');

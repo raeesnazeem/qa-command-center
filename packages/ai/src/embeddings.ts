@@ -6,7 +6,7 @@
 // dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
 // // Initialize the Google AI SDK
-// const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+// const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || "");
 
 /**
  * text-embedding-005 is the 2026 stable successor to 004.
@@ -57,14 +57,14 @@ let _genAI: GoogleGenerativeAI | null = null;
 
 function getClient() {
   if (!_genAI) {
-    _genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+    _genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!);
   }
   return _genAI;
 }
 
 export async function generateEmbedding(text: string): Promise<number[]> {
   const client = getClient();
-  const models = ['gemini-embedding-001', 'gemini-embedding-2', 'gemini-embedding-2-preview'];
+  const models = ['gemini-embedding-2', 'gemini-embedding-001', 'gemini-embedding-2-preview'];
   let lastError: any = null;
 
   for (const modelName of models) {

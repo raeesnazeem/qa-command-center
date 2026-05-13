@@ -152,6 +152,25 @@ export async function deleteTask(args: any) {
 }
 
 /**
+ * Delete multiple tasks.
+ */
+export async function deleteTasksBulk(args: { task_ids: string[], project_id: string }) {
+  const { task_ids, project_id } = args;
+  const { error } = await supabase
+    .from('tasks')
+    .delete()
+    .in('id', task_ids)
+    .eq('project_id', project_id);
+
+  if (error) throw error;
+
+  // Delete from embeddings
+  await supabase.from('embeddings').delete().eq('source_type', 'task').in('source_id', task_ids);
+
+  return { success: true, count: task_ids.length };
+}
+
+/**
  * Update a finding and sync to embeddings.
  */
 export async function updateFinding(args: any, orgId: string) {

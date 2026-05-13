@@ -2,11 +2,11 @@ export const TOOL_DEFINITIONS = [
   // --- Query Tools ---
   {
     name: 'find_project',
-    description: 'Find a project by name using fuzzy matching. Always call this FIRST when a project name is mentioned to get the project_id.',
+    description: 'Find a project by name using fuzzy matching. Always call this FIRST when a project name is mentioned to get the project_id. ALWAYS use snake_case for parameters.',
     parameters: {
       type: 'object',
       properties: {
-        project_name: { type: 'string', description: 'The name of the project to search for' }
+        project_name: { type: 'string', description: 'The name of the project to search for (use snake_case)' }
       },
       required: ['project_name']
     }
@@ -128,7 +128,7 @@ export const TOOL_DEFINITIONS = [
   },
   {
     name: 'find_user_by_name',
-    description: 'Find a user by their full name using fuzzy matching. Use this when a person name is mentioned.',
+    description: 'Find a user by their full name using fuzzy matching. Use this when a person name is mentioned. ALWAYS use snake_case for parameters.',
     parameters: {
       type: 'object',
       properties: {
@@ -139,7 +139,7 @@ export const TOOL_DEFINITIONS = [
   },
   {
     name: 'get_user_tasks',
-    description: 'Get all active (non-closed) tasks assigned to a specific user across all projects.',
+    description: 'Get all active (non-closed) tasks assigned to a specific user across all projects. ALWAYS use snake_case for parameters.',
     parameters: {
       type: 'object',
       properties: {
@@ -150,7 +150,7 @@ export const TOOL_DEFINITIONS = [
   },
   {
     name: 'get_user_task_stats',
-    description: 'Get counts of tasks grouped by status (open, in_progress, resolved, closed) for a specific user. Use this when asked for "number of" or "how many" tasks a user has.',
+    description: 'Get counts of tasks grouped by status (open, in_progress, resolved, closed) for a specific user. Use this when asked for "number of" or "how many" tasks a user has. ALWAYS use snake_case for parameters.',
     parameters: {
       type: 'object',
       properties: {
