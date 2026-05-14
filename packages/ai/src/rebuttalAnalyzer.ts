@@ -8,7 +8,7 @@ export interface RebuttalVerdict {
 
 export async function analyzeRebuttal(params: {
   findingDescription: string;
-  findingScreenshotBuffer: Buffer;
+  findingScreenshotBuffer?: Buffer;
   rebuttalText: string;
   rebuttalScreenshotBuffer?: Buffer;
 }): Promise<RebuttalVerdict> {
@@ -25,7 +25,7 @@ ${params.rebuttalText}`;
     { text: promptText },
     {
       inlineData: {
-        data: params.findingScreenshotBuffer.toString('base64'),
+        data: params.findingScreenshotBuffer?.toString('base64'),
         mimeType: 'image/png'
       }
     }

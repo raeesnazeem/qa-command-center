@@ -318,15 +318,39 @@ async function geminiChat(messages: ChatMessage[], tools: any[], toolCallHandler
   let totalUsage = { promptTokens: 0, completionTokens: 0 };
 
   while (rounds < MAX_ROUNDS) {
-    const response: any = await genAI.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: contents,
-      config: {
-        systemInstruction: systemMessage,
-        tools: [{ functionDeclarations: safeTools }],
-        toolConfig: { functionCallingConfig: { mode: 'AUTO' } },
+    const modelsToTry = [
+      'gemini-2.5-flash',
+      'gemma-4-31b-it',
+      'gemini-3.1-flash-lite'
+    ];
+
+    let response: any;
+    let success = false;
+    let lastError: any = null;
+
+    for (const model of modelsToTry) {
+      try {
+        response = await genAI.models.generateContent({
+          model: model,
+          contents: contents,
+          config: {
+            systemInstruction: systemMessage,
+            tools: [{ functionDeclarations: safeTools }],
+            toolConfig: { functionCallingConfig: { mode: 'AUTO' } },
+          }
+        });
+        success = true;
+        break;
+      } catch (err: any) {
+        lastError = err;
+        logger.warn({ model, error: err.message }, `Gemini provider model ${model} failed, trying next...`);
+        continue;
       }
-    });
+    }
+
+    if (!success) {
+      throw lastError || new Error('All Gemini provider fallback models failed');
+    }
     
     if (response.usageMetadata) {
       totalUsage.promptTokens += response.usageMetadata.promptTokenCount || 0;
