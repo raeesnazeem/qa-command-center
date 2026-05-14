@@ -17,7 +17,12 @@ export const useChat = () => {
   const [providerMetadata, setProviderMetadata] = useState<{ 
     provider: string, 
     failedProviders: string[],
-    allStats?: Record<string, { latencyMs: number, status: string, error?: string }>
+    allStats?: Record<string, { 
+      latencyMs: number, 
+      status: string, 
+      error?: string,
+      usage?: { promptTokens: number, completionTokens: number }
+    }>
   } | null>(null);
   const { getToken } = useAuth();
 

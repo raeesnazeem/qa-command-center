@@ -119,9 +119,16 @@ export const ChatSidebar: React.FC = () => {
                     {providerMetadata.provider}
                   </span>
                   {providerMetadata.allStats?.[providerMetadata.provider] && (
-                    <span className="text-[8px] font-mono text-accent/80 font-medium">
-                      {(providerMetadata.allStats[providerMetadata.provider].latencyMs / 1000).toFixed(1)}s
-                    </span>
+                    <div className="flex items-center space-x-1">
+                      <span className="text-[8px] font-mono text-accent/80 font-medium">
+                        {(providerMetadata.allStats[providerMetadata.provider].latencyMs / 1000).toFixed(1)}s
+                      </span>
+                      {providerMetadata.allStats[providerMetadata.provider].usage && (
+                        <span className="text-[7px] font-mono text-slate-400 font-bold border-l border-slate-200 pl-1">
+                          {providerMetadata.allStats[providerMetadata.provider].usage?.promptTokens}/{providerMetadata.allStats[providerMetadata.provider].usage?.completionTokens}
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
 
@@ -141,9 +148,16 @@ export const ChatSidebar: React.FC = () => {
                             {p}
                           </span>
                           {providerMetadata.allStats?.[p] && (
-                            <span className="text-[7px] font-mono text-red-300/60 font-medium">
-                              {(providerMetadata.allStats[p].latencyMs / 1000).toFixed(1)}s
-                            </span>
+                            <div className="flex items-center space-x-0.5">
+                              <span className="text-[7px] font-mono text-red-300/60 font-medium">
+                                {(providerMetadata.allStats[p].latencyMs / 1000).toFixed(1)}s
+                              </span>
+                              {providerMetadata.allStats[p].usage && (
+                                <span className="text-[6px] font-mono text-red-300/40 font-bold">
+                                  [{providerMetadata.allStats[p].usage?.promptTokens}/{providerMetadata.allStats[p].usage?.completionTokens}]
+                                </span>
+                              )}
+                            </div>
                           )}
                         </div>
                       ))}

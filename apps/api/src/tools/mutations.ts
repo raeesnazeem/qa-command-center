@@ -10,7 +10,7 @@ export async function createProject(args: any, orgId: string) {
     .insert({
       name: args.name,
       site_url: args.site_url,
-      client_name: args.client_name,
+      client_name: args.is_internal ? 'Internal' : args.client_name,
       is_pre_release: args.is_pre_release || false,
       org_id: orgId,
       status: 'active'
@@ -37,6 +37,86 @@ export async function updateProject(args: any, orgId: string) {
 
   if (error) throw error;
   return data;
+}
+
+/**
+ * Delete a project and all its associated data.
+ */
+export async function deleteProject(args: any, orgId: string) {
+  const { project_id } = args;
+
+  // 1. Get all task IDs for this project
+  const { data: tasks } = await supabase.from('tasks').select('id').eq('project_id', project_id);
+  const taskIds = tasks?.map(t => t.id) || [];
+
+  // 2. Get all finding IDs for this project (via runs)
+  const { data: runs } = await supabase.from('qa_runs').select('id').eq('project_id', project_id);
+  const runIds = runs?.map(r => r.id) || [];
+  
+  let findingIds: string[] = [];
+  if (runIds.length > 0) {
+    const { data: findings } = await supabase.from('findings').select('id').in('run_id', runIds);
+    findingIds = findings?.map(f => f.id) || [];
+  }
+
+  // 3. Delete embeddings
+  if (taskIds.length > 0) {
+    await supabase.from('embeddings').delete().eq('source_type', 'task').in('source_id', taskIds);
+  }
+  if (findingIds.length > 0) {
+    await supabase.from('embeddings').delete().eq('source_type', 'finding').in('source_id', findingIds);
+  }
+
+  // 4. Delete the project (CASCADE will handle runs, findings, tasks, members)
+  const { error } = await supabase
+    .from('projects')
+    .delete()
+    .eq('id', project_id)
+    .eq('org_id', orgId);
+
+  if (error) throw error;
+  return { success: true };
+}
+
+/**
+ * Delete multiple projects and all their associated data.
+ */
+export async function deleteProjectsBulk(args: { project_ids: string[] }, orgId: string) {
+  const { project_ids } = args;
+
+  for (const project_id of project_ids) {
+    // 1. Get all task IDs for this project
+    const { data: tasks } = await supabase.from('tasks').select('id').eq('project_id', project_id);
+    const taskIds = tasks?.map(t => t.id) || [];
+
+    // 2. Get all finding IDs for this project (via runs)
+    const { data: runs } = await supabase.from('qa_runs').select('id').eq('project_id', project_id);
+    const runIds = runs?.map(r => r.id) || [];
+    
+    let findingIds: string[] = [];
+    if (runIds.length > 0) {
+      const { data: findings } = await supabase.from('findings').select('id').in('run_id', runIds);
+      findingIds = findings?.map(f => f.id) || [];
+    }
+
+    // 3. Delete embeddings
+    if (taskIds.length > 0) {
+      await supabase.from('embeddings').delete().eq('source_type', 'task').in('source_id', taskIds);
+    }
+    if (findingIds.length > 0) {
+      await supabase.from('embeddings').delete().eq('source_type', 'finding').in('source_id', findingIds);
+    }
+  }
+
+  // 4. Delete the projects (CASCADE will handle runs, findings, tasks, members)
+  const { error } = await supabase
+    .from('projects')
+    .delete()
+    .in('id', project_ids)
+    .eq('org_id', orgId);
+
+  if (error) throw error;
+  return { success: true, count: project_ids.length };
 }
 
 /**

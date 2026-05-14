@@ -38,6 +38,7 @@ router.post('/', clerkAuth, aiRateLimiter, async (req: Request, res: Response) =
       const result = await (async () => {
         switch (name) {
           case 'find_project': return await queries.findProjectByName(args.project_name || args.projectName, orgId);
+          case 'find_projects_bulk': return await queries.findProjectsByNames(args.project_names || args.projectNames, orgId);
           case 'get_project_stats': return await queries.getProjectStats(projectId);
           case 'get_task_stats': return await queries.getTaskStats(projectId);
           case 'get_developers': return await queries.getDevelopersForProject(projectId);
@@ -58,6 +59,8 @@ router.post('/', clerkAuth, aiRateLimiter, async (req: Request, res: Response) =
           
           case 'create_project': return await mutations.createProject(args, orgId);
           case 'update_project': return await mutations.updateProject({ ...args, project_id: projectId }, orgId);
+          case 'delete_project': return await mutations.deleteProject({ ...args, project_id: projectId }, orgId);
+          case 'delete_projects_bulk': return await mutations.deleteProjectsBulk({ ...args, project_ids: args.project_ids || args.projectIds }, orgId);
           case 'add_project_member': return await mutations.addProjectMember({ ...args, project_id: projectId, user_id: userId });
           case 'remove_project_member': return await mutations.removeProjectMember({ ...args, project_id: projectId, user_id: userId });
           case 'create_task': return await mutations.createTask({ ...args, project_id: projectId, assigned_to: userId || args.assignedTo }, orgId);
@@ -92,8 +95,14 @@ IMPORTANT MAPPINGS:
 - "who is working on" = show developers with their task counts
 - "resolved/to-do/in-progress/closed" = task statuses
 
+PROJECT CREATION FLOW:
+- MANDATORY: site_url.
+- You MUST confirm: 1. Is it a pre-release project? 2. Is it an internal project?
+- If NOT internal, you MUST ask for the client name.
+- Do not call create_project until these are confirmed.
+
 ENTITY DISCOVERY:
-- If a project name is mentioned, ALWAYS call find_project FIRST to get the project_id.
+- If project names are mentioned, ALWAYS call find_project or find_projects_bulk FIRST to get the project_id(s).
 - If a person's name is mentioned, ALWAYS call find_user_by_name FIRST to get the user_id.
 - If it's ambiguous whether a name refers to a project or a user, try find_project first. If it returns no results, try find_user_by_name.
 

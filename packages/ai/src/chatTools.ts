@@ -12,6 +12,21 @@ export const TOOL_DEFINITIONS = [
     }
   },
   {
+    name: 'find_projects_bulk',
+    description: 'Find multiple projects by name using fuzzy matching. Use this when the user mentions multiple projects in one request.',
+    parameters: {
+      type: 'object',
+      properties: {
+        project_names: { 
+          type: 'array', 
+          items: { type: 'string' },
+          description: 'List of project names to search for'
+        }
+      },
+      required: ['project_names']
+    }
+  },
+  {
     name: 'get_project_stats',
     description: 'Get project findings statistics grouped by status and severity.',
     parameters: {
@@ -184,16 +199,17 @@ export const TOOL_DEFINITIONS = [
   // --- Mutation Tools ---
   {
     name: 'create_project',
-    description: 'Create a new QA project.',
+    description: 'Create a new project. Requirements: site_url is MANDATORY. You MUST confirm if it is a pre-release project and if it is an internal project. If NOT internal, you MUST ask for the client name.',
     parameters: {
       type: 'object',
       properties: {
-        name: { type: 'string' },
-        site_url: { type: 'string' },
-        client_name: { type: 'string' },
-        is_pre_release: { type: 'boolean' }
+        name: { type: 'string', description: 'Project display name' },
+        site_url: { type: 'string', description: 'Base URL (Mandatory)' },
+        client_name: { type: 'string', description: 'Client name (Required if not internal)' },
+        is_pre_release: { type: 'boolean', description: 'Whether this is a pre-release project' },
+        is_internal: { type: 'boolean', description: 'Whether this is an internal project' }
       },
-      required: ['name', 'site_url']
+      required: ['name', 'site_url', 'is_pre_release', 'is_internal']
     }
   },
   {
@@ -210,6 +226,32 @@ export const TOOL_DEFINITIONS = [
         status: { type: 'string', enum: ['active', 'archived', 'paused'] }
       },
       required: ['project_id']
+    }
+  },
+  {
+    name: 'delete_project',
+    description: "Delete a project and all its associated data (runs, tasks, findings). Use this ONLY when specifically asked to 'delete' a project.",
+    parameters: {
+      type: 'object',
+      properties: {
+        project_id: { type: 'string', description: 'The UUID of the project' }
+      },
+      required: ['project_id']
+    }
+  },
+  {
+    name: 'delete_projects_bulk',
+    description: "Delete multiple projects and all their associated data. Use this when the user asks to 'delete all these projects' or provides a list.",
+    parameters: {
+      type: 'object',
+      properties: {
+        project_ids: { 
+          type: 'array', 
+          items: { type: 'string' },
+          description: 'List of project UUIDs to delete'
+        }
+      },
+      required: ['project_ids']
     }
   },
   {
@@ -416,5 +458,8 @@ export const ORG_ID_PARAMS = [
   'find_user_by_name',
   'get_org_task_stats',
   'create_project',
+  'delete_project',
+  'delete_projects_bulk',
+  'find_projects_bulk',
   'search_issues'
 ];

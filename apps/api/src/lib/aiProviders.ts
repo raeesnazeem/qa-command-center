@@ -26,6 +26,10 @@ export interface ProviderStats {
   latencyMs: number;
   status: 'success' | 'failed';
   error?: string;
+  usage?: {
+    promptTokens: number;
+    completionTokens: number;
+  };
 }
 
 /**
@@ -123,7 +127,11 @@ export async function chatWithFallback(
       const result = await provider.fn(messages, tools, toolCallHandler);
       const latencyMs = Date.now() - startTime;
       
-      allStats[provider.name] = { latencyMs, status: 'success' };
+      allStats[provider.name] = { 
+        latencyMs, 
+        status: 'success',
+        usage: result.usage
+      };
       if (onUpdate) onUpdate(provider.name, allStats[provider.name]);
 
       return {
@@ -169,21 +177,29 @@ async function openAiCompatibleChat(
   let rounds = 0;
   const MAX_ROUNDS = 6;
 
+  let totalUsage = { promptTokens: 0, completionTokens: 0 };
+  const toolsPayload = tools.length > 0 ? tools.map(t => ({ type: 'function', function: t })) : undefined;
+
   while (rounds < MAX_ROUNDS) {
     const response = await axios.post(`${baseUrl}/chat/completions`, {
       model,
       messages: currentMessages,
-      tools: tools.map(t => ({ type: 'function', function: t })),
-      tool_choice: 'auto',
+      tools: toolsPayload,
+      tool_choice: toolsPayload ? 'auto' : undefined,
     }, {
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }
     });
+
+    if (response.data.usage) {
+      totalUsage.promptTokens += response.data.usage.prompt_tokens || 0;
+      totalUsage.completionTokens += response.data.usage.completion_tokens || 0;
+    }
 
     const message = response.data.choices[0].message;
     currentMessages.push(message);
 
     if (!message.tool_calls || message.tool_calls.length === 0) {
-      return { content: message.content, history: currentMessages };
+      return { content: message.content, history: currentMessages, usage: totalUsage };
     }
 
     for (const toolCall of message.tool_calls) {
@@ -299,6 +315,7 @@ async function geminiChat(messages: ChatMessage[], tools: any[], toolCallHandler
 
   let rounds = 0;
   const MAX_ROUNDS = 6;
+  let totalUsage = { promptTokens: 0, completionTokens: 0 };
 
   while (rounds < MAX_ROUNDS) {
     const response: any = await genAI.models.generateContent({
@@ -310,12 +327,17 @@ async function geminiChat(messages: ChatMessage[], tools: any[], toolCallHandler
         toolConfig: { functionCallingConfig: { mode: 'AUTO' } },
       }
     });
+    
+    if (response.usageMetadata) {
+      totalUsage.promptTokens += response.usageMetadata.promptTokenCount || 0;
+      totalUsage.completionTokens += response.usageMetadata.candidatesTokenCount || 0;
+    }
 
     const parts = response.candidates?.[0]?.content?.parts || [];
     const calls = parts.filter((p: any) => p.functionCall);
 
     if (!calls || calls.length === 0) {
-      return { content: response.text || parts.map((p: any) => p.text).join(''), history: [] };
+      return { content: response.text || parts.map((p: any) => p.text).join(''), history: [], usage: totalUsage };
     }
 
     // Append the model's tool calls to contents

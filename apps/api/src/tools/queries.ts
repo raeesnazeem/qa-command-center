@@ -16,6 +16,24 @@ export async function findProjectByName(name: string, orgId: string) {
 }
 
 /**
+ * Find multiple projects by name using fuzzy matching.
+ */
+export async function findProjectsByNames(names: string[], orgId: string) {
+  const results: any[] = [];
+  for (const name of names) {
+    const { data } = await supabase
+      .from('projects')
+      .select('id, name, site_url')
+      .eq('org_id', orgId)
+      .ilike('name', `%${name}%`)
+      .limit(3);
+    if (data) results.push(...data);
+  }
+  // De-duplicate results by ID
+  return Array.from(new Map(results.map(item => [item.id, item])).values());
+}
+
+/**
  * Get project findings statistics grouped by status and severity.
  */
 export async function getProjectStats(projectId: string) {
