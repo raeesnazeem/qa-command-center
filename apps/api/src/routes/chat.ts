@@ -63,6 +63,8 @@ router.post('/', clerkAuth, aiRateLimiter, async (req: Request, res: Response) =
           case 'create_task': return await mutations.createTask({ ...args, project_id: projectId, assigned_to: userId || args.assignedTo }, orgId);
           case 'update_task': return await mutations.updateTask({ ...args, task_id: taskId, project_id: projectId, assigned_to: userId || args.assignedTo }, orgId);
           case 'delete_task': return await mutations.deleteTask({ ...args, task_id: taskId, project_id: projectId });
+          case 'delete_tasks_bulk': return await mutations.deleteTasksBulk({ ...args, task_ids: args.task_ids, project_id: projectId });
+          case 'delete_user_tasks_in_project': return await mutations.deleteUserTasksInProject({ ...args, user_id: userId, project_id: projectId });
           case 'update_finding': return await mutations.updateFinding({ ...args, finding_id: findingId, run_id: runId }, orgId);
           case 'delete_finding': return await mutations.deleteFinding({ ...args, finding_id: findingId, run_id: runId });
           case 'update_user_role': return await mutations.updateUserRole({ ...args, user_id: userId });

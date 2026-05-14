@@ -241,10 +241,13 @@ export const RunDetailPage = () => {
       "Capturing multiview screenshots... (20s wait/view)",
     )
     try {
-      const response = await axios.post("/api/proxy-browser/capture-multiview", {
-        url: selectedPage.url,
-        type: "screenshots",
-      })
+      const response = await axios.post(
+        "/api/proxy-browser/capture-multiview",
+        {
+          url: selectedPage.url,
+          type: "screenshots",
+        },
+      )
 
       const results = response.data // { desktop, laptop, tablet, mobile }
       const galleryImages = [
@@ -276,7 +279,9 @@ export const RunDetailPage = () => {
         gallery_images: galleryImages,
       })
 
-      toast.success("Screenshots captured and staged as a task", { id: toastId })
+      toast.success("Screenshots captured and staged as a task", {
+        id: toastId,
+      })
     } catch (err) {
       console.error(err)
       toast.error("Failed to capture multiview screenshots", { id: toastId })
@@ -531,7 +536,6 @@ export const RunDetailPage = () => {
           <div className="flex justify-between items-end">
             <div className="space-y-1">
               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                <Activity size={16} className="text-blue-500" />
                 {isDiscovering
                   ? "Phase 1: Sitemap Discovery"
                   : "Phase 2: Scanning Pages"}
@@ -552,7 +556,7 @@ export const RunDetailPage = () => {
                     setSelectedManualPageId(null)
                     setIsManualScanOpen(true)
                   }}
-                  className="px-2 py-1 border border-accent rounded text-accent text-[10px] font-bold uppercase tracking-tighter hover:bg-accent/5 transition-colors"
+                  className="px-2 py-1 border border-accent rounded-sm text-accent text-[10px] font-bold uppercase tracking-tighter hover:bg-accent/5 transition-colors"
                 >
                   Manual Scan
                 </button>
@@ -649,7 +653,7 @@ export const RunDetailPage = () => {
         )}
         <button
           onClick={() => setActiveTab("report")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
             activeTab === "report"
               ? "bg-white text-slate-900 shadow-sm border border-slate-200"
               : "text-slate-500 hover:text-slate-700"
@@ -666,7 +670,6 @@ export const RunDetailPage = () => {
             <div className="flex justify-between items-end">
               <div className="space-y-1">
                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                  <Activity size={16} className="text-accent" />
                   {isDiscovering
                     ? "Phase 1: Sitemap Discovery"
                     : "Phase 2: Scanning Pages"}
@@ -722,13 +725,13 @@ export const RunDetailPage = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="bg-white p-6 rounded-md border border-slate-200 shadow-sm">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
                 Total Pages
               </p>
               <p className="text-2xl font-bold text-slate-900">{pagesTotal}</p>
             </div>
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="bg-white p-6 rounded-md border border-slate-200 shadow-sm">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
                 Processed
               </p>
@@ -736,7 +739,7 @@ export const RunDetailPage = () => {
                 {pagesProcessed}
               </p>
             </div>
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="bg-white p-6 rounded-md border border-slate-200 shadow-sm">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
                 Total Issues
               </p>
@@ -747,7 +750,7 @@ export const RunDetailPage = () => {
                 )}
               </p>
             </div>
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="bg-white p-6 rounded-md border border-slate-200 shadow-sm">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
                 Status
               </p>
@@ -766,11 +769,11 @@ export const RunDetailPage = () => {
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-slate-900">Scan Steps</h2>
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-slate-100 px-3 py-1.5 rounded-md border border-slate-200">
               {pagesProcessed} / {pagesTotal} Completed
             </span>
           </div>
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden">
             <PagesTable
               pages={run.pages || []}
               onPageSelect={(page) => {
@@ -891,7 +894,7 @@ export const RunDetailPage = () => {
               </div>
             </div>
           ) : (
-            <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-24 text-center">
+            <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-md p-24 text-center">
               <Search className="w-10 h-10 text-slate-200 mx-auto mb-4" />
               <p className="text-slate-900 font-bold uppercase tracking-tight">
                 Intelligence Ready
@@ -987,7 +990,7 @@ export const RunDetailPage = () => {
       )}
 
       {activeTab === "woocommerce" && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <div className="bg-white border border-slate-200 rounded-md p-8 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
           {isLoadingRunFindings ? (
             <div className="py-20 text-center">
               <Loader2 className="w-8 h-8 animate-spin mx-auto text-accent" />

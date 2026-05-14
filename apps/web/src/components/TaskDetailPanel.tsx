@@ -42,10 +42,12 @@ export const TaskDetailPanel = ({
   const [rebuttalText, setRebuttalText] = useState("")
   const [rebuttalUrl, setRebuttalUrl] = useState("")
   const [isResolveModalOpen, setIsResolveModalOpen] = useState(false)
-  
+
   // Ensure we only fetch if we have a valid task and the panel is open
-  const isValidTask = initialTask && (initialTask as any).project_id;
-  const { data: latestTask } = useTask(isValidTask && isOpen ? initialTask.id : "");
+  const isValidTask = initialTask && (initialTask as any).project_id
+  const { data: latestTask } = useTask(
+    isValidTask && isOpen ? initialTask.id : "",
+  )
   const task = latestTask || initialTask
   const { isDeveloper } = useRole()
   const hasRebuttals = (task?.rebuttals?.length || 0) > 0
@@ -104,14 +106,14 @@ export const TaskDetailPanel = ({
       {/* Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 transition-opacity"
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 transition-opacity !mt-0"
           onClick={onClose}
         />
       )}
 
       {/* Panel */}
       <div
-        className={`fixed inset-y-0 right-0 w-full max-w-xl bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col overflow-hidden ${isOpen ? "translate-x-0" : "translate-x-full"}`}
+        className={`fixed top-0 bottom-10 right-0 w-full max-w-xl bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col overflow-hidden !mt-0 ${isOpen ? "translate-x-0" : "translate-x-full"}`}
       >
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
@@ -138,16 +140,18 @@ export const TaskDetailPanel = ({
             <div className="space-y-4">
               <h1 className="text-2xl font-bold text-slate-900 leading-tight">
                 {(() => {
-                  const match = task.title.match(/^(Issue #\d+):?\s*(.*)$/);
+                  const match = task.title.match(/^(Issue #\d+):?\s*(.*)$/)
                   if (match) {
                     return (
                       <div className="flex flex-col space-y-1">
-                        <span className="text-accent text-sm font-bold uppercase tracking-[0.2em]">{match[1]}</span>
+                        <span className="text-accent text-sm font-bold uppercase tracking-[0.2em]">
+                          {match[1]}
+                        </span>
                         <span>{match[2]}</span>
                       </div>
-                    );
+                    )
                   }
-                  return task.title;
+                  return task.title
                 })()}
               </h1>
 
@@ -177,26 +181,31 @@ export const TaskDetailPanel = ({
                     </span>
                     <div className="flex flex-wrap gap-2 items-center">
                       {task.assignees?.map((a) => (
-                        <div 
+                        <div
                           key={a.taskId}
                           className={`flex items-center border rounded px-2.5 py-1 space-x-2 transition-all ${
-                            a.taskId === task.id 
-                              ? 'bg-accent/10 border-accent/20 text-accent' 
-                              : 'bg-slate-50 border-slate-200 text-slate-700'
+                            a.taskId === task.id
+                              ? "bg-accent/10 border-accent/20 text-accent"
+                              : "bg-slate-50 border-slate-200 text-slate-700"
                           }`}
                         >
-                          <span className="text-[11px] font-bold uppercase tracking-wider">{a.name}</span>
-                          <button 
+                          <span className="text-[11px] font-bold uppercase tracking-wider">
+                            {a.name}
+                          </span>
+                          <button
                             onClick={() => {
-                              if (task.assignees && task.assignees.length <= 1) {
-                                toast.error("Cannot remove the last assignee");
-                                return;
+                              if (
+                                task.assignees &&
+                                task.assignees.length <= 1
+                              ) {
+                                toast.error("Cannot remove the last assignee")
+                                return
                               }
                               deleteTask(a.taskId, {
                                 onSuccess: () => {
-                                  if (a.taskId === task.id) onClose();
-                                }
-                              });
+                                  if (a.taskId === task.id) onClose()
+                                },
+                              })
                             }}
                             className="p-0.5 hover:bg-slate-200/50 rounded-full transition-colors"
                           >
@@ -204,13 +213,13 @@ export const TaskDetailPanel = ({
                           </button>
                         </div>
                       ))}
-                      
+
                       <div className="relative">
                         <select
                           value=""
                           onChange={(e) => {
-                            const userId = e.target.value;
-                            if (!userId) return;
+                            const userId = e.target.value
+                            if (!userId) return
                             createTask({
                               project_id: task.project_id,
                               finding_id: task.finding_id,
@@ -220,13 +229,18 @@ export const TaskDetailPanel = ({
                               assigned_to: userId,
                               status: task.status,
                               gallery_images: task.gallery_images,
-                            } as any);
+                            } as any)
                           }}
                           className="appearance-none bg-slate-50 border-2 border-dashed border-slate-200 hover:border-accent hover:text-accent text-slate-400 text-[10px] font-bold uppercase tracking-widest rounded-lg px-3 py-1 pr-8 cursor-pointer transition-all focus:outline-none"
                         >
                           <option value="">+ Add Dev</option>
                           {project?.project_members
-                            .filter(m => !task.assignees?.some(a => a.userId === m.user_id))
+                            .filter(
+                              (m) =>
+                                !task.assignees?.some(
+                                  (a) => a.userId === m.user_id,
+                                ),
+                            )
                             .map((m) => (
                               <option key={m.user_id} value={m.user_id}>
                                 {m.users.full_name}
@@ -243,7 +257,8 @@ export const TaskDetailPanel = ({
 
                 {project?.basecamp_account_id &&
                   project?.basecamp_project_id &&
-                  (project?.basecamp_todo_list_id || project?.basecamp_post_todo_list_id) && (
+                  (project?.basecamp_todo_list_id ||
+                    project?.basecamp_post_todo_list_id) && (
                     <BasecampPushButton
                       task={task}
                       onPush={handlePush}
@@ -299,9 +314,16 @@ export const TaskDetailPanel = ({
                       rel="noopener noreferrer"
                       className="aspect-square bg-slate-100 rounded-xl overflow-hidden border border-slate-200 group/img relative"
                     >
-                      <img src={img} className="w-full h-full object-cover transition-transform group-hover/img:scale-110" alt={`Evidence ${i+1}`} />
+                      <img
+                        src={img}
+                        className="w-full h-full object-cover transition-transform group-hover/img:scale-110"
+                        alt={`Evidence ${i + 1}`}
+                      />
                       <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/20 transition-colors flex items-center justify-center">
-                        <ExternalLink size={16} className="text-white opacity-0 group-hover/img:opacity-100 transition-opacity" />
+                        <ExternalLink
+                          size={16}
+                          className="text-white opacity-0 group-hover/img:opacity-100 transition-opacity"
+                        />
                       </div>
                     </a>
                   ))}

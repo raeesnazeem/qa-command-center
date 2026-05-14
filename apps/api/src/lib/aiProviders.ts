@@ -41,20 +41,20 @@ function truncateTools(tools: any[], maxLength = 120) {
 /**
  * Selective tool loading to reduce token footprint for rate-limited providers.
  */
-function getRelevantTools(message: string, allTools: any[]) {
-  const query = message.toLowerCase();
+function getRelevantTools(messages: ChatMessage[], allTools: any[]) {
+  const historyText = messages.map(m => (m.content || '')).join(' ').toLowerCase();
   
   // Core tools that are almost always needed for entity discovery
   const coreTools = ['find_project', 'find_user_by_name', 'list_projects', 'get_all_users'];
   
-  const mutationKeywords = ['create', 'update', 'delete', 'add', 'remove', 'cancel', 'start', 'assign', 'set'];
+  const mutationKeywords = ['create', 'update', 'delete', 'add', 'remove', 'cancel', 'start', 'assign', 'set', 'clear'];
   const statsKeywords = ['stats', 'count', 'how many', 'total', 'summary', 'status'];
   const ragKeywords = ['search', 'about', 'issue', 'task', 'bug', 'problem', 'performance', 'login'];
 
   const categories = {
-    mutation: mutationKeywords.some(k => query.includes(k)),
-    stats: statsKeywords.some(k => query.includes(k)),
-    rag: query.includes('search') || ragKeywords.some(k => query.includes(k))
+    mutation: mutationKeywords.some(k => historyText.includes(k)),
+    stats: statsKeywords.some(k => historyText.includes(k)),
+    rag: historyText.includes('search') || ragKeywords.some(k => historyText.includes(k))
   };
 
   return allTools.filter(t => {
@@ -74,7 +74,7 @@ function getRelevantTools(message: string, allTools: any[]) {
     // RAG tools
     if (t.name === 'search_issues') return categories.rag;
 
-    // Default to including it if we can't categorize it, but we want to be aggressive
+    // Default to including it if we can't categorize it
     return true; 
   });
 }
@@ -216,8 +216,7 @@ async function openAiCompatibleChat(
  */
 async function groqChat(messages: ChatMessage[], tools: any[], toolCallHandler: (name: string, args: any) => Promise<any>) {
   try {
-    const userMessage = messages[messages.length - 1].content;
-    const relevantTools = getRelevantTools(userMessage, tools);
+    const relevantTools = getRelevantTools(messages, tools);
     const optimizedTools = truncateTools(relevantTools);
     return await openAiCompatibleChat('Groq', 'https://api.groq.com/openai/v1', process.env.GROQ_API_KEY || '', 'llama-3.3-70b-versatile', messages, optimizedTools, toolCallHandler);
   } catch (error: any) {

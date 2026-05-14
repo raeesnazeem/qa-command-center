@@ -207,10 +207,8 @@ router.get('/', clerkAuth, async (req: Request, res: Response) => {
     if (severity) query = query.eq('severity', severity);
     if (req.query.created_by) query = query.eq('created_by', req.query.created_by);
     
-    // RBAC: Developer only sees assigned tasks
-    if (role === 'developer') {
-      query = query.eq('assigned_to', supabaseUserId);
-    } else if (assigned_to) {
+    // RBAC: If explicitly filtering by assignee, apply it
+    if (assigned_to) {
       query = query.eq('assigned_to', assigned_to);
     }
 
@@ -287,10 +285,8 @@ router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
 
     if (error || !task) return res.status(404).json({ error: 'Task not found' });
 
-    // RBAC Check
-    if (role === 'developer' && task.assigned_to !== supabaseUserId) {
-      return res.status(403).json({ error: 'Access denied' });
-    }
+    // RBAC Check: Handled by project membership check in list route, 
+    // and org_id check in single fetch. Developers can view all tasks in their projects.
 
     // Unify comments and rebuttals across all tasks sharing the same finding_id
     if (task.finding_id) {

@@ -272,7 +272,7 @@ export const TOOL_DEFINITIONS = [
   },
   {
     name: 'delete_task',
-    description: 'Delete a task.',
+    description: 'Delete a single task.',
     parameters: {
       type: 'object',
       properties: {
@@ -280,6 +280,30 @@ export const TOOL_DEFINITIONS = [
         project_id: { type: 'string' }
       },
       required: ['task_id', 'project_id']
+    }
+  },
+  {
+    name: 'delete_tasks_bulk',
+    description: 'Delete multiple tasks at once. Use this when asked to "delete all", "clear", or remove multiple specific tasks.',
+    parameters: {
+      type: 'object',
+      properties: {
+        task_ids: { type: 'array', items: { type: 'string' }, description: 'Array of task UUIDs' },
+        project_id: { type: 'string' }
+      },
+      required: ['task_ids', 'project_id']
+    }
+  },
+  {
+    name: 'delete_user_tasks_in_project',
+    description: "Delete all tasks assigned to a specific user within a specific project. Use this for 'delete all tasks for [user]' or 'clear tasks for [user]' requests.",
+    parameters: {
+      type: 'object',
+      properties: {
+        user_id: { type: 'string', description: 'The UUID of the user' },
+        project_id: { type: 'string', description: 'The UUID of the project' }
+      },
+      required: ['user_id', 'project_id']
     }
   },
   {

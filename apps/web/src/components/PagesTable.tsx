@@ -62,7 +62,7 @@ export const PagesTable: React.FC<PagesTableProps> = ({
   }
 
   return (
-    <div className="bg-white rounded-[10px] border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full min-h-[400px]">
+    <div className="bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full min-h-[400px]">
       {/* Table Header */}
       <div className="bg-slate-50 border-b border-slate-200 px-6 py-3 flex items-center text-[10px] font-bold uppercase tracking-widest text-slate-500">
         <div className="w-16">Step</div>
@@ -200,7 +200,7 @@ export const PagesTable: React.FC<PagesTableProps> = ({
 
                 <div className="w-32 flex justify-center pt-1">
                   {totalIssues > 0 ? (
-                    <div className="flex items-center gap-1.5 px-2 py-1 bg-red-50 text-red-700 rounded-lg border border-red-100">
+                    <div className="flex items-center gap-1.5 px-2 py-1 bg-red-50 text-red-700 rounded-sm border border-red-100">
                       <span className="text-xs font-bold">{totalIssues}</span>
                       <span className="text-[10px] font-bold uppercase tracking-tight">
                         Issues
@@ -237,7 +237,7 @@ export const PagesTable: React.FC<PagesTableProps> = ({
                         e.stopPropagation()
                         onManualScan(page)
                       }}
-                      className="px-2 py-1 border border-red-500 rounded text-red-500 text-[8px] font-bold uppercase tracking-tighter hover:bg-red-50 transition-colors"
+                      className="px-2 py-1 border border-red-500 rounded-sm text-red-500 text-[8px] font-bold uppercase tracking-tighter hover:bg-red-50 transition-colors"
                     >
                       Manual Scan
                     </button>

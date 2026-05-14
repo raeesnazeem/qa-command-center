@@ -171,6 +171,36 @@ export async function deleteTasksBulk(args: { task_ids: string[], project_id: st
 }
 
 /**
+ * Delete all tasks for a specific user in a project.
+ */
+export async function deleteUserTasksInProject(args: { user_id: string, project_id: string }) {
+  const { user_id, project_id } = args;
+  
+  // Get task IDs first for embedding sync
+  const { data: tasks } = await supabase
+    .from('tasks')
+    .select('id')
+    .eq('assigned_to', user_id)
+    .eq('project_id', project_id);
+  
+  const taskIds = tasks?.map(t => t.id) || [];
+  if (taskIds.length === 0) return { success: true, count: 0 };
+
+  const { error } = await supabase
+    .from('tasks')
+    .delete()
+    .eq('assigned_to', user_id)
+    .eq('project_id', project_id);
+
+  if (error) throw error;
+
+  // Delete from embeddings
+  await supabase.from('embeddings').delete().eq('source_type', 'task').in('source_id', taskIds);
+
+  return { success: true, count: taskIds.length };
+}
+
+/**
  * Update a finding and sync to embeddings.
  */
 export async function updateFinding(args: any, orgId: string) {
