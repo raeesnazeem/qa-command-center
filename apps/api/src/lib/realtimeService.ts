@@ -33,18 +33,25 @@ export async function broadcastTaskUpdate(taskId: string, payload: any): Promise
  * Channel: "run:{runId}"
  */
 export async function broadcastRunProgress(runId: string, payload: any): Promise<void> {
-  try {
-    const channel = supabase.channel(`run:${runId}`);
-    await channel.send({
-      type: 'broadcast',
-      event: 'progress_update',
-      payload: {
-        runId,
-        ...payload,
-        timestamp: new Date().toISOString(),
-      },
-    });
-  } catch (error) {
-    console.error(`[RealtimeService] Failed to broadcast run progress for ${runId}:`, error);
-  }
+  const channel = supabase.channel(`run:${runId}`);
+  
+  channel.subscribe(async (status) => {
+    if (status === 'SUBSCRIBED') {
+      try {
+        await channel.send({
+          type: 'broadcast',
+          event: 'progress_update',
+          payload: {
+            runId,
+            ...payload,
+            timestamp: new Date().toISOString(),
+          },
+        });
+      } catch (error) {
+        console.error(`[RealtimeService] Failed to broadcast run progress for ${runId}:`, error);
+      } finally {
+        supabase.removeChannel(channel);
+      }
+    }
+  });
 }

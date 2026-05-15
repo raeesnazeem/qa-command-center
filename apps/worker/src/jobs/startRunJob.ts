@@ -2,6 +2,7 @@ import { Job } from 'bullmq';
 import { supabase } from '../lib/supabase';
 import { qaQueue } from '../lib/queue';
 import { crawlSitemap } from '../crawlers/sitemapCrawler';
+import * as activityService from '../services/activityService';
 import pino from 'pino';
 
 const logger = pino({
@@ -155,7 +156,39 @@ export async function processStartRunJob(job: Job) {
         completed_at: new Date().toISOString()
       })
       .eq('id', runId);
-      
+
+    // Notify the run creator that the scan failed
+    try {
+      const { data: failedRun } = await supabase
+        .from('qa_runs')
+        .select('created_by, project_id')
+        .eq('id', runId)
+        .single();
+
+      if (failedRun?.created_by) {
+        const { data: projectData } = await supabase
+          .from('projects')
+          .select('name')
+          .eq('id', failedRun.project_id)
+          .single();
+
+        await activityService.logActivity(
+          { id: 'system', name: 'System' },
+          {
+            type: 'RUN_FAILED',
+            details: {
+              projectName: projectData?.name || 'Project',
+              message: `Scan for ${projectData?.name || 'Project'} failed during crawl: ${error.message}`
+            }
+          },
+          { id: runId, type: 'run' },
+          [failedRun.created_by]
+        );
+      }
+    } catch (notifyErr: any) {
+      logger.error({ runId, error: notifyErr.message }, '[ActivityService] Failed to send run failure notification');
+    }
+
     throw error;
   }
 }

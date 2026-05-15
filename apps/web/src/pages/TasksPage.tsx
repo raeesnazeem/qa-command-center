@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   CheckSquare,
   Search,
@@ -14,7 +14,7 @@ import {
   CheckCircle2,
   Trash2,
 } from "lucide-react"
-import { Link } from "react-router-dom"
+import { Link, useSearchParams } from "react-router-dom"
 import { useDashboardStats } from "../hooks/useDashboard"
 import { useRole } from "../hooks/useRole"
 import { CreateTaskModal } from "../components/CreateTaskModal"
@@ -22,7 +22,8 @@ import { TasksTab } from "../components/TasksTab"
 import { Skeleton } from "../components/Skeleton"
 import { TaskDetailPanel } from "../components/TaskDetailPanel"
 import { useUpdateTask, useTasks, useDeleteTask } from "../hooks/useTasks"
-import { TaskStatus } from "../api/tasks.api"
+import { TaskStatus, getTask } from "../api/tasks.api"
+import { useAuthAxios } from "../lib/useAuthAxios"
 
 const ProjectCard = ({ project }: { project: any }) => (
   <Link
@@ -346,6 +347,22 @@ export const TasksPage = () => {
   const { role, profile, isLoading: isRoleLoading } = useRole()
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useState<any>(null)
+  const [searchParams] = useSearchParams()
+  const taskIdParam = searchParams.get("taskId")
+  const axios = useAuthAxios()
+
+  useEffect(() => {
+    if (taskIdParam) {
+      getTask(axios, taskIdParam)
+        .then((task) => {
+          setSelectedTask(task)
+        })
+        .catch((err) => {
+          console.error("[TasksPage] Failed to fetch deep-linked task:", err)
+        })
+    }
+  }, [taskIdParam, axios])
+
   const [showAllOther, setShowAllOther] = useState(false)
   const [qaExpanded, setQaExpanded] = useState(true)
   const [devExpanded, setDevExpanded] = useState(true)

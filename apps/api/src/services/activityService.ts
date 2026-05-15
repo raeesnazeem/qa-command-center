@@ -15,8 +15,9 @@ import { supabase } from '../lib/supabase';
  * COMMENT_ADDED: A new comment on a task
  * REBUTTAL_SUBMITTED: A developer submitted a rebuttal
  * 
- * RUN_STARTED: A QA run was initiated
- * RUN_COMPLETED: A QA run finished
+ * RUN_STARTED: A QA run initiated
+ * RUN_COMPLETED: A QA run finished successfully
+ * RUN_FAILED: A QA run failed
  * -----------------------------------------
  */
 
@@ -94,21 +95,7 @@ export async function logActivity(
       }
     }
 
-    // [Step 2.7 - 2.8] Broadcast the update live via Supabase Realtime
-    const channel = supabase.channel('global_notifications');
-    await channel.send({
-      type: 'broadcast',
-      event: 'new_activity',
-      payload: {
-        activityId,
-        performerName: performer.name,
-        actionType: action.type,
-        entityId: entity.id,
-        entityType: entity.type,
-        isAdminOnly: !!action.isAdminOnly,
-        timestamp: new Date().toISOString()
-      }
-    });
+
   } catch (error) {
     // [Step 2.10] Log failure but don't break the main flow
     console.error('[ActivityService] Notification/Broadcast failed:', error);

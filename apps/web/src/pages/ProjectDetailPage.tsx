@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { useProject } from '../hooks/useProjects';
 import { useBasecampPeople } from '../hooks/useBasecampPeople';
@@ -39,6 +39,13 @@ export const ProjectDetailPage = () => {
   const setTab = (tab: string) => {
     setSearchParams({ tab });
   };
+
+  useEffect(() => {
+    const taskId = searchParams.get('taskId');
+    if (taskId && activeTab !== 'tasks') {
+      setTab('tasks');
+    }
+  }, [searchParams, activeTab]);
 
   if (isLoading) {
     return (

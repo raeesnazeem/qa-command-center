@@ -17,6 +17,7 @@ import { supabase } from '../lib/supabase';
  * 
  * RUN_STARTED: A QA run was initiated
  * RUN_COMPLETED: A QA run finished
+ * RUN_FAILED: A QA run failed
  * -----------------------------------------
  */
 
@@ -89,20 +90,7 @@ export async function logActivity(
       }
     }
 
-    const channel = supabase.channel('global_notifications');
-    await channel.send({
-      type: 'broadcast',
-      event: 'new_activity',
-      payload: {
-        activityId,
-        performerName: performer.name,
-        actionType: action.type,
-        entityId: entity.id,
-        entityType: entity.type,
-        isAdminOnly: !!action.isAdminOnly,
-        timestamp: new Date().toISOString()
-      }
-    });
+
   } catch (error) {
     console.error('[ActivityService] Notification/Broadcast failed:', error);
   }

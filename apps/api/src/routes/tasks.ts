@@ -170,6 +170,7 @@ router.post(
         logger.error(logError, '[ActivityService] Failed to log task creation');
       }
 
+      await broadcastTaskUpdate(task.id, task);
       return res.status(201).json(task);
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
@@ -416,16 +417,22 @@ router.patch(
       // Log Task Status Change and Notify Creator
       if (status) {
         try {
-          const targetUsers = [];
-          if (status === 'resolved' && currentTask) {
-            // [Step 4.8] Notify the task creator (QA) when resolved
+          const targetUsersSet: string[] = [];
+          // Notify creator on all meaningful status transitions
+          if (['resolved', 'in-progress', 'closed', 'to-do'].includes(status) && currentTask) {
             const { data: creator } = await supabase
               .from('tasks')
               .select('created_by')
               .eq('id', id)
               .single();
-            if (creator?.created_by) targetUsers.push(creator.created_by);
+            if (creator?.created_by) targetUsersSet.push(creator.created_by);
           }
+          // For to-do (reopened), also notify the current assignee
+          if (status === 'to-do' && task.assigned_to) {
+            targetUsersSet.push(task.assigned_to);
+          }
+          const targetUsers = Array.from(new Set(targetUsersSet));
+
 
           await activityService.notifyTaskStatusChanged(
             { id: performerId?.id || '', name: performerName },
@@ -796,6 +803,7 @@ router.delete(
         .eq('id', id);
 
       if (error) throw error;
+      await broadcastTaskUpdate(id, { id, deleted: true });
       return res.status(204).send();
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
@@ -817,12 +825,42 @@ router.post(
     }
 
     try {
+      // Fetch task metadata before deletion for logging and broadcast
+      const { clerkUserId } = req.auth!;
+      const [performerRes, tasksRes] = await Promise.all([
+        supabase.from('users').select('id, full_name').eq('clerk_user_id', clerkUserId).single(),
+        supabase.from('tasks').select('id, title, project_id').in('id', ids)
+      ]);
+
       const { error } = await supabase
         .from('tasks')
         .delete()
         .in('id', ids);
 
       if (error) throw error;
+
+      // Log activity and broadcast for each deleted task
+      try {
+        const performer = { id: performerRes.data?.id || '', name: performerRes.data?.full_name || 'QA Engineer' };
+        for (const task of tasksRes.data || []) {
+          await activityService.logActivity(
+            performer,
+            {
+              type: 'TASK_DELETED',
+              details: {
+                taskTitle: task.title,
+                message: `Bulk deleted task: ${task.title}`
+              },
+              isAdminOnly: true
+            },
+            { id: task.project_id, type: 'project' }
+          );
+          await broadcastTaskUpdate(task.id, { id: task.id, deleted: true });
+        }
+      } catch (logError) {
+        logger.error(logError, '[ActivityService] Failed to log bulk task deletion');
+      }
+
       return res.status(204).send();
     } catch (error: any) {
       return res.status(500).json({ error: error.message });

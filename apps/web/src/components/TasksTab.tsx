@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ProjectWithMembers } from '../api/projects.api';
 import { useTasks, useUpdateTask, useDeleteTask, useBulkDeleteTasks } from '../hooks/useTasks';
 import { 
@@ -35,6 +36,18 @@ export const TasksTab = ({ project }: TasksTabProps) => {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [searchParams] = useSearchParams();
+  const taskIdParam = searchParams.get('taskId');
+
+  useEffect(() => {
+    if (taskIdParam && tasks.length > 0) {
+      const task = tasks.find(t => t.id === taskIdParam);
+      if (task) {
+        setSelectedTask(task);
+      }
+    }
+  }, [taskIdParam, tasks]);
+
   const [notResolvedTask, setNotResolvedTask] = useState<Task | null>(null);
   const [resolveTaskData, setResolveTaskData] = useState<Task | null>(null);
   const [isPendingReminderOpen, setIsPendingReminderOpen] = useState(false);

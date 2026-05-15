@@ -420,7 +420,8 @@ router.patch(
                 message: `${performerName} ${actionWord} the run for ${projectName}` 
               } 
             },
-            { id: updatedRun.id, type: 'run' }
+            { id: updatedRun.id, type: 'run' },
+            [updatedRun.created_by]
           );
         } catch (logError) {
           console.error('[ActivityService] Failed to log run status change:', logError);
@@ -437,16 +438,20 @@ router.patch(
 
           const performerName = performerRes.data?.full_name || 'System';
           const projectName = projectRes.data?.name || 'Project';
-          const statusText = newStatus === 'completed' ? 'Success' : 'Failed';
+          
+          const actionType = newStatus === 'completed' ? 'RUN_COMPLETED' : 'RUN_FAILED';
+          const message = newStatus === 'completed' 
+            ? `Run for ${projectName} finished successfully` 
+            : `Run for ${projectName} failed`;
 
           await activityService.logActivity(
             { id: performerRes.data?.id || '', name: performerName },
             { 
-              type: 'RUN_COMPLETED', 
+              type: actionType, 
               details: { 
                 projectName,
-                status: statusText,
-                message: `Run for ${projectName} finished with status: ${statusText}` 
+                status: newStatus === 'completed' ? 'Success' : 'Failed',
+                message
               } 
             },
             { id: updatedRun.id, type: 'run' },
@@ -531,7 +536,8 @@ router.post(
               message: `${performerName} started a run for ${projectName}` 
             } 
           },
-          { id: updatedRun.id, type: 'run' }
+          { id: updatedRun.id, type: 'run' },
+          [updatedRun.created_by]
         );
       } catch (logError) {
         console.error('[ActivityService] Failed to log run start:', logError);

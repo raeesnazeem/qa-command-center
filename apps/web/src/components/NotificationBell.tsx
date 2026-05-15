@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { Bell, Check, Trash2, Clock, Inbox } from 'lucide-react';
 import { useAuthAxios } from '@/lib/useAuthAxios';
 import { formatDistanceToNow } from 'date-fns';
@@ -12,6 +13,8 @@ interface Notification {
   activity: {
     performer_name: string;
     action_type: string;
+    entity_id: string;
+    entity_type: string;
     details: any;
   };
 }
@@ -55,6 +58,24 @@ export const NotificationBell: React.FC = () => {
     }
   });
 
+  const getNotificationUrl = (notif: Notification) => {
+    const { entity_id, entity_type } = notif.activity;
+    
+    if (!entity_id || !entity_type) return '#';
+
+    switch (entity_type) {
+      case 'project':
+        return `/projects/${entity_id}`;
+      case 'task':
+        return `/tasks?taskId=${entity_id}`;
+      case 'run':
+        // Project ID is usually needed for runs, fallback to dashboard if not available
+        return `/dashboard`;
+      default:
+        return '#';
+    }
+  };
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -97,9 +118,16 @@ export const NotificationBell: React.FC = () => {
           <div className="max-h-96 overflow-y-auto divide-y divide-slate-50">
             {notifications.length > 0 ? (
               notifications.map((notif) => (
-                <div 
+                <Link 
                   key={notif.id}
-                  className={`p-4 hover:bg-slate-50 transition-colors flex gap-3 group ${!notif.is_read ? 'bg-indigo-50/30' : ''}`}
+                  to={getNotificationUrl(notif)}
+                  onClick={() => {
+                    if (!notif.is_read) {
+                      markRead.mutate(notif.id);
+                    }
+                    setIsOpen(false);
+                  }}
+                  className={`p-4 hover:bg-slate-50 transition-colors flex gap-3 group text-left ${!notif.is_read ? 'bg-indigo-50/30' : ''}`}
                 >
                   <div className={`w-2 h-2 mt-1.5 rounded-full flex-shrink-0 ${!notif.is_read ? 'bg-accent shadow-sm' : 'bg-transparent'}`} />
                   <div className="flex-1 space-y-1">
@@ -114,14 +142,18 @@ export const NotificationBell: React.FC = () => {
                   </div>
                   {!notif.is_read && (
                     <button
-                      onClick={() => markRead.mutate(notif.id)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        markRead.mutate(notif.id);
+                      }}
                       className="opacity-0 group-hover:opacity-100 p-1.5 bg-white border border-slate-200 text-slate-400 hover:text-accent hover:border-accent rounded-lg transition-all shadow-sm self-start"
                       title="Mark as read"
                     >
                       <Check className="w-3.5 h-3.5" />
                     </button>
                   )}
-                </div>
+                </Link>
               ))
             ) : (
               <div className="py-12 flex flex-col items-center justify-center text-center px-6">
