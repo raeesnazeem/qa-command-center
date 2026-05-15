@@ -162,7 +162,8 @@ router.post(
                 message: `Created task: ${finalTitle}` 
               } 
             },
-            { id: task.id, type: 'task' }
+            { id: task.id, type: 'task' },
+            assigned_to ? [assigned_to] : []
           );
         }
       } catch (logError) {
@@ -455,7 +456,8 @@ router.patch(
                 message: `Updated task ${changes.join(' and ')}` 
               } 
             },
-            { id: task.id, type: 'task' }
+            { id: task.id, type: 'task' },
+            [task.created_by]
           );
         } catch (logError) {
           logger.error(logError, '[ActivityService] Failed to log task update');
@@ -648,9 +650,9 @@ router.post(
           const projectName = projectRes.data?.name || 'Project';
           const performerName = performerRes.data.full_name || 'User';
           const taskData = taskRes.data;
-          // Notify both creator and assignee (if they are not the performer)
+          // Notify both creator and assignee
           const targetUsers = [taskData.created_by, taskData.assigned_to]
-            .filter(uid => uid && uid !== performerRes.data?.id);
+            .filter(uid => uid);
 
           await activityService.notifyCommentAdded(
             { id: performerRes.data?.id || '', name: performerName },

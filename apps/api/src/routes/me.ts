@@ -38,7 +38,7 @@ router.get('/', clerkAuth, async (req: Request, res: Response) => {
  */
 router.get('/notifications', clerkAuth, async (req: Request, res: Response) => {
   try {
-    const { userId: clerkUserId } = req.auth!;
+    const { clerkUserId } = req.auth!;
     const { data: user } = await supabase
       .from('users')
       .select('id')

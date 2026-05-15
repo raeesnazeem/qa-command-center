@@ -449,7 +449,8 @@ router.patch(
                 message: `Run for ${projectName} finished with status: ${statusText}` 
               } 
             },
-            { id: updatedRun.id, type: 'run' }
+            { id: updatedRun.id, type: 'run' },
+            [updatedRun.created_by]
           );
         } catch (logError) {
           console.error('[ActivityService] Failed to log run completion:', logError);

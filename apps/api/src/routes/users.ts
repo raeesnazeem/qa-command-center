@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { clerkAuth } from '../middleware/clerkAuth';
 import { requireRole } from '../middleware/requireRole';
 import { logger } from '../lib/logger';
+import * as activityService from '../services/activityService';
 
 
 const router: Router = Router();
