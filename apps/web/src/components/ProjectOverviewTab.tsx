@@ -164,7 +164,7 @@ export const ProjectOverviewTab = ({
 
             <div className="flex items-center space-x-4">
               <div
-                className="flex items-center gap-2 bg-white/50 p-1 rounded-lg border border-blue-200 shadow-sm"
+                className="flex items-center gap-2 bg-white/50 p-1 rounded-md border border-blue-200 shadow-sm"
                 onClick={(e) => e.stopPropagation()}
               >
                 {ongoingRun.status === "running" ? (
@@ -203,7 +203,7 @@ export const ProjectOverviewTab = ({
           </Link>
 
           {(project as any).concurrent_scans > 0 && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 border border-indigo-100 rounded-lg w-fit">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 border border-indigo-100 rounded-md w-fit">
               <Zap size={12} className="text-indigo-500 fill-indigo-500" />
               <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-tight">
                 {(project as any).concurrent_scans} active scans in org
@@ -243,7 +243,7 @@ export const ProjectOverviewTab = ({
             className="bg-white border border-slate-100 rounded-xl p-6 shadow-sm"
           >
             <div className="flex items-center justify-between mb-4">
-              <div className={`p-2 ${stat.bg} rounded-lg`}>
+              <div className={`p-2 ${stat.bg} rounded-md`}>
                 <stat.icon className={`w-5 h-5 ${stat.color}`} />
               </div>
             </div>
@@ -287,7 +287,7 @@ export const ProjectOverviewTab = ({
                 >
                   <div className="flex items-center space-x-4">
                     <div
-                      className={`p-2 rounded-lg bg-slate-50 text-slate-400 group-hover:bg-white group-hover:text-accent transition-colors shadow-sm border border-slate-100`}
+                      className={`p-2 rounded-md bg-slate-50 text-slate-400 group-hover:bg-white group-hover:text-accent transition-colors shadow-sm border border-slate-100`}
                     >
                       {getStatusIcon(run.status)}
                     </div>
@@ -341,7 +341,7 @@ export const ProjectOverviewTab = ({
         <div className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-sm">
           <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+              <div className="w-8 h-8 rounded-md bg-white border border-slate-200 flex items-center justify-center shadow-sm">
                 <ListTodo className="w-4 h-4 text-accent" />
               </div>
               <h3 className="font-bold text-slate-900">My Assigned Tasks</h3>

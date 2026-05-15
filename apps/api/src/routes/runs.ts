@@ -6,6 +6,8 @@ import { zodValidate } from '../middleware/zodValidate';
 import { CreateRunSchema } from '@qacc/shared';
 import { addRunJob } from '../lib/queue';
 import { quickFetchUrls } from '../lib/crawler';
+import * as activityService from '../services/activityService';
+
 
 const router: Router = Router();
 
@@ -396,6 +398,65 @@ router.patch(
 
       if (updateError) throw updateError;
 
+            // [Step 4.2] Log Run Pause/Resume
+      if (newStatus === 'running' || newStatus === 'paused') {
+        try {
+          const { userId: clerkUserId } = req.auth!;
+          const [performerRes, projectRes] = await Promise.all([
+            supabase.from('users').select('id, full_name').eq('clerk_user_id', clerkUserId).single(),
+            supabase.from('projects').select('name').eq('id', updatedRun.project_id).single()
+          ]);
+
+          const performerName = performerRes.data?.full_name || 'QA Engineer';
+          const projectName = projectRes.data?.name || 'Project';
+          const actionWord = newStatus === 'running' ? 'resumed' : 'paused';
+
+          await activityService.logActivity(
+            { id: performerRes.data?.id || '', name: performerName },
+            { 
+              type: `RUN_${newStatus.toUpperCase()}`, 
+              details: { 
+                projectName,
+                message: `${performerName} ${actionWord} the run for ${projectName}` 
+              } 
+            },
+            { id: updatedRun.id, type: 'run' }
+          );
+        } catch (logError) {
+          console.error('[ActivityService] Failed to log run status change:', logError);
+        }
+      }
+            // [Step 4.3] Log Run Completion (Success/Failed)
+      if (newStatus === 'completed' || newStatus === 'failed') {
+        try {
+          const { userId: clerkUserId } = req.auth!;
+          const [performerRes, projectRes] = await Promise.all([
+            supabase.from('users').select('id, full_name').eq('clerk_user_id', clerkUserId).single(),
+            supabase.from('projects').select('name').eq('id', updatedRun.project_id).single()
+          ]);
+
+          const performerName = performerRes.data?.full_name || 'System';
+          const projectName = projectRes.data?.name || 'Project';
+          const statusText = newStatus === 'completed' ? 'Success' : 'Failed';
+
+          await activityService.logActivity(
+            { id: performerRes.data?.id || '', name: performerName },
+            { 
+              type: 'RUN_COMPLETED', 
+              details: { 
+                projectName,
+                status: statusText,
+                message: `Run for ${projectName} finished with status: ${statusText}` 
+              } 
+            },
+            { id: updatedRun.id, type: 'run' }
+          );
+        } catch (logError) {
+          console.error('[ActivityService] Failed to log run completion:', logError);
+        }
+      }
+
+
       // Trigger embeddings generation if completed
       if (newStatus === 'completed') {
         const { qaQueue } = require('../lib/queue');
@@ -448,6 +509,33 @@ router.post(
         .single();
 
       if (updateError) throw updateError;
+
+            // [Step 4.1] Log QA Run Started
+      try {
+        const { userId: clerkUserId } = req.auth!;
+        const [performerRes, projectRes] = await Promise.all([
+          supabase.from('users').select('id, full_name').eq('clerk_user_id', clerkUserId).single(),
+          supabase.from('projects').select('name').eq('id', updatedRun.project_id).single()
+        ]);
+
+        const performerName = performerRes.data?.full_name || 'QA Engineer';
+        const projectName = projectRes.data?.name || 'Project';
+
+        await activityService.logActivity(
+          { id: performerRes.data?.id || '', name: performerName },
+          { 
+            type: 'RUN_STARTED', 
+            details: { 
+              projectName,
+              message: `${performerName} started a run for ${projectName}` 
+            } 
+          },
+          { id: updatedRun.id, type: 'run' }
+        );
+      } catch (logError) {
+        console.error('[ActivityService] Failed to log run start:', logError);
+      }
+
 
       // 3. Enqueue the job in BullMQ for the worker to pick up
       await addRunJob(id);

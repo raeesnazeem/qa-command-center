@@ -5,7 +5,7 @@ import { supabase } from './supabase';
  * Channel: "tasks"
  */
 export async function broadcastTaskUpdate(taskId: string, payload: any): Promise<void> {
-  const channel = supabase.channel(`task_update_${Date.now()}_${Math.random().toString(36).substring(7)}`);
+  const channel = supabase.channel('tasks');
   
   channel.subscribe(async (status) => {
     if (status === 'SUBSCRIBED') {

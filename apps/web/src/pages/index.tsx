@@ -13,3 +13,4 @@ export { VisualDiffPage } from './VisualDiffPage';
 export { default as Week1TestPage } from './Week1TestPage';
 export { default as Week2TestPage } from './Week2TestPage';
 export { default as QueueHistoryPage } from './QueueHistoryPage';
+export { ActivityLogPage } from './ActivityLogPage';

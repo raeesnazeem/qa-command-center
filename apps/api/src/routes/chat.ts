@@ -18,13 +18,25 @@ const router = Router();
  */
 router.post('/', clerkAuth, aiRateLimiter, async (req: Request, res: Response) => {
   const { message, history, project_id, run_id } = req.body;
-  const { orgId } = req.auth!;
+  const { orgId, userId: supabaseUserId } = req.auth!;
 
   if (!message) {
     return res.status(400).json({ error: 'Message is required' });
   }
 
   try {
+    // Fetch performer details for activity logging
+    const { data: userProfile } = await supabase
+      .from('users')
+      .select('full_name')
+      .eq('id', supabaseUserId)
+      .single();
+    
+    const performer = {
+      id: supabaseUserId,
+      name: userProfile?.full_name || 'System User'
+    };
+
     const executeToolCall = async (name: string, args: any) => {
       logger.info({ name, args }, 'Executing tool call');
       
@@ -57,22 +69,22 @@ router.post('/', clerkAuth, aiRateLimiter, async (req: Request, res: Response) =
           case 'list_projects': return await queries.listProjects(orgId);
           case 'get_user_projects': return await queries.getUserProjects(userId);
           
-          case 'create_project': return await mutations.createProject(args, orgId);
-          case 'update_project': return await mutations.updateProject({ ...args, project_id: projectId }, orgId);
-          case 'delete_project': return await mutations.deleteProject({ ...args, project_id: projectId }, orgId);
-          case 'delete_projects_bulk': return await mutations.deleteProjectsBulk({ ...args, project_ids: args.project_ids || args.projectIds }, orgId);
-          case 'add_project_member': return await mutations.addProjectMember({ ...args, project_id: projectId, user_id: userId });
-          case 'remove_project_member': return await mutations.removeProjectMember({ ...args, project_id: projectId, user_id: userId });
-          case 'create_task': return await mutations.createTask({ ...args, project_id: projectId, assigned_to: userId || args.assignedTo }, orgId);
-          case 'update_task': return await mutations.updateTask({ ...args, task_id: taskId, project_id: projectId, assigned_to: userId || args.assignedTo }, orgId);
-          case 'delete_task': return await mutations.deleteTask({ ...args, task_id: taskId, project_id: projectId });
-          case 'delete_tasks_bulk': return await mutations.deleteTasksBulk({ ...args, task_ids: args.task_ids, project_id: projectId });
-          case 'delete_user_tasks_in_project': return await mutations.deleteUserTasksInProject({ ...args, user_id: userId, project_id: projectId });
-          case 'update_finding': return await mutations.updateFinding({ ...args, finding_id: findingId, run_id: runId }, orgId);
-          case 'delete_finding': return await mutations.deleteFinding({ ...args, finding_id: findingId, run_id: runId });
-          case 'update_user_role': return await mutations.updateUserRole({ ...args, user_id: userId });
-          case 'create_qa_run': return await mutations.createRun({ ...args, project_id: projectId });
-          case 'cancel_qa_run': return await mutations.cancelRun({ ...args, run_id: runId, project_id: projectId });
+          case 'create_project': return await mutations.createProject(args, orgId, performer);
+          case 'update_project': return await mutations.updateProject({ ...args, project_id: projectId }, orgId, performer);
+          case 'delete_project': return await mutations.deleteProject({ ...args, project_id: projectId }, orgId, performer);
+          case 'delete_projects_bulk': return await mutations.deleteProjectsBulk({ ...args, project_ids: args.project_ids || args.projectIds }, orgId, performer);
+          case 'add_project_member': return await mutations.addProjectMember({ ...args, project_id: projectId, user_id: userId }, performer);
+          case 'remove_project_member': return await mutations.removeProjectMember({ ...args, project_id: projectId, user_id: userId }, performer);
+          case 'create_task': return await mutations.createTask({ ...args, project_id: projectId, assigned_to: userId || args.assignedTo }, orgId, performer);
+          case 'update_task': return await mutations.updateTask({ ...args, task_id: taskId, project_id: projectId, assigned_to: userId || args.assignedTo }, orgId, performer);
+          case 'delete_task': return await mutations.deleteTask({ ...args, task_id: taskId, project_id: projectId }, performer);
+          case 'delete_tasks_bulk': return await mutations.deleteTasksBulk({ ...args, task_ids: args.task_ids, project_id: projectId }, performer);
+          case 'delete_user_tasks_in_project': return await mutations.deleteUserTasksInProject({ ...args, user_id: userId, project_id: projectId }, performer);
+          case 'update_finding': return await mutations.updateFinding({ ...args, finding_id: findingId, run_id: runId }, orgId, performer);
+          case 'delete_finding': return await mutations.deleteFinding({ ...args, finding_id: findingId, run_id: runId }, performer);
+          case 'update_user_role': return await mutations.updateUserRole({ ...args, user_id: userId }, performer);
+          case 'create_qa_run': return await mutations.createRun({ ...args, project_id: projectId }, performer);
+          case 'cancel_qa_run': return await mutations.cancelRun({ ...args, run_id: runId, project_id: projectId }, performer);
           
           case 'search_issues': return await ragSearch.semanticSearch(args.query, orgId, projectId, args.source_type || args.sourceType);
           
@@ -94,6 +106,11 @@ IMPORTANT MAPPINGS:
 - "working on issues" = tasks assigned to developers (use get_issues_by_developer for project-wide or get_user_tasks for specific user)
 - "who is working on" = show developers with their task counts
 - "resolved/to-do/in-progress/closed" = task statuses
+
+SAFETY PROTOCOL:
+- You MUST NOT call tools that modify or delete data (update_*, delete_*) without explicit confirmation from the user in the current conversation.
+- Always state the specific name of the item you intend to modify/delete when asking for confirmation.
+- Once the user confirms, proceed with the tool call.
 
 PROJECT CREATION FLOW:
 - MANDATORY: site_url.

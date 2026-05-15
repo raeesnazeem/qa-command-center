@@ -6,6 +6,8 @@ import { useEffect } from 'react'
 import { ChatSidebar } from '../components/ChatSidebar'
 import { AdminRedisWidget } from '../components/AdminRedisWidget'
 import { useRealtimeTasks } from '../hooks/useRealtimeTasks'
+import { NotificationBell } from '../components/NotificationBell'
+import { useRealtimeNotifications } from '../hooks/useRealtimeNotifications'
 
 export const AppLayout = () => {
   const { user } = useUser()
@@ -15,6 +17,7 @@ export const AppLayout = () => {
 
   // Initialize global real-time listeners
   useRealtimeTasks()
+  useRealtimeNotifications()
 
   useEffect(() => {
     // Redirect to onboarding if profile is incomplete in Supabase
@@ -39,6 +42,7 @@ export const AppLayout = () => {
     { to: '/tasks', label: 'Tasks', icon: CheckSquare },
     ...(!isDeveloper ? [{ to: '/team', label: 'Team', icon: Users }] : []),
     ...(!isDeveloper ? [{ to: '/admin/queue-history', label: 'Queue History', icon: History }] : []),
+    ...(!isDeveloper ? [{ to: '/admin/activity-logs', label: 'Activity Logs', icon: History }] : []),
     ...(!isDeveloper ? [{ to: '/settings', label: 'Settings', icon: SettingsIcon }] : []),
   ]
 
@@ -85,19 +89,22 @@ export const AppLayout = () => {
              </span>
           </div>
 
-          <div className="flex items-center space-x-4">
-            {user?.firstName && (
-              <span className="text-sm text-slate-700 font-bold tracking-tight">
-                {user.firstName}
-              </span>
-            )}
-            <UserButton
-              appearance={{
-                elements: {
-                  avatarBox: 'w-8 h-8 border border-slate-200 shadow-sm transition-all hover:scale-105',
-                },
-              }}
-            />
+          <div className="flex items-center space-x-6">
+            <NotificationBell />
+            <div className="flex items-center space-x-4">
+              {user?.firstName && (
+                <span className="text-sm text-slate-700 font-bold tracking-tight">
+                  {user.firstName}
+                </span>
+              )}
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox: 'w-8 h-8 border border-slate-200 shadow-sm transition-all hover:scale-105',
+                  },
+                }}
+              />
+            </div>
           </div>
         </header>
 

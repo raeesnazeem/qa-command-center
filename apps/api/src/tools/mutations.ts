@@ -1,10 +1,11 @@
 import { supabase } from '../lib/supabase';
 import { upsertFindingEmbedding, upsertTaskEmbedding } from './embedSync';
+import * as activityService from '../services/activityService';
 
 /**
  * Create a new project.
  */
-export async function createProject(args: any, orgId: string) {
+export async function createProject(args: any, orgId: string, performer?: activityService.ActivityPerformer) {
   const { data, error } = await supabase
     .from('projects')
     .insert({
@@ -19,13 +20,26 @@ export async function createProject(args: any, orgId: string) {
     .single();
 
   if (error) throw error;
+
+  if (performer) {
+    // 1. Add creator to members
+    await supabase.from('project_members').insert({
+      project_id: data.id,
+      user_id: performer.id,
+      role: 'sub_admin'
+    });
+
+    // 2. Log activity
+    await activityService.notifyProjectCreated(performer, { id: data.id, name: data.name });
+  }
+
   return data;
 }
 
 /**
  * Update an existing project.
  */
-export async function updateProject(args: any, orgId: string) {
+export async function updateProject(args: any, orgId: string, performer?: activityService.ActivityPerformer) {
   const { project_id, ...updates } = args;
   const { data, error } = await supabase
     .from('projects')
@@ -36,14 +50,37 @@ export async function updateProject(args: any, orgId: string) {
     .single();
 
   if (error) throw error;
+
+  if (performer) {
+    await activityService.logActivity(
+      performer,
+      { type: 'PROJECT_UPDATED', details: { projectName: data.name } },
+      { id: data.id, type: 'project' }
+    );
+  }
+
   return data;
 }
 
 /**
  * Delete a project and all its associated data.
  */
-export async function deleteProject(args: any, orgId: string) {
+export async function deleteProject(args: any, orgId: string, performer?: activityService.ActivityPerformer) {
   const { project_id } = args;
+
+  // 0. Verify project exists and get name for logging
+  const { data: project, error: fetchError } = await supabase
+    .from('projects')
+    .select('name')
+    .eq('id', project_id)
+    .eq('org_id', orgId)
+    .single();
+
+  if (fetchError || !project) {
+    throw new Error(`Project not found or you don't have permission to delete it.`);
+  }
+
+  const projectName = project.name;
 
   // 1. Get all task IDs for this project
   const { data: tasks } = await supabase.from('tasks').select('id').eq('project_id', project_id);
@@ -75,13 +112,22 @@ export async function deleteProject(args: any, orgId: string) {
     .eq('org_id', orgId);
 
   if (error) throw error;
+
+  if (performer) {
+    await activityService.logActivity(
+      performer,
+      { type: 'PROJECT_DELETED', details: { project_id, projectName } },
+      { id: project_id, type: 'project' }
+    );
+  }
+
   return { success: true };
 }
 
 /**
  * Delete multiple projects and all their associated data.
  */
-export async function deleteProjectsBulk(args: { project_ids: string[] }, orgId: string) {
+export async function deleteProjectsBulk(args: { project_ids: string[] }, orgId: string, performer?: activityService.ActivityPerformer) {
   const { project_ids } = args;
 
   for (const project_id of project_ids) {
@@ -122,7 +168,7 @@ export async function deleteProjectsBulk(args: { project_ids: string[] }, orgId:
 /**
  * Add a member to a project.
  */
-export async function addProjectMember(args: any) {
+export async function addProjectMember(args: any, performer?: activityService.ActivityPerformer) {
   const { project_id, user_id, role } = args;
   const { data, error } = await supabase
     .from('project_members')
@@ -137,7 +183,7 @@ export async function addProjectMember(args: any) {
 /**
  * Remove a member from a project.
  */
-export async function removeProjectMember(args: any) {
+export async function removeProjectMember(args: any, performer?: activityService.ActivityPerformer) {
   const { project_id, user_id } = args;
   const { error } = await supabase
     .from('project_members')
@@ -152,7 +198,7 @@ export async function removeProjectMember(args: any) {
 /**
  * Create a new task and sync to embeddings.
  */
-export async function createTask(args: any, orgId: string) {
+export async function createTask(args: any, orgId: string, performer?: activityService.ActivityPerformer) {
   const { data, error } = await supabase
     .from('tasks')
     .insert({
@@ -180,13 +226,24 @@ export async function createTask(args: any, orgId: string) {
     status: data.status
   }).catch(err => console.error('Failed to sync task embedding:', err));
 
+  if (performer) {
+    // Get project name for logs
+    const { data: project } = await supabase.from('projects').select('name').eq('id', data.project_id).single();
+    
+    await activityService.logActivity(
+      performer,
+      { type: 'TASK_CREATED', details: { taskTitle: data.title, projectName: project?.name } },
+      { id: data.id, type: 'task' }
+    );
+  }
+
   return data;
 }
 
 /**
  * Update a task and sync to embeddings.
  */
-export async function updateTask(args: any, orgId: string) {
+export async function updateTask(args: any, orgId: string, performer?: activityService.ActivityPerformer) {
   const { task_id, project_id, ...updates } = args;
   const { data, error } = await supabase
     .from('tasks')
@@ -209,14 +266,41 @@ export async function updateTask(args: any, orgId: string) {
     status: data.status
   }).catch(err => console.error('Failed to sync task embedding:', err));
 
+  if (performer) {
+    // Get project name for logs
+    const { data: project } = await supabase.from('projects').select('name').eq('id', data.project_id).single();
+
+    await activityService.notifyTaskStatusChanged(
+      performer,
+      { id: data.id, title: data.title },
+      project?.name || 'Unknown',
+      data.status
+    );
+  }
+
   return data;
 }
 
 /**
  * Delete a task.
  */
-export async function deleteTask(args: any) {
+export async function deleteTask(args: any, performer?: activityService.ActivityPerformer) {
   const { task_id, project_id } = args;
+
+  // 0. Verify task exists and get title for logging
+  const { data: task, error: fetchError } = await supabase
+    .from('tasks')
+    .select('title, project_id')
+    .eq('id', task_id)
+    .eq('project_id', project_id)
+    .single();
+
+  if (fetchError || !task) {
+    throw new Error(`Task not found or you don't have permission to delete it.`);
+  }
+
+  const taskTitle = task.title;
+
   const { error } = await supabase
     .from('tasks')
     .delete()
@@ -228,13 +312,24 @@ export async function deleteTask(args: any) {
   // Ideally delete from embeddings too
   await supabase.from('embeddings').delete().eq('source_type', 'task').eq('source_id', task_id);
 
+  if (performer) {
+    // Get project name for logs
+    const { data: project } = await supabase.from('projects').select('name').eq('id', project_id).single();
+    
+    await activityService.logActivity(
+      performer,
+      { type: 'TASK_DELETED', details: { taskTitle, projectName: project?.name } },
+      { id: task_id, type: 'task' }
+    );
+  }
+
   return { success: true };
 }
 
 /**
  * Delete multiple tasks.
  */
-export async function deleteTasksBulk(args: { task_ids: string[], project_id: string }) {
+export async function deleteTasksBulk(args: { task_ids: string[], project_id: string }, performer?: activityService.ActivityPerformer) {
   const { task_ids, project_id } = args;
   const { error } = await supabase
     .from('tasks')
@@ -283,7 +378,7 @@ export async function deleteUserTasksInProject(args: { user_id: string, project_
 /**
  * Update a finding and sync to embeddings.
  */
-export async function updateFinding(args: any, orgId: string) {
+export async function updateFinding(args: any, orgId: string, performer?: activityService.ActivityPerformer) {
   const { finding_id, run_id, ...updates } = args;
   const { data, error } = await supabase
     .from('findings')
@@ -315,7 +410,7 @@ export async function updateFinding(args: any, orgId: string) {
 /**
  * Delete a finding.
  */
-export async function deleteFinding(args: any) {
+export async function deleteFinding(args: any, performer?: activityService.ActivityPerformer) {
   const { finding_id, run_id } = args;
   const { error } = await supabase
     .from('findings')
@@ -334,7 +429,7 @@ export async function deleteFinding(args: any) {
 /**
  * Update user org role.
  */
-export async function updateUserRole(args: any) {
+export async function updateUserRole(args: any, performer?: activityService.ActivityPerformer) {
   const { user_id, role } = args;
   const { data, error } = await supabase
     .from('users')
@@ -350,7 +445,7 @@ export async function updateUserRole(args: any) {
 /**
  * Create a new QA run.
  */
-export async function createRun(args: any) {
+export async function createRun(args: any, performer?: activityService.ActivityPerformer) {
   const { project_id, urls, device_matrix, start_immediately } = args;
   const { data, error } = await supabase
     .from('qa_runs')
@@ -370,7 +465,7 @@ export async function createRun(args: any) {
 /**
  * Cancel a QA run.
  */
-export async function cancelRun(args: any) {
+export async function cancelRun(args: any, performer?: activityService.ActivityPerformer) {
   const { run_id, project_id } = args;
   const { data, error } = await supabase
     .from('qa_runs')

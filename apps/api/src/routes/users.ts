@@ -4,6 +4,7 @@ import { clerkAuth } from '../middleware/clerkAuth';
 import { requireRole } from '../middleware/requireRole';
 import { logger } from '../lib/logger';
 
+
 const router: Router = Router();
 
 /**
@@ -62,6 +63,39 @@ router.patch('/:id', clerkAuth, requireRole('admin'), async (req: Request, res: 
       .single();
 
     if (error) throw error;
+
+          // [Step 3.8] Log User Profile/Role Update
+    try {
+      const { userId: clerkUserId } = req.auth!;
+      const performerId = await supabase
+        .from('users')
+        .select('id, full_name')
+        .eq('clerk_user_id', clerkUserId)
+        .single();
+      
+      const changes = [];
+      if (full_name) changes.push(`name to "${full_name}"`);
+      if (role) changes.push(`role to "${role}"`);
+
+      if (changes.length > 0) {
+        await activityService.logActivity(
+          { id: performerId.data?.id || '', name: performerId.data?.full_name || 'Admin' },
+          { 
+            type: 'USER_UPDATED', 
+            details: { 
+              targetUser: data.full_name, 
+              message: `Updated ${changes.join(', ')}` 
+            },
+            isAdminOnly: true
+          },
+          { id, type: 'user' }
+        );
+      }
+    } catch (logError) {
+      logger.error(logError, '[ActivityService] Failed to log user update');
+    }
+
+
     return res.json(data);
   } catch (error: any) {
     logger.error({ error: error.message, userId: id }, 'Error updating user');
@@ -76,6 +110,31 @@ router.patch('/:id', clerkAuth, requireRole('admin'), async (req: Request, res: 
 router.delete('/:id', clerkAuth, requireRole('admin'), async (req: Request, res: Response) => {
   const { id } = req.params;
   const { orgId } = req.auth!;
+
+      // [Step 3.9] Log User Deletion
+    try {
+      const { userId: clerkUserId } = req.auth!;
+      const [performerRes, targetRes] = await Promise.all([
+        supabase.from('users').select('id, full_name').eq('clerk_user_id', clerkUserId).single(),
+        supabase.from('users').select('full_name').eq('id', id).single()
+      ]);
+
+      if (targetRes.data) {
+        await activityService.logActivity(
+          { id: performerRes.data?.id || '', name: performerRes.data?.full_name || 'Admin' },
+          { 
+            type: 'USER_DELETED', 
+            details: { targetUser: targetRes.data.full_name },
+            isAdminOnly: true
+          },
+          { id, type: 'user' }
+        );
+      }
+    } catch (logError) {
+      logger.error(logError, '[ActivityService] Failed to log user deletion');
+    }
+
+
 
   try {
     const { error } = await supabase

@@ -27,6 +27,10 @@ import { CanDo } from "./CanDo"
 import { BasecampPushButton, BasecampTaskLink } from "./BasecampPushButton"
 import { CommentThread } from "./CommentThread"
 import { ResolveTaskModal } from "./ResolveTaskModal"
+import { TaskActivityFeed } from "./TaskActivityFeed"
+import { useQueryClient } from "@tanstack/react-query"
+import { supabase } from "../lib/supabase"
+import { useEffect } from "react"
 
 interface TaskDetailPanelProps {
   task: Task | null
@@ -62,6 +66,30 @@ export const TaskDetailPanel = ({
     isPending: isPushing,
     isSuccess: pushSuccess,
   } = usePushToBasecamp()
+
+  const queryClient = useQueryClient()
+
+  // Real-time listener for THIS specific task
+  useEffect(() => {
+    if (!task?.id || !isOpen) return
+
+    const channel = supabase
+      .channel("tasks")
+      .on("broadcast", { event: "task_updated" }, (payload) => {
+        if (payload.payload?.taskId === task.id) {
+          console.log("[Realtime] Refreshing task details and activity...")
+          queryClient.invalidateQueries({ queryKey: ["tasks", task.id] })
+          queryClient.invalidateQueries({
+            queryKey: ["task-activity", task.id],
+          })
+        }
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [task?.id, isOpen, queryClient])
 
   const { data: project } = useProject(task?.project_id || "")
 
@@ -422,6 +450,11 @@ export const TaskDetailPanel = ({
                 </div>
               </div>
             )}
+
+            {/* Activity Feed Sidebar/Section */}
+            <div className="pt-8 border-t border-slate-100">
+              <TaskActivityFeed taskId={task.id} />
+            </div>
           </div>
         </div>
 
