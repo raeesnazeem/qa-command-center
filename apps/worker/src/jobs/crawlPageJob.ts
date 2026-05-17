@@ -1,307 +1,409 @@
-import { Job } from 'bullmq';
-import { chromium } from 'playwright';
-import { supabase } from '../lib/supabase';
-import { qaQueue } from '../lib/queue';
-import { screenshotPage } from '../crawlers/pageScreenshotter';
-import { checkBrokenLinks } from '../checks/brokenLinksCheck';
-import { checkExternalLinks } from '../checks/externalLinkCheck';
-import { checkMeta } from '../checks/metaCheck';
-import { checkConsoleErrors } from '../checks/consoleErrorCheck';
-import { checkDummyContent } from '../checks/dummyContentCheck';
-import { checkSpelling } from '../checks/spellingCheck';
-import { checkImageCompliance } from '../checks/imageComplianceCheck';
-import { checkForms } from '../checks/formTestingCheck';
-import { checkWooCommerce } from '../checks/wooCommerceCheck';
-import { checkResponsiveVisual } from '../checks/responsiveVisualCheck';
-import pino from 'pino';
+import { Job } from "bullmq"
+import { chromium } from "playwright"
+import { supabase } from "../lib/supabase"
+import { qaQueue } from "../lib/queue"
+import { screenshotPage } from "../crawlers/pageScreenshotter"
+import { checkBrokenLinks } from "../checks/brokenLinksCheck"
+import { checkExternalLinks } from "../checks/externalLinkCheck"
+import { checkMeta } from "../checks/metaCheck"
+import { checkConsoleErrors } from "../checks/consoleErrorCheck"
+import { checkDummyContent } from "../checks/dummyContentCheck"
+import { checkSpelling } from "../checks/spellingCheck"
+import { checkImageCompliance } from "../checks/imageComplianceCheck"
+import { checkForms } from "../checks/formTestingCheck"
+import { checkWooCommerce } from "../checks/wooCommerceCheck"
+import { checkResponsiveVisual } from "../checks/responsiveVisualCheck"
+import { checkHeroMedia } from "../checks/heroMediaCheck"
+import pino from "pino"
 
 const logger = pino({
-  level: process.env.LOG_LEVEL || 'info',
+  level: process.env.LOG_LEVEL || "info",
   transport: {
-    target: 'pino-pretty',
+    target: "pino-pretty",
     options: { colorize: true },
   },
-});
+})
 
 export async function processCrawlPageJob(job: Job) {
-  const { runId, pageId, url: pageUrl } = job.data;
+  const { runId, pageId, url: pageUrl } = job.data
 
   if (!runId || !pageId || !pageUrl) {
-    throw new Error('Missing required data for crawl_page job (runId, pageId, or url)');
+    throw new Error(
+      "Missing required data for crawl_page job (runId, pageId, or url)",
+    )
   }
 
-  logger.info({ runId, pageId, pageUrl }, 'Processing page crawl');
+  logger.info({ runId, pageId, pageUrl }, "Processing page crawl")
 
   // Fetch run settings for conditional checks
   const { data: run, error: runError } = await supabase
-    .from('qa_runs')
-    .select('status, is_woocommerce, site_url, enabled_checks')
-    .eq('id', runId)
-    .single();
+    .from("qa_runs")
+    .select("status, is_woocommerce, site_url, enabled_checks")
+    .eq("id", runId)
+    .single()
 
   if (runError || !run) {
-    logger.error({ runId, error: runError?.message }, 'Failed to fetch run status for crawl_page job');
-    throw new Error(`Failed to fetch run status: ${runError?.message}`);
+    logger.error(
+      { runId, error: runError?.message },
+      "Failed to fetch run status for crawl_page job",
+    )
+    throw new Error(`Failed to fetch run status: ${runError?.message}`)
   }
 
   // Check if run is paused or cancelled
-  if (run.status === 'paused' || run.status === 'cancelled') {
-    logger.info({ runId, pageId, status: run.status }, 'Run is paused or cancelled. Aborting crawl_page job.');
-    return;
+  if (run.status === "paused" || run.status === "cancelled") {
+    logger.info(
+      { runId, pageId, status: run.status },
+      "Run is paused or cancelled. Aborting crawl_page job.",
+    )
+    return
   }
 
   const updateProgress = async (progress: number, step: string) => {
     const { error: progressError } = await supabase
-      .from('pages')
+      .from("pages")
       .update({ progress, current_step: step })
-      .eq('id', pageId);
-    
+      .eq("id", pageId)
+
     if (progressError) {
-      logger.error({ pageId, error: progressError.message, progress, step }, 'Failed to update page progress in DB');
+      logger.error(
+        { pageId, error: progressError.message, progress, step },
+        "Failed to update page progress in DB",
+      )
     }
-    
-    const progressChannel = supabase.channel(`run:${runId}`);
+
+    const progressChannel = supabase.channel(`run:${runId}`)
     await progressChannel.send({
-      type: 'broadcast',
-      event: 'page_progress',
-      payload: { pageId, progress, current_step: step }
-    });
-  };
+      type: "broadcast",
+      event: "page_progress",
+      payload: { pageId, progress, current_step: step },
+    })
+  }
 
   try {
     // Step 1: Update page status to 'processing' and set initial step
-    logger.info({ pageId }, 'Setting page status to processing');
+    logger.info({ pageId }, "Setting page status to processing")
     const { error: statusError } = await supabase
-      .from('pages')
-      .update({ 
-        status: 'processing',
-        current_step: 'Starting page crawl...',
-        progress: 2
+      .from("pages")
+      .update({
+        status: "processing",
+        current_step: "Starting page crawl...",
+        progress: 2,
       })
-      .eq('id', pageId);
+      .eq("id", pageId)
 
     if (statusError) {
-      logger.error({ pageId, error: statusError.message }, 'Failed to update page status to processing');
+      logger.error(
+        { pageId, error: statusError.message },
+        "Failed to update page status to processing",
+      )
     }
 
     // Immediate broadcast to update UI
-    const initialChannel = supabase.channel(`run:${runId}`);
+    const initialChannel = supabase.channel(`run:${runId}`)
     await initialChannel.send({
-      type: 'broadcast',
-      event: 'page_progress',
-      payload: { pageId, progress: 2, current_step: 'Starting page crawl...' }
-    });
+      type: "broadcast",
+      event: "page_progress",
+      payload: { pageId, progress: 2, current_step: "Starting page crawl..." },
+    })
 
     // Step 2: Call screenshotPage(pageUrl, runId, pageId)
-    const screenshots = await screenshotPage(pageUrl, runId, pageId, updateProgress);
+    const screenshots = await screenshotPage(
+      pageUrl,
+      runId,
+      pageId,
+      updateProgress,
+    )
 
     // Step 3: Update page record with screenshot URLs and status='screenshotted'
     const { error: updatePageError } = await supabase
-      .from('pages')
+      .from("pages")
       .update({
         screenshot_url_desktop: screenshots.desktopUrl,
         screenshot_url_tablet: screenshots.tabletUrl,
         screenshot_url_mobile: screenshots.mobileUrl,
-        status: 'screenshotted'
+        status: "screenshotted",
       })
-      .eq('id', pageId);
+      .eq("id", pageId)
 
     if (updatePageError) {
-      logger.error({ pageId, error: updatePageError.message }, 'Failed to update page record with screenshots');
+      logger.error(
+        { pageId, error: updatePageError.message },
+        "Failed to update page record with screenshots",
+      )
     }
 
     // Step 3.5: Responsive Visual Check (Check Factor 12)
-    let responsiveFindings: any[] = [];
+    let responsiveFindings: any[] = []
     if (screenshots.desktopBuffer && screenshots.mobileBuffer) {
-      logger.info({ pageId }, 'Running responsive visual check');
+      logger.info({ pageId }, "Running responsive visual check")
       responsiveFindings = await checkResponsiveVisual(
         screenshots.desktopBuffer,
         screenshots.mobileBuffer,
-        pageUrl
-      ).catch(e => {
-        logger.error('Responsive visual check failed:', e);
-        return [];
-      });
+        pageUrl,
+      ).catch((e) => {
+        logger.error("Responsive visual check failed:", e)
+        return []
+      })
     }
 
     // Step 4: Run automated checks
-    logger.info({ pageId }, 'Running automated checks');
-    await updateProgress(90, 'Running quality checks...');
+    logger.info({ pageId }, "Running automated checks")
+    await updateProgress(90, "Running quality checks...")
 
-    const browser = await chromium.launch({ 
+    const browser = await chromium.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
-    });
-    
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+      ],
+    })
+
     try {
-      const context = await browser.newContext();
-      const page = await context.newPage();
+      const context = await browser.newContext()
+      const page = await context.newPage()
 
       // Console error check listener must be attached before goto
-      const consoleErrors: string[] = [];
-      const criticalErrors: string[] = [];
-      
-      page.on('console', msg => {
-        if (msg.type() === 'error' && (consoleErrors.length + criticalErrors.length) < 80) {
-          consoleErrors.push(msg.text());
-        }
-      });
+      const consoleErrors: string[] = []
+      const criticalErrors: string[] = []
 
-      page.on('pageerror', err => {
-        if ((consoleErrors.length + criticalErrors.length) < 80) {
-          criticalErrors.push(err.message);
+      page.on("console", (msg) => {
+        if (
+          msg.type() === "error" &&
+          consoleErrors.length + criticalErrors.length < 80
+        ) {
+          consoleErrors.push(msg.text())
         }
-      });
+      })
 
-      await page.goto(pageUrl, { waitUntil: 'load', timeout: 60000 });
+      page.on("pageerror", (err) => {
+        if (consoleErrors.length + criticalErrors.length < 80) {
+          criticalErrors.push(err.message)
+        }
+      })
+
+      await page.goto(pageUrl, { waitUntil: "load", timeout: 60000 })
 
       // Check for forms on page
-      const hasForms = await page.$('form') !== null;
+      const hasForms = (await page.$("form")) !== null
 
-   const enabledChecks = run?.enabled_checks || [];
-   const checkPromises: Promise<any[]>[] = [];
+      const enabledChecks = run?.enabled_checks || []
+      const checkPromises: Promise<any[]>[] = []
 
-   if (enabledChecks.includes('visual_regression')) {
-     checkPromises.push(checkBrokenLinks(page, screenshots).catch(e => { logger.error('Broken links check failed:', e); return []; }));
-     checkPromises.push(checkExternalLinks(page, screenshots).catch(e => { logger.error('External links check failed:', e); return []; }));
-     checkPromises.push(checkImageCompliance(page, screenshots).catch(e => { logger.error('Image compliance check failed:', e); return []; }));
-   }
+      if (enabledChecks.includes("hero_media")) {
+        checkPromises.push(
+          checkHeroMedia(page, screenshots).catch((e) => {
+            logger.error("Hero media check failed:", e)
+            return []
+          }),
+        )
+      }
 
-   if (enabledChecks.includes('accessibility')) {
-     checkPromises.push(checkMeta(page, screenshots).catch(e => { logger.error('Meta check failed:', e); return []; }));
-     checkPromises.push(checkDummyContent(page, screenshots).catch(e => { logger.error('Dummy content check failed:', e); return []; }));
-     checkPromises.push(checkSpelling(page, screenshots).catch(e => { logger.error('Spelling check failed:', e); return []; }));
-     if (hasForms) {
-       checkPromises.push(checkForms(page, screenshots).catch(e => { logger.error('Forms check failed:', e); return []; }));
-     }
-   }
+      if (enabledChecks.includes("visual_regression")) {
+        checkPromises.push(
+          checkBrokenLinks(page, screenshots).catch((e) => {
+            logger.error("Broken links check failed:", e)
+            return []
+          }),
+        )
+        checkPromises.push(
+          checkExternalLinks(page, screenshots).catch((e) => {
+            logger.error("External links check failed:", e)
+            return []
+          }),
+        )
+        checkPromises.push(
+          checkImageCompliance(page, screenshots).catch((e) => {
+            logger.error("Image compliance check failed:", e)
+            return []
+          }),
+        )
+      }
 
-   if (enabledChecks.includes('console_errors')) {
-     checkPromises.push(checkConsoleErrors(page, screenshots).catch(e => { logger.error('Console errors check failed:', e); return []; }));
-   }
+      if (enabledChecks.includes("accessibility")) {
+        checkPromises.push(
+          checkMeta(page, screenshots).catch((e) => {
+            logger.error("Meta check failed:", e)
+            return []
+          }),
+        )
+        checkPromises.push(
+          checkDummyContent(page, screenshots).catch((e) => {
+            logger.error("Dummy content check failed:", e)
+            return []
+          }),
+        )
+        checkPromises.push(
+          checkSpelling(page, screenshots).catch((e) => {
+            logger.error("Spelling check failed:", e)
+            return []
+          }),
+        )
+        if (hasForms) {
+          checkPromises.push(
+            checkForms(page, screenshots).catch((e) => {
+              logger.error("Forms check failed:", e)
+              return []
+            }),
+          )
+        }
+      }
 
-   if (run?.is_woocommerce && enabledChecks.includes('woocommerce')) {
-     checkPromises.push((async () => {
-       const wooPage = await context.newPage();
-       try {
-         return await checkWooCommerce(wooPage, run.site_url, run);
-       } catch (e) {
-         logger.error('WooCommerce check failed:', e);
-         return [];
-       } finally {
-         await wooPage.close();
-       }
-     })());
-   }
+      if (enabledChecks.includes("console_errors")) {
+        checkPromises.push(
+          checkConsoleErrors(page, screenshots).catch((e) => {
+            logger.error("Console errors check failed:", e)
+            return []
+          }),
+        )
+      }
 
-   // Resolve only selected checks
-   const checkResults = await Promise.all(checkPromises);
+      if (run?.is_woocommerce && enabledChecks.includes("woocommerce")) {
+        checkPromises.push(
+          (async () => {
+            const wooPage = await context.newPage()
+            try {
+              return await checkWooCommerce(wooPage, run.site_url, run)
+            } catch (e) {
+              logger.error("WooCommerce check failed:", e)
+              return []
+            } finally {
+              await wooPage.close()
+            }
+          })(),
+        )
+      }
 
-   const allFindings = [
-     ...checkResults.flat(),
-     ...responsiveFindings
-   ].map(f => ({
-     ...f,
-     page_id: pageId,
-     run_id: runId
-   }));
+      // Resolve only selected checks
+      const checkResults = await Promise.all(checkPromises)
 
+      const allFindings = [...checkResults.flat(), ...responsiveFindings].map(
+        (f) => ({
+          ...f,
+          page_id: pageId,
+          run_id: runId,
+        }),
+      )
 
       if (allFindings.length > 0) {
-        logger.info({ pageId, count: allFindings.length }, 'Inserting findings');
+        logger.info({ pageId, count: allFindings.length }, "Inserting findings")
         const { error: findingsError } = await supabase
-          .from('findings')
-          .insert(allFindings);
-        
+          .from("findings")
+          .insert(allFindings)
+
         if (findingsError) {
-          logger.error({ pageId, error: findingsError.message }, 'Failed to insert findings');
+          logger.error(
+            { pageId, error: findingsError.message },
+            "Failed to insert findings",
+          )
         }
       }
 
       // Add AI Check jobs decoupled to perform asynchronously
-      const pageText = await page.evaluate(() => document.body.innerText).catch(() => '');
-      
-      qaQueue.add('run_ai_checks', { runId, pageId, pageUrl, pageText, enabled_checks: run?.enabled_checks || []  })
-             .catch(e => logger.error('Failed to queue run_ai_checks:', e));
-             
+      const pageText = await page
+        .evaluate(() => document.body.innerText)
+        .catch(() => "")
+
+      qaQueue
+        .add("run_ai_checks", {
+          runId,
+          pageId,
+          pageUrl,
+          pageText,
+          enabled_checks: run?.enabled_checks || [],
+        })
+        .catch((e) => logger.error("Failed to queue run_ai_checks:", e))
+
       // Step 5: Update page status to 'done'
       await supabase
-        .from('pages')
-        .update({ status: 'done', progress: 100, current_step: 'All checks complete' })
-        .eq('id', pageId);
-
+        .from("pages")
+        .update({
+          status: "done",
+          progress: 100,
+          current_step: "All checks complete",
+        })
+        .eq("id", pageId)
     } finally {
-      await browser.close().catch(e => logger.error({ err: e }, 'Failed to close browser'));
+      await browser
+        .close()
+        .catch((e) => logger.error({ err: e }, "Failed to close browser"))
+    }
+  } catch (error: any) {
+    logger.error(
+      { runId, pageUrl, error: error.message },
+      "Error during page crawl",
+    )
+
+    if (pageId) {
+      await supabase.from("pages").update({ status: "failed" }).eq("id", pageId)
     }
 
-  } catch (error: any) {
-    logger.error({ runId, pageUrl, error: error.message }, 'Error during page crawl');
-    
-    if (pageId) {
-      await supabase
-        .from('pages')
-        .update({ status: 'failed' })
-        .eq('id', pageId);
-    }
-    
-    throw error;
+    throw error
   } finally {
     // Step 6: Increment run.pages_processed by 1
     // This MUST run regardless of success/failure so the run doesn't get stuck
-    const { error: incrementError } = await supabase.rpc('increment_pages_processed', {
-      run_id_param: runId
-    });
+    const { error: incrementError } = await supabase.rpc(
+      "increment_pages_processed",
+      {
+        run_id_param: runId,
+      },
+    )
 
     // Fallback if RPC doesn't exist yet
     if (incrementError) {
-      logger.warn({ runId, error: incrementError.message }, 'RPC increment_pages_processed failed, trying manual update');
-      
+      logger.warn(
+        { runId, error: incrementError.message },
+        "RPC increment_pages_processed failed, trying manual update",
+      )
+
       const { data: runData } = await supabase
-        .from('qa_runs')
-        .select('pages_processed')
-        .eq('id', runId)
-        .single();
-      
+        .from("qa_runs")
+        .select("pages_processed")
+        .eq("id", runId)
+        .single()
+
       if (runData) {
         await supabase
-          .from('qa_runs')
+          .from("qa_runs")
           .update({ pages_processed: (runData.pages_processed || 0) + 1 })
-          .eq('id', runId);
+          .eq("id", runId)
       }
     }
 
     // Step 7: Check for run completion
     const { data: runCheck } = await supabase
-      .from('qa_runs')
-      .select('pages_processed, pages_total')
-      .eq('id', runId)
-      .single();
+      .from("qa_runs")
+      .select("pages_processed, pages_total")
+      .eq("id", runId)
+      .single()
 
     if (runCheck && runCheck.pages_processed >= runCheck.pages_total) {
       await supabase
-        .from('qa_runs')
-        .update({ status: 'completed', completed_at: new Date().toISOString() })
-        .eq('id', runId);
-      
-      logger.info({ runId }, 'Run marked as completed');
+        .from("qa_runs")
+        .update({ status: "completed", completed_at: new Date().toISOString() })
+        .eq("id", runId)
+
+      logger.info({ runId }, "Run marked as completed")
 
       // Trigger embeddings generation
-      qaQueue.add('generate_embeddings', { runId })
-             .catch(e => logger.error('Failed to queue generate_embeddings:', e));
+      qaQueue
+        .add("generate_embeddings", { runId })
+        .catch((e) => logger.error("Failed to queue generate_embeddings:", e))
     }
 
     // Step 8: Broadcast progress update
-    const finalChannel = supabase.channel(`run:${runId}`);
+    const finalChannel = supabase.channel(`run:${runId}`)
     await finalChannel.send({
-      type: 'broadcast',
-      event: 'progress',
+      type: "broadcast",
+      event: "progress",
       payload: {
         pageUrl,
-        status: 'done',
-        pageId
-      }
-    });
+        status: "done",
+        pageId,
+      },
+    })
 
-    logger.info({ pageId, runId }, 'Page crawl lifecycle finished');
+    logger.info({ pageId, runId }, "Page crawl lifecycle finished")
   }
 }

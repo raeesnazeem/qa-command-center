@@ -46,6 +46,7 @@ const CHECK_FACTORS = [
   { id: 'form_testing', label: 'Form Testing', icon: CheckSquare },
   { id: 'woocommerce', label: 'WooCommerce', icon: ShoppingCart, isWooOnly: true },
   { id: 'responsive_visual', label: 'Responsive Visual', icon: Layers },
+  { id: 'hero_media', label: 'Hero Video & Image Load', icon: Monitor },
 ];
 
 export const CreateRunModal = ({ project, isOpen, onClose }: CreateRunModalProps) => {

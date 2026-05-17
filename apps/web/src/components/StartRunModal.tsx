@@ -112,6 +112,7 @@ export const StartRunModal = ({
       "dummy_content",
       "image_compliance",
       "ai_content_audit",
+      "hero_media",
     ]
     // 2. Check if any of these page scan checks are selected by the user
     const requiresPageScan = data.enabled_checks.some((c) =>
@@ -176,6 +177,11 @@ export const StartRunModal = ({
       id: "project_plan",
       label: "Project Plan",
       description: "Fetch project plan from Basecamp",
+    },
+    {
+      id: "hero_media",
+      label: "Hero Video & Image Load",
+      description: "Verify that the hero section video and fallback image load immediately on page load",
     },
   ]
 

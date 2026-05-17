@@ -48,6 +48,7 @@ import {
   Video,
 } from "lucide-react"
 import { useEffect, useState, useMemo } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import toast from "react-hot-toast"
 
 export const RunDetailPage = () => {
@@ -88,7 +89,7 @@ export const RunDetailPage = () => {
   )
 
   const [activeTab, setActiveTab] = useState<
-    "overview" | "pages" | "findings" | "visual_diff" | "woocommerce" | "report"
+    "overview" | "pages" | "general" | "findings" | "visual_diff" | "woocommerce" | "report"
   >("overview")
 
   const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false)
@@ -106,19 +107,36 @@ export const RunDetailPage = () => {
   const updateFindingMutation = useUpdateFinding(selectedPageId)
   const { mutate: createTask } = useCreateTask()
 
-  // 1. Extract any general run-level findings (null page_id OR project plan factor)
+  // 1. Extract any general run-level findings (null page_id OR project plan factor OR hero_media matching selected page)
   const generalFindings = useMemo(() => {
     return (
       runFindings?.filter(
-        (f) => !f.page_id || f.check_factor === "project_plan",
+        (f) =>
+          !f.page_id ||
+          f.check_factor === "project_plan" ||
+          (f.check_factor === "hero_media" && f.page_id === selectedPageId),
+      ) || []
+    )
+  }, [runFindings, selectedPageId])
+
+  // 2. Filter out project_plan and hero_media from page-specific findings to avoid duplicate rendering
+  const pageFindings = useMemo(() => {
+    return (
+      findings?.filter(
+        (f) => f.check_factor !== "project_plan" && f.check_factor !== "hero_media",
+      ) || []
+    )
+  }, [findings])
+
+  const queryClient = useQueryClient()
+
+  const runGeneralFindings = useMemo(() => {
+    return (
+      runFindings?.filter(
+        (f) => !f.page_id || f.check_factor === "project_plan" || f.check_factor === "hero_media",
       ) || []
     )
   }, [runFindings])
-
-  // 2. Filter out project_plan from page-specific findings to avoid duplicate rendering
-  const pageFindings = useMemo(() => {
-    return findings?.filter((f) => f.check_factor !== "project_plan") || []
-  }, [findings])
 
   const findingToTaskMap = useMemo(() => {
     const map: Record<string, { taskIds: string[]; assignedUsers: any[] }> = {}
@@ -320,6 +338,10 @@ export const RunDetailPage = () => {
     updateFindingMutation.mutate({
       findingId: id,
       data: { status: "confirmed" },
+    }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['run-findings', runId] })
+      }
     })
   }
 
@@ -327,6 +349,10 @@ export const RunDetailPage = () => {
     updateFindingMutation.mutate({
       findingId: id,
       data: { status: "false_positive" },
+    }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['run-findings', runId] })
+      }
     })
   }
 
@@ -631,6 +657,17 @@ export const RunDetailPage = () => {
           Pages
         </button>
         <button
+          onClick={() => setActiveTab("general")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
+            activeTab === "general"
+              ? "bg-white text-slate-900 shadow-sm border border-slate-200"
+              : "text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          <ClipboardList size={14} />
+          General
+        </button>
+        <button
           onClick={() => setActiveTab("findings")}
           className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
             activeTab === "findings"
@@ -639,7 +676,7 @@ export const RunDetailPage = () => {
           }`}
         >
           <Search size={14} />
-          Findings
+          Functional Findings
         </button>
         <button
           onClick={() => setActiveTab("visual_diff")}
@@ -807,6 +844,62 @@ export const RunDetailPage = () => {
         </div>
       )}
 
+      {activeTab === "general" && (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+            <h2 className="text-xl font-bold text-slate-900">
+              General Findings
+            </h2>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-md overflow-hidden shadow-sm w-full">
+            <div className="bg-slate-50 border-b border-slate-100 p-6">
+              <h3 className="font-bold text-slate-900 text-lg">
+                Run-level & Project Plan Findings
+              </h3>
+              <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest">
+                {runGeneralFindings.length} General Issues Detected
+              </p>
+            </div>
+
+            <div className="p-8">
+              {isLoadingRunFindings ? (
+                <div className="py-20 text-center">
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-accent" />
+                </div>
+              ) : runGeneralFindings.length > 0 ? (
+                <FindingReviewPanel
+                  findings={runGeneralFindings}
+                  generalFindings={[]}
+                  onSingleConfirm={handleConfirmFinding}
+                  onSingleFalsePositive={handleFalsePositiveFinding}
+                  onSingleCreateTask={(finding) =>
+                    handleAddToStage([finding])
+                  }
+                  onConfirmBulk={handleBulkConfirm}
+                  onFalsePositiveBulk={handleBulkFalsePositive}
+                  onCreateTasksBulk={handleBulkCreateTasks}
+                  onAddToStage={handleAddToStage}
+                  onAssignBulk={handleBulkAssign}
+                  onSingleAssign={handleSingleAssign}
+                  findingToTaskMap={findingToTaskMap}
+                />
+              ) : (
+                <div className="py-20 text-center bg-emerald-50/20 rounded-md border border-dashed border-emerald-100">
+                  <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto mb-4" />
+                  <p className="text-slate-900 font-bold uppercase tracking-tight">
+                    No General Issues
+                  </p>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-2">
+                    All run-level audits passed successfully.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {activeTab === "findings" && (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
           <div className="flex items-center justify-between border-b border-slate-200 pb-4">
@@ -881,7 +974,7 @@ export const RunDetailPage = () => {
                   selectedPage ? (
                   <FindingReviewPanel
                     findings={pageFindings}
-                    generalFindings={generalFindings}
+                    generalFindings={[]}
                     pageScreenshots={{
                       desktop: selectedPage.screenshot_url_desktop,
                       tablet: selectedPage.screenshot_url_tablet,

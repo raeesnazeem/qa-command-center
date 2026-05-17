@@ -64,6 +64,7 @@ const CHECK_FACTOR_ICONS: Record<string, React.ReactNode> = {
   image_compliance: <Monitor size={14} />,
   ai_content_audit: <FileSearch size={14} className="text-accent" />,
   project_plan: <ClipboardList size={14} className="text-accent" />,
+  hero_media: <Monitor size={14} className="text-accent" />,
 }
 
 export const FindingCard: React.FC<FindingCardProps> = ({
@@ -402,6 +403,7 @@ export const FindingCard: React.FC<FindingCardProps> = ({
                       assignedTaskIds[0] !== finding.id && (
                         <Link
                           to={`/projects/${projectId}?tab=tasks&taskId=${assignedTaskIds[0]}`}
+                          target="_blank"
                           className="p-2 text-slate-400 hover:text-accent transition-colors"
                           title="View Task"
                         >
@@ -520,8 +522,10 @@ export const FindingCard: React.FC<FindingCardProps> = ({
           onClose={() => setIsBrowserOpen(false)}
           url={
             isProjectPlan && project?.site_url
-              ? (project.site_url.endsWith("/") ? `${project.site_url}reviews` : `${project.site_url}/reviews`)
-              : (finding.pages?.url || "")
+              ? project.site_url.endsWith("/")
+                ? `${project.site_url}reviews`
+                : `${project.site_url}/reviews`
+              : finding.pages?.url || ""
           }
           onCapture={(img) => addImage(finding.id, img)}
           galleryCount={galleryImages.length}
@@ -780,8 +784,10 @@ export const FindingCard: React.FC<FindingCardProps> = ({
         onClose={() => setIsBrowserOpen(false)}
         url={
           isProjectPlan && project?.site_url
-            ? (project.site_url.endsWith("/") ? `${project.site_url}reviews` : `${project.site_url}/reviews`)
-            : (finding.pages?.url || "")
+            ? project.site_url.endsWith("/")
+              ? `${project.site_url}reviews`
+              : `${project.site_url}/reviews`
+            : finding.pages?.url || ""
         }
         onCapture={(img) => addImage(finding.id, img)}
         galleryCount={galleryImages.length}

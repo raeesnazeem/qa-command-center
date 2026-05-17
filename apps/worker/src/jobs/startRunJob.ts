@@ -70,6 +70,7 @@ export async function processStartRunJob(job: Job) {
       "dummy_content",
       "image_compliance",
       "ai_content_audit",
+      "hero_media",
     ]
     const needsPageScan = run.enabled_checks?.some((c: string) =>
       PAGE_CHECKS.includes(c),

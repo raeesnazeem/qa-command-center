@@ -34,6 +34,7 @@ export const FILTER_TABS: FilterTab[] = [
     label: "Responsive",
     factors: ["visual_regression"],
   },
+  { id: "hero_media", label: "Hero Media", factors: ["hero_media"] },
 ]
 
 export const CheckFactorFilter: React.FC<CheckFactorFilterProps> = ({

@@ -7,6 +7,7 @@ import { checkMeta } from "../checks/metaCheck"
 import { checkConsoleErrors } from "../checks/consoleErrorCheck"
 import { checkDummyContent } from "../checks/dummyContentCheck"
 import { checkImageCompliance } from "../checks/imageComplianceCheck"
+import { checkHeroMedia } from "../checks/heroMediaCheck"
 import { processCheckProjectPlanJob } from './checkProjectPlanJob'
 import pino from "pino"
 
@@ -113,6 +114,10 @@ export async function processRunChecksJob(job: Job) {
 
       if (checksToRun.includes('console_errors')) {
         checkPromises.push(checkConsoleErrors(playwrightPage, page));
+      }
+
+      if (checksToRun.includes('hero_media')) {
+        checkPromises.push(checkHeroMedia(playwrightPage, page));
       }
 
       // Execute enabled checks in parallel
