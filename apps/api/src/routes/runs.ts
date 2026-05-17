@@ -417,7 +417,7 @@ router.patch(
               type: `RUN_${newStatus.toUpperCase()}`, 
               details: { 
                 projectName,
-                message: `${performerName} ${actionWord} the run for ${projectName}` 
+                message: `${actionWord} the run for ${projectName}` 
               } 
             },
             { id: updatedRun.id, type: 'run' },
@@ -533,7 +533,7 @@ router.post(
             type: 'RUN_STARTED', 
             details: { 
               projectName,
-              message: `${performerName} started a run for ${projectName}` 
+              message: ` started a run for ${projectName}` 
             } 
           },
           { id: updatedRun.id, type: 'run' },

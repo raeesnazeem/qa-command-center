@@ -19,6 +19,7 @@ import {
   Week2TestPage,
   QueueHistoryPage,
   ActivityLogPage,
+  StatsPage,
 } from "@/pages"
 import { AuthenticateWithRedirectCallback } from "@clerk/react"
 
@@ -122,6 +123,15 @@ export const router = createBrowserRouter(
               path: "/team",
               element: <TeamPage />,
             },
+            {
+              path: "/team",
+              element: <TeamPage />,
+            },
+            {
+              path: "/stats",
+              element: <StatsPage />,
+            },
+
             {
               path: "/admin/queue-history",
               element: <QueueHistoryPage />,

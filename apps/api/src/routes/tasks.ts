@@ -495,7 +495,7 @@ router.patch(
               details: { 
                 taskTitle: task.title,
                 projectName,
-                message: `${performerName} ${actionMessage} ("${task.title}")` 
+                message: `${actionMessage} ("${task.title}")` 
               } 
             },
             { id: task.id, type: 'task' },
@@ -731,7 +731,7 @@ router.post(
               details: { 
                 taskTitle: taskRes.data.title,
                 projectName,
-                message: `${performerRes.data?.full_name || 'Developer'} submitted a rebuttal for "${taskRes.data.title}" in ${projectName}` 
+                message: ` submitted a rebuttal for "${taskRes.data.title}" in ${projectName}` 
               } 
             },
             { id, type: 'task' },
