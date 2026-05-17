@@ -35,7 +35,7 @@ export async function processCrawlPageJob(job: Job) {
   // Fetch run settings for conditional checks
   const { data: run, error: runError } = await supabase
     .from('qa_runs')
-    .select('status, is_woocommerce, site_url')
+    .select('status, is_woocommerce, site_url, enabled_checks')
     .eq('id', runId)
     .single();
 
@@ -158,44 +158,54 @@ export async function processCrawlPageJob(job: Job) {
       // Check for forms on page
       const hasForms = await page.$('form') !== null;
 
-      const [linkFindings, extLinkFindings, metaFindings, consoleFindings, dummyFindings, spellingFindings, imageFindings, formFindings, wooFindings] = await Promise.all([
-        checkBrokenLinks(page, screenshots).catch(e => { logger.error('Broken links check failed:', e); return []; }),
-        checkExternalLinks(page, screenshots).catch(e => { logger.error('External links check failed:', e); return []; }),
-        checkMeta(page, screenshots).catch(e => { logger.error('Meta check failed:', e); return []; }),
-        checkConsoleErrors(page, screenshots).catch(e => { logger.error('Console errors check failed:', e); return []; }),
-        checkDummyContent(page, screenshots).catch(e => { logger.error('Dummy content check failed:', e); return []; }),
-        checkSpelling(page, screenshots).catch(e => { logger.error('Spelling check failed:', e); return []; }),
-        checkImageCompliance(page, screenshots).catch(e => { logger.error('Image compliance check failed:', e); return []; }),
-        hasForms ? checkForms(page, screenshots).catch(e => { logger.error('Forms check failed:', e); return []; }) : Promise.resolve([]),
-        run?.is_woocommerce ? (async () => {
-          const wooPage = await context.newPage();
-          try {
-            return await checkWooCommerce(wooPage, run.site_url, run);
-          } catch (e) {
-            logger.error('WooCommerce check failed:', e);
-            return [];
-          } finally {
-            await wooPage.close();
-          }
-        })() : Promise.resolve([])
-      ]);
+   const enabledChecks = run?.enabled_checks || [];
+   const checkPromises: Promise<any[]>[] = [];
 
-      const allFindings = [
-        ...linkFindings,
-        ...extLinkFindings,
-        ...metaFindings,
-        ...consoleFindings,
-        ...dummyFindings,
-        ...spellingFindings,
-        ...imageFindings,
-        ...formFindings,
-        ...wooFindings,
-        ...responsiveFindings
-      ].map(f => ({
-        ...f,
-        page_id: pageId,
-        run_id: runId
-      }));
+   if (enabledChecks.includes('visual_regression')) {
+     checkPromises.push(checkBrokenLinks(page, screenshots).catch(e => { logger.error('Broken links check failed:', e); return []; }));
+     checkPromises.push(checkExternalLinks(page, screenshots).catch(e => { logger.error('External links check failed:', e); return []; }));
+     checkPromises.push(checkImageCompliance(page, screenshots).catch(e => { logger.error('Image compliance check failed:', e); return []; }));
+   }
+
+   if (enabledChecks.includes('accessibility')) {
+     checkPromises.push(checkMeta(page, screenshots).catch(e => { logger.error('Meta check failed:', e); return []; }));
+     checkPromises.push(checkDummyContent(page, screenshots).catch(e => { logger.error('Dummy content check failed:', e); return []; }));
+     checkPromises.push(checkSpelling(page, screenshots).catch(e => { logger.error('Spelling check failed:', e); return []; }));
+     if (hasForms) {
+       checkPromises.push(checkForms(page, screenshots).catch(e => { logger.error('Forms check failed:', e); return []; }));
+     }
+   }
+
+   if (enabledChecks.includes('console_errors')) {
+     checkPromises.push(checkConsoleErrors(page, screenshots).catch(e => { logger.error('Console errors check failed:', e); return []; }));
+   }
+
+   if (run?.is_woocommerce && enabledChecks.includes('woocommerce')) {
+     checkPromises.push((async () => {
+       const wooPage = await context.newPage();
+       try {
+         return await checkWooCommerce(wooPage, run.site_url, run);
+       } catch (e) {
+         logger.error('WooCommerce check failed:', e);
+         return [];
+       } finally {
+         await wooPage.close();
+       }
+     })());
+   }
+
+   // Resolve only selected checks
+   const checkResults = await Promise.all(checkPromises);
+
+   const allFindings = [
+     ...checkResults.flat(),
+     ...responsiveFindings
+   ].map(f => ({
+     ...f,
+     page_id: pageId,
+     run_id: runId
+   }));
+
 
       if (allFindings.length > 0) {
         logger.info({ pageId, count: allFindings.length }, 'Inserting findings');
@@ -211,7 +221,7 @@ export async function processCrawlPageJob(job: Job) {
       // Add AI Check jobs decoupled to perform asynchronously
       const pageText = await page.evaluate(() => document.body.innerText).catch(() => '');
       
-      qaQueue.add('run_ai_checks', { runId, pageId, pageUrl, pageText })
+      qaQueue.add('run_ai_checks', { runId, pageId, pageUrl, pageText, enabled_checks: run?.enabled_checks || []  })
              .catch(e => logger.error('Failed to queue run_ai_checks:', e));
              
       // Step 5: Update page status to 'done'

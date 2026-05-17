@@ -116,7 +116,7 @@ export const AdminRedisWidget: React.FC = () => {
                   </p>
                 </div>
               ) : error ? (
-                <div className="p-6 bg-red-50 text-red-600 rounded-2xl text-sm font-bold border border-red-100 text-center">
+                <div className="p-6 bg-red-50 text-red-600 rounded-md text-sm font-bold border border-red-100 text-center">
                   {error}
                 </div>
               ) : (

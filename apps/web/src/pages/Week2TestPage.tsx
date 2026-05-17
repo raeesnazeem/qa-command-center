@@ -191,7 +191,7 @@ export default function Week2TestPage() {
       </header>
 
       {/* Control Panel */}
-      <div className="bg-white p-8 rounded-3xl border-2 border-slate-100 shadow-xl space-y-6">
+      <div className="bg-white p-8 rounded-md border-2 border-slate-100 shadow-xl space-y-6">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <h2 className="text-lg font-bold text-slate-900">
@@ -206,7 +206,7 @@ export default function Week2TestPage() {
             disabled={
               isStarting || (testRunId !== null && run?.status === "running")
             }
-            className="flex items-center gap-2 px-6 py-3 bg-black text-accent rounded-2xl font-bold uppercase tracking-widest hover:bg-slate-800 transition-all disabled:opacity-50 active:scale-95"
+            className="flex items-center gap-2 px-6 py-3 bg-black text-accent rounded-md font-bold uppercase tracking-widest hover:bg-slate-800 transition-all disabled:opacity-50 active:scale-95"
           >
             {isStarting ? (
               <Loader2 size={18} className="animate-spin" />
@@ -248,7 +248,7 @@ export default function Week2TestPage() {
       {/* Checklist */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Verification Checklist */}
-        <div className="bg-slate-900 rounded-3xl p-8 text-white shadow-2xl space-y-6">
+        <div className="bg-slate-900 rounded-md p-8 text-white shadow-2xl space-y-6">
           <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-400 border-b border-white/10 pb-4">
             Verification Checklist
           </h3>
@@ -358,7 +358,7 @@ export default function Week2TestPage() {
         </div>
 
         {/* Findings Summary */}
-        <div className="bg-white rounded-3xl p-8 border-2 border-slate-100 shadow-sm space-y-6">
+        <div className="bg-white rounded-md p-8 border-2 border-slate-100 shadow-sm space-y-6">
           <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-400 border-b border-slate-50 pb-4">
             Findings Payload
           </h3>
@@ -396,9 +396,9 @@ export default function Week2TestPage() {
 
       {/* WooCommerce Verification */}
       {run?.status === "completed" && run.is_woocommerce && (
-        <div className="bg-emerald-50 rounded-3xl p-8 border border-emerald-100 animate-in zoom-in-95 duration-500">
+        <div className="bg-emerald-50 rounded-md p-8 border border-emerald-100 animate-in zoom-in-95 duration-500">
           <div className="flex items-center gap-4 mb-6">
-            <div className="p-3 bg-white rounded-2xl shadow-sm text-emerald-600">
+            <div className="p-3 bg-white rounded-md shadow-sm text-emerald-600">
               <ShoppingCart size={24} />
             </div>
             <div>

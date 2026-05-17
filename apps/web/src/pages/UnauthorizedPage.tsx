@@ -11,7 +11,7 @@ export const UnauthorizedPage = () => {
     <div className="min-h-[80vh] flex items-center justify-center p-4">
       <div className="max-w-md w-full text-center space-y-8 animate-in fade-in zoom-in duration-300">
         <div className="flex justify-center">
-          <div className="p-4 bg-red-50 rounded-2xl border border-red-100 shadow-sm">
+          <div className="p-4 bg-red-50 rounded-md border border-red-100 shadow-sm">
             <ShieldAlert className="w-12 h-12 text-red-600" />
           </div>
         </div>

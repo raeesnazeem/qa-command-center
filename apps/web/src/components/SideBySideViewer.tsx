@@ -74,7 +74,7 @@ export const SideBySideViewer: React.FC<SideBySideViewerProps> = ({
   return (
     <div className="flex flex-col h-full bg-slate-900 overflow-hidden relative group/viewer">
       {/* Controls Overlay */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-3 py-2 bg-black/80 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl opacity-0 group-hover/viewer:opacity-100 transition-all duration-300 translate-y-2 group-hover/viewer:translate-y-0">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-3 py-2 bg-black/80 backdrop-blur-md rounded-md border border-white/10 shadow-2xl opacity-0 group-hover/viewer:opacity-100 transition-all duration-300 translate-y-2 group-hover/viewer:translate-y-0">
         <div className="flex items-center gap-1 border-r border-white/10 pr-2">
           <button
             onClick={() => handleZoom(-0.1)}

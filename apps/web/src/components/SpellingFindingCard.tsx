@@ -119,7 +119,7 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
 
   return (
     <div
-      className={`group p-6 bg-white rounded-2xl border transition-all duration-300 shadow-sm hover:shadow-xl relative overflow-hidden ${
+      className={`group p-6 bg-white rounded-md border transition-all duration-300 shadow-sm hover:shadow-xl relative overflow-hidden ${
         isConfirmed || isAssigned
           ? "border-emerald-500 ring-1 ring-emerald-500/20"
           : isFalsePositive
@@ -272,7 +272,7 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
 
           {finding.tasks?.[0]?.rebuttals?.[0] &&
             !finding.tasks[0].rebuttals[0].ai_verdict && (
-              <div className="mb-6 p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-3">
+              <div className="mb-6 p-4 bg-slate-50 rounded-md border border-slate-100 flex items-center gap-3">
                 <div className="p-2 bg-white rounded-lg shadow-sm">
                   <Activity size={16} className="text-blue-500 animate-pulse" />
                 </div>

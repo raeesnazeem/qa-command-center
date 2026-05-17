@@ -22,7 +22,7 @@ export const RebuttalVerdictCard: React.FC<RebuttalVerdictCardProps> = ({
 
   return (
     <div
-      className={`p-6 rounded-2xl border transition-all ${isResolved ? "bg-emerald-50/50 border-emerald-200" : "bg-orange-50/50 border-orange-200"}`}
+      className={`p-6 rounded-md border transition-all ${isResolved ? "bg-emerald-50/50 border-emerald-200" : "bg-orange-50/50 border-orange-200"}`}
     >
       <div className="flex items-start gap-4 mb-4">
         <div

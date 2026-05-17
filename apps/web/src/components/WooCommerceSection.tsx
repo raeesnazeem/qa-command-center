@@ -254,7 +254,7 @@ export const WooCommerceSection: React.FC<WooCommerceSectionProps> = ({
       )}
 
       {wooFindings.length === 0 && formFindings.length === 0 && (
-        <div className="py-20 text-center bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+        <div className="py-20 text-center bg-slate-50 rounded-md border border-dashed border-slate-200">
           <AlertCircle size={40} className="mx-auto text-slate-300 mb-4" />
           <p className="text-slate-900 font-bold uppercase tracking-tight">
             No commerce results yet

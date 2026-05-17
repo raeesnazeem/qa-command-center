@@ -21,7 +21,7 @@ export const FormTestResultCard: React.FC<FormTestResultCardProps> = ({
   const pageUrl = finding.pages?.url
 
   return (
-    <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-all">
+    <div className="p-4 bg-white border border-slate-200 rounded-md shadow-sm hover:shadow-md transition-all">
       <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-50">
         <div className="flex items-center gap-2">
           <div

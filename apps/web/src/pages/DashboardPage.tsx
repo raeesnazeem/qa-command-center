@@ -54,7 +54,7 @@ export const DashboardPage = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-32 w-full rounded-3xl" />
+            <Skeleton key={i} className="h-32 w-full rounded-md" />
           ))}
         </div>
 
@@ -62,14 +62,14 @@ export const DashboardPage = () => {
           <Skeleton className="h-4 w-32" />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-48 w-full rounded-3xl" />
+              <Skeleton key={i} className="h-48 w-full rounded-md" />
             ))}
           </div>
         </section>
 
         <section className="space-y-6">
           <Skeleton className="h-4 w-32" />
-          <div className="bg-white border border-slate-100 rounded-3xl h-64 overflow-hidden relative">
+          <div className="bg-white border border-slate-100 rounded-md h-64 overflow-hidden relative">
             <Skeleton className="absolute inset-0" />
           </div>
         </section>
@@ -222,7 +222,7 @@ export const DashboardPage = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {data?.my_tasks.length === 0 ? (
-                  <div className="md:col-span-2 bg-white border-2 border-dashed border-slate-200 rounded-3xl p-12 text-center">
+                  <div className="md:col-span-2 bg-white border-2 border-dashed border-slate-200 rounded-md p-12 text-center">
                     <div className="bg-slate-50 w-16 h-16 rounded-md flex items-center justify-center mx-auto mb-4">
                       <CheckCircle2 className="w-8 h-8 text-slate-300" />
                     </div>
@@ -236,7 +236,7 @@ export const DashboardPage = () => {
                     <Link
                       key={task.id}
                       to={`/tasks?taskId=${task.id}`}
-                      className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group flex flex-col h-full"
+                      className="bg-white border border-slate-100 rounded-md p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group flex flex-col h-full"
                     >
                       <div className="flex justify-between items-start mb-4">
                         <span
@@ -435,7 +435,7 @@ export const DashboardPage = () => {
             </div>
           </div>
 
-          <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm overflow-x-auto">
+          <div className="bg-white border border-slate-100 rounded-md overflow-hidden shadow-sm overflow-x-auto">
             <div className="min-w-[800px]">
               <table className="w-full text-left border-collapse">
                 <thead>

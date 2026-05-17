@@ -46,7 +46,8 @@ export async function processCrawlBatchJob(job: Job) {
           runId,
           pageId,
           url: pageUrl,
-          projectId
+          projectId,
+          enabledChecks: job.data.enabledChecks
         }
       } as Job);
 

@@ -42,7 +42,7 @@ export const RebuttalSection: React.FC<RebuttalSectionProps> = ({ task }) => {
           )}
         </div>
 
-        <div className="bg-red-50/30 border border-red-100 rounded-2xl p-4 space-y-4">
+        <div className="bg-red-50/30 border border-red-100 rounded-md p-4 space-y-4">
           <p className="text-[11px] text-red-600/80 font-medium leading-relaxed bg-red-50/50 p-3 rounded-xl border border-red-100/50">
             If you disagree with this finding, provide a detailed rebuttal and
             optional screenshot. The QA team will review your submission and
@@ -150,7 +150,7 @@ const RebuttalForm: React.FC<RebuttalFormProps> = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white border border-red-200 rounded-2xl p-4 shadow-xl space-y-4 ring-4 ring-red-500/5"
+      className="bg-white border border-red-200 rounded-md p-4 shadow-xl space-y-4 ring-4 ring-red-500/5"
     >
       <div className="flex items-center justify-between mb-2">
         <h4 className="text-[10px] font-bold uppercase tracking-widest text-red-600">

@@ -18,9 +18,11 @@ import {
   User,
   Square,
   CheckSquare,
+  ClipboardList,
   Clock,
 } from "lucide-react"
 import { useRole } from "../hooks/useRole"
+import { useProject } from "../hooks/useProjects"
 import { useParams, Link } from "react-router-dom"
 import { FindingSeverityEditor } from "./FindingSeverityEditor"
 import { SpellingFindingCard } from "./SpellingFindingCard"
@@ -29,6 +31,7 @@ import { RebuttalVerdictCard } from "./RebuttalVerdictCard"
 import { QAFinding } from "../api/runs.api"
 import { BrowserOverlay } from "./BrowserOverlay"
 import { useGalleryStore } from "../store/galleryStore"
+import { useAuthAxios } from "../lib/useAuthAxios"
 
 interface FindingCardProps {
   finding: QAFinding
@@ -60,6 +63,7 @@ const CHECK_FACTOR_ICONS: Record<string, React.ReactNode> = {
   seo: <Search size={14} />,
   image_compliance: <Monitor size={14} />,
   ai_content_audit: <FileSearch size={14} className="text-accent" />,
+  project_plan: <ClipboardList size={14} className="text-accent" />,
 }
 
 export const FindingCard: React.FC<FindingCardProps> = ({
@@ -75,7 +79,9 @@ export const FindingCard: React.FC<FindingCardProps> = ({
   assignedUsers = [],
   isAssigned = false,
 }) => {
+  const api = useAuthAxios()
   const { id: projectId } = useParams<{ id: string }>()
+  const { data: project } = useProject(projectId || "")
   const { canDo } = useRole()
   const canAction = canDo("qa_engineer")
   const [localTitle, setLocalTitle] = React.useState(finding.title)
@@ -83,6 +89,32 @@ export const FindingCard: React.FC<FindingCardProps> = ({
   const [isBrowserOpen, setIsBrowserOpen] = React.useState(false)
   const { galleryImages: allGalleryImages, addImage } = useGalleryStore()
   const galleryImages = allGalleryImages[finding.id] || []
+
+  const isProjectPlan = finding.check_factor === "project_plan"
+  const [isPushing, setIsPushing] = React.useState(false)
+  const [isPushed, setIsPushed] = React.useState(finding.status === "confirmed")
+  const [isBasecampModalOpen, setIsBasecampModalOpen] = React.useState(false)
+
+  const handlePushToBasecamp = async () => {
+    setIsPushing(true)
+    try {
+      const response = await api.post(
+        `/api/findings/${finding.id}/push-basecamp`,
+      )
+      setIsPushed(true)
+      if (onConfirm) {
+        onConfirm(finding.id)
+      }
+    } catch (err: any) {
+      console.error(err)
+      const errorMsg =
+        err.response?.data?.error ||
+        "Failed to push finding to Basecamp. Please verify settings."
+      alert(errorMsg)
+    } finally {
+      setIsPushing(false)
+    }
+  }
 
   React.useEffect(() => {
     setLocalTitle(finding.title)
@@ -192,152 +224,216 @@ export const FindingCard: React.FC<FindingCardProps> = ({
         </div>
 
         {/* Middle Body Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-          {/* Details Column */}
+        {isProjectPlan ? (
           <div className="space-y-4">
             <div>
               <h5 className="font-bold text-slate-900 text-sm uppercase tracking-tight mb-2">
-                {finding.check_factor.replace(/_/g, " ")} found
+                Project Plan found
               </h5>
-              <div className="space-y-3">
-                <p
-                  className={`text-[11px] text-slate-500 font-medium leading-relaxed break-words ${
-                    isExpanded ? "" : "line-clamp-3"
-                  }`}
-                >
-                  {finding.description}
+            </div>
+
+            {/* Evidence Screenshots below description as small thumbnails side by side */}
+            {finding.screenshot_url?.includes(",") ? (
+              <div className="space-y-2 pt-2">
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                  Screenshots
                 </p>
-                {finding.description && finding.description.length > 150 && (
-                  <button
-                    onClick={() => setIsExpanded(!isExpanded)}
-                    className="text-[9px] font-bold text-accent uppercase tracking-[0.2em] hover:text-black transition-colors"
+                <div className="flex gap-4">
+                  {finding.screenshot_url.split(",").map((url, idx) => (
+                    <div key={url} className="space-y-1">
+                      <FindingCardWithScreenshot
+                        finding={{ ...finding, screenshot_url: url }}
+                        pageScreenshots={{}}
+                        hideTabs={true}
+                      />
+                      <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest text-center">
+                        {idx === 0 ? "Plan Highlight" : "Reviews Page"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              (finding.screenshot_url || pageScreenshots?.desktop) && (
+                <div className="space-y-2 pt-2">
+                  <FindingCardWithScreenshot
+                    finding={finding}
+                    pageScreenshots={pageScreenshots}
+                    hideTabs={true}
+                  />
+                </div>
+              )
+            )}
+
+            <div className="pt-2 flex items-center justify-start gap-3">
+              <button
+                onClick={() => setIsBrowserOpen(true)}
+                className="btn-unified w-fit flex items-center gap-2"
+              >
+                <span>
+                  <Globe
+                    size={14}
+                    className="text-slate-400 group-hover/btn:text-black transition-colors"
+                  />
+                </span>
+                <span className="text-[11px]">See in Browser</span>
+              </button>
+
+              <button
+                onClick={handlePushToBasecamp}
+                disabled={isPushing || isPushed}
+                className={`px-3 py-2 rounded-md font-bold uppercase tracking-wider text-[10px] transition-all active:scale-95 ${
+                  isPushed
+                    ? "bg-emerald-100 text-emerald-800 border border-emerald-200 cursor-default animate-fade-in"
+                    : "bg-accent hover:bg-accent/90 text-black border border-accent"
+                }`}
+              >
+                {isPushing
+                  ? "Pushing..."
+                  : isPushed
+                    ? "✓ Pushed to Basecamp"
+                    : "Push to Basecamp"}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+            {/* Details Column */}
+            <div className="space-y-4">
+              <div>
+                <h5 className="font-bold text-slate-900 text-sm uppercase tracking-tight mb-2">
+                  {finding.check_factor.replace(/_/g, " ")} found
+                </h5>
+                <div className="space-y-3">
+                  <p
+                    className={`text-[11px] text-slate-500 font-medium leading-relaxed break-words ${
+                      isExpanded ? "" : "line-clamp-3"
+                    }`}
                   >
-                    {isExpanded ? "See less" : "See more"}
-                  </button>
-                )}
+                    {finding.description}
+                  </p>
+                  {finding.description && finding.description.length > 150 && (
+                    <button
+                      onClick={() => setIsExpanded(!isExpanded)}
+                      className="text-[9px] font-bold text-accent uppercase tracking-[0.2em] hover:text-black transition-colors"
+                    >
+                      {isExpanded ? "See less" : "See more"}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="pt-2 flex flex-col items-start">
+                <button
+                  onClick={() => setIsContextModalOpen(true)}
+                  className="text-[9px] font-bold text-slate-500 uppercase tracking-widest hover:text-accent transition-colors text-left"
+                >
+                  Click to open contextual data
+                </button>
               </div>
             </div>
 
-            <div className="pt-2 flex flex-col items-start">
+            {/* Screenshot Column */}
+            <div className="relative group/ss">
+              <div className="aspect-video bg-slate-50 rounded-md overflow-hidden border border-slate-100 shadow-inner group-hover/ss:shadow-md transition-all">
+                <FindingCardWithScreenshot
+                  finding={finding}
+                  pageScreenshots={pageScreenshots}
+                />
+              </div>
+              <p className="text-[8px] font-bold text-slate-400 uppercase mt-2 tracking-[0.2em] text-center">
+                Click to expand evidence
+              </p>
               <button
-                onClick={() => setIsContextModalOpen(true)}
-                className="text-[9px] font-bold text-slate-500 uppercase tracking-widest hover:text-accent transition-colors text-left"
+                onClick={() => setIsBrowserOpen(true)}
+                className="btn-unified w-fit ml-auto flex justify-end items-center gap-2 mt-3"
               >
-                Click to open contextual data
+                <span>
+                  <Globe
+                    size={14}
+                    className="text-slate-400 group-hover/btn:text-black transition-colors"
+                  />
+                </span>
+                <span className="text-[11px]">See in Browser</span>
               </button>
             </div>
           </div>
-
-          {/* Screenshot Column */}
-          <div className="relative group/ss">
-            <div className="aspect-video bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 shadow-inner group-hover/ss:shadow-md transition-all">
-              <FindingCardWithScreenshot
-                finding={finding}
-                pageScreenshots={pageScreenshots}
-              />
-            </div>
-            <p className="text-[8px] font-bold text-slate-400 uppercase mt-2 tracking-[0.2em] text-center">
-              Click to expand evidence
-            </p>
-            <button
-              onClick={() => setIsBrowserOpen(true)}
-              className="btn-unified w-fit ml-auto flex justify-end items-center gap-2 mt-3"
-            >
-              <span>
-                <Globe
-                  size={14}
-                  className="text-slate-400 group-hover/btn:text-black transition-colors"
-                />
-              </span>
-              <span className="text-[11px]">See in Browser</span>
-            </button>
-          </div>
-        </div>
+        )}
 
         {/* Footer Actions & Assignees */}
-        <div className="flex items-center justify-between pt-4 border-t border-slate-50 mt-auto">
-          <div className="flex items-center gap-2">
-            {isFalsePositive ? (
-              <button
-                onClick={() => onConfirm?.(finding.id)}
-                className="btn-unified"
-              >
-                Re-flag as genuine
-              </button>
-            ) : (
-              <>
-                {!(hasTask || isAssigned) && (
-                  <button
-                    onClick={() => onFalsePositive?.(finding.id)}
-                    className="btn-unified"
-                  >
-                    False Positive
-                  </button>
-                )}
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() =>
-                      onCreateTask?.({
-                        ...finding,
-                        title: localTitle,
-                        gallery_images: galleryImages,
-                      })
-                    }
-                    disabled={hasTask || isAssigned}
-                    className={`btn-unified ${hasTask || isAssigned ? "bg-accent text-white cursor-not-allowed" : ""}`}
-                  >
-                    {hasTask || isAssigned ? "Task Linked" : "Add to Tasks"}
-                  </button>
-                  {(hasTask || isAssigned) &&
-                    assignedTaskIds &&
-                    assignedTaskIds.length > 0 && 
-                    assignedTaskIds[0] !== finding.id && (
-                      <Link
-                        to={`/projects/${projectId}?tab=tasks&taskId=${assignedTaskIds[0]}`}
-                        className="p-2 text-slate-400 hover:text-accent transition-colors"
-                        title="View Task"
-                      >
-                        <ExternalLink size={18} />
-                      </Link>
-                    )}
-                </div>
-              </>
-            )}
-          </div>
-
-          <div className="flex flex-col items-end gap-1.5">
-            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-[0.2em]">
-              Currently Assigned to
-            </span>
-            <div className="flex items-center -space-x-2">
-              {assignedUsers.length > 0 ? (
-                assignedUsers.map((user: any, i: number) => (
-                  <div
-                    key={user.id || i}
-                    className="w-7 h-7 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-slate-600 shadow-sm"
-                    title={user.full_name}
-                  >
-                    {user.full_name?.charAt(0) || "U"}
-                  </div>
-                ))
-              ) : assignees.length > 0 ? (
-                assignees.map((user: any, i: number) => (
-                  <div
-                    key={user.id || i}
-                    className="w-7 h-7 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-slate-600 shadow-sm"
-                    title={user.full_name}
-                  >
-                    {user.full_name?.charAt(0) || "U"}
-                  </div>
-                ))
+        {/* Footer Actions & Assignees */}
+        {!isProjectPlan && (
+          <div className="flex items-center justify-between pt-4 border-t border-slate-50 mt-auto">
+            <div className="flex items-center gap-2">
+              {isFalsePositive ? (
+                <button
+                  onClick={() => onConfirm?.(finding.id)}
+                  className="btn-unified"
+                >
+                  Re-flag as genuine
+                </button>
               ) : (
-                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-tight">
-                  None
-                </span>
+                <>
+                  {!(hasTask || isAssigned) && (
+                    <button
+                      onClick={() => onFalsePositive?.(finding.id)}
+                      className="btn-unified"
+                    >
+                      False Positive
+                    </button>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() =>
+                        onCreateTask?.({
+                          ...finding,
+                          title: localTitle,
+                          gallery_images: galleryImages,
+                        })
+                      }
+                      disabled={hasTask || isAssigned}
+                      className={`btn-unified ${hasTask || isAssigned ? "bg-accent text-white cursor-not-allowed" : ""}`}
+                    >
+                      {hasTask || isAssigned ? "Task Linked" : "Add to Tasks"}
+                    </button>
+                    {(hasTask || isAssigned) &&
+                      assignedTaskIds &&
+                      assignedTaskIds.length > 0 &&
+                      assignedTaskIds[0] !== finding.id && (
+                        <Link
+                          to={`/projects/${projectId}?tab=tasks&taskId=${assignedTaskIds[0]}`}
+                          className="p-2 text-slate-400 hover:text-accent transition-colors"
+                          title="View Task"
+                        >
+                          <ClipboardList size={16} />
+                        </Link>
+                      )}
+                  </div>
+                </>
               )}
             </div>
+
+            {/* Assigned users avatars */}
+            {assignedUsers.length > 0 && (
+              <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-100 p-1.5 rounded-full pl-3 pr-2">
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">
+                  Assigned
+                </span>
+                <div className="flex -space-x-1.5 overflow-hidden">
+                  {assignedUsers.map((u, idx) => (
+                    <div
+                      key={u.id || idx}
+                      className="w-5 h-5 rounded-full bg-slate-200 border border-white flex items-center justify-center text-[8px] font-bold text-slate-600 shadow-sm"
+                      title={u.full_name || u.name}
+                    >
+                      {u.full_name ? u.full_name.charAt(0) : "U"}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        </div>
+        )}
 
         {/* Context Modal */}
         {isContextModalOpen && (
@@ -347,7 +443,7 @@ export const FindingCard: React.FC<FindingCardProps> = ({
               if (e.target === e.currentTarget) setIsContextModalOpen(false)
             }}
           >
-            <div className="bg-white w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200">
+            <div className="bg-white w-full max-w-3xl rounded-md shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200">
               <div className="p-6 border-b flex items-center justify-between bg-slate-50">
                 <div className="flex items-center gap-3">
                   <div>
@@ -381,10 +477,52 @@ export const FindingCard: React.FC<FindingCardProps> = ({
             </div>
           </div>
         )}
+        {/* Basecamp Message Board Details Modal */}
+        {isBasecampModalOpen && (
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <div className="bg-white max-w-2xl w-full p-8 rounded-md border border-slate-200 shadow-2xl relative text-left">
+              <button
+                onClick={() => setIsBasecampModalOpen(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <XCircle size={24} />
+              </button>
+              <h3 className="font-bold text-slate-900 text-lg mb-4">
+                Basecamp Project Plan Details
+              </h3>
+              <p className="text-slate-600 text-sm mb-6 leading-relaxed">
+                This project plan was fetched dynamically from your Basecamp
+                Message Board topic: <strong>"Project Order Details"</strong>.
+              </p>
+              <div className="bg-slate-50 border border-slate-100 p-6 rounded-xl text-slate-800 font-medium text-sm mb-6 shadow-inner max-h-[300px] overflow-y-auto">
+                {finding.description}
+              </div>
+              <div className="flex justify-end">
+                <a
+                  href={
+                    project?.basecamp_account_id && project?.basecamp_project_id
+                      ? `https://3.basecamp.com/${project.basecamp_account_id}/buckets/${project.basecamp_project_id}`
+                      : `https://3.basecamp.com`
+                  }
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn-unified flex items-center gap-2"
+                >
+                  <ExternalLink size={14} />
+                  Open Basecamp Workspace
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
         <BrowserOverlay
           isOpen={isBrowserOpen}
           onClose={() => setIsBrowserOpen(false)}
-          url={finding.pages?.url || ""}
+          url={
+            isProjectPlan && project?.site_url
+              ? (project.site_url.endsWith("/") ? `${project.site_url}reviews` : `${project.site_url}/reviews`)
+              : (finding.pages?.url || "")
+          }
           onCapture={(img) => addImage(finding.id, img)}
           galleryCount={galleryImages.length}
           findingId={finding.id}
@@ -395,7 +533,7 @@ export const FindingCard: React.FC<FindingCardProps> = ({
 
   return (
     <div
-      className={`group p-6 bg-white rounded-2xl border transition-all duration-300 shadow-sm hover:shadow-xl relative overflow-hidden ${
+      className={`group p-6 bg-white rounded-md border transition-all duration-300 shadow-sm hover:shadow-xl relative overflow-hidden ${
         isConfirmed || isAssigned
           ? "border-emerald-500 ring-1 ring-emerald-500/20"
           : isFalsePositive
@@ -480,17 +618,24 @@ export const FindingCard: React.FC<FindingCardProps> = ({
           )}
 
           {/* Screenshot Thumbnail */}
-          {(finding.screenshot_url || pageScreenshots?.desktop) && (
+          {isProjectPlan && finding.screenshot_url?.includes(",") ? (
             <div className="mb-4">
-              <FindingCardWithScreenshot
-                finding={finding}
-                pageScreenshots={pageScreenshots}
-              />
-              <p className="text-[8px] font-bold text-slate-400 uppercase mt-1 tracking-widest">
-                {finding.screenshot_url
-                  ? "Click to expand evidence"
-                  : "Click to view page context"}
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                Evidence Screenshots
               </p>
+              <div className="flex gap-4 mb-3">
+                {finding.screenshot_url.split(",").map((url, idx) => (
+                  <div key={url} className="space-y-1">
+                    <FindingCardWithScreenshot
+                      finding={{ ...finding, screenshot_url: url }}
+                      pageScreenshots={{}}
+                    />
+                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest text-center">
+                      {idx === 0 ? "Plan Highlight" : "Reviews Page"}
+                    </p>
+                  </div>
+                ))}
+              </div>
               <button
                 onClick={() => setIsBrowserOpen(true)}
                 className="btn-unified w-fit ml-auto flex justify-end items-center gap-2 mt-3"
@@ -503,6 +648,72 @@ export const FindingCard: React.FC<FindingCardProps> = ({
                 </span>
                 <span className="text-[11px]">See in Browser</span>
               </button>
+            </div>
+          ) : (
+            (finding.screenshot_url || pageScreenshots?.desktop) && (
+              <div className="mb-4">
+                <FindingCardWithScreenshot
+                  finding={finding}
+                  pageScreenshots={pageScreenshots}
+                />
+                <p className="text-[8px] font-bold text-slate-400 uppercase mt-1 tracking-widest">
+                  {finding.screenshot_url
+                    ? "Click to expand evidence"
+                    : "Click to view page context"}
+                </p>
+                <button
+                  onClick={() => setIsBrowserOpen(true)}
+                  className="btn-unified w-fit ml-auto flex justify-end items-center gap-2 mt-3"
+                >
+                  <span>
+                    <Globe
+                      size={14}
+                      className="text-slate-400 group-hover/btn:text-black transition-colors"
+                    />
+                  </span>
+                  <span className="text-[11px]">See in Browser</span>
+                </button>
+              </div>
+            )
+          )}
+
+          {/* Basecamp Message Board Details Modal */}
+          {isBasecampModalOpen && (
+            <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+              <div className="bg-white max-w-2xl w-full p-8 rounded-md border border-slate-200 shadow-2xl relative text-left">
+                <button
+                  onClick={() => setIsBasecampModalOpen(false)}
+                  className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  <XCircle size={24} />
+                </button>
+                <h3 className="font-bold text-slate-900 text-lg mb-4">
+                  Basecamp Project Plan Details
+                </h3>
+                <p className="text-slate-600 text-sm mb-6 leading-relaxed">
+                  This project plan was fetched dynamically from your Basecamp
+                  Message Board topic: <strong>"Project Order Details"</strong>.
+                </p>
+                <div className="bg-slate-50 border border-slate-100 p-6 rounded-xl text-slate-800 font-medium text-sm mb-6 shadow-inner max-h-[300px] overflow-y-auto">
+                  {finding.description}
+                </div>
+                <div className="flex justify-end">
+                  <a
+                    href={
+                      project?.basecamp_account_id &&
+                      project?.basecamp_project_id
+                        ? `https://3.basecamp.com/${project.basecamp_account_id}/buckets/${project.basecamp_project_id}`
+                        : `https://3.basecamp.com`
+                    }
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn-unified flex items-center gap-2"
+                  >
+                    <ExternalLink size={14} />
+                    Open Basecamp Workspace
+                  </a>
+                </div>
+              </div>
             </div>
           )}
 
@@ -540,7 +751,7 @@ export const FindingCard: React.FC<FindingCardProps> = ({
 
           {finding.tasks?.[0]?.rebuttals?.[0] &&
             !finding.tasks[0].rebuttals[0].ai_verdict && (
-              <div className="mb-6 p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-3">
+              <div className="mb-6 p-4 bg-slate-50 rounded-md border border-slate-100 flex items-center gap-3">
                 <div className="p-2 bg-white rounded-lg shadow-sm">
                   <Activity size={16} className="text-blue-500 animate-pulse" />
                 </div>
@@ -554,7 +765,6 @@ export const FindingCard: React.FC<FindingCardProps> = ({
                 </div>
               </div>
             )}
-
           {isFalsePositive && (
             <div className="pt-4 border-t border-slate-100 flex justify-end">
               <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] italic">
@@ -568,7 +778,11 @@ export const FindingCard: React.FC<FindingCardProps> = ({
       <BrowserOverlay
         isOpen={isBrowserOpen}
         onClose={() => setIsBrowserOpen(false)}
-        url={finding.pages?.url || ""}
+        url={
+          isProjectPlan && project?.site_url
+            ? (project.site_url.endsWith("/") ? `${project.site_url}reviews` : `${project.site_url}/reviews`)
+            : (finding.pages?.url || "")
+        }
         onCapture={(img) => addImage(finding.id, img)}
         galleryCount={galleryImages.length}
         findingId={finding.id}

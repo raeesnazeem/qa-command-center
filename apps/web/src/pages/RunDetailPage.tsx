@@ -106,6 +106,20 @@ export const RunDetailPage = () => {
   const updateFindingMutation = useUpdateFinding(selectedPageId)
   const { mutate: createTask } = useCreateTask()
 
+  // 1. Extract any general run-level findings (null page_id OR project plan factor)
+  const generalFindings = useMemo(() => {
+    return (
+      runFindings?.filter(
+        (f) => !f.page_id || f.check_factor === "project_plan",
+      ) || []
+    )
+  }, [runFindings])
+
+  // 2. Filter out project_plan from page-specific findings to avoid duplicate rendering
+  const pageFindings = useMemo(() => {
+    return findings?.filter((f) => f.check_factor !== "project_plan") || []
+  }, [findings])
+
   const findingToTaskMap = useMemo(() => {
     const map: Record<string, { taskIds: string[]; assignedUsers: any[] }> = {}
     if (!tasksData?.data) return map
@@ -862,9 +876,12 @@ export const RunDetailPage = () => {
                   <div className="py-20 text-center">
                     <Loader2 className="w-8 h-8 animate-spin mx-auto text-accent" />
                   </div>
-                ) : findings && findings.length > 0 && selectedPage ? (
+                ) : ((pageFindings && pageFindings.length > 0) ||
+                    (generalFindings && generalFindings.length > 0)) &&
+                  selectedPage ? (
                   <FindingReviewPanel
-                    findings={findings}
+                    findings={pageFindings}
+                    generalFindings={generalFindings}
                     pageScreenshots={{
                       desktop: selectedPage.screenshot_url_desktop,
                       tablet: selectedPage.screenshot_url_tablet,

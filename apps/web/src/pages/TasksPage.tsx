@@ -28,7 +28,7 @@ import { useAuthAxios } from "../lib/useAuthAxios"
 const ProjectCard = ({ project }: { project: any }) => (
   <Link
     to={`/projects/${project.id}`}
-    className="flex-shrink-0 w-80 bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group flex flex-col h-full"
+    className="flex-shrink-0 w-80 bg-white border border-slate-100 rounded-md p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group flex flex-col h-full"
   >
     <div className="flex justify-between items-start mb-4">
       <span
@@ -256,7 +256,7 @@ const KanbanColumn = ({
       </span>
     </div>
 
-    <div className="space-y-4 min-h-[200px] bg-slate-50/50 rounded-2xl p-2 border border-dashed border-slate-200/60">
+    <div className="space-y-4 min-h-[200px] bg-slate-50/50 rounded-md p-2 border border-dashed border-slate-200/60">
       {tasks.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-32 text-center space-y-2 opacity-30 grayscale">
           <CheckSquare className="w-6 h-6 text-slate-400" />
@@ -379,7 +379,7 @@ export const TasksPage = () => {
     assignedTo: isDev ? profile?.id : undefined,
     createdBy: isQA ? profile?.id : undefined,
   })
-  
+
   const handleDeleteTask = (taskId: string) => {
     if (window.confirm("Are you sure you want to delete this task?")) {
       deleteTask(taskId)
@@ -401,7 +401,7 @@ export const TasksPage = () => {
           {[1, 2].map((i) => (
             <div key={i} className="space-y-4">
               <Skeleton className="h-6 w-48" />
-              <div className="bg-white border border-slate-100 rounded-3xl h-64 overflow-hidden relative">
+              <div className="bg-white border border-slate-100 rounded-md h-64 overflow-hidden relative">
                 <Skeleton className="absolute inset-0" />
               </div>
             </div>
@@ -414,7 +414,7 @@ export const TasksPage = () => {
             {[1, 2, 3].map((i) => (
               <Skeleton
                 key={i}
-                className="h-48 w-80 rounded-2xl flex-shrink-0"
+                className="h-48 w-80 rounded-md flex-shrink-0"
               />
             ))}
           </div>
@@ -704,7 +704,7 @@ export const TasksPage = () => {
 
               if (myTasks.length === 0) {
                 return (
-                  <div className="bg-white border border-slate-100 rounded-2xl p-12 text-center text-slate-400 text-sm font-medium italic">
+                  <div className="bg-white border border-slate-100 rounded-md p-12 text-center text-slate-400 text-sm font-medium italic">
                     No active QA projects at the moment.
                   </div>
                 )

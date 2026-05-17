@@ -219,7 +219,7 @@ export const VisualDiffPage: React.FC = () => {
                   )
                 ) : (
                   <div className="h-full flex flex-col items-center justify-center text-center p-12 bg-slate-900">
-                    <div className="w-16 h-16 bg-slate-800 rounded-3xl flex items-center justify-center mb-6 border border-slate-700">
+                    <div className="w-16 h-16 bg-slate-800 rounded-md flex items-center justify-center mb-6 border border-slate-700">
                       <RefreshCw className="w-8 h-8 text-slate-500" />
                     </div>
                     <h3 className="text-xl font-bold text-white uppercase tracking-tight mb-2">
@@ -251,7 +251,7 @@ export const VisualDiffPage: React.FC = () => {
             </>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-12 bg-slate-50">
-              <div className="w-16 h-16 bg-white rounded-3xl shadow-xl flex items-center justify-center mb-6 border border-slate-100">
+              <div className="w-16 h-16 bg-white rounded-md shadow-xl flex items-center justify-center mb-6 border border-slate-100">
                 <Layout className="w-8 h-8 text-slate-200" />
               </div>
               <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight mb-2">

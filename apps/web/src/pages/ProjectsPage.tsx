@@ -1,17 +1,17 @@
-import { useState } from 'react';
-import { useProjects } from '../hooks/useProjects';
-import { ProjectCard } from '../components/ProjectCard';
-import { CreateProjectModal } from '../components/CreateProjectModal';
-import { CanDo } from '../components/CanDo';
-import { Plus, FolderPlus, RefreshCcw, AlertCircle } from 'lucide-react';
+import { useState } from "react"
+import { useProjects } from "../hooks/useProjects"
+import { ProjectCard } from "../components/ProjectCard"
+import { CreateProjectModal } from "../components/CreateProjectModal"
+import { CanDo } from "../components/CanDo"
+import { Plus, FolderPlus, RefreshCcw, AlertCircle } from "lucide-react"
 
 export const ProjectsPage = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const { data: projects, isLoading, isError, error, refetch } = useProjects();
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const { data: projects, isLoading, isError, error, refetch } = useProjects()
 
   const handleOpenModal = () => {
-    setIsModalOpen(true);
-  };
+    setIsModalOpen(true)
+  }
 
   const SkeletonCard = () => (
     <div className="bg-white border border-slate-100 rounded-lg p-6 h-48 animate-pulse shadow-sm">
@@ -24,17 +24,21 @@ export const ProjectsPage = () => {
         <div className="h-4 w-40 bg-slate-50 rounded" />
       </div>
     </div>
-  );
+  )
 
   return (
     <div className="min-h-screen bg-bg-main p-6 lg:p-10">
       {/* Header */}
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Projects</h1>
-          <p className="text-slate-500 mt-1">Manage and monitor your QA test environments</p>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+            Projects
+          </h1>
+          <p className="text-slate-500 mt-1">
+            Manage and monitor your QA test environments
+          </p>
         </div>
-        
+
         <CanDo role="sub_admin">
           <button
             type="button"
@@ -63,9 +67,13 @@ export const ProjectsPage = () => {
             <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="w-6 h-6 text-red-600" />
             </div>
-            <h3 className="text-lg font-bold text-red-900 mb-2">Failed to load projects</h3>
+            <h3 className="text-lg font-bold text-red-900 mb-2">
+              Failed to load projects
+            </h3>
             <p className="text-red-600 text-sm mb-6">
-              {error instanceof Error ? error.message : 'An unexpected error occurred'}
+              {error instanceof Error
+                ? error.message
+                : "An unexpected error occurred"}
             </p>
             <button
               onClick={() => refetch()}
@@ -84,15 +92,18 @@ export const ProjectsPage = () => {
               <button
                 type="button"
                 onClick={handleOpenModal}
-                className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center mb-6 border border-slate-200 shadow-sm cursor-pointer hover:border-accent hover:bg-slate-50 transition-all group appearance-none outline-none"
+                className="w-24 h-24 bg-white rounded-md flex items-center justify-center mb-6 border border-slate-200 shadow-sm cursor-pointer hover:border-accent hover:bg-slate-50 transition-all group appearance-none outline-none"
               >
                 <FolderPlus className="w-12 h-12 text-slate-300 group-hover:text-accent transition-colors" />
               </button>
             </CanDo>
-            
-            <h3 className="text-2xl font-bold text-slate-900 mb-2">No projects yet</h3>
+
+            <h3 className="text-2xl font-bold text-slate-900 mb-2">
+              No projects yet
+            </h3>
             <p className="text-slate-500 max-w-sm mb-8">
-              Get started by creating your first project to monitor and run QA checks.
+              Get started by creating your first project to monitor and run QA
+              checks.
             </p>
             <CanDo role="sub_admin">
               <button
@@ -116,10 +127,10 @@ export const ProjectsPage = () => {
         )}
       </div>
 
-      <CreateProjectModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      <CreateProjectModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
       />
     </div>
-  );
-};
+  )
+}

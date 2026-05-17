@@ -23,9 +23,11 @@ export const NotResolvedModal = ({
   useEffect(() => {
     if (task && isOpen) {
       // Initialize with current assignees (from sibling tasks if available, or just the task's assigned_to)
-      const currentAssignees = task.assignees?.map((a: any) => a.userId || a.id).filter(Boolean) || (task.assigned_to ? [task.assigned_to] : []);
-      setAssigneeIds(Array.from(new Set(currentAssignees)));
-      setComment("");
+      const currentAssignees =
+        task.assignees?.map((a: any) => a.userId || a.id).filter(Boolean) ||
+        (task.assigned_to ? [task.assigned_to] : [])
+      setAssigneeIds(Array.from(new Set(currentAssignees)))
+      setComment("")
     }
   }, [task, isOpen])
 
@@ -36,7 +38,7 @@ export const NotResolvedModal = ({
 
   const handleConfirm = () => {
     if (!comment.trim()) return
-    
+
     notResolved(
       {
         taskId: task.id,
@@ -47,25 +49,25 @@ export const NotResolvedModal = ({
       },
       {
         onSuccess: () => onClose(),
-      }
+      },
     )
   }
 
   const toggleAssignee = (userId: string) => {
-    setAssigneeIds(prev => 
-      prev.includes(userId) 
-        ? prev.filter(id => id !== userId) 
-        : [...prev, userId]
-    );
+    setAssigneeIds((prev) =>
+      prev.includes(userId)
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId],
+    )
   }
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+      <div className="bg-white w-full max-w-lg rounded-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-red-50 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-md bg-red-50 flex items-center justify-center">
               <Info className="w-5 h-5 text-red-500" />
             </div>
             <div>
@@ -97,20 +99,28 @@ export const NotResolvedModal = ({
               </span>
             </div>
             <div className="flex flex-wrap gap-2">
-              {assigneeIds.map(userId => {
-                const member = project?.project_members.find(m => m.user_id === userId);
-                const taskAssignee = task.assignees?.find((a: any) => (a.userId || a.id) === userId);
-                const displayName = member?.users.full_name || (taskAssignee as any)?.name || (taskAssignee as any)?.full_name || "Unknown";
-                
+              {assigneeIds.map((userId) => {
+                const member = project?.project_members.find(
+                  (m) => m.user_id === userId,
+                )
+                const taskAssignee = task.assignees?.find(
+                  (a: any) => (a.userId || a.id) === userId,
+                )
+                const displayName =
+                  member?.users.full_name ||
+                  (taskAssignee as any)?.name ||
+                  (taskAssignee as any)?.full_name ||
+                  "Unknown"
+
                 return (
-                  <div 
+                  <div
                     key={userId}
                     className="flex items-center gap-2 bg-accent/5 border border-accent/20 text-accent px-3 py-1.5 rounded-lg"
                   >
                     <span className="text-[11px] font-bold uppercase tracking-wider">
                       {displayName}
                     </span>
-                    <button 
+                    <button
                       onClick={() => toggleAssignee(userId)}
                       className="p-0.5 hover:bg-accent/10 rounded-full transition-colors"
                     >
@@ -119,7 +129,7 @@ export const NotResolvedModal = ({
                   </div>
                 )
               })}
-              
+
               <div className="relative">
                 <select
                   value=""
@@ -128,7 +138,7 @@ export const NotResolvedModal = ({
                 >
                   <option value="">+ Tag Someone</option>
                   {project?.project_members
-                    .filter(m => !assigneeIds.includes(m.user_id))
+                    .filter((m) => !assigneeIds.includes(m.user_id))
                     .map((m) => (
                       <option key={m.user_id} value={m.user_id}>
                         {m.users.full_name}
@@ -151,7 +161,7 @@ export const NotResolvedModal = ({
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="Explain why this task is not resolved..."
-              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 resize-none min-h-[120px] transition-all"
+              className="w-full bg-slate-50 border border-slate-200 rounded-md px-4 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 resize-none min-h-[120px] transition-all"
             />
           </div>
         </div>

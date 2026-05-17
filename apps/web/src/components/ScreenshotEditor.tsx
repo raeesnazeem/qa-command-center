@@ -497,7 +497,7 @@ export const ScreenshotEditor: React.FC<ScreenshotEditorProps> = ({
       </div>
 
       {/* Zoom Controls */}
-      <div className="absolute bottom-8 right-8 flex items-center bg-white/80 backdrop-blur-md border border-white shadow-xl rounded-2xl p-2 gap-2">
+      <div className="absolute bottom-8 right-8 flex items-center bg-white/80 backdrop-blur-md border border-white shadow-xl rounded-md p-2 gap-2">
         <button
           onClick={() => setZoom(Math.max(0.1, zoom - 0.1))}
           className="w-10 h-10 flex items-center justify-center hover:bg-slate-100 rounded-xl transition-all"

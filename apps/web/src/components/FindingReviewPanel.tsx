@@ -18,6 +18,7 @@ import { CheckFactorFilter, FILTER_TABS, FilterTab } from "./CheckFactorFilter"
 
 interface FindingReviewPanelProps {
   findings: QAFinding[]
+  generalFindings?: QAFinding[]
   pageScreenshots?: {
     desktop?: string | null
     tablet?: string | null
@@ -94,6 +95,7 @@ const DonutChart = ({
 
 export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
   findings,
+  generalFindings,
   pageScreenshots,
   onConfirmBulk,
   onFalsePositiveBulk,
@@ -119,26 +121,36 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
 
   // Summary Stats
   const stats = useMemo(() => {
-    const total = findings.length
-    const confirmed = findings.filter((f) => f.status === "confirmed").length
-    const falsePositives = findings.filter(
+    const allUniqueFindings = [...findings]
+    if (generalFindings) {
+      generalFindings.forEach((gf) => {
+        if (!allUniqueFindings.some((f) => f.id === gf.id)) {
+          allUniqueFindings.push(gf)
+        }
+      })
+    }
+    const total = allUniqueFindings.length
+    const confirmed = allUniqueFindings.filter(
+      (f) => f.status === "confirmed",
+    ).length
+    const falsePositives = allUniqueFindings.filter(
       (f) => f.status === "false_positive",
     ).length
-    const open = findings.filter((f) => f.status === "open").length
+    const open = allUniqueFindings.filter((f) => f.status === "open").length
     const resolved = confirmed + falsePositives
-
     return {
       open,
       confirmed,
       falsePositives,
-      critical: findings.filter((f) => f.severity === "critical").length,
-      high: findings.filter((f) => f.severity === "high").length,
-      medium: findings.filter((f) => f.severity === "medium").length,
-      low: findings.filter((f) => f.severity === "low").length,
+      critical: allUniqueFindings.filter((f) => f.severity === "critical")
+        .length,
+      high: allUniqueFindings.filter((f) => f.severity === "high").length,
+      medium: allUniqueFindings.filter((f) => f.severity === "medium").length,
+      low: allUniqueFindings.filter((f) => f.severity === "low").length,
       total,
       resolvedPercentage: total > 0 ? Math.round((resolved / total) * 100) : 0,
     }
-  }, [findings])
+  }, [findings, generalFindings])
 
   // Filtered Findings
   const filteredFindings = useMemo(() => {
@@ -294,6 +306,41 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
         </div>
       </div>
 
+      {/* General Run Findings Section */}
+      {generalFindings && generalFindings.length > 0 && (
+        <div className="space-y-4 bg-slate-50/50 p-6 rounded-md border border-slate-100">
+          <div className="flex items-center gap-2 border-b border-slate-200/60 pb-3">
+            <ShieldAlert className="w-5 h-5 text-slate-800" />
+            <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider">
+              General Run Findings
+            </h3>
+            <span className="text-[10px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded-full border border-slate-200 shadow-sm ml-1">
+              {generalFindings.length}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {generalFindings.map((finding) => (
+              <div key={finding.id} className="relative group/wrapper">
+                <FindingCard
+                  key={finding.id}
+                  finding={finding}
+                  pageScreenshots={pageScreenshots}
+                  onConfirm={onSingleConfirm}
+                  onFalsePositive={onSingleFalsePositive}
+                  onCreateTask={onSingleCreateTask}
+                  onAssign={onSingleAssign}
+                  isSelected={selectedIds.has(finding.id)}
+                  onToggleSelect={() => toggleSelect(finding.id)}
+                  assignedTaskIds={findingToTaskMap[finding.id]?.taskIds}
+                  assignedUsers={findingToTaskMap[finding.id]?.assignedUsers}
+                  isAssigned={!!findingToTaskMap[finding.id]}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Filter Tabs */}
       <div className="bg-white border border-slate-100 p-2 rounded-md shadow-sm">
         <CheckFactorFilter
@@ -377,7 +424,7 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
         ))}
 
         {filteredFindings.length === 0 && (
-          <div className="col-span-full py-20 bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl text-center">
+          <div className="col-span-full py-20 bg-slate-50 border-2 border-dashed border-slate-200 rounded-md text-center">
             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100">
               <Filter className="w-8 h-8 text-slate-200" />
             </div>

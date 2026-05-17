@@ -19,6 +19,7 @@ interface ImageViewerProps {
     mobile?: string | null
   }
   initialTab?: "desktop" | "tablet" | "mobile"
+  hideTabs?: boolean
 }
 
 export const ImageViewer: React.FC<ImageViewerProps> = ({
@@ -26,6 +27,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
   onClose,
   screenshots,
   initialTab = "desktop",
+  hideTabs = false,
 }) => {
   const [activeTab, setActiveTab] = useState<"desktop" | "tablet" | "mobile">(
     initialTab,
@@ -78,69 +80,58 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 backdrop-blur-md select-none overflow-hidden">
       {/* Top Navigation Bar */}
       <div className="absolute top-0 left-0 right-0 p-6 flex flex-col md:flex-row items-center justify-between gap-6 z-50 bg-gradient-to-b from-slate-950/80 to-transparent">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-accent rounded-xl shadow-[0_0_20px_rgba(147,192,177,0.3)]">
-            <Move size={20} className="text-black" />
-          </div>
-          <div>
-            <h2 className="text-white font-bold text-sm uppercase tracking-widest leading-none">
-              Evidence Inspector
-            </h2>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mt-1">
-              Multi-Viewport Analysis Engine
-            </p>
-          </div>
-        </div>
+        <div className="flex items-center gap-3">DETAILED SCREENSHOT</div>
 
         {/* Viewport Tabs */}
-        <div className="flex items-center gap-1.5 bg-white/5 p-1.5 rounded-2xl border border-white/10 backdrop-blur-xl">
-          <button
-            onClick={() => {
-              setActiveTab("desktop")
-              handleReset()
-            }}
-            className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${
-              activeTab === "desktop"
-                ? "bg-white text-black shadow-xl scale-105"
-                : "text-slate-400 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            <Monitor size={14} />
-            Desktop
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab("tablet")
-              handleReset()
-            }}
-            className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${
-              activeTab === "tablet"
-                ? "bg-white text-black shadow-xl scale-105"
-                : "text-slate-400 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            <Tablet size={14} />
-            Tablet
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab("mobile")
-              handleReset()
-            }}
-            className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${
-              activeTab === "mobile"
-                ? "bg-white text-black shadow-xl scale-105"
-                : "text-slate-400 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            <Smartphone size={14} />
-            Mobile
-          </button>
-        </div>
-
+        {!hideTabs && (
+          <div className="flex items-center gap-1.5 bg-white/5 p-1.5 rounded-md border border-white/10 backdrop-blur-xl">
+            <button
+              onClick={() => {
+                setActiveTab("desktop")
+                handleReset()
+              }}
+              className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${
+                activeTab === "desktop"
+                  ? "bg-white text-black shadow-xl scale-105"
+                  : "text-slate-400 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <Monitor size={14} />
+              Desktop
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab("tablet")
+                handleReset()
+              }}
+              className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${
+                activeTab === "tablet"
+                  ? "bg-white text-black shadow-xl scale-105"
+                  : "text-slate-400 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <Tablet size={14} />
+              Tablet
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab("mobile")
+                handleReset()
+              }}
+              className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${
+                activeTab === "mobile"
+                  ? "bg-white text-black shadow-xl scale-105"
+                  : "text-slate-400 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <Smartphone size={14} />
+              Mobile
+            </button>
+          </div>
+        )}
         {/* Controls */}
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5 bg-white/5 p-1.5 rounded-2xl border border-white/10 backdrop-blur-xl">
+          <div className="flex items-center gap-1.5 bg-white/5 p-1.5 rounded-md border border-white/10 backdrop-blur-xl">
             <button
               onClick={handleZoomOut}
               className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
@@ -172,7 +163,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
 
           <button
             onClick={onClose}
-            className="p-3 bg-white/5 hover:bg-red-500 text-slate-400 hover:text-white rounded-2xl border border-white/10 backdrop-blur-xl transition-all group active:scale-95"
+            className="p-3 bg-white/5 hover:bg-red-500 text-slate-400 hover:text-white rounded-md border border-white/10 backdrop-blur-xl transition-all group active:scale-95"
           >
             <X size={24} />
           </button>
@@ -217,16 +208,21 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
 
       {/* Bottom Shortcuts Info */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-8 px-8 py-3 bg-slate-900/50 backdrop-blur-2xl border border-white/5 rounded-full z-50">
-        <div className="flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-            {activeTab === "desktop"
-              ? "1440 × Auto"
-              : activeTab === "tablet"
-                ? "768 × Auto"
-                : "375 × Auto"}
-          </span>
-        </div>
+        {!hideTabs && (
+          <>
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                {activeTab === "desktop"
+                  ? "1440 × Auto"
+                  : activeTab === "tablet"
+                    ? "768 × Auto"
+                    : "375 × Auto"}
+              </span>
+            </div>
+            <div className="h-4 w-px bg-white/10" />
+          </>
+        )}
         <div className="h-4 w-px bg-white/10" />
         <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em]">
           Hold & Drag to Pan <span className="mx-2 text-white/10">•</span> Use

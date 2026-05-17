@@ -71,7 +71,7 @@ export const RunProgressHeader: React.FC<RunProgressHeaderProps> = ({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden">
       <div className="p-6 md:p-8 space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">

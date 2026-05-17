@@ -112,7 +112,7 @@ export const AIVisualSummaryPanel: React.FC<AIVisualSummaryPanelProps> = ({
             {filteredFindings.map((finding) => (
               <div
                 key={finding.id}
-                className={`p-4 bg-white border rounded-2xl shadow-sm hover:shadow-md transition-all group relative overflow-hidden ${
+                className={`p-4 bg-white border rounded-md shadow-sm hover:shadow-md transition-all group relative overflow-hidden ${
                   finding.status === "confirmed"
                     ? "border-emerald-200 bg-emerald-50/10"
                     : "border-slate-100"

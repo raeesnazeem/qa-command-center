@@ -97,7 +97,7 @@ export const ResolveTaskModal = ({
           {/* Header */}
           <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-100 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-md bg-emerald-100 flex items-center justify-center">
                 <CheckCircle2 className="w-5 h-5 text-emerald-600" />
               </div>
               <div>
