@@ -345,7 +345,111 @@ router.post(
         ? `<div style="color: #EAB308;"><h1>Issue no: #${issueMatch[1]}</h1></div>`
         : ""
 
-      const description = `${issueHeader}
+      let description = ""
+      if (isDeadLink) {
+        // Parse the markdown bullet-point description into structured objects
+        const rawDesc = task.description || ""
+        const lines = rawDesc.split("\n")
+        const links: { url: string; reason: string; text: string }[] = []
+
+        let currentLink: any = null
+        for (const line of lines) {
+          const trimmed = line.trim()
+          if (trimmed.startsWith("- **") || trimmed.startsWith("-**")) {
+            if (currentLink) links.push(currentLink)
+            const urlMatch = trimmed.match(/-\s*\*\*(.*?)\*\*/)
+            currentLink = {
+              url: urlMatch ? urlMatch[1] : trimmed.replace(/[-\s*]/g, ""),
+              reason: "N/A",
+              text: "N/A",
+            }
+          } else if (
+            trimmed.startsWith("* Reason:") ||
+            trimmed.startsWith("Reason:")
+          ) {
+            if (currentLink) {
+              currentLink.reason = trimmed
+                .replace(/^\*\s*Reason:\s*/i, "")
+                .replace(/^Reason:\s*/i, "")
+            }
+          } else if (
+            trimmed.startsWith("* Link Text:") ||
+            trimmed.startsWith("Link Text:")
+          ) {
+            if (currentLink) {
+              currentLink.text = trimmed
+                .replace(/^\*\s*Link\s+Text:\s*/i, "")
+                .replace(/^Link\s+Text:\s*/i, "")
+            }
+          }
+        }
+        if (currentLink) links.push(currentLink)
+
+        // Generate the beautiful HTML rows
+        let tableRowsHtml = ""
+        if (links.length > 0) {
+          tableRowsHtml = links
+            .map(
+              (l, idx) => `
+            <tr style="background-color: ${idx % 2 === 0 ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.02)"};">
+              <td style="padding: 10px; border: 1px solid #e2e8f0; font-family: monospace; font-size: 11px; word-break: break-all; width: 45%;">
+                <a href="${l.url}" target="_blank" style="color: #2563eb; text-decoration: none;">${l.url}</a>
+              </td>
+              <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 12px; color: #ef4444; font-weight: 500; width: 30%;">
+                ${l.reason}
+              </td>
+              <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 12px; font-style: italic; width: 25%;">
+                ${l.text}
+              </td>
+            </tr>
+          `,
+            )
+            .join("")
+        } else {
+          tableRowsHtml = `
+            <tr>
+              <td colspan="3" style="padding: 12px; border: 1px solid #e2e8f0; font-size: 12px; text-align: center;">
+                ${rawDesc.replace(/\n/g, "<br/>")}
+              </td>
+            </tr>
+          `
+        }
+
+        // Build premium styled container for the Basecamp comment
+        description = `
+          ${issueHeader}
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 800px; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">
+              <span style="font-size: 15px; font-weight: bold;">🚨 General Findings: Dead Links Audit</span>
+              <span style="background-color: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; text-transform: uppercase;">[PENDING]</span>
+            </div>
+            
+            ${mentions ? `<div style="margin-bottom: 15px; font-size: 13px;">${mentions}</div>` : ""}
+
+           
+
+            <div style="overflow-x: auto; margin-bottom: 15px;">
+              <table style="width: 100%; border-collapse: collapse; text-align: left; border: 1px solid #e2e8f0;">
+                <thead>
+                  <tr style="background-color: rgba(0,0,0,0.03);">
+                    <th style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; font-weight: bold; text-transform: uppercase;">Broken Link URL</th>
+                    <th style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; font-weight: bold; text-transform: uppercase;">Failure Reason</th>
+                    <th style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; font-weight: bold; text-transform: uppercase;">Anchor Text</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${tableRowsHtml}
+                </tbody>
+              </table>
+            </div>
+
+            <div style="font-size: 10px; text-align: right; border-top: 1px solid #e2e8f0; padding-top: 10px; margin-top: 15px; opacity: 0.7;">
+              Created via QA Command Center
+            </div>
+          </div>
+        `.trim()
+      } else {
+        description = `${issueHeader}
 <div>[PENDING]</div>
 ${mentions ? `<div>${mentions}</div>` : ""}
 <br/>
@@ -354,6 +458,7 @@ ${mentions ? `<div>${mentions}</div>` : ""}
 URL: ${findingUrl}${galleryHtml}
 <br/><br/>
 Created via QA Command Center`.trim()
+      }
 
       // 5. Call Basecamp (Push as comment to Command Center)
       console.log(`[BasecampPush] FINAL Description before POST:`, description)
