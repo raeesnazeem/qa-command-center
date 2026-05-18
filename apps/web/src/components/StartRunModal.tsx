@@ -66,8 +66,9 @@ export const StartRunModal = ({
   })
 
   const enabledChecks = useWatch({ control, name: "enabled_checks" }) || []
-  const isPlanOnly =
-    enabledChecks.length === 1 && enabledChecks.includes("project_plan")
+  const isGeneralOnly = enabledChecks.every(
+    (c) => c === "project_plan" || c === "dead_links",
+  )
 
   const siteUrl = useWatch({ control, name: "site_url" })
   const { data: fetchedUrls, isLoading: isFetchingUrls } = useFetchUrls(siteUrl)
@@ -113,6 +114,7 @@ export const StartRunModal = ({
       "image_compliance",
       "ai_content_audit",
       "hero_media",
+      "dead_links",
     ]
     // 2. Check if any of these page scan checks are selected by the user
     const requiresPageScan = data.enabled_checks.some((c) =>
@@ -125,13 +127,19 @@ export const StartRunModal = ({
     }
 
     // 4. If we are ONLY doing general checks (like Project Plan select), we don't need any page URLs!
-    const urlsToSubmit = requiresPageScan ? selectedUrls : []
+    // const urlsToSubmit = requiresPageScan ? selectedUrls : []
+    const requiresUrls = data.enabled_checks.some(
+      (c) => c !== "project_plan" && c !== "dead_links",
+    )
+    if (requiresUrls && selectedUrls.length === 0) {
+      return
+    }
 
     // 5. Construct the payload safely
     const payload = {
       ...data,
       figma_url: data.figma_url === "" ? null : data.figma_url,
-      selected_urls: urlsToSubmit,
+      selected_urls: requiresUrls ? selectedUrls : [],
     }
 
     createRun(payload, {
@@ -181,7 +189,14 @@ export const StartRunModal = ({
     {
       id: "hero_media",
       label: "Hero Video & Image Load",
-      description: "Verify that the hero section video and fallback image load immediately on page load",
+      description:
+        "Verify that the hero section video and fallback image load immediately on page load",
+    },
+    {
+      id: "dead_links",
+      label: "Dead Link & Anchor Checker",
+      description:
+        "Detect dead links and broken anchors (#hash) using a super-fast native Playwright + Got hybrid approach",
     },
   ]
 
@@ -361,7 +376,7 @@ export const StartRunModal = ({
                     ))}
                   </div>
                   {selectedUrls.length === 0 &&
-                    !isPlanOnly &&
+                    !isGeneralOnly &&
                     !isFetchingUrls &&
                     fetchedUrls && (
                       <p className="text-[10px] text-red-500 font-medium italic">
@@ -377,7 +392,7 @@ export const StartRunModal = ({
               <label className="block text-sm font-semibold text-slate-700 mb-2">
                 Checks to Run
               </label>
-              <div className="space-y-2">
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
                 {checkOptions.map((check) => (
                   <label
                     key={check.id}
@@ -415,7 +430,9 @@ export const StartRunModal = ({
             </button>
             <button
               type="submit"
-              disabled={isPending || (selectedUrls.length === 0 && !isPlanOnly)}
+              disabled={
+                isPending || (selectedUrls.length === 0 && !isGeneralOnly)
+              }
               className="btn-unified flex-[2] flex items-center justify-center space-x-2"
             >
               {isPending ? (

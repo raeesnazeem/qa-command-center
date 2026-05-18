@@ -65,6 +65,7 @@ const CHECK_FACTOR_ICONS: Record<string, React.ReactNode> = {
   ai_content_audit: <FileSearch size={14} className="text-accent" />,
   project_plan: <ClipboardList size={14} className="text-accent" />,
   hero_media: <Monitor size={14} className="text-accent" />,
+  dead_links: <Globe size={14} className="text-accent" />,
 }
 
 export const FindingCard: React.FC<FindingCardProps> = ({
@@ -298,9 +299,13 @@ export const FindingCard: React.FC<FindingCardProps> = ({
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          <div
+            className={`grid grid-cols-1 ${finding.check_factor === "dead_links" ? "w-full" : "lg:grid-cols-2"} gap-8 items-start`}
+          >
             {/* Details Column */}
-            <div className="space-y-4">
+            <div
+              className={`space-y-4 ${finding.check_factor === "dead_links" ? "col-span-full" : ""}`}
+            >
               <div>
                 <h5 className="font-bold text-slate-900 text-sm uppercase tracking-tight mb-2">
                   {finding.check_factor.replace(/_/g, " ")} found
@@ -334,30 +339,32 @@ export const FindingCard: React.FC<FindingCardProps> = ({
               </div>
             </div>
 
-            {/* Screenshot Column */}
-            <div className="relative group/ss">
-              <div className="aspect-video bg-slate-50 rounded-md overflow-hidden border border-slate-100 shadow-inner group-hover/ss:shadow-md transition-all">
-                <FindingCardWithScreenshot
-                  finding={finding}
-                  pageScreenshots={pageScreenshots}
-                />
-              </div>
-              <p className="text-[8px] font-bold text-slate-400 uppercase mt-2 tracking-[0.2em] text-center">
-                Click to expand evidence
-              </p>
-              <button
-                onClick={() => setIsBrowserOpen(true)}
-                className="btn-unified w-fit ml-auto flex justify-end items-center gap-2 mt-3"
-              >
-                <span>
-                  <Globe
-                    size={14}
-                    className="text-slate-400 group-hover/btn:text-black transition-colors"
+            {/* Screenshot Column (Hidden for dead_links!) */}
+            {finding.check_factor !== "dead_links" && (
+              <div className="relative group/ss">
+                <div className="aspect-video bg-slate-50 rounded-md overflow-hidden border border-slate-100 shadow-inner group-hover/ss:shadow-md transition-all">
+                  <FindingCardWithScreenshot
+                    finding={finding}
+                    pageScreenshots={pageScreenshots}
                   />
-                </span>
-                <span className="text-[11px]">See in Browser</span>
-              </button>
-            </div>
+                </div>
+                <p className="text-[8px] font-bold text-slate-400 uppercase mt-2 tracking-[0.2em] text-center">
+                  Click to expand evidence
+                </p>
+                <button
+                  onClick={() => setIsBrowserOpen(true)}
+                  className="btn-unified w-fit ml-auto flex justify-end items-center gap-2 mt-3"
+                >
+                  <span>
+                    <Globe
+                      size={14}
+                      className="text-slate-400 group-hover/btn:text-black transition-colors"
+                    />
+                  </span>
+                  <span className="text-[11px]">See in Browser</span>
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -622,49 +629,25 @@ export const FindingCard: React.FC<FindingCardProps> = ({
           )}
 
           {/* Screenshot Thumbnail */}
-          {isProjectPlan && finding.screenshot_url?.includes(",") ? (
-            <div className="mb-4">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                Evidence Screenshots
-              </p>
-              <div className="flex gap-4 mb-3">
-                {finding.screenshot_url.split(",").map((url, idx) => (
-                  <div key={url} className="space-y-1">
-                    <FindingCardWithScreenshot
-                      finding={{ ...finding, screenshot_url: url }}
-                      pageScreenshots={{}}
-                    />
-                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest text-center">
-                      {idx === 0 ? "Plan Highlight" : "Reviews Page"}
-                    </p>
-                  </div>
-                ))}
-              </div>
-              <button
-                onClick={() => setIsBrowserOpen(true)}
-                className="btn-unified w-fit ml-auto flex justify-end items-center gap-2 mt-3"
-              >
-                <span>
-                  <Globe
-                    size={14}
-                    className="text-slate-400 group-hover/btn:text-black transition-colors"
-                  />
-                </span>
-                <span className="text-[11px]">See in Browser</span>
-              </button>
-            </div>
-          ) : (
-            (finding.screenshot_url || pageScreenshots?.desktop) && (
+          {finding.check_factor !== "dead_links" &&
+            (isProjectPlan && finding.screenshot_url?.includes(",") ? (
               <div className="mb-4">
-                <FindingCardWithScreenshot
-                  finding={finding}
-                  pageScreenshots={pageScreenshots}
-                />
-                <p className="text-[8px] font-bold text-slate-400 uppercase mt-1 tracking-widest">
-                  {finding.screenshot_url
-                    ? "Click to expand evidence"
-                    : "Click to view page context"}
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                  Evidence Screenshots
                 </p>
+                <div className="flex gap-4 mb-3">
+                  {finding.screenshot_url.split(",").map((url, idx) => (
+                    <div key={url} className="space-y-1">
+                      <FindingCardWithScreenshot
+                        finding={{ ...finding, screenshot_url: url }}
+                        pageScreenshots={{}}
+                      />
+                      <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest text-center">
+                        {idx === 0 ? "Plan Highlight" : "Reviews Page"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
                 <button
                   onClick={() => setIsBrowserOpen(true)}
                   className="btn-unified w-fit ml-auto flex justify-end items-center gap-2 mt-3"
@@ -678,8 +661,33 @@ export const FindingCard: React.FC<FindingCardProps> = ({
                   <span className="text-[11px]">See in Browser</span>
                 </button>
               </div>
-            )
-          )}
+            ) : (
+              (finding.screenshot_url || pageScreenshots?.desktop) && (
+                <div className="mb-4">
+                  <FindingCardWithScreenshot
+                    finding={finding}
+                    pageScreenshots={pageScreenshots}
+                  />
+                  <p className="text-[8px] font-bold text-slate-400 uppercase mt-1 tracking-widest">
+                    {finding.screenshot_url
+                      ? "Click to expand evidence"
+                      : "Click to view page context"}
+                  </p>
+                  <button
+                    onClick={() => setIsBrowserOpen(true)}
+                    className="btn-unified w-fit ml-auto flex justify-end items-center gap-2 mt-3"
+                  >
+                    <span>
+                      <Globe
+                        size={14}
+                        className="text-slate-400 group-hover/btn:text-black transition-colors"
+                      />
+                    </span>
+                    <span className="text-[11px]">See in Browser</span>
+                  </button>
+                </div>
+              )
+            ))}
 
           {/* Basecamp Message Board Details Modal */}
           {isBasecampModalOpen && (

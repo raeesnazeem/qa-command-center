@@ -8,6 +8,7 @@ import { notifyOnGoogleChat } from "../services/googleChatNotificationService"
 import { logger } from "../lib/logger"
 import { broadcastTaskUpdate } from "../lib/realtimeService"
 import crypto from "crypto"
+import axios from "axios"
 
 const router = Router()
 
@@ -147,6 +148,90 @@ router.post(
       if (!todolistId) {
         return res.status(400).json({ error: "Basecamp to-do list not configured" });
       }
+
+      // Special routing for Hero Media findings
+      const isHeroMedia = task.findings?.check_factor === "hero_media";
+      let appUrl = "";
+      if (isHeroMedia) {
+        console.log(`[BasecampPush] Task is a Hero Media finding. Locating specific checklist item...`);
+        const headers = {
+          Authorization: `Bearer ${projectSettings.basecamp_token}`,
+          "User-Agent": "QACC (raees.nazeem@growth99.com)",
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        };
+
+        // A. Get Docker tool lists to find To-dos set
+        const bucketUrl = `https://3.basecampapi.com/${projectSettings.basecamp_account_id}/buckets/${projectSettings.basecamp_project_id}.json`;
+        const bucketResponse = await axios.get(bucketUrl, { headers });
+        const todosetTool = bucketResponse.data.dock?.find(
+          (tool: any) =>
+            tool.title === "To-dos" || tool.url?.includes("/todosets/"),
+        );
+
+        if (!todosetTool) {
+          throw new Error("Basecamp To-doset tool not found in project dock");
+        }
+
+        // B. Fetch todosets detail to fetch todolists_url
+        const todosetDetailResponse = await axios.get(todosetTool.url, { headers });
+        const todolistsUrl = todosetDetailResponse.data.todolists_url;
+
+        // C. Fetch all to-do lists and locate the list matching "15-Quality Assurance - Prerelease 2026"
+        const listsResponse = await axios.get(todolistsUrl, { headers });
+        const targetList = listsResponse.data.find(
+          (l: any) =>
+            l.name
+              .toLowerCase()
+              .includes("15-quality assurance - prerelease 2026") ||
+            l.name.toLowerCase().includes("quality assurance - prerelease 2026"),
+        );
+
+        if (!targetList) {
+          throw new Error(
+            'Checklist list heading "15-Quality Assurance - Prerelease 2026" not found in Basecamp.',
+          );
+        }
+
+        // D. Fetch all checklist items under the matched list
+        let page = 1;
+        let allTodos: any[] = [];
+        while (true) {
+          const todosResponse = await axios.get(
+            `${targetList.todos_url}?page=${page}`,
+            { headers },
+          );
+          const pageTodos = todosResponse.data || [];
+          if (pageTodos.length === 0) break;
+          allTodos = allTodos.concat(pageTodos);
+          if (pageTodos.length < 15) break;
+          page++;
+        }
+
+        const targetTodoName = "qa-verify that the hero section video and fallback image load immediately on page load.";
+        let targetTodo = allTodos.find((todo: any) =>
+          todo.content.toLowerCase().includes(targetTodoName),
+        );
+
+        if (!targetTodo) {
+          targetTodo = allTodos.find(
+            (todo: any) =>
+              todo.content.toLowerCase().includes("hero section video") ||
+              todo.content.toLowerCase().includes("fallback image") ||
+              todo.content.toLowerCase().includes("hero section"),
+          );
+        }
+
+        if (!targetTodo) {
+          throw new Error(
+            `To-do checklist item "QA-Verify that the hero section video and fallback image load immediately on page load." not found in Basecamp checklist "${targetList.name}".`,
+          );
+        }
+
+        todolistId = targetTodo.id;
+        appUrl = targetTodo.app_url || "";
+        console.log(`[BasecampPush] Located target checklist item: ${targetTodo.content} (ID: ${todolistId})`);
+      }
       
       const allAssignedTo = Array.from(new Set((siblings || []).map(s => s.assigned_to).filter(Boolean)));
       
@@ -263,7 +348,9 @@ Created via QA Command Center`.trim();
         });
       }
 
-      const basecampUrl = `https://3.basecamp.com/${projectSettings.basecamp_account_id}/buckets/${projectSettings.basecamp_project_id}/todolists/${todolistId}`;
+      const basecampUrl = isHeroMedia
+        ? (appUrl || `https://3.basecamp.com/${projectSettings.basecamp_account_id}/buckets/${projectSettings.basecamp_project_id}/todos/${todolistId}`)
+        : `https://3.basecamp.com/${projectSettings.basecamp_account_id}/buckets/${projectSettings.basecamp_project_id}/todolists/${todolistId}`;
 
       // 6. Update all siblings in Supabase
       console.log(`[BasecampPush] 6/6 Updating ${siblingIds.length} tasks in Supabase with Basecamp info...`);

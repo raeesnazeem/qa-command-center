@@ -8,7 +8,8 @@ import { checkConsoleErrors } from "../checks/consoleErrorCheck"
 import { checkDummyContent } from "../checks/dummyContentCheck"
 import { checkImageCompliance } from "../checks/imageComplianceCheck"
 import { checkHeroMedia } from "../checks/heroMediaCheck"
-import { processCheckProjectPlanJob } from './checkProjectPlanJob'
+import { processCheckProjectPlanJob } from "./checkProjectPlanJob"
+import { checkOptimizedLinks } from "../checks/optimizedLinksCheck"
 import pino from "pino"
 
 const logger = pino({
@@ -91,53 +92,59 @@ export async function processRunChecksJob(job: Job) {
 
       await updateProgress(60, "Running automated audits...")
 
-           // Before running checks, fetch enabled_checks from the run:
+      // Before running checks, fetch enabled_checks from the run:
       const { data: run } = await supabase
-        .from('qa_runs')
-        .select('enabled_checks, project_id')
-        .eq('id', runId)
-        .single();
+        .from("qa_runs")
+        .select("enabled_checks, project_id")
+        .eq("id", runId)
+        .single()
 
-      const checksToRun = run?.enabled_checks || [];
-      const checkPromises: Promise<any[]>[] = [];
+      const checksToRun = run?.enabled_checks || []
+      const checkPromises: Promise<any[]>[] = []
 
-      if (checksToRun.includes('visual_regression')) {
-        checkPromises.push(checkBrokenLinks(playwrightPage, page));
-        checkPromises.push(checkExternalLinks(playwrightPage, page));
-        checkPromises.push(checkImageCompliance(playwrightPage, page));
+      if (checksToRun.includes("visual_regression")) {
+        checkPromises.push(checkBrokenLinks(playwrightPage, page))
+        checkPromises.push(checkExternalLinks(playwrightPage, page))
+        checkPromises.push(checkImageCompliance(playwrightPage, page))
       }
 
-      if (checksToRun.includes('accessibility')) {
-        checkPromises.push(checkMeta(playwrightPage, page));
-        checkPromises.push(checkDummyContent(playwrightPage, page));
+      if (checksToRun.includes("accessibility")) {
+        checkPromises.push(checkMeta(playwrightPage, page))
+        checkPromises.push(checkDummyContent(playwrightPage, page))
       }
 
-      if (checksToRun.includes('console_errors')) {
-        checkPromises.push(checkConsoleErrors(playwrightPage, page));
+      if (checksToRun.includes("console_errors")) {
+        checkPromises.push(checkConsoleErrors(playwrightPage, page))
       }
 
-      if (checksToRun.includes('hero_media')) {
-        checkPromises.push(checkHeroMedia(playwrightPage, page));
+      if (checksToRun.includes("hero_media")) {
+        checkPromises.push(checkHeroMedia(playwrightPage, page))
+      }
+
+      if (checksToRun.includes("dead_links")) {
+        checkPromises.push(checkOptimizedLinks(playwrightPage, page))
       }
 
       // Execute enabled checks in parallel
-      const checkResults = await Promise.all(checkPromises);
+      const checkResults = await Promise.all(checkPromises)
 
-      const allFindings = checkResults.flat().map(f => ({
+      const allFindings = checkResults.flat().map((f) => ({
         ...f,
         page_id: pageId,
-        run_id: runId
-      }));
+        run_id: runId,
+      }))
 
       // Add condition to run checkProjectPlanJob if 'project_plan' is in enabled_checks
-      if (checksToRun.includes('project_plan')) {
+      if (checksToRun.includes("project_plan")) {
         await processCheckProjectPlanJob({
-          data: { runId, projectId: run?.project_id }
-        } as any).catch(e => {
-          logger.error({ error: e.message }, 'Failed to run checkProjectPlanJob');
-        });
+          data: { runId, projectId: run?.project_id },
+        } as any).catch((e) => {
+          logger.error(
+            { error: e.message },
+            "Failed to run checkProjectPlanJob",
+          )
+        })
       }
-
 
       if (allFindings.length > 0) {
         await updateProgress(80, `Saving ${allFindings.length} findings...`)

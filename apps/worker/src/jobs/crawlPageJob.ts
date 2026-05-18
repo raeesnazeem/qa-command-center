@@ -135,17 +135,17 @@ export async function processCrawlPageJob(job: Job) {
 
     // Step 3.5: Responsive Visual Check (Check Factor 12)
     let responsiveFindings: any[] = []
-    if (screenshots.desktopBuffer && screenshots.mobileBuffer) {
-      logger.info({ pageId }, "Running responsive visual check")
-      responsiveFindings = await checkResponsiveVisual(
-        screenshots.desktopBuffer,
-        screenshots.mobileBuffer,
-        pageUrl,
-      ).catch((e) => {
-        logger.error("Responsive visual check failed:", e)
-        return []
-      })
-    }
+    // if (screenshots.desktopBuffer && screenshots.mobileBuffer) {
+    //   logger.info({ pageId }, "Running responsive visual check")
+    //   responsiveFindings = await checkResponsiveVisual(
+    //     screenshots.desktopBuffer,
+    //     screenshots.mobileBuffer,
+    //     pageUrl,
+    //   ).catch((e) => {
+    //     logger.error("Responsive visual check failed:", e)
+    //     return []
+    //   })
+    // }
 
     // Step 4: Run automated checks
     logger.info({ pageId }, "Running automated checks")
@@ -301,19 +301,19 @@ export async function processCrawlPageJob(job: Job) {
       }
 
       // Add AI Check jobs decoupled to perform asynchronously
-      const pageText = await page
-        .evaluate(() => document.body.innerText)
-        .catch(() => "")
+      // const pageText = await page
+      //   .evaluate(() => document.body.innerText)
+      //   .catch(() => "")
 
-      qaQueue
-        .add("run_ai_checks", {
-          runId,
-          pageId,
-          pageUrl,
-          pageText,
-          enabled_checks: run?.enabled_checks || [],
-        })
-        .catch((e) => logger.error("Failed to queue run_ai_checks:", e))
+      // qaQueue
+      //   .add("run_ai_checks", {
+      //     runId,
+      //     pageId,
+      //     pageUrl,
+      //     pageText,
+      //     enabled_checks: run?.enabled_checks || [],
+      //   })
+      //   .catch((e) => logger.error("Failed to queue run_ai_checks:", e))
 
       // Step 5: Update page status to 'done'
       await supabase

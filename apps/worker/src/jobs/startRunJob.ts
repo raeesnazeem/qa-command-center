@@ -71,27 +71,55 @@ export async function processStartRunJob(job: Job) {
       "image_compliance",
       "ai_content_audit",
       "hero_media",
+      "dead_links",
     ]
     const needsPageScan = run.enabled_checks?.some((c: string) =>
       PAGE_CHECKS.includes(c),
     )
-
     let urls: string[] = []
+    const hasDeadLinks = run.enabled_checks?.includes("dead_links")
 
     if (needsPageScan) {
       logger.info({ runId }, "Determining URLs to process")
-      if (run.selected_urls && run.selected_urls.length > 0) {
+
+      // If dead_links check is enabled, ignore user selected_urls filter and check all pages!
+      if (run.selected_urls && run.selected_urls.length > 0 && !hasDeadLinks) {
         logger.info(
           { runId, count: run.selected_urls.length },
           "Using provided selected_urls",
         )
-        urls = run.selected_urls
+        urls = [...run.selected_urls]
       } else {
         logger.info(
           { runId, siteUrl: run.site_url },
-          "Crawling site for pages (crawlSitemap)",
+          "Crawling site for all pages (crawlSitemap)",
         )
         urls = await crawlSitemap(run.site_url)
+      }
+
+      // Fallback to homepage URL if crawler returns nothing
+      if (!urls || urls.length === 0) {
+        urls = [run.site_url]
+      }
+
+      // Force homepage inclusion if hero_media or dead_links is active
+      const hasHeroMedia = run.enabled_checks?.includes("hero_media")
+      if (hasHeroMedia || hasDeadLinks) {
+        const homepage = run.site_url
+        const homepageNormalized = homepage.endsWith("/")
+          ? homepage.slice(0, -1)
+          : homepage
+        const hasHomepage = urls.some((url) => {
+          const u = url.endsWith("/") ? url.slice(0, -1) : url
+          return u.toLowerCase() === homepageNormalized.toLowerCase()
+        })
+        if (!hasHomepage) {
+          logger.info(
+            { runId, homepage },
+            "Forcing homepage inclusion in check sequence",
+          )
+          urls.unshift(homepage) // Prepends homepage to the start of the list
+        }
       }
     } else {
       logger.info(

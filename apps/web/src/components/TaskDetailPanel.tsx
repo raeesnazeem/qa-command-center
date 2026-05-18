@@ -96,7 +96,12 @@ export const TaskDetailPanel = ({
   if (!task) return null
 
   const handlePush = () => {
-    console.log("Pushing task...", { taskId: task.id })
+    const isHeroMedia = task.findings?.check_factor === "hero_media" || (task as any).check_factor === "hero_media";
+    if (isHeroMedia) {
+      console.log("Pushing hero media task to specific checklist item...", { taskId: task.id })
+    } else {
+      console.log("Pushing task...", { taskId: task.id })
+    }
     pushToBasecamp(task.id)
   }
 

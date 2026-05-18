@@ -159,6 +159,9 @@ export async function processCheckProjectPlanJob(job: Job) {
     "dummy_content",
     "image_compliance",
     "ai_content_audit",
+    "hero_media",
+    "project_plan",
+    "dead_links",
   ]
   const needsPageScan = runData?.enabled_checks?.some((c: string) =>
     PAGE_CHECKS.includes(c),
