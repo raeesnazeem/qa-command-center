@@ -14,6 +14,7 @@ import { checkForms } from "../checks/formTestingCheck"
 import { checkWooCommerce } from "../checks/wooCommerceCheck"
 import { checkResponsiveVisual } from "../checks/responsiveVisualCheck"
 import { checkHeroMedia } from "../checks/heroMediaCheck"
+import { checkOptimizedLinks } from "../checks/optimizedLinksCheck"
 import pino from "pino"
 
 const logger = pino({
@@ -107,30 +108,58 @@ export async function processCrawlPageJob(job: Job) {
       payload: { pageId, progress: 2, current_step: "Starting page crawl..." },
     })
 
-    // Step 2: Call screenshotPage(pageUrl, runId, pageId)
-    const screenshots = await screenshotPage(
-      pageUrl,
-      runId,
-      pageId,
-      updateProgress,
+    const enabledChecks = run?.enabled_checks || []
+
+    // We only need screenshots if we are doing visual regression, accessibility, or hero media!
+    const needsScreenshots = enabledChecks.some(
+      (c) => c !== "dead_links" && c !== "project_plan",
     )
 
-    // Step 3: Update page record with screenshot URLs and status='screenshotted'
-    const { error: updatePageError } = await supabase
-      .from("pages")
-      .update({
-        screenshot_url_desktop: screenshots.desktopUrl,
-        screenshot_url_tablet: screenshots.tabletUrl,
-        screenshot_url_mobile: screenshots.mobileUrl,
-        status: "screenshotted",
-      })
-      .eq("id", pageId)
+    // Step 2: Call screenshotPage(pageUrl, runId, pageId)
+    let screenshots: any = {}
+    if (needsScreenshots) {
+      screenshots = await screenshotPage(pageUrl, runId, pageId, updateProgress)
 
-    if (updatePageError) {
-      logger.error(
-        { pageId, error: updatePageError.message },
-        "Failed to update page record with screenshots",
+      // Step 3: Update page record with screenshot URLs and status='screenshotted'
+      const { error: updatePageError } = await supabase
+        .from("pages")
+        .update({
+          screenshot_url_desktop: screenshots.desktopUrl,
+          screenshot_url_tablet: screenshots.tabletUrl,
+          screenshot_url_mobile: screenshots.mobileUrl,
+          status: "screenshotted",
+        })
+        .eq("id", pageId)
+
+      if (updatePageError) {
+        logger.error(
+          { pageId, error: updatePageError.message },
+          "Failed to update page record with screenshots",
+        )
+      }
+    } else {
+      // If we don't need screenshots, update status directly to 'screenshotted' with nulls!
+      logger.info(
+        { pageId },
+        "Skipping screenshot capture: Not needed for active checks",
       )
+
+      const { error: updatePageError } = await supabase
+        .from("pages")
+        .update({
+          screenshot_url_desktop: null,
+          screenshot_url_tablet: null,
+          screenshot_url_mobile: null,
+          status: "screenshotted",
+        })
+        .eq("id", pageId)
+
+      if (updatePageError) {
+        logger.error(
+          { pageId, error: updatePageError.message },
+          "Failed to update page status directly",
+        )
+      }
     }
 
     // Step 3.5: Responsive Visual Check (Check Factor 12)
@@ -256,6 +285,17 @@ export async function processCrawlPageJob(job: Job) {
             logger.error("Console errors check failed:", e)
             return []
           }),
+        )
+      }
+
+      if (enabledChecks.includes("dead_links")) {
+        checkPromises.push(
+          checkOptimizedLinks(page, { id: pageId, run_id: runId }).catch(
+            (e) => {
+              logger.error("Dead links check failed:", e)
+              return []
+            },
+          ),
         )
       }
 

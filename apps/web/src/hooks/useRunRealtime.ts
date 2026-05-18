@@ -112,6 +112,10 @@ export const useRunRealtime = (runId: string) => {
       .channel(`run:${runId}`)
       .on("broadcast", { event: "progress" }, (payload) => {
         console.log("Granular progress broadcast received:", payload)
+        // Refresh the caches so new findings and page statuses update in the UI in real-time!
+        queryClient.invalidateQueries({ queryKey: ["run", runId] })
+        queryClient.invalidateQueries({ queryKey: ["findings"] })
+        queryClient.invalidateQueries({ queryKey: ["run-findings", runId] })
       })
       .on("broadcast", { event: "page_progress" }, (payload) => {
         console.log("Per-page progress broadcast received:", payload)

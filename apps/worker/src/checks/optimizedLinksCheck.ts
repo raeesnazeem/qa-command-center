@@ -17,20 +17,6 @@ export async function checkOptimizedLinks(
   page: PlaywrightPage,
   pageRecord: any,
 ): Promise<Finding[]> {
-  // 1. Verify if this page is the very first page in the run to avoid duplicate checks!
-  const { data: firstPage } = await supabase
-    .from("pages")
-    .select("id")
-    .eq("run_id", pageRecord.run_id)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .single()
-
-  if (firstPage && pageRecord.id !== firstPage.id) {
-    logger.info("Skipping dead link checker: Already run on the first page.")
-    return []
-  }
-
   logger.info(
     { runId: pageRecord.run_id },
     "Starting dead link check on the first page",

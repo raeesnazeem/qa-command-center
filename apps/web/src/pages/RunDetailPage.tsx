@@ -89,7 +89,13 @@ export const RunDetailPage = () => {
   )
 
   const [activeTab, setActiveTab] = useState<
-    "overview" | "pages" | "general" | "findings" | "visual_diff" | "woocommerce" | "report"
+    | "overview"
+    | "pages"
+    | "general"
+    | "findings"
+    | "visual_diff"
+    | "woocommerce"
+    | "report"
   >("overview")
 
   const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false)
@@ -114,6 +120,7 @@ export const RunDetailPage = () => {
         (f) =>
           !f.page_id ||
           f.check_factor === "project_plan" ||
+          f.check_factor === "dead_links" ||
           (f.check_factor === "hero_media" && f.page_id === selectedPageId),
       ) || []
     )
@@ -123,7 +130,10 @@ export const RunDetailPage = () => {
   const pageFindings = useMemo(() => {
     return (
       findings?.filter(
-        (f) => f.check_factor !== "project_plan" && f.check_factor !== "hero_media",
+        (f) =>
+          f.check_factor !== "project_plan" &&
+          f.check_factor !== "hero_media" &&
+          f.check_factor !== "dead_links",
       ) || []
     )
   }, [findings])
@@ -133,7 +143,11 @@ export const RunDetailPage = () => {
   const runGeneralFindings = useMemo(() => {
     return (
       runFindings?.filter(
-        (f) => !f.page_id || f.check_factor === "project_plan" || f.check_factor === "hero_media",
+        (f) =>
+          !f.page_id ||
+          f.check_factor === "project_plan" ||
+          f.check_factor === "dead_links" ||
+          f.check_factor === "hero_media",
       ) || []
     )
   }, [runFindings])
@@ -335,25 +349,31 @@ export const RunDetailPage = () => {
   }
 
   const handleConfirmFinding = async (id: string) => {
-    updateFindingMutation.mutate({
-      findingId: id,
-      data: { status: "confirmed" },
-    }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['run-findings', runId] })
-      }
-    })
+    updateFindingMutation.mutate(
+      {
+        findingId: id,
+        data: { status: "confirmed" },
+      },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ["run-findings", runId] })
+        },
+      },
+    )
   }
 
   const handleFalsePositiveFinding = async (id: string) => {
-    updateFindingMutation.mutate({
-      findingId: id,
-      data: { status: "false_positive" },
-    }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['run-findings', runId] })
-      }
-    })
+    updateFindingMutation.mutate(
+      {
+        findingId: id,
+        data: { status: "false_positive" },
+      },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ["run-findings", runId] })
+        },
+      },
+    )
   }
 
   const handleCreateTaskForFinding = (finding: QAFinding) => {
@@ -873,9 +893,7 @@ export const RunDetailPage = () => {
                   generalFindings={[]}
                   onSingleConfirm={handleConfirmFinding}
                   onSingleFalsePositive={handleFalsePositiveFinding}
-                  onSingleCreateTask={(finding) =>
-                    handleAddToStage([finding])
-                  }
+                  onSingleCreateTask={(finding) => handleAddToStage([finding])}
                   onConfirmBulk={handleBulkConfirm}
                   onFalsePositiveBulk={handleBulkFalsePositive}
                   onCreateTasksBulk={handleBulkCreateTasks}

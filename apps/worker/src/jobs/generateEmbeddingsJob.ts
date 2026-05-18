@@ -97,7 +97,7 @@ export async function processGenerateEmbeddingsJob(job: Job) {
       }
     } catch (err) {
       logger.error(
-        { findingId: finding.id, error: err },
+        { findingId: finding.id, error: err.message || err },
         "Error embedding finding",
       )
     }
@@ -145,7 +145,7 @@ export async function processGenerateEmbeddingsJob(job: Job) {
           }
         } catch (err) {
           logger.error(
-            { commentId: comment.id, error: err },
+            { commentId: comment.id, error: err.message || err },
             "Error embedding comment",
           )
         }
