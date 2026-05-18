@@ -113,9 +113,75 @@ export const RunDetailPage = () => {
   const updateFindingMutation = useUpdateFinding(selectedPageId)
   const { mutate: createTask } = useCreateTask()
 
+  // Helper to consolidate all dead link findings into a single finding
+  const consolidateDeadLinks = (findings: QAFinding[]): QAFinding[] => {
+    const nonDeadLinks = findings.filter((f) => f.check_factor !== "dead_links")
+    const deadLinks = findings.filter((f) => f.check_factor === "dead_links")
+
+    if (deadLinks.length === 0) return nonDeadLinks
+
+    const violations: string[] = []
+    let totalDeadLinksCount = 0
+
+    deadLinks.forEach((f) => {
+      // Clean up and extract bullet points from descriptions
+      const parts = f.description?.split("- **") || []
+      parts.forEach((part, index) => {
+        if (index === 0) return // Before the first "- **"
+        const cleanPart = part.trim()
+        if (cleanPart) {
+          violations.push(`- **${cleanPart}`)
+          totalDeadLinksCount++
+        }
+      })
+    })
+
+    if (violations.length === 0) {
+      deadLinks.forEach((f) => {
+        if (f.description) {
+          violations.push(f.description)
+        }
+      })
+    }
+
+    const mergedDescription =
+      `The following dead or broken links were detected:\n\n` +
+      violations.join("\n\n")
+
+    let severity: "medium" | "high" | "critical" = "medium"
+    if (totalDeadLinksCount >= 10) severity = "critical"
+    else if (totalDeadLinksCount >= 5) severity = "high"
+
+    const combinedId = deadLinks.map((f) => f.id).join(",")
+
+    const consolidatedDeadLinks: QAFinding = {
+      id: combinedId,
+      check_factor: "dead_links",
+      severity,
+      title: `${totalDeadLinksCount} dead link${totalDeadLinksCount > 1 ? "s" : ""} found`,
+      description: mergedDescription,
+      context_text: deadLinks
+        .map((f) => f.context_text)
+        .filter(Boolean)
+        .join("\n"),
+      screenshot_url: null,
+      status: deadLinks.every((f) => f.status === "confirmed")
+        ? "confirmed"
+        : deadLinks.every((f) => f.status === "false_positive")
+          ? "false_positive"
+          : "open",
+      ai_generated: false,
+      created_at: deadLinks[0]?.created_at,
+      page_id: null,
+      run_id: deadLinks[0]?.run_id,
+    } as any
+
+    return [...nonDeadLinks, consolidatedDeadLinks]
+  }
+
   // 1. Extract any general run-level findings (null page_id OR project plan factor OR hero_media matching selected page)
   const generalFindings = useMemo(() => {
-    return (
+    const baseGeneral =
       runFindings?.filter(
         (f) =>
           !f.page_id ||
@@ -123,7 +189,7 @@ export const RunDetailPage = () => {
           f.check_factor === "dead_links" ||
           (f.check_factor === "hero_media" && f.page_id === selectedPageId),
       ) || []
-    )
+    return consolidateDeadLinks(baseGeneral)
   }, [runFindings, selectedPageId])
 
   // 2. Filter out project_plan and hero_media from page-specific findings to avoid duplicate rendering
@@ -141,7 +207,7 @@ export const RunDetailPage = () => {
   const queryClient = useQueryClient()
 
   const runGeneralFindings = useMemo(() => {
-    return (
+    const baseGeneral =
       runFindings?.filter(
         (f) =>
           !f.page_id ||
@@ -149,13 +215,14 @@ export const RunDetailPage = () => {
           f.check_factor === "dead_links" ||
           f.check_factor === "hero_media",
       ) || []
-    )
+    return consolidateDeadLinks(baseGeneral)
   }, [runFindings])
 
   const findingToTaskMap = useMemo(() => {
     const map: Record<string, { taskIds: string[]; assignedUsers: any[] }> = {}
     if (!tasksData?.data) return map
 
+    // 1. Map tasks to their exact finding_id
     tasksData.data.forEach((task) => {
       if (task.finding_id) {
         if (!map[task.finding_id]) {
@@ -172,8 +239,41 @@ export const RunDetailPage = () => {
         }
       }
     })
+
+    // 2. Map the consolidated dead links combined ID to tasks associated with any individual finding ID
+    const deadLinks =
+      runFindings?.filter((f) => f.check_factor === "dead_links") || []
+    if (deadLinks.length > 0) {
+      const combinedId = deadLinks.map((f) => f.id).join(",")
+      const combinedTaskIds: string[] = []
+      const combinedAssignedUsers: any[] = []
+
+      deadLinks.forEach((f) => {
+        const taskInfo = map[f.id]
+        if (taskInfo) {
+          taskInfo.taskIds.forEach((tid) => {
+            if (!combinedTaskIds.includes(tid)) {
+              combinedTaskIds.push(tid)
+            }
+          })
+          taskInfo.assignedUsers.forEach((user) => {
+            if (!combinedAssignedUsers.some((u) => u.id === user.id)) {
+              combinedAssignedUsers.push(user)
+            }
+          })
+        }
+      })
+
+      if (combinedTaskIds.length > 0) {
+        map[combinedId] = {
+          taskIds: combinedTaskIds,
+          assignedUsers: combinedAssignedUsers,
+        }
+      }
+    }
+
     return map
-  }, [tasksData])
+  }, [tasksData, runFindings])
 
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false)
   const [assignTarget, setAssignTarget] = useState<{
@@ -349,31 +449,29 @@ export const RunDetailPage = () => {
   }
 
   const handleConfirmFinding = async (id: string) => {
-    updateFindingMutation.mutate(
-      {
-        findingId: id,
-        data: { status: "confirmed" },
-      },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["run-findings", runId] })
-        },
-      },
+    const ids = id.split(",")
+    await Promise.all(
+      ids.map((findingId) =>
+        updateFindingMutation.mutateAsync({
+          findingId,
+          data: { status: "confirmed" },
+        }),
+      ),
     )
+    queryClient.invalidateQueries({ queryKey: ["run-findings", runId] })
   }
 
   const handleFalsePositiveFinding = async (id: string) => {
-    updateFindingMutation.mutate(
-      {
-        findingId: id,
-        data: { status: "false_positive" },
-      },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["run-findings", runId] })
-        },
-      },
+    const ids = id.split(",")
+    await Promise.all(
+      ids.map((findingId) =>
+        updateFindingMutation.mutateAsync({
+          findingId,
+          data: { status: "false_positive" },
+        }),
+      ),
     )
+    queryClient.invalidateQueries({ queryKey: ["run-findings", runId] })
   }
 
   const handleCreateTaskForFinding = (finding: QAFinding) => {
@@ -387,21 +485,29 @@ export const RunDetailPage = () => {
   }
 
   const handleBulkConfirm = async (ids: string[]) => {
-    ids.forEach((id) => {
-      updateFindingMutation.mutate({
-        findingId: id,
-        data: { status: "confirmed" },
-      })
-    })
+    const flatIds = ids.flatMap((id) => id.split(","))
+    await Promise.all(
+      flatIds.map((id) =>
+        updateFindingMutation.mutateAsync({
+          findingId: id,
+          data: { status: "confirmed" },
+        }),
+      ),
+    )
+    queryClient.invalidateQueries({ queryKey: ["run-findings", runId] })
   }
 
   const handleBulkFalsePositive = async (ids: string[]) => {
-    ids.forEach((id) => {
-      updateFindingMutation.mutate({
-        findingId: id,
-        data: { status: "false_positive" },
-      })
-    })
+    const flatIds = ids.flatMap((id) => id.split(","))
+    await Promise.all(
+      flatIds.map((id) =>
+        updateFindingMutation.mutateAsync({
+          findingId: id,
+          data: { status: "false_positive" },
+        }),
+      ),
+    )
+    queryClient.invalidateQueries({ queryKey: ["run-findings", runId] })
   }
 
   const handleBulkAssign = (ids: string[]) => {
@@ -416,16 +522,24 @@ export const RunDetailPage = () => {
 
   const handleAssignFinding = async (userId: string) => {
     try {
-      const targets = (findings || []).filter((f) =>
+      const allPossibleFindings = [
+        ...(findings || []),
+        ...(runGeneralFindings || []),
+      ]
+      const targets = allPossibleFindings.filter((f) =>
         assignTarget.ids.includes(f.id),
       )
       for (const finding of targets) {
-        // Merge gallery images from store
-        const galleryImages = allGalleryImages[finding.id] || []
+        const galleryImages =
+          allGalleryImages[finding.id] ||
+          allGalleryImages[finding.id.split(",")[0]] ||
+          []
 
         createTask({
           project_id: projectId!,
-          finding_id: finding.id,
+          finding_id: finding.id.includes(",")
+            ? finding.id.split(",")[0]
+            : finding.id,
           title: finding.title,
           description: finding.description || "",
           severity: finding.severity,
@@ -442,12 +556,16 @@ export const RunDetailPage = () => {
 
   const handleBulkCreateTasks = (selectedFindings: QAFinding[]) => {
     selectedFindings.forEach((finding) => {
-      // Merge gallery images from store
-      const galleryImages = allGalleryImages[finding.id] || []
+      const galleryImages =
+        allGalleryImages[finding.id] ||
+        allGalleryImages[finding.id.split(",")[0]] ||
+        []
 
       createTask({
         project_id: projectId!,
-        finding_id: finding.id,
+        finding_id: finding.id.includes(",")
+          ? finding.id.split(",")[0]
+          : finding.id,
         title: finding.title,
         description: finding.description || "",
         severity: finding.severity,
@@ -471,7 +589,10 @@ export const RunDetailPage = () => {
           ...f,
           issue_number: nextIssueNum++,
           title: f.title.replace(/^Issue #\d+:?\s*/, ""),
-          gallery_images: allGalleryImages[f.id] || f.gallery_images,
+          gallery_images:
+            allGalleryImages[f.id] ||
+            allGalleryImages[f.id.split(",")[0]] ||
+            f.gallery_images,
         }
       })
       addToStage(mergedFindings as any)
@@ -480,7 +601,6 @@ export const RunDetailPage = () => {
       toast.error("Failed to calculate issue numbers")
     }
   }
-
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-8 animate-in fade-in duration-500">
       {/* Header */}
@@ -1345,7 +1465,9 @@ export const RunDetailPage = () => {
         prefillData={
           prefillFinding
             ? {
-                finding_id: prefillFinding.id,
+                finding_id: prefillFinding.id.includes(",")
+                  ? prefillFinding.id.split(",")[0]
+                  : prefillFinding.id,
                 title: prefillFinding.title,
                 description: prefillFinding.description || "",
                 severity: prefillFinding.severity,

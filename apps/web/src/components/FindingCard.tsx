@@ -284,10 +284,10 @@ export const FindingCard: React.FC<FindingCardProps> = ({
               <button
                 onClick={handlePushToBasecamp}
                 disabled={isPushing || isPushed}
-                className={`px-3 py-2 rounded-md font-bold uppercase tracking-wider text-[10px] transition-all active:scale-95 ${
+                className={`btn-unified font-bold text-[11px] transition-all active:scale-95 ${
                   isPushed
                     ? "bg-emerald-100 text-emerald-800 border border-emerald-200 cursor-default animate-fade-in"
-                    : "bg-accent hover:bg-accent/90 text-black border border-accent"
+                    : "bg-[#F97315] hover:bg-accent/90 text-white"
                 }`}
               >
                 {isPushing

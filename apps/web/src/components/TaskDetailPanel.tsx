@@ -96,9 +96,20 @@ export const TaskDetailPanel = ({
   if (!task) return null
 
   const handlePush = () => {
-    const isHeroMedia = task.findings?.check_factor === "hero_media" || (task as any).check_factor === "hero_media";
+    const isHeroMedia =
+      task.findings?.check_factor === "hero_media" ||
+      (task as any).check_factor === "hero_media"
+    const isDeadLink =
+      task.findings?.check_factor === "dead_links" ||
+      (task as any).check_factor === "dead_links"
     if (isHeroMedia) {
-      console.log("Pushing hero media task to specific checklist item...", { taskId: task.id })
+      console.log("Pushing hero media task to specific checklist item...", {
+        taskId: task.id,
+      })
+    } else if (isDeadLink) {
+      console.log("Pushing dead link task to specific checklist item...", {
+        taskId: task.id,
+      })
     } else {
       console.log("Pushing task...", { taskId: task.id })
     }

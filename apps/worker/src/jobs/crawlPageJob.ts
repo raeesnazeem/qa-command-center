@@ -74,10 +74,10 @@ export async function processCrawlPageJob(job: Job) {
     }
 
     const progressChannel = supabase.channel(`run:${runId}`)
-    await progressChannel.send({
-      type: "broadcast",
-      event: "page_progress",
-      payload: { pageId, progress, current_step: step },
+    await progressChannel.httpSend("page_progress", {
+      pageId,
+      progress,
+      current_step: step,
     })
   }
 

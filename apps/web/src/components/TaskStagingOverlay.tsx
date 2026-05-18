@@ -98,11 +98,16 @@ export const TaskStagingOverlay: React.FC<TaskStagingOverlayProps> = ({
           )
 
           // Merge gallery images from store
-          const galleryImages = allGalleryImages[finding.id] || []
+          const galleryImages =
+            allGalleryImages[finding.id] ||
+            allGalleryImages[finding.id.split(",")[0]] ||
+            []
 
           const task = await createTask({
             project_id: projectId,
-            finding_id: finding.id,
+            finding_id: finding.id.includes(",")
+              ? finding.id.split(",")[0]
+              : finding.id,
             title: `Issue #${(finding as any).issue_number}: ${finding.title}`,
             description: finding.description || "",
             severity: finding.severity,
