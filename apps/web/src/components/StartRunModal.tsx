@@ -21,6 +21,7 @@ import {
 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { useState, useEffect } from "react"
+import { createPortal } from "react-dom"
 
 interface StartRunModalProps {
   project: Project
@@ -198,9 +199,68 @@ export const StartRunModal = ({
       description:
         "Detect dead links and broken anchors (#hash) using a super-fast native Playwright + Got hybrid approach",
     },
+    {
+      id: "paid_media",
+      label: "Paid Media Check",
+      description:
+        "Verify Google and Facebook Ads campaigns are started in Basecamp for this project",
+    },
+    {
+      id: "privacy_policy",
+      label: "Privacy Policy Check",
+      description:
+        "Check if Privacy Policy page is added on the footer and WooCommerce checkout page",
+    },
+    {
+      id: "footer_logo",
+      label: "Footer Logo Check",
+      description:
+        "Ensure footer logo is the brand-new logo with no tagline text across all views",
+    },
+    {
+      id: "single_script",
+      label: "Single Script Features",
+      description:
+        "Verify single script tag is injected and widgets are configured and displayed",
+    },
+    {
+      id: "top_bar_sticky",
+      label: "Top Bar & Sticky Header Check",
+      description:
+        "Verify phone, email, social links in top bar, and ensure header remains sticky on scroll",
+    },
+    {
+      id: "favicon",
+      label: "Favicon Check",
+      description: "Verify favicon link is present in head and loads correctly",
+    },
+    {
+      id: "url_matching",
+      label: "URL & Tab Name Matching",
+      description:
+        "Compare dev site sitemap against old site sitemap to make sure no page is missed",
+    },
+    {
+      id: "contact_form",
+      label: "Growth99 Contact Form Check",
+      description:
+        "Test responsive rendering and mock submission of contact forms on all pages",
+    },
+    {
+      id: "chatbot_consultation",
+      label: "Chatbot & Virtual Consultation Check",
+      description:
+        "Verify that chatbot and virtual consultation modals open and function correctly",
+    },
+    {
+      id: "text_share",
+      label: "Text Share Metadata Check",
+      description:
+        "Verify that social preview tags (og:title, og:site_name) match the business name",
+    },
   ]
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-200">
       <div className="absolute inset-0 bg-transparent" onClick={onClose} />
 
@@ -450,6 +510,7 @@ export const StartRunModal = ({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

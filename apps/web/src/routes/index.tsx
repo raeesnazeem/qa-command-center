@@ -20,6 +20,7 @@ import {
   QueueHistoryPage,
   ActivityLogPage,
   StatsPage,
+  AllTasksPage,
 } from "@/pages"
 import { AuthenticateWithRedirectCallback } from "@clerk/react"
 
@@ -114,6 +115,10 @@ export const router = createBrowserRouter(
             {
               path: "/tasks",
               element: <TasksPage />,
+            },
+            {
+              path: "/all-tasks",
+              element: <AllTasksPage />,
             },
             {
               path: "/settings",

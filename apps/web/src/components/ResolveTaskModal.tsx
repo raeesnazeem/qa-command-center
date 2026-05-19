@@ -12,6 +12,7 @@ import { Task } from "../api/tasks.api"
 import { useResolveTask } from "../hooks/useTasks"
 import { TaskCommentsModal } from "./TaskCommentsModal"
 import { useAuthAxios } from "../lib/useAuthAxios"
+import { createPortal } from "react-dom"
 
 interface ResolveTaskModalProps {
   task: Task | null
@@ -90,7 +91,7 @@ export const ResolveTaskModal = ({
     )
   }
 
-  return (
+  return createPortal(
     <>
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
         <div className="bg-white w-full max-w-lg rounded-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
@@ -245,6 +246,7 @@ export const ResolveTaskModal = ({
         isOpen={isCommentsModalOpen}
         onClose={() => setIsCommentsModalOpen(false)}
       />
-    </>
+    </>,
+    document.body,
   )
 }

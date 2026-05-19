@@ -23,7 +23,17 @@ export const CreateRunSchema = z.object({
       "performance",
       "accessibility",
       "seo",
-      "project_plan"
+      "project_plan",
+      "paid_media",
+      "privacy_policy",
+      "footer_logo",
+      "single_script",
+      "top_bar_sticky",
+      "favicon",
+      "url_matching",
+      "contact_form",
+      "chatbot_consultation",
+      "text_share",
     ]),
   is_woocommerce: z.boolean().default(false),
   device_matrix: z

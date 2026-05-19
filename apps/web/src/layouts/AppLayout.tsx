@@ -49,6 +49,9 @@ export const AppLayout = () => {
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/projects", label: "Projects", icon: FolderKanban },
     { to: "/tasks", label: "Tasks", icon: CheckSquare },
+    ...(isAdmin
+      ? [{ to: "/all-tasks", label: "All tasks", icon: CheckSquare }]
+      : []),
     { to: "/stats", label: "Stats", icon: BarChart2 },
     ...(!isDeveloper ? [{ to: "/team", label: "Team", icon: Users }] : []),
     ...(!isDeveloper
