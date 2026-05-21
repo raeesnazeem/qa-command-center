@@ -35,7 +35,7 @@ export const ProjectsPage = () => {
             Projects
           </h1>
           <p className="text-slate-500 mt-1">
-            Manage and monitor your QA test environments
+            Manage and monitor your QA tests
           </p>
         </div>
 

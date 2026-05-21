@@ -99,27 +99,27 @@ export const OnboardingPage = () => {
               Your Role
             </label>
             <div className="grid grid-cols-2 gap-4">
-              <label>
+              <label className="cursor-pointer">
                 <input
                   type="radio"
                   value="developer"
                   {...register("role")}
                   className="hidden peer"
                 />
-                <div className="w-full btn-unified flex items-center justify-center h-10">
+                <div className="w-full flex items-center justify-center h-8 rounded-md border border-slate-200 bg-white text-slate-500 font-bold text-xs uppercase tracking-wider hover:bg-slate-50 hover:text-slate-700 transition-all shadow-sm peer-checked:bg-accent peer-checked:text-white peer-checked:border-accent peer-checked:shadow-[0_0_10px_rgba(var(--accent-rgb),0.2)]">
                   Developer
                 </div>
               </label>
 
-              <label>
+              <label className="cursor-pointer">
                 <input
                   type="radio"
                   value="qa_engineer"
                   {...register("role")}
                   className="hidden peer"
                 />
-                <div className="w-full btn-unified flex items-center justify-center h-10">
-                  QA Engineer
+                <div className="w-full flex items-center justify-center h-8 rounded-md border border-slate-200 bg-white text-slate-500 font-bold text-xs uppercase tracking-wider hover:bg-slate-50 hover:text-slate-700 transition-all shadow-sm peer-checked:bg-accent peer-checked:text-white peer-checked:border-accent peer-checked:shadow-[0_0_10px_rgba(var(--accent-rgb),0.2)]">
+                  QA
                 </div>
               </label>
             </div>
@@ -135,7 +135,9 @@ export const OnboardingPage = () => {
               <label className="text-sm font-semibold text-slate-700 uppercase tracking-wider">
                 Basecamp ID
               </label>
-              <span className="text-xs text-slate-400 font-medium lowercase">optional</span>
+              <span className="text-xs text-slate-400 font-medium lowercase">
+                optional
+              </span>
             </div>
             <input
               {...register("basecampId")}
@@ -149,7 +151,9 @@ export const OnboardingPage = () => {
               <label className="text-sm font-semibold text-slate-700 uppercase tracking-wider">
                 Google Chat ID
               </label>
-              <span className="text-xs text-slate-400 font-medium lowercase">optional</span>
+              <span className="text-xs text-slate-400 font-medium lowercase">
+                optional
+              </span>
             </div>
             <input
               {...register("googleChatId")}

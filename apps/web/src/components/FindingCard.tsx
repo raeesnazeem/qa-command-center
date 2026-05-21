@@ -342,7 +342,7 @@ export const FindingCard: React.FC<FindingCardProps> = ({
             {/* Screenshot Column (Hidden for dead_links!) */}
             {finding.check_factor !== "dead_links" && (
               <div className="relative group/ss">
-                <div className="aspect-video bg-slate-50 rounded-md overflow-hidden border border-slate-100 shadow-inner group-hover/ss:shadow-md transition-all">
+                {/* <div className="aspect-video bg-slate-50 rounded-md overflow-hidden border border-slate-100 shadow-inner group-hover/ss:shadow-md transition-all">
                   <FindingCardWithScreenshot
                     finding={finding}
                     pageScreenshots={pageScreenshots}
@@ -350,7 +350,7 @@ export const FindingCard: React.FC<FindingCardProps> = ({
                 </div>
                 <p className="text-[8px] font-bold text-slate-400 uppercase mt-2 tracking-[0.2em] text-center">
                   Click to expand evidence
-                </p>
+                </p> */}
                 <button
                   onClick={() => setIsBrowserOpen(true)}
                   className="btn-unified w-fit ml-auto flex justify-end items-center gap-2 mt-3"
@@ -664,7 +664,7 @@ export const FindingCard: React.FC<FindingCardProps> = ({
             ) : (
               (finding.screenshot_url || pageScreenshots?.desktop) && (
                 <div className="mb-4">
-                  <FindingCardWithScreenshot
+                  {/* <FindingCardWithScreenshot
                     finding={finding}
                     pageScreenshots={pageScreenshots}
                   />
@@ -672,7 +672,7 @@ export const FindingCard: React.FC<FindingCardProps> = ({
                     {finding.screenshot_url
                       ? "Click to expand evidence"
                       : "Click to view page context"}
-                  </p>
+                  </p> */}
                   <button
                     onClick={() => setIsBrowserOpen(true)}
                     className="btn-unified w-fit ml-auto flex justify-end items-center gap-2 mt-3"

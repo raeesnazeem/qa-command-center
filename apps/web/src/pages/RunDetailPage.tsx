@@ -321,8 +321,15 @@ export const RunDetailPage = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 text-accent animate-spin" />
+      <div className="flex flex-col items-center justify-center min-h-[60vh] font-sans mt-[100px]">
+        <div className="flex flex-col items-center space-y-4 animate-pulse">
+          <img
+            src="https://growth99.com/storage/2024/09/LOGO.svg"
+            alt="QACC Logo"
+            className="h-48 w-48"
+            style={{ objectFit: "contain" }}
+          />
+        </div>
       </div>
     )
   }
@@ -383,9 +390,7 @@ export const RunDetailPage = () => {
   const handleCaptureScreenshots = async () => {
     if (!selectedPage?.url) return
     setIsCapturingScreenshots(true)
-    const toastId = toast.loading(
-      "Capturing multiview screenshots... (20s wait/view)",
-    )
+    const toastId = toast.loading("Capturing multiview screenshots... ")
     try {
       const response = await axios.post(
         "/api/proxy-browser/capture-multiview",
@@ -602,7 +607,7 @@ export const RunDetailPage = () => {
     }
   }
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-8 animate-in fade-in duration-500">
+    <div className="max-w-5xl mx-auto p-6 space-y-8 animate-in fade-in duration-200">
       {/* Header */}
       <div className="flex flex-col space-y-6">
         <div className="flex items-center justify-between">
@@ -856,7 +861,7 @@ export const RunDetailPage = () => {
       </div>
 
       {activeTab === "overview" && (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <div className="space-y-8 animate-in fade-in duration-200">
           <div className="bg-white p-8 rounded-md border border-slate-200 shadow-sm space-y-6">
             <div className="flex justify-between items-end">
               <div className="space-y-1">
@@ -957,7 +962,7 @@ export const RunDetailPage = () => {
       )}
 
       {activeTab === "pages" && (
-        <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <div className="animate-in fade-in duration-200">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-slate-900">Scan Steps</h2>
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-slate-100 px-3 py-1.5 rounded-md border border-slate-200">
@@ -985,7 +990,7 @@ export const RunDetailPage = () => {
       )}
 
       {activeTab === "general" && (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <div className="space-y-6 animate-in fade-in duration-200">
           <div className="flex items-center justify-between border-b border-slate-200 pb-4">
             <h2 className="text-xl font-bold text-slate-900">
               General Findings
@@ -1039,7 +1044,7 @@ export const RunDetailPage = () => {
       )}
 
       {activeTab === "findings" && (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <div className="space-y-6 animate-in fade-in duration-200">
           <div className="flex items-center justify-between border-b border-slate-200 pb-4">
             <h2 className="text-xl font-bold text-slate-900">
               Findings Details
@@ -1159,7 +1164,7 @@ export const RunDetailPage = () => {
       )}
 
       {activeTab === "visual_diff" && (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <div className="space-y-6 animate-in fade-in duration-200">
           <div className="flex items-center justify-between border-b border-slate-200 pb-4">
             <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">
               Visual Diff Analysis
@@ -1238,7 +1243,7 @@ export const RunDetailPage = () => {
       )}
 
       {activeTab === "woocommerce" && (
-        <div className="bg-white border border-slate-200 rounded-md p-8 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <div className="bg-white border border-slate-200 rounded-md p-8 shadow-sm animate-in fade-in duration-200">
           {isLoadingRunFindings ? (
             <div className="py-20 text-center">
               <Loader2 className="w-8 h-8 animate-spin mx-auto text-accent" />
@@ -1253,7 +1258,7 @@ export const RunDetailPage = () => {
       )}
 
       {activeTab === "report" && (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <div className="space-y-8 animate-in fade-in duration-200">
           {/* Report Header */}
           <div className="flex items-center justify-between border-b border-slate-200 pb-6">
             <div>

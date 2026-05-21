@@ -558,7 +558,7 @@ export const DashboardPage = () => {
             Executive Overview
           </h1>
           <p className="text-slate-500 mt-2 font-medium">
-            Global intelligence across all organizational projects.
+            Global monitoring across all projects.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -704,47 +704,71 @@ export const DashboardPage = () => {
                     </td>
                   </tr>
                 ) : (
-                  data?.recent_runs.map((run) => (
-                    <tr
-                      key={run.id}
-                      className="hover:bg-slate-50 transition-colors group"
-                    >
-                      <td className="px-8 py-5">
-                        <div className="flex flex-col">
-                          <Link
-                            to={`/projects/${run.project_id}/runs/${run.id}`}
-                            className="text-sm font-bold text-slate-900 group-hover:text-accent transition-colors leading-tight"
+                  (() => {
+                    let lastProjectName = ""
+                    return data?.recent_runs.map((run) => {
+                      const projectName = (run as any).projects?.name || ""
+                      const isDuplicate = projectName === lastProjectName
+                      if (!isDuplicate) {
+                        lastProjectName = projectName
+                      }
+                      return (
+                        <tr
+                          key={run.id}
+                          className="hover:bg-slate-50 transition-colors group"
+                        >
+                          <td
+                            className={`px-8 ${isDuplicate ? "py-1" : "py-5"}`}
                           >
-                            {(run as any).projects?.name}
-                          </Link>
-                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                            {run.run_type.replace("_", " ")}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-8 py-5">
-                        <div className="flex items-center">
-                          <div
-                            className={`w-2 h-2 rounded-full mr-3 ${
-                              run.status === "completed"
-                                ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
-                                : run.status === "running"
-                                  ? "bg-accent animate-pulse shadow-[0_0_8px_rgba(var(--accent-rgb),0.4)]"
-                                  : run.status === "failed"
-                                    ? "bg-red-500"
-                                    : "bg-slate-300"
-                            }`}
-                          />
-                          <span className="text-xs font-bold text-slate-600 uppercase tracking-tight">
-                            {run.status}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-8 py-5 text-xs text-slate-400 font-medium">
-                        {format(new Date(run.created_at), "MMM d, HH:mm")}
-                      </td>
-                    </tr>
-                  ))
+                            <div className="flex flex-col">
+                              {!isDuplicate ? (
+                                <Link
+                                  to={`/projects/${run.project_id}/runs/${run.id}`}
+                                  className="text-sm font-bold text-slate-900 group-hover:text-accent transition-colors leading-tight"
+                                >
+                                  {projectName}
+                                </Link>
+                              ) : (
+                                <span className="text-[10px] font-semibold text-slate-300 select-none ml-2 leading-none">
+                                  ↳
+                                </span>
+                              )}
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                                {run.run_type.replace("_", " ")}
+                              </span>
+                            </div>
+                          </td>
+                          <td
+                            className={`px-8 ${isDuplicate ? "py-1" : "py-5"}`}
+                          >
+                            <div className="flex items-center">
+                              <div
+                                className={`rounded-full ${isDuplicate ? "w-1.5 h-1.5 mr-2" : "w-2 h-2 mr-3"} ${
+                                  run.status === "completed"
+                                    ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
+                                    : run.status === "running"
+                                      ? "bg-accent animate-pulse shadow-[0_0_8px_rgba(var(--accent-rgb),0.4)]"
+                                      : run.status === "failed"
+                                        ? "bg-red-500"
+                                        : "bg-slate-300"
+                                }`}
+                              />
+                              <span
+                                className={`${isDuplicate ? "text-[9px] tracking-widest font-extrabold" : "text-xs font-bold"} text-slate-600 uppercase tracking-tight`}
+                              >
+                                {run.status}
+                              </span>
+                            </div>
+                          </td>
+                          <td
+                            className={`px-8 text-xs text-slate-400 font-medium ${isDuplicate ? "py-1" : "py-5"}`}
+                          >
+                            {format(new Date(run.created_at), "MMM d, HH:mm")}
+                          </td>
+                        </tr>
+                      )
+                    })
+                  })()
                 )}
               </tbody>
             </table>

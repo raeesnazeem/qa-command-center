@@ -334,7 +334,7 @@ export const AllTasksPage = () => {
             All Workspace Tasks
           </h1>
           <p className="text-slate-500 mt-2 font-medium">
-            Consolidated Kanban workflow across all projects in the workspace.
+            Consolidated Task assignment flow across all projects.
           </p>
         </div>
         <button

@@ -118,8 +118,18 @@ export const VisualDiffPage: React.FC = () => {
 
   if (runLoading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-slate-50">
-        <Loader2 className="w-8 h-8 text-black animate-spin" />
+      <div className="h-screen flex flex-col items-center justify-center bg-slate-50 font-sans">
+        <div className="flex flex-col items-center space-y-4 animate-pulse">
+          <img
+            src="https://growth99.com/storage/2024/09/LOGO.svg"
+            alt="QACC Logo"
+            className="h-48 w-48"
+            style={{ objectFit: "contain" }}
+          />
+          <p className="text-slate-500 text-sm font-medium uppercase tracking-widest">
+            Loading Visual Diff...
+          </p>
+        </div>
       </div>
     )
   }

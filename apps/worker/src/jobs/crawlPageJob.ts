@@ -111,9 +111,10 @@ export async function processCrawlPageJob(job: Job) {
     const enabledChecks = run?.enabled_checks || []
 
     // We only need screenshots if we are doing visual regression, accessibility, or hero media!
-    const needsScreenshots = enabledChecks.some(
-      (c) => c !== "dead_links" && c !== "project_plan",
-    )
+    // const needsScreenshots = enabledChecks.some(
+    //   (c) => c !== "dead_links" && c !== "project_plan",
+    // )
+    const needsScreenshots = false
 
     // Step 2: Call screenshotPage(pageUrl, runId, pageId)
     let screenshots: any = {}

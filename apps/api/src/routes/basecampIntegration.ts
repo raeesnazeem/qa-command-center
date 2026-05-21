@@ -420,7 +420,7 @@ router.post(
           ${issueHeader}
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 800px; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">
-              <span style="font-size: 15px; font-weight: bold;">🚨 General Findings: Dead Links Audit</span>
+              <span style="font-size: 15px; font-weight: bold;"> General Findings: Dead Links Audit</span>
               <span style="background-color: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; text-transform: uppercase;">[PENDING]</span>
             </div>
             

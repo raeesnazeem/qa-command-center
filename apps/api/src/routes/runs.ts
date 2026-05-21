@@ -1,34 +1,33 @@
-import { Router, Request, Response } from 'express';
-import { supabase } from '../lib/supabase';
-import { clerkAuth } from '../middleware/clerkAuth';
-import { requireRole } from '../middleware/requireRole';
-import { zodValidate } from '../middleware/zodValidate';
-import { CreateRunSchema } from '@qacc/shared';
-import { addRunJob } from '../lib/queue';
-import { quickFetchUrls } from '../lib/crawler';
-import * as activityService from '../services/activityService';
+import { Router, Request, Response } from "express"
+import { supabase } from "../lib/supabase"
+import { clerkAuth } from "../middleware/clerkAuth"
+import { requireRole } from "../middleware/requireRole"
+import { zodValidate } from "../middleware/zodValidate"
+import { CreateRunSchema } from "@qacc/shared"
+import { addRunJob } from "../lib/queue"
+import { quickFetchUrls } from "../lib/crawler"
+import * as activityService from "../services/activityService"
 
-
-const router: Router = Router();
+const router: Router = Router()
 
 /**
  * Helper to get Supabase user UUID from Clerk ID
  */
 async function getSupabaseUserId(clerkIdOrUuid: string): Promise<string> {
-  if (clerkIdOrUuid.length === 36 && clerkIdOrUuid.includes('-')) {
-    return clerkIdOrUuid;
+  if (clerkIdOrUuid.length === 36 && clerkIdOrUuid.includes("-")) {
+    return clerkIdOrUuid
   }
 
   const { data, error } = await supabase
-    .from('users')
-    .select('id')
-    .eq('clerk_user_id', clerkIdOrUuid)
-    .maybeSingle();
-  
+    .from("users")
+    .select("id")
+    .eq("clerk_user_id", clerkIdOrUuid)
+    .maybeSingle()
+
   if (error || !data) {
-    throw new Error(`User not synced: ${clerkIdOrUuid}`);
+    throw new Error(`User not synced: ${clerkIdOrUuid}`)
   }
-  return data.id;
+  return data.id
 }
 
 /**
@@ -36,19 +35,28 @@ async function getSupabaseUserId(clerkIdOrUuid: string): Promise<string> {
  * Start a new QA run (Status: pending).
  */
 router.post(
-  '/',
+  "/",
   clerkAuth,
-  requireRole('qa_engineer'),
+  requireRole("qa_engineer"),
   zodValidate(CreateRunSchema),
   async (req: Request, res: Response) => {
-    const { project_id, run_type, site_url, figma_url, enabled_checks, is_woocommerce, device_matrix, selected_urls } = req.body;
-    const { userId: clerkUserId } = req.auth!;
+    const {
+      project_id,
+      run_type,
+      site_url,
+      figma_url,
+      enabled_checks,
+      is_woocommerce,
+      device_matrix,
+      selected_urls,
+    } = req.body
+    const { userId: clerkUserId } = req.auth!
 
     try {
-      const supabaseUserId = await getSupabaseUserId(clerkUserId);
+      const supabaseUserId = await getSupabaseUserId(clerkUserId)
 
       const { data: run, error } = await supabase
-        .from('qa_runs')
+        .from("qa_runs")
         .insert({
           project_id,
           run_type,
@@ -59,111 +67,126 @@ router.post(
           device_matrix,
           selected_urls,
           pages_total: selected_urls ? selected_urls.length : 0,
-          status: 'pending',
+          status: "pending",
           created_by: supabaseUserId,
         })
         .select()
-        .single();
+        .single()
 
-      if (error) throw error;
+      if (error) throw error
 
-      return res.status(201).json(run);
+      return res.status(201).json(run)
     } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+      return res.status(500).json({ error: error.message })
     }
-  }
-);
+  },
+)
 
 /**
  * POST /api/runs/fetch-urls
  * Fetch URLs for a site to allow manual selection.
  */
 router.post(
-  '/fetch-urls',
+  "/fetch-urls",
   clerkAuth,
-  requireRole('qa_engineer'),
+  requireRole("qa_engineer"),
   async (req: Request, res: Response) => {
-    const { site_url } = req.body;
+    const { site_url } = req.body
 
     if (!site_url) {
-      return res.status(400).json({ error: 'site_url is required' });
+      return res.status(400).json({ error: "site_url is required" })
     }
 
     try {
-      const urls = await quickFetchUrls(site_url);
-      return res.json({ urls });
+      const urls = await quickFetchUrls(site_url)
+      return res.json({ urls })
     } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+      return res.status(500).json({ error: error.message })
     }
-  }
-);
+  },
+)
 
 /**
  * GET /api/runs/projects/:id/runs
  * List runs for a project with pagination and summary stats.
  */
-router.get('/projects/:id/runs', clerkAuth, async (req: Request, res: Response) => {
-  const { id: project_id } = req.params;
-  const { orgId } = req.auth!;
-  const page = parseInt(req.query.page as string) || 1;
-  const limit = parseInt(req.query.limit as string) || 20;
-  const offset = (page - 1) * limit;
+router.get(
+  "/projects/:id/runs",
+  clerkAuth,
+  async (req: Request, res: Response) => {
+    const { id: project_id } = req.params
+    const { orgId } = req.auth!
+    const page = parseInt(req.query.page as string) || 1
+    const limit = parseInt(req.query.limit as string) || 20
+    const offset = (page - 1) * limit
 
-  try {
-    // Verify project belongs to org
-    const { data: project } = await supabase
-      .from('projects')
-      .select('id')
-      .eq('id', project_id)
-      .eq('org_id', orgId)
-      .single();
+    try {
+      // Verify project belongs to org
+      const { data: project } = await supabase
+        .from("projects")
+        .select("id")
+        .eq("id", project_id)
+        .eq("org_id", orgId)
+        .single()
 
-    if (!project) return res.status(404).json({ error: 'Project not found' });
+      if (!project) return res.status(404).json({ error: "Project not found" })
 
-    const { data: runs, error, count } = await supabase
-      .from('qa_runs')
-      .select(`
+      const {
+        data: runs,
+        error,
+        count,
+      } = await supabase
+        .from("qa_runs")
+        .select(
+          `
         *,
         users!qa_runs_created_by_fkey (
           full_name,
           email
         )
-      `, { count: 'exact' })
-      .eq('project_id', project_id)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+      `,
+          { count: "exact" },
+        )
+        .eq("project_id", project_id)
+        .order("created_at", { ascending: false })
+        .range(offset, offset + limit - 1)
 
-    if (error) throw error;
+      if (error) throw error
 
-    const enrichedRuns = runs.map((run: any) => ({
-      ...run,
-      created_by_name: run.users?.full_name || run.users?.email || 'Unknown',
-    }));
+      const enrichedRuns = runs.map((run: any) => ({
+        ...run,
+        created_by_name: run.users?.full_name || run.users?.email || "Unknown",
+      }))
 
-    return res.json({
-      data: enrichedRuns,
-      pagination: {
-        page,
-        limit,
-        total: count,
-      },
-    });
-  } catch (error: any) {
-    return res.status(500).json({ error: error.message });
-  }
-});
+      return res.json({
+        data: enrichedRuns,
+        pagination: {
+          page,
+          limit,
+          total: count,
+        },
+      })
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message })
+    }
+  },
+)
 
 /**
  * GET /api/runs/pages/:pageId/findings
  * Get detailed findings for a specific page.
  */
-router.get('/pages/:pageId/findings', clerkAuth, async (req: Request, res: Response) => {
-  const { pageId } = req.params;
+router.get(
+  "/pages/:pageId/findings",
+  clerkAuth,
+  async (req: Request, res: Response) => {
+    const { pageId } = req.params
 
-  try {
-    const { data: findings, error } = await supabase
-      .from('findings')
-      .select(`
+    try {
+      const { data: findings, error } = await supabase
+        .from("findings")
+        .select(
+          `
         *,
         pages (
           url
@@ -178,29 +201,32 @@ router.get('/pages/:pageId/findings', clerkAuth, async (req: Request, res: Respo
             ai_reasoning
           )
         )
-      `)
-      .eq('page_id', pageId)
-      .order('created_at', { ascending: false });
+      `,
+        )
+        .eq("page_id", pageId)
+        .order("created_at", { ascending: false })
 
-    if (error) throw error;
+      if (error) throw error
 
-    return res.json(findings || []);
-  } catch (error: any) {
-    return res.status(500).json({ error: error.message });
-  }
-});
+      return res.json(findings || [])
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message })
+    }
+  },
+)
 
 /**
  * GET /api/runs/:id/findings
  * Get all findings for a full run (all pages).
  */
-router.get('/:id/findings', clerkAuth, async (req: Request, res: Response) => {
-  const { id } = req.params;
+router.get("/:id/findings", clerkAuth, async (req: Request, res: Response) => {
+  const { id } = req.params
 
   try {
     const { data: findings, error } = await supabase
-      .from('findings')
-      .select(`
+      .from("findings")
+      .select(
+        `
         *,
         pages (
           url
@@ -215,375 +241,494 @@ router.get('/:id/findings', clerkAuth, async (req: Request, res: Response) => {
             ai_reasoning
           )
         )
-      `)
-      .eq('run_id', id)
-      .order('created_at', { ascending: false });
+      `,
+      )
+      .eq("run_id", id)
+      .order("created_at", { ascending: false })
 
-    if (error) throw error;
+    if (error) throw error
 
-    return res.json(findings || []);
+    return res.json(findings || [])
   } catch (error: any) {
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message })
   }
-});
+})
 
 /**
  * GET /api/runs/:id
  * Get full run details, pages, and findings summary.
  */
-router.get('/:id', clerkAuth, async (req: Request, res: Response) => {
-  const { id } = req.params;
+router.get("/:id", clerkAuth, async (req: Request, res: Response) => {
+  const { id } = req.params
 
   try {
     // 1. Fetch run details with creator info
     const { data: run, error: runError } = await supabase
-      .from('qa_runs')
-      .select(`
+      .from("qa_runs")
+      .select(
+        `
         *,
         users!qa_runs_created_by_fkey (
           full_name,
           email
         )
-      `)
-      .eq('id', id)
-      .single();
+      `,
+      )
+      .eq("id", id)
+      .single()
 
     if (runError || !run) {
-      return res.status(404).json({ error: 'Run not found' });
+      return res.status(404).json({ error: "Run not found" })
     }
 
     // 2. Fetch pages for this run
     const { data: pages, error: pagesError } = await supabase
-      .from('pages')
-      .select('*')
-      .eq('run_id', id)
-      .order('created_at', { ascending: true });
+      .from("pages")
+      .select("*")
+      .eq("run_id", id)
+      .order("created_at", { ascending: true })
 
-    if (pagesError) throw pagesError;
+    if (pagesError) throw pagesError
 
     // 3. Fetch all findings for this run to aggregate per page
     const { data: findings, error: findingsError } = await supabase
-      .from('findings')
-      .select('id, page_id, check_factor, severity, status')
-      .eq('run_id', id);
+      .from("findings")
+      .select("id, page_id, check_factor, severity, status")
+      .eq("run_id", id)
 
-    if (findingsError) throw findingsError;
+    if (findingsError) throw findingsError
 
     // 4. Aggregate findings per page and for the whole run
-    const runFindingCounts: Record<string, number> = {};
-    const pageFindingCounts: Record<string, Record<string, number>> = {};
+    const runFindingCounts: Record<string, number> = {}
+    const pageFindingCounts: Record<string, Record<string, number>> = {}
 
     findings?.forEach((f: any) => {
       // Only count open or confirmed findings
-      if (f.status === 'false_positive') return;
+      if (f.status === "false_positive") return
 
       // Global counts
-      runFindingCounts[f.check_factor] = (runFindingCounts[f.check_factor] || 0) + 1;
-      
+      runFindingCounts[f.check_factor] =
+        (runFindingCounts[f.check_factor] || 0) + 1
+
       // Per-page counts
       if (!pageFindingCounts[f.page_id]) {
-        pageFindingCounts[f.page_id] = {};
+        pageFindingCounts[f.page_id] = {}
       }
-      pageFindingCounts[f.page_id][f.check_factor] = (pageFindingCounts[f.page_id][f.check_factor] || 0) + 1;
-    });
+      pageFindingCounts[f.page_id][f.check_factor] =
+        (pageFindingCounts[f.page_id][f.check_factor] || 0) + 1
+    })
 
     // 5. Enrich pages with their finding counts
-    const enrichedPages = pages?.map(page => ({
+    const enrichedPages = pages?.map((page) => ({
       ...page,
-      finding_counts: pageFindingCounts[page.id] || {}
-    }));
+      finding_counts: pageFindingCounts[page.id] || {},
+    }))
 
     // 6. Calculate progress
-    const pages_total = run.pages_total || 0;
-    const pages_processed = run.pages_processed || 0;
-    const progress_percentage = pages_total > 0 ? (pages_processed / pages_total) * 100 : 0;
+    const pages_total = run.pages_total || 0
+    const pages_processed = run.pages_processed || 0
+    const progress_percentage =
+      pages_total > 0 ? (pages_processed / pages_total) * 100 : 0
 
     // 7. Get concurrent scans count (running or pending in the same organization)
     const { count: concurrentScans } = await supabase
-      .from('qa_runs')
-      .select('id', { count: 'exact', head: true })
-      .in('status', ['running', 'pending']);
+      .from("qa_runs")
+      .select("id", { count: "exact", head: true })
+      .in("status", ["running", "pending"])
 
     return res.json({
       ...run,
-      created_by_name: run.users?.full_name || run.users?.email || 'Unknown',
+      created_by_name: run.users?.full_name || run.users?.email || "Unknown",
       pages: enrichedPages,
       finding_counts: runFindingCounts,
       progress_percentage,
       concurrent_scans: concurrentScans || 0,
-    });
+    })
   } catch (error: any) {
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message })
   }
-});
+})
 
 /**
  * PATCH /api/findings/:id
  * Update finding details (severity, status, etc.)
  */
 router.patch(
-  '/findings/:id',
+  "/findings/:id",
   clerkAuth,
-  requireRole('qa_engineer'),
+  requireRole("qa_engineer"),
   async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const { severity, status } = req.body;
+    const { id } = req.params
+    const { severity, status } = req.body
 
     try {
       const { data: updatedFinding, error } = await supabase
-        .from('findings')
+        .from("findings")
         .update({ severity, status })
-        .eq('id', id)
+        .eq("id", id)
         .select()
-        .single();
+        .single()
 
-      if (error) throw error;
+      if (error) throw error
 
-      return res.json(updatedFinding);
+      return res.json(updatedFinding)
     } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+      return res.status(500).json({ error: error.message })
     }
-  }
-);
+  },
+)
 
 /**
  * PATCH /api/runs/:id/status
  * Update run status with strict state transition rules.
  */
 router.patch(
-  '/:id/status',
+  "/:id/status",
   clerkAuth,
-  requireRole('qa_engineer'),
+  requireRole("qa_engineer"),
   async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const { status: newStatus } = req.body;
+    const { id } = req.params
+    const { status: newStatus } = req.body
 
     try {
       const { data: run, error: fetchError } = await supabase
-        .from('qa_runs')
-        .select('status')
-        .eq('id', id)
-        .single();
+        .from("qa_runs")
+        .select("status")
+        .eq("id", id)
+        .single()
 
       if (fetchError || !run) {
-        return res.status(404).json({ error: 'Run not found' });
+        return res.status(404).json({ error: "Run not found" })
       }
 
-      const currentStatus = run.status;
+      const currentStatus = run.status
 
       // Validate transitions
       const validTransitions: Record<string, string[]> = {
-        'pending': ['running', 'cancelled'],
-        'running': ['completed', 'failed', 'paused', 'cancelled'],
-        'paused': ['running', 'cancelled'],
-      };
+        pending: ["running", "cancelled"],
+        running: ["completed", "failed", "paused", "cancelled"],
+        paused: ["running", "cancelled"],
+      }
 
       if (!validTransitions[currentStatus]?.includes(newStatus)) {
         return res.status(422).json({
           error: `Invalid status transition from ${currentStatus} to ${newStatus}`,
-        });
+        })
       }
 
-      const updateData: any = { status: newStatus };
-      if (newStatus === 'completed' || newStatus === 'failed' || newStatus === 'cancelled') {
-        updateData.completed_at = new Date().toISOString();
+      const updateData: any = { status: newStatus }
+      if (
+        newStatus === "completed" ||
+        newStatus === "failed" ||
+        newStatus === "cancelled"
+      ) {
+        updateData.completed_at = new Date().toISOString()
       }
 
       const { data: updatedRun, error: updateError } = await supabase
-        .from('qa_runs')
+        .from("qa_runs")
         .update(updateData)
-        .eq('id', id)
+        .eq("id", id)
         .select()
-        .single();
+        .single()
 
-      if (updateError) throw updateError;
+      if (updateError) throw updateError
+      // Target Resume Trigger: Re-enqueue remaining or discovery scans
+      if (currentStatus === "paused" && newStatus === "running") {
+        const { qaQueue } = require("../lib/queue")
 
-            // [Step 4.2] Log Run Pause/Resume
-      if (newStatus === 'running' || newStatus === 'paused') {
-        try {
-          const { userId: clerkUserId } = req.auth!;
-          const [performerRes, projectRes] = await Promise.all([
-            supabase.from('users').select('id, full_name').eq('clerk_user_id', clerkUserId).single(),
-            supabase.from('projects').select('name').eq('id', updatedRun.project_id).single()
-          ]);
+        // Fetch pages already discovered for this run
+        const { data: pages, error: pagesError } = await supabase
+          .from("pages")
+          .select("id, url, status")
+          .eq("run_id", id)
 
-          const performerName = performerRes.data?.full_name || 'QA Engineer';
-          const projectName = projectRes.data?.name || 'Project';
-          const actionWord = newStatus === 'running' ? 'resumed' : 'paused';
+        if (pagesError) throw pagesError
 
-          await activityService.logActivity(
-            { id: performerRes.data?.id || '', name: performerName },
-            { 
-              type: `RUN_${newStatus.toUpperCase()}`, 
-              details: { 
-                projectName,
-                message: `${actionWord} the run for ${projectName}` 
-              } 
-            },
-            { id: updatedRun.id, type: 'run' },
-            [updatedRun.created_by]
-          );
-        } catch (logError) {
-          console.error('[ActivityService] Failed to log run status change:', logError);
+        if (!pages || pages.length === 0) {
+          // Bypassed Phase 1: Re-queue sitemap discovery
+          const { addRunJob } = require("../lib/queue")
+          await addRunJob(id)
+        } else {
+          // Bypassed Phase 2: Fetch and re-queue pending/processing pages
+          const remainingPages = pages.filter(
+            (p) => p.status !== "done" && p.status !== "failed",
+          )
+
+          if (remainingPages.length > 0) {
+            const remainingPageIds = remainingPages.map((p) => p.id)
+
+            // Clean page states in the DB
+            await supabase
+              .from("pages")
+              .update({
+                status: "pending",
+                current_step: "Queued for resume...",
+                progress: 0,
+              })
+              .in("id", remainingPageIds)
+
+            // Group pages into batches of 10 and add to queue
+            const BATCH_SIZE = 10
+            const chunks = []
+            for (let i = 0; i < remainingPages.length; i += BATCH_SIZE) {
+              chunks.push(remainingPages.slice(i, i + BATCH_SIZE))
+            }
+
+            const jobs = chunks.map((chunk) => {
+              if (chunk.length === 1) {
+                const page = chunk[0]
+                return {
+                  name: "crawl_page",
+                  data: {
+                    runId: id,
+                    pageId: page.id,
+                    url: page.url,
+                    projectId: updatedRun.project_id,
+                    enabledChecks: updatedRun.enabled_checks,
+                  },
+                  opts: {
+                    attempts: 3,
+                    backoff: { type: "exponential", delay: 5000 },
+                  },
+                }
+              } else {
+                return {
+                  name: "crawl_batch",
+                  data: {
+                    runId: id,
+                    pages: chunk.map((p) => ({ id: p.id, url: p.url })),
+                    projectId: updatedRun.project_id,
+                  },
+                  opts: {
+                    attempts: 3,
+                    backoff: { type: "exponential", delay: 5000 },
+                    lockDuration: 600000,
+                  },
+                }
+              }
+            })
+
+            await qaQueue.addBulk(jobs)
+          }
         }
       }
-            // [Step 4.3] Log Run Completion (Success/Failed)
-      if (newStatus === 'completed' || newStatus === 'failed') {
-        try {
-          const { userId: clerkUserId } = req.auth!;
-          const [performerRes, projectRes] = await Promise.all([
-            supabase.from('users').select('id, full_name').eq('clerk_user_id', clerkUserId).single(),
-            supabase.from('projects').select('name').eq('id', updatedRun.project_id).single()
-          ]);
 
-          const performerName = performerRes.data?.full_name || 'System';
-          const projectName = projectRes.data?.name || 'Project';
-          
-          const actionType = newStatus === 'completed' ? 'RUN_COMPLETED' : 'RUN_FAILED';
-          const message = newStatus === 'completed' 
-            ? `Run for ${projectName} finished successfully` 
-            : `Run for ${projectName} failed`;
+      // [Step 4.2] Log Run Pause/Resume
+      if (newStatus === "running" || newStatus === "paused") {
+        try {
+          const { userId: clerkUserId } = req.auth!
+          const [performerRes, projectRes] = await Promise.all([
+            supabase
+              .from("users")
+              .select("id, full_name")
+              .eq("clerk_user_id", clerkUserId)
+              .single(),
+            supabase
+              .from("projects")
+              .select("name")
+              .eq("id", updatedRun.project_id)
+              .single(),
+          ])
+
+          const performerName = performerRes.data?.full_name || "QA Engineer"
+          const projectName = projectRes.data?.name || "Project"
+          const actionWord = newStatus === "running" ? "resumed" : "paused"
 
           await activityService.logActivity(
-            { id: performerRes.data?.id || '', name: performerName },
-            { 
-              type: actionType, 
-              details: { 
+            { id: performerRes.data?.id || "", name: performerName },
+            {
+              type: `RUN_${newStatus.toUpperCase()}`,
+              details: {
                 projectName,
-                status: newStatus === 'completed' ? 'Success' : 'Failed',
-                message
-              } 
+                message: `${actionWord} the run for ${projectName}`,
+              },
             },
-            { id: updatedRun.id, type: 'run' },
-            [updatedRun.created_by]
-          );
+            { id: updatedRun.id, type: "run" },
+            [updatedRun.created_by],
+          )
         } catch (logError) {
-          console.error('[ActivityService] Failed to log run completion:', logError);
+          console.error(
+            "[ActivityService] Failed to log run status change:",
+            logError,
+          )
         }
       }
+      // [Step 4.3] Log Run Completion (Success/Failed)
+      if (newStatus === "completed" || newStatus === "failed") {
+        try {
+          const { userId: clerkUserId } = req.auth!
+          const [performerRes, projectRes] = await Promise.all([
+            supabase
+              .from("users")
+              .select("id, full_name")
+              .eq("clerk_user_id", clerkUserId)
+              .single(),
+            supabase
+              .from("projects")
+              .select("name")
+              .eq("id", updatedRun.project_id)
+              .single(),
+          ])
 
+          const performerName = performerRes.data?.full_name || "System"
+          const projectName = projectRes.data?.name || "Project"
+
+          const actionType =
+            newStatus === "completed" ? "RUN_COMPLETED" : "RUN_FAILED"
+          const message =
+            newStatus === "completed"
+              ? `Run for ${projectName} finished successfully`
+              : `Run for ${projectName} failed`
+
+          await activityService.logActivity(
+            { id: performerRes.data?.id || "", name: performerName },
+            {
+              type: actionType,
+              details: {
+                projectName,
+                status: newStatus === "completed" ? "Success" : "Failed",
+                message,
+              },
+            },
+            { id: updatedRun.id, type: "run" },
+            [updatedRun.created_by],
+          )
+        } catch (logError) {
+          console.error(
+            "[ActivityService] Failed to log run completion:",
+            logError,
+          )
+        }
+      }
 
       // Trigger embeddings generation if completed
-      if (newStatus === 'completed') {
-        const { qaQueue } = require('../lib/queue');
-        qaQueue.add('generate_embeddings', { runId: id })
-               .catch((e: any) => console.error('Failed to queue generate_embeddings from API:', e));
+      if (newStatus === "completed") {
+        const { qaQueue } = require("../lib/queue")
+        qaQueue
+          .add("generate_embeddings", { runId: id })
+          .catch((e: any) =>
+            console.error("Failed to queue generate_embeddings from API:", e),
+          )
       }
 
-      return res.json(updatedRun);
+      return res.json(updatedRun)
     } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+      return res.status(500).json({ error: error.message })
     }
-  }
-);
+  },
+)
 
 /**
  * POST /api/runs/:id/start
  * Manually start a pending QA run and enqueue it in BullMQ.
  */
 router.post(
-  '/:id/start',
+  "/:id/start",
   clerkAuth,
-  requireRole('qa_engineer'),
+  requireRole("qa_engineer"),
   async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const { id } = req.params
 
     try {
       // 1. Fetch current status
       const { data: run, error: fetchError } = await supabase
-        .from('qa_runs')
-        .select('status')
-        .eq('id', id)
-        .single();
+        .from("qa_runs")
+        .select("status")
+        .eq("id", id)
+        .single()
 
       if (fetchError || !run) {
-        return res.status(404).json({ error: 'Run not found' });
+        return res.status(404).json({ error: "Run not found" })
       }
 
-      if (run.status !== 'pending') {
-        return res.status(400).json({ 
-          error: `Only pending runs can be started. Current status: ${run.status}` 
-        });
+      if (run.status !== "pending") {
+        return res.status(400).json({
+          error: `Only pending runs can be started. Current status: ${run.status}`,
+        })
       }
 
       // 2. Update status to 'running'
       const { data: updatedRun, error: updateError } = await supabase
-        .from('qa_runs')
-        .update({ status: 'running' })
-        .eq('id', id)
+        .from("qa_runs")
+        .update({ status: "running" })
+        .eq("id", id)
         .select()
-        .single();
+        .single()
 
-      if (updateError) throw updateError;
+      if (updateError) throw updateError
 
-            // [Step 4.1] Log QA Run Started
+      // [Step 4.1] Log QA Run Started
       try {
-        const { userId: clerkUserId } = req.auth!;
+        const { userId: clerkUserId } = req.auth!
         const [performerRes, projectRes] = await Promise.all([
-          supabase.from('users').select('id, full_name').eq('clerk_user_id', clerkUserId).single(),
-          supabase.from('projects').select('name').eq('id', updatedRun.project_id).single()
-        ]);
+          supabase
+            .from("users")
+            .select("id, full_name")
+            .eq("clerk_user_id", clerkUserId)
+            .single(),
+          supabase
+            .from("projects")
+            .select("name")
+            .eq("id", updatedRun.project_id)
+            .single(),
+        ])
 
-        const performerName = performerRes.data?.full_name || 'QA Engineer';
-        const projectName = projectRes.data?.name || 'Project';
+        const performerName = performerRes.data?.full_name || "QA Engineer"
+        const projectName = projectRes.data?.name || "Project"
 
         await activityService.logActivity(
-          { id: performerRes.data?.id || '', name: performerName },
-          { 
-            type: 'RUN_STARTED', 
-            details: { 
+          { id: performerRes.data?.id || "", name: performerName },
+          {
+            type: "RUN_STARTED",
+            details: {
               projectName,
-              message: ` started a run for ${projectName}` 
-            } 
+              message: ` started a run for ${projectName}`,
+            },
           },
-          { id: updatedRun.id, type: 'run' },
-          [updatedRun.created_by]
-        );
+          { id: updatedRun.id, type: "run" },
+          [updatedRun.created_by],
+        )
       } catch (logError) {
-        console.error('[ActivityService] Failed to log run start:', logError);
+        console.error("[ActivityService] Failed to log run start:", logError)
       }
 
-
       // 3. Enqueue the job in BullMQ for the worker to pick up
-      await addRunJob(id);
+      await addRunJob(id)
 
-      return res.json(updatedRun);
+      return res.json(updatedRun)
     } catch (error: any) {
-      console.error('[Start Run Error]:', error);
-      return res.status(500).json({ error: error.message });
+      console.error("[Start Run Error]:", error)
+      return res.status(500).json({ error: error.message })
     }
-  }
-);
+  },
+)
 
 /**
  * DELETE /api/runs
  * Bulk delete QA runs.
  */
 router.delete(
-  '/',
+  "/",
   clerkAuth,
-  requireRole('qa_engineer'),
+  requireRole("qa_engineer"),
   async (req: Request, res: Response) => {
-    const { runIds } = req.body;
+    const { runIds } = req.body
 
     if (!runIds || !Array.isArray(runIds) || runIds.length === 0) {
-      return res.status(400).json({ error: 'runIds array is required' });
+      return res.status(400).json({ error: "runIds array is required" })
     }
 
     try {
-      const { error } = await supabase
-        .from('qa_runs')
-        .delete()
-        .in('id', runIds);
+      const { error } = await supabase.from("qa_runs").delete().in("id", runIds)
 
-      if (error) throw error;
+      if (error) throw error
 
-      return res.status(200).json({ message: 'Runs deleted successfully' });
+      return res.status(200).json({ message: "Runs deleted successfully" })
     } catch (error: any) {
-      return res.status(500).json({ error: error.message });
+      return res.status(500).json({ error: error.message })
     }
-  }
-);
+  },
+)
 
-export { router as runsRouter };
-
+export { router as runsRouter }

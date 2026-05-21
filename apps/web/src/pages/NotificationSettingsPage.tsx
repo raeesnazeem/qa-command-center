@@ -202,7 +202,7 @@ export const NotificationSettingsPage = ({
       </section>
 
       {/* Slack Integration */}
-      <section className="bg-white border border-slate-100 rounded-md overflow-hidden shadow-sm">
+      {/* <section className="bg-white border border-slate-100 rounded-md overflow-hidden shadow-sm">
         <div className="px-6 py-4 border-b border-slate-50 flex items-center space-x-3 bg-slate-50/50">
           <div className="p-2 bg-white border border-slate-100 rounded-md text-slate-400 shadow-sm">
             <Hash className="w-5 h-5" />
@@ -285,7 +285,7 @@ export const NotificationSettingsPage = ({
             </p>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Google Chat Integration */}
       <section className="bg-white border border-slate-100 rounded-md overflow-hidden shadow-sm">

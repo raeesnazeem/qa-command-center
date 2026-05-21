@@ -151,8 +151,13 @@ export const TeamPage = () => {
             {isLoading ? (
               <tr>
                 <td colSpan={5} className="px-6 py-12 text-center">
-                  <div className="flex flex-col items-center space-y-2">
-                    <Loader2 className="w-6 h-6 text-accent animate-spin" />
+                  <div className="flex flex-col items-center space-y-3 animate-pulse font-sans">
+                    <img
+                      src="https://growth99.com/storage/2024/09/LOGO.svg"
+                      alt="QACC Logo"
+                      className="h-10 w-10"
+                      style={{ objectFit: "contain" }}
+                    />
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                       Loading team members...
                     </span>
@@ -229,14 +234,15 @@ export const TeamPage = () => {
 
       {/* Role Guide */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="p-6 bg-slate-900 rounded-xl text-white shadow-xl">
-          <ShieldCheck className="w-8 h-8 text-accent mb-4" />
-          <h4 className="font-bold text-lg mb-2">Admins</h4>
-          <p className="text-xs text-slate-400 leading-relaxed font-medium">
+        <div className="p-6 bg-accent rounded-xl text-white shadow-xl shadow-accent/10">
+          <ShieldCheck className="w-8 h-8 text-white mb-4 animate-pulse" />
+          <h4 className="font-bold text-lg text-white mb-2">Admins</h4>
+          <p className="text-xs text-white leading-relaxed font-medium opacity-90">
             Full organization access. Can create projects, invite users, and
             sign off on all QA reports.
           </p>
         </div>
+
         <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm">
           <Users className="w-8 h-8 text-black mb-4" />
           <h4 className="font-bold text-lg text-slate-900 mb-2">
