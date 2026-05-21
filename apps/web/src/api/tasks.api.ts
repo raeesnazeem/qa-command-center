@@ -39,6 +39,11 @@ export interface Task {
   projects?: {
     name: string;
   };
+  assignees?: {
+    taskId: string;
+    userId: string;
+    name: string;
+  }[];
 }
 
 export interface TaskComment {
@@ -187,7 +192,6 @@ export const bulkDeleteTasks = async (
 };
 
 export const getBasecampPeople = async (
-
   axios: AxiosInstance,
   projectId: string
 ): Promise<Record<number, { sgid: string; name: string }>> => {
@@ -195,4 +199,44 @@ export const getBasecampPeople = async (
     params: { projectId }
   });
   return data;
+};
+
+export const notResolvedTask = async (
+  axios: AxiosInstance,
+  taskId: string,
+  data: { comment: string; assignees: string[] }
+): Promise<{ success: boolean }> => {
+  const { data: response } = await axios.post<{ success: boolean }>(
+    `/api/basecamp/tasks/${taskId}/not-resolved`,
+    data
+  );
+  return response;
+};
+
+export const resolveTask = async (
+  axios: AxiosInstance,
+  taskId: string,
+  data: { comment: string; screenshot_url?: string }
+): Promise<{ success: boolean }> => {
+  const { data: response } = await axios.post<{ success: boolean }>(
+    `/api/basecamp/tasks/${taskId}/resolve`,
+    data
+  );
+  return response;
+};
+
+export const pushPendingReminder = async (
+  axios: AxiosInstance,
+  data: { 
+    taskIds: string[], 
+    assigneeIds: string[], 
+    comment: string,
+    projectId: string
+  }
+): Promise<{ success: boolean }> => {
+  const { data: response } = await axios.post<{ success: boolean }>(
+    `/api/basecamp/pending-reminder`,
+    data
+  );
+  return response;
 };

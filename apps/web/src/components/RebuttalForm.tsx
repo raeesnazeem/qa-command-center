@@ -1,131 +1,147 @@
-import React, { useState, useCallback } from 'react';
-import { Upload, X, Loader2, Send } from 'lucide-react';
-import { useAddRebuttal } from '../hooks/useTasks';
-import { supabase } from '../lib/supabase';
-import toast from 'react-hot-toast';
+import React, { useState, useCallback } from "react"
+import { Upload, X, Loader2, Send } from "lucide-react"
+import { useAddRebuttal } from "../hooks/useTasks"
+import { supabase } from "../lib/supabase"
+import toast from "react-hot-toast"
 
 interface RebuttalFormProps {
-  taskId: string;
-  onCancel: () => void;
-  onSuccess: () => void;
+  taskId: string
+  onCancel: () => void
+  onSuccess: () => void
 }
 
-export const RebuttalForm: React.FC<RebuttalFormProps> = ({ taskId, onCancel, onSuccess }) => {
-  const [text, setText] = useState('');
-  const [file, setFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [isAiAnalyzing, setIsAiAnalyzing] = useState(false);
+export const RebuttalForm: React.FC<RebuttalFormProps> = ({
+  taskId,
+  onCancel,
+  onSuccess,
+}) => {
+  const [text, setText] = useState("")
+  const [file, setFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const [isAiAnalyzing, setIsAiAnalyzing] = useState(false)
 
-  const { mutate: submitRebuttal, isPending: isSubmitting } = useAddRebuttal();
+  const { mutate: submitRebuttal, isPending: isSubmitting } = useAddRebuttal()
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
+    const selectedFile = e.target.files?.[0]
     if (selectedFile) {
       if (selectedFile.size > 5 * 1024 * 1024) {
-        toast.error('File size must be less than 5MB');
-        return;
+        toast.error("File size must be less than 5MB")
+        return
       }
-      if (!selectedFile.type.startsWith('image/')) {
-        toast.error('Only image files are allowed');
-        return;
+      if (!selectedFile.type.startsWith("image/")) {
+        toast.error("Only image files are allowed")
+        return
       }
-      setFile(selectedFile);
-      setPreviewUrl(URL.createObjectURL(selectedFile));
+      setFile(selectedFile)
+      setPreviewUrl(URL.createObjectURL(selectedFile))
     }
-  };
+  }
 
   const onDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    const droppedFile = e.dataTransfer.files?.[0];
+    e.preventDefault()
+    const droppedFile = e.dataTransfer.files?.[0]
     if (droppedFile) {
       if (droppedFile.size > 5 * 1024 * 1024) {
-        toast.error('File size must be less than 5MB');
-        return;
+        toast.error("File size must be less than 5MB")
+        return
       }
-      if (!droppedFile.type.startsWith('image/')) {
-        toast.error('Only image files are allowed');
-        return;
+      if (!droppedFile.type.startsWith("image/")) {
+        toast.error("Only image files are allowed")
+        return
       }
-      setFile(droppedFile);
-      setPreviewUrl(URL.createObjectURL(droppedFile));
+      setFile(droppedFile)
+      setPreviewUrl(URL.createObjectURL(droppedFile))
     }
-  }, []);
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     if (text.length < 20) {
-      toast.error('Explanation must be at least 20 characters');
-      return;
+      toast.error("Explanation must be at least 20 characters")
+      return
     }
 
-    let uploadedUrl = '';
+    let uploadedUrl = ""
     if (file) {
-      setIsUploading(true);
+      setIsUploading(true)
       try {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${taskId}-${Date.now()}.${fileExt}`;
-        const filePath = `rebuttals/${fileName}`;
+        const fileExt = file.name.split(".").pop()
+        const fileName = `${taskId}-${Date.now()}.${fileExt}`
+        const filePath = `rebuttals/${fileName}`
 
         const { error: uploadError } = await supabase.storage
-          .from('screenshots')
-          .upload(filePath, file);
+          .from("screenshots")
+          .upload(filePath, file)
 
-        if (uploadError) throw uploadError;
+        if (uploadError) throw uploadError
 
         const { data } = supabase.storage
-          .from('screenshots')
-          .getPublicUrl(filePath);
-        
-        uploadedUrl = data.publicUrl;
+          .from("screenshots")
+          .getPublicUrl(filePath)
+
+        uploadedUrl = data.publicUrl
       } catch (error: any) {
-        toast.error('Failed to upload screenshot: ' + error.message);
-        setIsUploading(false);
-        return;
+        toast.error("Failed to upload screenshot: " + error.message)
+        setIsUploading(false)
+        return
       } finally {
-        setIsUploading(false);
+        setIsUploading(false)
       }
     }
 
-    setIsAiAnalyzing(true);
-    submitRebuttal({
-      taskId,
-      data: {
-        text,
-        screenshot_url: uploadedUrl || undefined
-      }
-    }, {
-      onSuccess: () => {
-        setIsAiAnalyzing(false);
-        onSuccess();
+    setIsAiAnalyzing(true)
+    submitRebuttal(
+      {
+        taskId,
+        data: {
+          text,
+          screenshot_url: uploadedUrl || undefined,
+        },
       },
-      onError: () => {
-        setIsAiAnalyzing(false);
-      }
-    });
-  };
+      {
+        onSuccess: () => {
+          setIsAiAnalyzing(false)
+          onSuccess()
+        },
+        onError: () => {
+          setIsAiAnalyzing(false)
+        },
+      },
+    )
+  }
 
   if (isAiAnalyzing) {
     return (
-      <div className="bg-white border border-red-200 rounded-2xl p-8 shadow-xl flex flex-col items-center justify-center space-y-4 animate-in zoom-in duration-300">
+      <div className="bg-white border border-red-200 rounded-md p-8 shadow-xl flex flex-col items-center justify-center space-y-4 animate-in zoom-in duration-300">
         <div className="p-4 bg-red-50 rounded-full relative">
           <Loader2 className="w-8 h-8 text-red-600 animate-spin" />
           <div className="absolute inset-0 bg-red-500/10 rounded-full animate-ping" />
         </div>
         <div className="text-center">
-          <h4 className="font-black text-slate-900 uppercase tracking-widest text-sm">Rebuttal submitted</h4>
-          <p className="text-xs text-slate-500 font-bold uppercase tracking-tighter mt-1">AI is analyzing your evidence...</p>
+          <h4 className="font-bold text-slate-900 uppercase tracking-widest text-sm">
+            Rebuttal submitted
+          </h4>
+          <p className="text-xs text-slate-500 font-bold uppercase tracking-tighter mt-1">
+            AI is analyzing your evidence...
+          </p>
         </div>
       </div>
-    );
+    )
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white border border-red-200 rounded-2xl p-6 shadow-xl space-y-6 ring-4 ring-red-500/5 animate-in slide-in-from-top-4 duration-300">
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white border border-red-200 rounded-md p-6 shadow-xl space-y-6 ring-4 ring-red-500/5 animate-in slide-in-from-top-4 duration-300"
+    >
       <div className="flex items-center justify-between">
-        <h4 className="text-[10px] font-black uppercase tracking-widest text-red-600">New Rebuttal Submission</h4>
-        <button 
-          type="button" 
+        <h4 className="text-[10px] font-bold uppercase tracking-widest text-red-600">
+          New Rebuttal Submission
+        </h4>
+        <button
+          type="button"
           onClick={onCancel}
           className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors"
         >
@@ -135,7 +151,9 @@ export const RebuttalForm: React.FC<RebuttalFormProps> = ({ taskId, onCancel, on
 
       <div className="space-y-4">
         <div className="space-y-1.5">
-          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Explanation (Min 20 characters)</label>
+          <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">
+            Explanation (Min 20 characters)
+          </label>
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -147,13 +165,22 @@ export const RebuttalForm: React.FC<RebuttalFormProps> = ({ taskId, onCancel, on
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Evidence Screenshot (Optional, Max 5MB)</label>
+          <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">
+            Evidence Screenshot (Optional, Max 5MB)
+          </label>
           {previewUrl ? (
             <div className="relative group rounded-xl overflow-hidden border-2 border-slate-200 aspect-video bg-slate-100">
-              <img src={previewUrl} alt="Preview" className="w-full h-full object-contain" />
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="w-full h-full object-contain"
+              />
               <button
                 type="button"
-                onClick={() => { setFile(null); setPreviewUrl(null); }}
+                onClick={() => {
+                  setFile(null)
+                  setPreviewUrl(null)
+                }}
                 className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 text-white rounded-lg backdrop-blur-sm transition-all shadow-lg"
               >
                 <X size={14} />
@@ -161,17 +188,33 @@ export const RebuttalForm: React.FC<RebuttalFormProps> = ({ taskId, onCancel, on
             </div>
           ) : (
             <div
-              onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
-              onDrop={(e) => { e.preventDefault(); e.stopPropagation(); onDrop(e); }}
+              onDragOver={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+              }}
+              onDrop={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onDrop(e)
+              }}
               className="border-2 border-dashed border-slate-200 rounded-xl p-8 flex flex-col items-center justify-center gap-3 hover:border-red-300 hover:bg-red-50/30 transition-all cursor-pointer group"
-              onClick={() => document.getElementById('screenshot-upload')?.click()}
+              onClick={() =>
+                document.getElementById("screenshot-upload")?.click()
+              }
             >
               <div className="p-3 bg-slate-100 rounded-xl group-hover:bg-red-100 transition-colors">
-                <Upload size={20} className="text-slate-400 group-hover:text-red-600" />
+                <Upload
+                  size={20}
+                  className="text-slate-400 group-hover:text-red-600"
+                />
               </div>
               <div className="text-center">
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-600">Drag & drop or click to upload</p>
-                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter mt-1">Image files only up to 5MB</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600">
+                  Drag & drop or click to upload
+                </p>
+                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter mt-1">
+                  Image files only up to 5MB
+                </p>
               </div>
               <input
                 id="screenshot-upload"
@@ -189,14 +232,14 @@ export const RebuttalForm: React.FC<RebuttalFormProps> = ({ taskId, onCancel, on
         <button
           type="button"
           onClick={onCancel}
-          className="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-800 transition-colors"
+          className="px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-800 transition-colors"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={text.length < 20 || isUploading || isSubmitting}
-          className="flex items-center gap-2 bg-red-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-500/20 active:scale-95 disabled:opacity-50 disabled:active:scale-100"
+          className="flex items-center gap-2 bg-red-600 text-white px-8 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-500/20 active:scale-95 disabled:opacity-50 disabled:active:scale-100"
         >
           {isSubmitting ? (
             <>
@@ -212,5 +255,5 @@ export const RebuttalForm: React.FC<RebuttalFormProps> = ({ taskId, onCancel, on
         </button>
       </div>
     </form>
-  );
-};
+  )
+}

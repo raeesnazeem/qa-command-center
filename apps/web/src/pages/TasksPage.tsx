@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   CheckSquare,
   Search,
@@ -12,25 +12,27 @@ import {
   ExternalLink,
   MessageSquare,
   CheckCircle2,
+  Trash2,
 } from "lucide-react"
-import { Link } from "react-router-dom"
+import { Link, useSearchParams } from "react-router-dom"
 import { useDashboardStats } from "../hooks/useDashboard"
 import { useRole } from "../hooks/useRole"
 import { CreateTaskModal } from "../components/CreateTaskModal"
 import { TasksTab } from "../components/TasksTab"
 import { Skeleton } from "../components/Skeleton"
 import { TaskDetailPanel } from "../components/TaskDetailPanel"
-import { useUpdateTask, useTasks } from "../hooks/useTasks"
-import { TaskStatus } from "../api/tasks.api"
+import { useUpdateTask, useTasks, useDeleteTask } from "../hooks/useTasks"
+import { TaskStatus, getTask } from "../api/tasks.api"
+import { useAuthAxios } from "../lib/useAuthAxios"
 
 const ProjectCard = ({ project }: { project: any }) => (
   <Link
     to={`/projects/${project.id}`}
-    className="flex-shrink-0 w-80 bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group flex flex-col h-full"
+    className="flex-shrink-0 w-80 bg-white border border-slate-100 rounded-md p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group flex flex-col h-full"
   >
     <div className="flex justify-between items-start mb-4">
       <span
-        className={`text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded-full border ${
+        className={`text-[9px] font-bold uppercase tracking-[0.2em] px-2.5 py-1 rounded-full border ${
           project.is_pre_release
             ? "bg-amber-50 text-amber-600 border-amber-100"
             : "bg-emerald-50 text-emerald-600 border-emerald-100"
@@ -45,14 +47,14 @@ const ProjectCard = ({ project }: { project: any }) => (
         </span>
       )}
     </div>
-    <h4 className="font-black text-slate-900 text-lg mb-1 group-hover:text-accent transition-colors line-clamp-1 leading-tight">
+    <h4 className="font-bold text-slate-900 text-lg mb-1 group-hover:text-accent transition-colors line-clamp-1 leading-tight">
       {project.name}
     </h4>
     <p className="text-xs text-slate-400 font-medium mb-6 uppercase tracking-wider">
       {project.client_name || "Internal"}
     </p>
 
-    <div className="mt-auto pt-4 border-t border-slate-50 flex items-center justify-between text-accent font-black text-[10px] uppercase tracking-widest">
+    <div className="mt-auto pt-4 border-t border-slate-50 flex items-center justify-between text-accent font-bold text-[10px] uppercase tracking-widest">
       <span>View Dashboard</span>
       <ArrowUpRight
         size={14}
@@ -73,7 +75,7 @@ const HorizontalScroll = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between px-2">
-        <h3 className="font-black text-slate-900 flex items-center gap-2 uppercase tracking-widest text-xs">
+        <h3 className="font-bold text-slate-900 flex items-center gap-2 uppercase tracking-widest text-xs">
           <Icon className={`w-4 h-4 ${iconColor}`} />
           {title}
         </h3>
@@ -91,32 +93,37 @@ const HorizontalScroll = ({
 }
 
 const groupTasksForUI = (tasks: any[]) => {
-  const groups = new Map<string, any>();
-  tasks.forEach(task => {
-    const groupKey = task.finding_id || task.title;
+  const groups = new Map<string, any>()
+  tasks.forEach((task) => {
+    const groupKey = task.finding_id || task.title
     if (!groups.has(groupKey)) {
-      groups.set(groupKey, { 
-        ...task, 
-        assignees: task.users ? [task.users] : [] 
-      });
+      groups.set(groupKey, {
+        ...task,
+        assignees: task.users ? [task.users] : [],
+      })
     } else {
-      const group = groups.get(groupKey);
-      if (task.users && !group.assignees.some((u: any) => u.id === task.users.id)) {
-        group.assignees.push(task.users);
+      const group = groups.get(groupKey)
+      if (
+        task.users &&
+        !group.assignees.some((u: any) => u.id === task.users.id)
+      ) {
+        group.assignees.push(task.users)
       }
       // Combine comments from duplicates to show total count
       if (task.comments && task.comments.length > 0) {
-        const existingCommentIds = new Set(group.comments?.map((c: any) => c.id) || []);
+        const existingCommentIds = new Set(
+          group.comments?.map((c: any) => c.id) || [],
+        )
         task.comments.forEach((c: any) => {
           if (!existingCommentIds.has(c.id)) {
-            group.comments = [...(group.comments || []), c];
+            group.comments = [...(group.comments || []), c]
           }
-        });
+        })
       }
     }
-  });
-  return Array.from(groups.values());
-};
+  })
+  return Array.from(groups.values())
+}
 
 const getSeverityColor = (severity: string) => {
   switch (severity) {
@@ -137,10 +144,12 @@ const KanbanCard = ({
   task,
   onClick,
   role,
+  onDelete,
 }: {
   task: any
   onClick: any
   role: string
+  onDelete: (taskId: string) => void
 }) => {
   const isAdmin =
     role === "super_admin" || role === "admin" || role === "sub_admin"
@@ -154,7 +163,7 @@ const KanbanCard = ({
     >
       <div className="flex items-center justify-between mb-2">
         <span
-          className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg border ${getSeverityColor(task.severity)}`}
+          className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg border ${getSeverityColor(task.severity)}`}
         >
           {task.severity}
         </span>
@@ -162,6 +171,18 @@ const KanbanCard = ({
           <div className="text-emerald-600" title="Synced with Basecamp">
             <CheckCircle2 size={12} />
           </div>
+        )}
+        {isQA && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onDelete(task.id)
+            }}
+            className="p-1 text-slate-300 hover:text-red-500 transition-colors"
+            title="Delete task"
+          >
+            <Trash2 size={12} />
+          </button>
         )}
       </div>
       <h4 className="text-sm font-bold text-slate-900 group-hover:text-accent transition-colors leading-tight mb-4">
@@ -182,25 +203,26 @@ const KanbanCard = ({
         <div className="flex items-center -space-x-2">
           {(isAdmin || isDev) && task.creator && (
             <div
-              className="w-6 h-6 rounded-full bg-[#93c0b1] flex items-center justify-center text-[10px] font-black text-white border-2 border-white uppercase"
+              className="w-6 h-6 rounded-full bg-[#93c0b1] flex items-center justify-center text-[10px] font-bold text-white border-2 border-white uppercase"
               title={`Assigner: ${task.creator.full_name}`}
             >
               {task.creator.full_name.charAt(0)}
             </div>
           )}
-          {(isAdmin || isQA) && task.assignees && task.assignees.length > 0 && (
+          {(isAdmin || isQA) &&
+            task.assignees &&
+            task.assignees.length > 0 &&
             task.assignees.map((user: any) => (
               <div
                 key={user.id}
-                className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500 border-2 border-white uppercase"
+                className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border-2 border-white uppercase"
                 title={`Assigned to: ${user.full_name}`}
               >
                 {user.full_name.charAt(0)}
               </div>
-            ))
-          )}
+            ))}
           {!task.assignees?.length && !task.users && !task.creator && (
-            <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500 border-2 border-white uppercase">
+            <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border-2 border-white uppercase">
               ?
             </div>
           )}
@@ -215,28 +237,30 @@ const KanbanColumn = ({
   tasks,
   onTaskClick,
   role,
+  onDelete,
 }: {
   title: string
   tasks: any[]
   onTaskClick: any
   role: string
+  onDelete: (taskId: string) => void
 }) => (
   <div className="space-y-4">
     <div className="flex items-center justify-between px-2">
-      <h3 className="font-black text-slate-900 uppercase tracking-widest text-[11px] flex items-center gap-2">
+      <h3 className="font-bold text-slate-900 uppercase tracking-widest text-[11px] flex items-center gap-2">
         <div className="w-1.5 h-1.5 rounded-full bg-slate-300" />
         {title}
       </h3>
-      <span className="bg-slate-100 text-slate-500 text-[10px] font-black px-2 py-0.5 rounded-full">
+      <span className="bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-0.5 rounded-full">
         {tasks.length}
       </span>
     </div>
 
-    <div className="space-y-4 min-h-[200px] bg-slate-50/50 rounded-2xl p-2 border border-dashed border-slate-200/60">
+    <div className="space-y-4 min-h-[200px] bg-slate-50/50 rounded-md p-2 border border-dashed border-slate-200/60">
       {tasks.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-32 text-center space-y-2 opacity-30 grayscale">
           <CheckSquare className="w-6 h-6 text-slate-400" />
-          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">
+          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">
             No tasks
           </p>
         </div>
@@ -247,6 +271,7 @@ const KanbanColumn = ({
             task={task}
             onClick={onTaskClick}
             role={role}
+            onDelete={onDelete}
           />
         ))
       )}
@@ -259,11 +284,13 @@ const ProjectKanban = ({
   tasks,
   onTaskClick,
   role,
+  onDelete,
 }: {
   project: any
   tasks: any[]
   onTaskClick: any
   role: string
+  onDelete: (taskId: string) => void
 }) => {
   const groupedTasks = groupTasksForUI(tasks)
   const columns = [
@@ -279,7 +306,7 @@ const ProjectKanban = ({
         <div className="flex items-center gap-4">
           <div className="w-1.5 h-8 bg-accent rounded-full shadow-sm shadow-accent/20" />
           <div>
-            <h2 className="text-xl font-black text-slate-900 tracking-tight">
+            <h2 className="text-xl font-bold text-slate-900 tracking-tight">
               {project.name}
             </h2>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-0.5">
@@ -288,7 +315,7 @@ const ProjectKanban = ({
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-white px-3 py-1.5 rounded-xl border border-slate-100 shadow-sm">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-white px-3 py-1.5 rounded-xl border border-slate-100 shadow-sm">
             {tasks.length} Total Assigned
           </span>
           <Link
@@ -307,6 +334,7 @@ const ProjectKanban = ({
             tasks={groupedTasks.filter((t) => t.status === col.id)}
             onTaskClick={onTaskClick}
             role={role}
+            onDelete={onDelete}
           />
         ))}
       </div>
@@ -319,10 +347,27 @@ export const TasksPage = () => {
   const { role, profile, isLoading: isRoleLoading } = useRole()
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useState<any>(null)
+  const [searchParams] = useSearchParams()
+  const taskIdParam = searchParams.get("taskId")
+  const axios = useAuthAxios()
+
+  useEffect(() => {
+    if (taskIdParam) {
+      getTask(axios, taskIdParam)
+        .then((task) => {
+          setSelectedTask(task)
+        })
+        .catch((err) => {
+          console.error("[TasksPage] Failed to fetch deep-linked task:", err)
+        })
+    }
+  }, [taskIdParam, axios])
+
   const [showAllOther, setShowAllOther] = useState(false)
   const [qaExpanded, setQaExpanded] = useState(true)
   const [devExpanded, setDevExpanded] = useState(true)
   const { mutate: updateTask } = useUpdateTask()
+  const { mutate: deleteTask } = useDeleteTask()
 
   const isAdmin = role === "super_admin" || role === "admin"
   const isSubAdmin = role === "sub_admin"
@@ -334,6 +379,12 @@ export const TasksPage = () => {
     assignedTo: isDev ? profile?.id : undefined,
     createdBy: isQA ? profile?.id : undefined,
   })
+
+  const handleDeleteTask = (taskId: string) => {
+    if (window.confirm("Are you sure you want to delete this task?")) {
+      deleteTask(taskId)
+    }
+  }
 
   if (isStatsLoading || isRoleLoading || ((isDev || isQA) && isTasksLoading)) {
     return (
@@ -350,7 +401,7 @@ export const TasksPage = () => {
           {[1, 2].map((i) => (
             <div key={i} className="space-y-4">
               <Skeleton className="h-6 w-48" />
-              <div className="bg-white border border-slate-100 rounded-3xl h-64 overflow-hidden relative">
+              <div className="bg-white border border-slate-100 rounded-md h-64 overflow-hidden relative">
                 <Skeleton className="absolute inset-0" />
               </div>
             </div>
@@ -363,7 +414,7 @@ export const TasksPage = () => {
             {[1, 2, 3].map((i) => (
               <Skeleton
                 key={i}
-                className="h-48 w-80 rounded-2xl flex-shrink-0"
+                className="h-48 w-80 rounded-md flex-shrink-0"
               />
             ))}
           </div>
@@ -404,7 +455,7 @@ export const TasksPage = () => {
     <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-500 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-8">
         <div>
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-4xl font-bold text-slate-900 tracking-tight">
             {isDev ? "Developer Task Flow" : "Real-time Tasks Monitor"}
           </h1>
           <p className="text-slate-500 mt-2 font-medium">
@@ -434,7 +485,7 @@ export const TasksPage = () => {
             {/* Unified Table Header */}
             <div className="p-8 border-b border-slate-100 bg-slate-50/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h3 className="font-black text-slate-900 text-xl tracking-tight">
+                <h3 className="font-bold text-slate-900 text-xl tracking-tight">
                   Active Workflows
                 </h3>
                 <p className="text-slate-500 text-sm font-medium mt-1">
@@ -442,7 +493,7 @@ export const TasksPage = () => {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-black uppercase tracking-widest border border-emerald-100">
+                <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-emerald-100">
                   Real-time Tracking
                 </span>
               </div>
@@ -471,7 +522,7 @@ export const TasksPage = () => {
                           </span>
                         </div>
                         <div className="ml-auto">
-                          <span className="text-[10px] font-black text-slate-400 uppercase bg-white/80 px-3 py-1 rounded-full border border-slate-100 shadow-sm">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase bg-white/80 px-3 py-1 rounded-full border border-slate-100 shadow-sm">
                             {data?.qa_projects?.length || 0} Total
                           </span>
                         </div>
@@ -511,7 +562,7 @@ export const TasksPage = () => {
                           </td>
                           <td className="px-8 py-5 text-center">
                             <span
-                              className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg border ${
+                              className={`text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg border ${
                                 project.is_pre_release
                                   ? "bg-amber-50 text-amber-600 border-amber-100"
                                   : "bg-emerald-50 text-emerald-600 border-emerald-100"
@@ -523,7 +574,7 @@ export const TasksPage = () => {
                             </span>
                           </td>
                           <td className="px-8 py-5 text-center">
-                            <span className="text-xs font-black text-slate-700 bg-slate-100 px-3 py-1 rounded-full border border-slate-200/50">
+                            <span className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-full border border-slate-200/50">
                               {project.open_issues_count || 0}
                             </span>
                           </td>
@@ -571,7 +622,7 @@ export const TasksPage = () => {
                           </span>
                         </div>
                         <div className="ml-auto">
-                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-white/80 px-3 py-1 rounded-full border border-slate-100 shadow-sm">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-white/80 px-3 py-1 rounded-full border border-slate-100 shadow-sm">
                             {data?.dev_projects?.length || 0} Total
                           </span>
                         </div>
@@ -615,8 +666,8 @@ export const TasksPage = () => {
                                     key={i}
                                     className={
                                       name === "none"
-                                        ? "text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg border bg-amber-50 text-amber-600 border-amber-100"
-                                        : "text-[10px] font-black text-[#93c0b1] bg-[#93c0b1]/10 px-2.5 py-1 rounded-lg border border-[#93c0b1]/10 uppercase tracking-wider"
+                                        ? "text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg border bg-amber-50 text-amber-600 border-amber-100"
+                                        : "text-[10px] font-bold text-[#93c0b1] bg-[#93c0b1]/10 px-2.5 py-1 rounded-lg border border-[#93c0b1]/10 uppercase tracking-wider"
                                     }
                                   >
                                     {name}
@@ -650,10 +701,10 @@ export const TasksPage = () => {
           <div className="space-y-20">
             {(() => {
               const myTasks = directTasks?.data || []
-              
+
               if (myTasks.length === 0) {
                 return (
-                  <div className="bg-white border border-slate-100 rounded-2xl p-12 text-center text-slate-400 text-sm font-medium italic">
+                  <div className="bg-white border border-slate-100 rounded-md p-12 text-center text-slate-400 text-sm font-medium italic">
                     No active QA projects at the moment.
                   </div>
                 )
@@ -683,6 +734,7 @@ export const TasksPage = () => {
                   tasks={groupedTasks[projectId]}
                   onTaskClick={setSelectedTask}
                   role={role!}
+                  onDelete={handleDeleteTask}
                 />
               ))
             })()}
@@ -694,7 +746,7 @@ export const TasksPage = () => {
           <div className="space-y-20">
             {(() => {
               const myTasks = directTasks?.data || []
-              
+
               if (myTasks.length === 0) {
                 return (
                   <div className="bg-white border border-slate-200 rounded-[40px] p-24 text-center space-y-6 shadow-xl shadow-slate-100/50 animate-in zoom-in-95 duration-700">
@@ -702,7 +754,7 @@ export const TasksPage = () => {
                       <CheckSquare className="w-10 h-10 text-emerald-500" />
                     </div>
                     <div className="space-y-2">
-                      <h3 className="text-2xl font-black text-slate-900 tracking-tight">
+                      <h3 className="text-2xl font-bold text-slate-900 tracking-tight">
                         All Caught Up!
                       </h3>
                       <p className="text-slate-500 font-medium max-w-sm mx-auto">
@@ -746,6 +798,7 @@ export const TasksPage = () => {
                   tasks={groupedTasks[projectId]}
                   onTaskClick={setSelectedTask}
                   role={role!}
+                  onDelete={handleDeleteTask}
                 />
               ))
             })()}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Project } from '../api/projects.api';
-import { useRuns, useUpdateRunStatus } from '../hooks/useRuns';
+import { useRuns, useUpdateRunStatus, useDeleteRuns } from '../hooks/useRuns';
 import { CreateRunModal } from './CreateRunModal';
 import { CanDo } from './CanDo';
 import { 
@@ -15,7 +15,9 @@ import {
   Play,
   Square,
   User,
-  AlertCircle
+  AlertCircle,
+  Trash2,
+  CheckSquare
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -81,7 +83,27 @@ export const RunsTab = ({ project }: RunsTabProps) => {
   const [page, setPage] = useState(1);
   const { data: runsData, isLoading } = useRuns(project.id, page);
   const updateStatus = useUpdateRunStatus();
+  const deleteRuns = useDeleteRuns(project.id);
   const navigate = useNavigate();
+  const [selectedRunIds, setSelectedRunIds] = useState<string[]>([]);
+
+  const handleToggleSelectAll = () => {
+    if (!runsData?.data) return;
+    if (selectedRunIds.length === runsData.data.length) {
+      setSelectedRunIds([]);
+    } else {
+      setSelectedRunIds(runsData.data.map(run => run.id));
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedRunIds.length === 0) return;
+    if (confirm(`Are you sure you want to delete ${selectedRunIds.length} run(s)? This will permanently remove all associated findings and data.`)) {
+      deleteRuns.mutate(selectedRunIds, {
+        onSuccess: () => setSelectedRunIds([]),
+      });
+    }
+  };
 
   const handlePause = (e: React.MouseEvent, runId: string) => {
     e.stopPropagation();
@@ -111,13 +133,29 @@ export const RunsTab = ({ project }: RunsTabProps) => {
           <p className="text-sm text-slate-500 mt-1">Monitor and trigger automated QA sessions for this project.</p>
         </div>
         <CanDo role="qa_engineer">
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-black text-white rounded-md text-sm font-bold hover:bg-slate-800 transition-all shadow-sm active:scale-95"
-          >
-            <PlayCircle className="w-4 h-4" />
-            <span>Start New QA Run</span>
-          </button>
+          <div className="flex items-center space-x-3">
+            {selectedRunIds.length > 0 && (
+              <button
+                onClick={handleDeleteSelected}
+                disabled={deleteRuns.isPending}
+                className="flex items-center space-x-2 px-4 py-2 bg-red-50 text-red-600 rounded-md text-sm font-bold hover:bg-red-100 transition-all shadow-sm active:scale-95 border border-red-100"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Delete ({selectedRunIds.length})</span>
+              </button>
+            )}
+            <button
+              onClick={handleToggleSelectAll}
+              className="flex items-center space-x-2 px-4 py-2 bg-white text-slate-900 border border-slate-200 rounded-md text-sm font-bold hover:bg-slate-50 transition-all shadow-sm active:scale-95"
+            >
+              {selectedRunIds.length === (runsData?.data?.length || 0) && (runsData?.data?.length || 0) > 0 ? (
+                <Square className="w-4 h-4" />
+              ) : (
+                <CheckSquare className="w-4 h-4" />
+              )}
+              <span>{selectedRunIds.length === (runsData?.data?.length || 0) && (runsData?.data?.length || 0) > 0 ? 'Deselect All' : 'Select All'}</span>
+            </button>
+          </div>
         </CanDo>
       </div>
 
@@ -126,6 +164,7 @@ export const RunsTab = ({ project }: RunsTabProps) => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/50 border-b border-slate-100">
+                <th className="px-6 py-4 w-10"></th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Run #</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Type</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Creator</th>
@@ -160,9 +199,21 @@ export const RunsTab = ({ project }: RunsTabProps) => {
                 runsData.data.map((run, index) => (
                   <tr 
                     key={run.id} 
-                    className="hover:bg-slate-50 cursor-pointer group transition-colors"
+                    className={`hover:bg-slate-50 cursor-pointer group transition-colors ${selectedRunIds.includes(run.id) ? 'bg-slate-50' : ''}`}
                     onClick={() => navigate(`/projects/${project.id}/runs/${run.id}`)}
                   >
+                    <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedRunIds.includes(run.id)}
+                        onChange={(e) => {
+                          setSelectedRunIds(prev => 
+                            e.target.checked ? [...prev, run.id] : prev.filter(id => id !== run.id)
+                          );
+                        }}
+                        className="w-4 h-4 rounded border-slate-300 text-black focus:ring-black cursor-pointer"
+                      />
+                    </td>
                     <td className="px-6 py-4">
                       <span className="text-sm font-bold text-slate-900 tracking-tight">
                         #{(runsData.pagination.total - (page - 1) * runsData.pagination.limit) - index}

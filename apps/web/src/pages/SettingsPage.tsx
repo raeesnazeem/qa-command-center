@@ -5,12 +5,47 @@ import {
   Globe, 
   LogOut
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useUser, SignOutButton } from '@clerk/react';
 import { useRole } from '../hooks/useRole';
+import { useAuthAxios } from '../lib/useAuthAxios';
+import { Save, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export const SettingsPage = () => {
   const { user } = useUser();
   const { role } = useRole();
+  const axios = useAuthAxios();
+  const [googleChatUserId, setGoogleChatUserId] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const { data } = await axios.get('/api/users/notification-prefs');
+        if (data && data.google_chat_user_id !== undefined) {
+          setGoogleChatUserId(data.google_chat_user_id || '');
+        }
+      } catch (error) {
+        console.error('Failed to fetch profile settings:', error);
+      }
+    };
+    fetchProfile();
+  }, [axios]);
+
+  const handleSaveProfile = async () => {
+    setIsSaving(true);
+    try {
+      await axios.patch('/api/users/notification-prefs', {
+        google_chat_user_id: googleChatUserId
+      });
+      toast.success('Profile settings updated');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to update settings');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const sections = [
     {
@@ -22,6 +57,7 @@ export const SettingsPage = () => {
         { label: 'Full Name', value: user?.fullName || 'Not set', type: 'text' },
         { label: 'Email Address', value: user?.primaryEmailAddress?.emailAddress || 'Not set', type: 'text' },
         { label: 'Role', value: role || 'developer', type: 'badge' },
+        { label: 'Google Chat ID', value: googleChatUserId, type: 'input', placeholder: 'Enter your Google internal ID' },
       ]
     },
     {
@@ -73,6 +109,25 @@ export const SettingsPage = () => {
                   <div className="flex items-center space-x-4">
                     {item.type === 'text' && (
                       <span className="text-sm font-semibold text-slate-900">{item.value as string}</span>
+                    )}
+                    {item.type === 'input' && (
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="text"
+                          value={googleChatUserId}
+                          onChange={(e) => setGoogleChatUserId(e.target.value)}
+                          placeholder={item.placeholder}
+                          className="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-sm focus:outline-none focus:border-accent w-48"
+                        />
+                        <button 
+                          onClick={handleSaveProfile}
+                          disabled={isSaving}
+                          className="btn-unified-secondary h-8 px-3 text-[10px] flex items-center gap-2"
+                        >
+                          {isSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                          Save
+                        </button>
+                      </div>
                     )}
                     {item.type === 'badge' && (
                       <span className="px-2 py-0.5 bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-wider rounded-full border border-accent/20">

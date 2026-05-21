@@ -1,4 +1,4 @@
-import { Queue } from 'bullmq';
+import { Queue, QueueEvents } from 'bullmq';
 import IORedis from 'ioredis';
 import 'dotenv/config';
 
@@ -36,6 +36,14 @@ const connection = new IORedis(redisUrl, {
  * QA Jobs Queue
  */
 export const qaQueue = new Queue('qa-jobs', { connection });
+
+/**
+ * Singleton QueueEvents for monitoring job completion without leaking connections
+ */
+export const qaQueueEvents = new QueueEvents('qa-jobs', { 
+  connection,
+  stalledInterval: 300000 // 5 minutes
+});
 
 /**
  * Enqueue a crawler job for a specific QA run

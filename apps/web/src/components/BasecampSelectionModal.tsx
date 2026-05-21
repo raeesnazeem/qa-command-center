@@ -19,38 +19,51 @@ export const BasecampSelectionModal = ({
   isPushing,
   projectId,
   title = "Basecamp Destination",
-  description = "Select where to push these tasks"
+  description = "Select where to push these tasks",
 }: BasecampSelectionModalProps) => {
   const [selectedTodolistId, setSelectedTodolistId] = useState<string>("")
   const [selectedTodoId, setSelectedTodoId] = useState<string>("")
 
-  const { data: todolists, isLoading: isLoadingLists } = useBasecampTodoLists(projectId)
-  const { data: todos, isLoading: isLoadingTodos } = useBasecampTodos(projectId, selectedTodolistId)
+  const { data: todolists, isLoading: isLoadingLists } =
+    useBasecampTodoLists(projectId)
+  const { data: todos, isLoading: isLoadingTodos } = useBasecampTodos(
+    projectId,
+    selectedTodolistId,
+  )
 
   if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="absolute inset-0" onClick={() => !isPushing && onClose()} />
+      <div
+        className="absolute inset-0"
+        onClick={() => !isPushing && onClose()}
+      />
       <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-[12px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
         <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
           <div>
-            <h3 className="font-black text-slate-900 text-lg tracking-tight">{title}</h3>
-            <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-0.5">{description}</p>
+            <h3 className="font-bold text-slate-900 text-lg tracking-tight">
+              {title}
+            </h3>
+            <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-0.5">
+              {description}
+            </p>
           </div>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             disabled={isPushing}
             className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
-        
+
         <div className="p-8 space-y-6">
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">To-do List</label>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">
+                To-do List
+              </label>
               <select
                 value={selectedTodolistId}
                 onChange={(e) => {
@@ -62,14 +75,18 @@ export const BasecampSelectionModal = ({
               >
                 <option value="">Select a list...</option>
                 {todolists?.map((list: any) => (
-                  <option key={list.id} value={list.id}>{list.name}</option>
+                  <option key={list.id} value={list.id}>
+                    {list.name}
+                  </option>
                 ))}
               </select>
             </div>
 
             {selectedTodolistId && (
               <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Specific To-do (Optional)</label>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">
+                  Specific To-do (Optional)
+                </label>
                 <select
                   value={selectedTodoId}
                   onChange={(e) => setSelectedTodoId(e.target.value)}
@@ -78,7 +95,9 @@ export const BasecampSelectionModal = ({
                 >
                   <option value="">Create New / Use "QA Findings"</option>
                   {todos?.map((todo: any) => (
-                    <option key={todo.id} value={todo.id}>{todo.content}</option>
+                    <option key={todo.id} value={todo.id}>
+                      {todo.content}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -87,7 +106,9 @@ export const BasecampSelectionModal = ({
 
           <div className="flex flex-col gap-3">
             <button
-              onClick={() => onConfirm(selectedTodolistId, selectedTodoId || undefined)}
+              onClick={() =>
+                onConfirm(selectedTodolistId, selectedTodoId || undefined)
+              }
               disabled={isPushing || !selectedTodolistId}
               className="w-full btn-unified flex items-center justify-center space-x-2 py-3"
             >

@@ -14,6 +14,16 @@ export const useChat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [providerMetadata, setProviderMetadata] = useState<{ 
+    provider: string, 
+    failedProviders: string[],
+    allStats?: Record<string, { 
+      latencyMs: number, 
+      status: string, 
+      error?: string,
+      usage?: { promptTokens: number, completionTokens: number }
+    }>
+  } | null>(null);
   const { getToken } = useAuth();
 
   const sendMessage = useCallback(async (text: string, projectId?: string, runId?: string) => {
@@ -40,6 +50,7 @@ export const useChat = () => {
           message: text,
           project_id: projectId,
           run_id: runId,
+          history: messages.map(m => ({ role: m.role, content: m.content })),
         }),
       });
 
@@ -58,6 +69,7 @@ export const useChat = () => {
         role: 'assistant',
         content: '',
         timestamp: new Date(),
+
         isStreaming: true,
       };
 
@@ -77,9 +89,9 @@ export const useChat = () => {
         partialLine = lines.pop() || '';
 
         for (const line of lines) {
-          if (!line.trim() || !line.startsWith('data: ')) continue;
+          if (!line.startsWith('data: ')) continue;
           
-          const data = line.slice(6).trim();
+          const data = line.slice(6);
 
           if (data === '[DONE]') {
             setIsStreaming(false);
@@ -91,6 +103,29 @@ export const useChat = () => {
               }
               return newMessages;
             });
+            continue;
+          }
+
+          if (data.startsWith('[METADATA]')) {
+            try {
+              const meta = JSON.parse(data.slice(10));
+              if (meta.intermediate) {
+                setProviderMetadata((prev) => {
+                  const newStats = { ...(prev?.allStats || {}), [meta.provider]: meta.stats };
+                  return {
+                    provider: meta.stats.status === 'success' ? meta.provider : (prev?.provider || ''),
+                    failedProviders: Object.entries(newStats)
+                      .filter(([_, s]) => s.status === 'failed')
+                      .map(([name]) => name),
+                    allStats: newStats
+                  };
+                });
+              } else {
+                setProviderMetadata(meta);
+              }
+            } catch (e) {
+              console.error('Error parsing metadata:', e);
+            }
             continue;
           }
 
@@ -112,7 +147,7 @@ export const useChat = () => {
               }
             } else {
               // It's a plain text chunk
-              accumulatedContent += data;
+              accumulatedContent += data || '\n';
               setMessages((prev) => {
                 const newMessages = [...prev];
                 const lastMessage = newMessages[newMessages.length - 1];
@@ -142,12 +177,13 @@ export const useChat = () => {
       setIsStreaming(false);
       // Optionally handle error in UI
     }
-  }, [getToken]);
+  }, [getToken, messages]);
 
   return {
     messages,
     isLoading,
     isStreaming,
+    providerMetadata,
     sendMessage,
   };
 };

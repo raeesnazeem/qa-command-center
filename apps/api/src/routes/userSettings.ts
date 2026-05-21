@@ -35,17 +35,21 @@ router.get('/notification-prefs', clerkAuth, async (req: Request, res: Response)
  */
 router.patch('/notification-prefs', clerkAuth, async (req: Request, res: Response) => {
   const { userId } = req.auth!;
-  const prefs = req.body;
+  const { notification_prefs, google_chat_user_id } = req.body;
 
   try {
+    const updateData: any = {
+      updated_at: new Date().toISOString()
+    };
+
+    if (notification_prefs !== undefined) updateData.notification_prefs = notification_prefs;
+    if (google_chat_user_id !== undefined) updateData.google_chat_user_id = google_chat_user_id;
+
     const { data, error } = await supabase
       .from('users')
-      .update({
-        notification_prefs: prefs,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', userId)
-      .select('notification_prefs')
+      .select('notification_prefs, google_chat_user_id')
       .single();
 
     if (error) throw error;

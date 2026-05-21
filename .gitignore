@@ -185,3 +185,7 @@ yarn.lock
 .windsurfrules
 explanation.md
 summary.md
+
+#other mds
+**/*.md.resolved
+**/*.md

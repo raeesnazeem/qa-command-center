@@ -6,9 +6,10 @@ import {
   Clock, 
   CheckCircle2, 
   User,
-  Layers
+  Layers,
+  Trash2
 } from 'lucide-react';
-import { useTasks } from '../hooks/useTasks';
+import { useTasks, useDeleteTask } from '../hooks/useTasks';
 import { TaskDetailPanel } from '../components/TaskDetailPanel';
 import type { Task, TaskStatus, TaskSeverity } from '../api/tasks.api';
 import { format } from 'date-fns';
@@ -35,7 +36,8 @@ const getStatusStyles = (status: TaskStatus) => {
 };
 
 export const TaskListPage = () => {
-  const { isDeveloper, profile } = useRole();
+  const { isDeveloper, isQaEngineer, profile } = useRole();
+  const { mutate: deleteTask } = useDeleteTask();
   const [filters, setFilters] = useState({
     status: '' as TaskStatus | '',
     severity: '' as TaskSeverity | '',
@@ -75,6 +77,13 @@ export const TaskListPage = () => {
   const handleRowClick = (task: Task) => {
     setSelectedTask(task);
     setIsPanelOpen(true);
+  };
+
+  const handleDeleteTask = (e: React.MouseEvent, taskId: string) => {
+    e.stopPropagation();
+    if (window.confirm("Are you sure you want to delete this task?")) {
+      deleteTask(taskId);
+    }
   };
 
   return (
@@ -215,7 +224,18 @@ export const TaskListPage = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-accent transform group-hover:translate-x-1 transition-all" />
+                    <div className="flex items-center justify-end space-x-2">
+                      {isQaEngineer && (
+                        <button
+                          onClick={(e) => handleDeleteTask(e, task.id)}
+                          className="p-2 text-slate-300 hover:text-red-500 transition-colors"
+                          title="Delete task"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-accent transform group-hover:translate-x-1 transition-all" />
+                    </div>
                   </td>
                 </tr>
               ))

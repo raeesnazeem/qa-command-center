@@ -1,27 +1,32 @@
-import { useParams, Link } from 'react-router-dom';
-import { useProject } from '../hooks/useProjects';
-import { QAFinding, QAPage } from '../api/runs.api';
-import { useAuthAxios } from '../lib/useAuthAxios';
-import { useGalleryStore } from '../store/galleryStore';
-import { PagesTable } from '../components/PagesTable';
-import { FindingReviewPanel } from '../components/FindingReviewPanel';
-import { CreateTaskModal } from '../components/CreateTaskModal';
-import { useRunProgress } from '../hooks/useRunProgress';
-import { useFindings, useRunFindings, useUpdateRunStatus, useUpdateFinding, } from '../hooks/useRuns';
-import { useCreateTask, useTasks } from '../hooks/useTasks';
-import { AssignMemberModal } from '../components/AssignMemberModal';
-import { WooCommerceSection } from '../components/WooCommerceSection';
-import { SignOffButton } from '../components/SignOffButton';
-import { TaskStagingOverlay } from '../components/TaskStagingOverlay';
-import { ManualScanOverlay } from '../components/ManualScanOverlay';
-import { useTaskStageStore } from '../store/taskStageStore';
-import { useRole } from '../hooks/useRole';
-import { startVisualDiff } from '../api/visualDiff.api';
-import { 
-  ChevronLeft, 
-  CheckCircle2, 
-  AlertCircle, 
-  Clock, 
+import { useParams, Link } from "react-router-dom"
+import { useProject } from "../hooks/useProjects"
+import { QAFinding, QAPage } from "../api/runs.api"
+import { useAuthAxios } from "../lib/useAuthAxios"
+import { useGalleryStore } from "../store/galleryStore"
+import { PagesTable } from "../components/PagesTable"
+import { FindingReviewPanel } from "../components/FindingReviewPanel"
+import { CreateTaskModal } from "../components/CreateTaskModal"
+import { useRunProgress } from "../hooks/useRunProgress"
+import {
+  useFindings,
+  useRunFindings,
+  useUpdateRunStatus,
+  useUpdateFinding,
+} from "../hooks/useRuns"
+import { useCreateTask, useTasks } from "../hooks/useTasks"
+import { AssignMemberModal } from "../components/AssignMemberModal"
+import { WooCommerceSection } from "../components/WooCommerceSection"
+import { SignOffButton } from "../components/SignOffButton"
+import { TaskStagingOverlay } from "../components/TaskStagingOverlay"
+import { ManualScanOverlay } from "../components/ManualScanOverlay"
+import { useTaskStageStore } from "../store/taskStageStore"
+import { useRole } from "../hooks/useRole"
+import { startVisualDiff } from "../api/visualDiff.api"
+import {
+  ChevronLeft,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
   Loader2,
   Search,
   Activity,
@@ -38,267 +43,612 @@ import {
   RefreshCw,
   ChevronRight,
   Download,
-  Send
-} from 'lucide-react';
-import { useEffect, useState, useMemo } from 'react';
-import toast from 'react-hot-toast';
+  Send,
+  Camera,
+  Video,
+} from "lucide-react"
+import { useEffect, useState, useMemo } from "react"
+import { useQueryClient } from "@tanstack/react-query"
+import toast from "react-hot-toast"
 
 export const RunDetailPage = () => {
-  const { id: projectId, runId } = useParams<{ id: string; runId: string }>();
-  const axios = useAuthAxios();
-  const updateStatus = useUpdateRunStatus();
-  const { canDo } = useRole();
-  const { clearAllGalleries, galleryImages: allGalleryImages } = useGalleryStore();
+  const { id: projectId, runId } = useParams<{ id: string; runId: string }>()
+  const axios = useAuthAxios()
+  const updateStatus = useUpdateRunStatus()
+  const { canDo } = useRole()
+  const { clearAllGalleries, galleryImages: allGalleryImages } =
+    useGalleryStore()
 
   // Clear galleries on mount or when switching runs
   useEffect(() => {
-    clearAllGalleries();
-  }, [runId, clearAllGalleries]);
-  const addToStage = useTaskStageStore(state => state.addToStage);
-  
-  const [isManualScanOpen, setIsManualScanOpen] = useState(false);
-  const [selectedManualPageId, setSelectedManualPageId] = useState<string | null>(null);
-  const canActionManual = canDo('qa_engineer');
-  
-  const { 
-    run, 
-    progress, 
-    isLive, 
-    pagesProcessed, 
-    pagesTotal, 
-    isLoading: isLoadingRun 
-  } = useRunProgress(runId!);
-  
-  const { data: project, isLoading: isLoadingProject } = useProject(projectId!);
-  
-  const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
-  const selectedPage = useMemo(() => run?.pages?.find(p => p.id === selectedPageId) || null, [run?.pages, selectedPageId]);
+    clearAllGalleries()
+  }, [runId, clearAllGalleries])
+  const { addToStage, stagedFindings } = useTaskStageStore()
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'pages' | 'findings' | 'visual_diff' | 'woocommerce' | 'report'>('overview');
+  const [isManualScanOpen, setIsManualScanOpen] = useState(false)
+  const [selectedManualPageId, setSelectedManualPageId] = useState<
+    string | null
+  >(null)
+  const canActionManual = canDo("qa_engineer")
 
-  const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
-  const [prefillFinding, setPrefillFinding] = useState<QAFinding | null>(null);
+  const {
+    run,
+    progress,
+    isLive,
+    pagesProcessed,
+    pagesTotal,
+    isLoading: isLoadingRun,
+  } = useRunProgress(runId!)
 
-  const { data: findings, isLoading: isLoadingFindings } = useFindings(selectedPageId);
-  const { data: runFindings, isLoading: isLoadingRunFindings } = useRunFindings(runId!);
-  const { data: tasksData } = useTasks({ projectId: projectId! });
-  const updateFindingMutation = useUpdateFinding(selectedPageId);
-  const { mutate: createTask } = useCreateTask();
+  const { data: project, isLoading: isLoadingProject } = useProject(projectId!)
+
+  const [selectedPageId, setSelectedPageId] = useState<string | null>(null)
+  const selectedPage = useMemo(
+    () => run?.pages?.find((p) => p.id === selectedPageId) || null,
+    [run?.pages, selectedPageId],
+  )
+
+  const [activeTab, setActiveTab] = useState<
+    | "overview"
+    | "pages"
+    | "general"
+    | "findings"
+    | "visual_diff"
+    | "woocommerce"
+    | "report"
+  >("overview")
+
+  const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false)
+  const [prefillFinding, setPrefillFinding] = useState<QAFinding | null>(null)
+
+  const [isCapturingScreenshots, setIsCapturingScreenshots] = useState(false)
+  const [isRecordingVideo, setIsRecordingVideo] = useState(false)
+
+  const { data: findings, isLoading: isLoadingFindings } =
+    useFindings(selectedPageId)
+  const { data: runFindings, isLoading: isLoadingRunFindings } = useRunFindings(
+    runId!,
+  )
+  const { data: tasksData } = useTasks({ projectId: projectId! })
+  const updateFindingMutation = useUpdateFinding(selectedPageId)
+  const { mutate: createTask } = useCreateTask()
+
+  // Helper to consolidate all dead link findings into a single finding
+  const consolidateDeadLinks = (findings: QAFinding[]): QAFinding[] => {
+    const nonDeadLinks = findings.filter((f) => f.check_factor !== "dead_links")
+    const deadLinks = findings.filter((f) => f.check_factor === "dead_links")
+
+    if (deadLinks.length === 0) return nonDeadLinks
+
+    const violations: string[] = []
+    let totalDeadLinksCount = 0
+
+    deadLinks.forEach((f) => {
+      // Clean up and extract bullet points from descriptions
+      const parts = f.description?.split("- **") || []
+      parts.forEach((part, index) => {
+        if (index === 0) return // Before the first "- **"
+        const cleanPart = part.trim()
+        if (cleanPart) {
+          violations.push(`- **${cleanPart}`)
+          totalDeadLinksCount++
+        }
+      })
+    })
+
+    if (violations.length === 0) {
+      deadLinks.forEach((f) => {
+        if (f.description) {
+          violations.push(f.description)
+        }
+      })
+    }
+
+    const mergedDescription =
+      `The following dead or broken links were detected:\n\n` +
+      violations.join("\n\n")
+
+    let severity: "medium" | "high" | "critical" = "medium"
+    if (totalDeadLinksCount >= 10) severity = "critical"
+    else if (totalDeadLinksCount >= 5) severity = "high"
+
+    const combinedId = deadLinks.map((f) => f.id).join(",")
+
+    const consolidatedDeadLinks: QAFinding = {
+      id: combinedId,
+      check_factor: "dead_links",
+      severity,
+      title: `${totalDeadLinksCount} dead link${totalDeadLinksCount > 1 ? "s" : ""} found`,
+      description: mergedDescription,
+      context_text: deadLinks
+        .map((f) => f.context_text)
+        .filter(Boolean)
+        .join("\n"),
+      screenshot_url: null,
+      status: deadLinks.every((f) => f.status === "confirmed")
+        ? "confirmed"
+        : deadLinks.every((f) => f.status === "false_positive")
+          ? "false_positive"
+          : "open",
+      ai_generated: false,
+      created_at: deadLinks[0]?.created_at,
+      page_id: null,
+      run_id: deadLinks[0]?.run_id,
+    } as any
+
+    return [...nonDeadLinks, consolidatedDeadLinks]
+  }
+
+  // 1. Extract any general run-level findings (null page_id OR project plan factor OR hero_media matching selected page)
+  const generalFindings = useMemo(() => {
+    const baseGeneral =
+      runFindings?.filter(
+        (f) =>
+          !f.page_id ||
+          f.check_factor === "project_plan" ||
+          f.check_factor === "dead_links" ||
+          (f.check_factor === "hero_media" && f.page_id === selectedPageId),
+      ) || []
+    return consolidateDeadLinks(baseGeneral)
+  }, [runFindings, selectedPageId])
+
+  // 2. Filter out project_plan and hero_media from page-specific findings to avoid duplicate rendering
+  const pageFindings = useMemo(() => {
+    return (
+      findings?.filter(
+        (f) =>
+          f.check_factor !== "project_plan" &&
+          f.check_factor !== "hero_media" &&
+          f.check_factor !== "dead_links",
+      ) || []
+    )
+  }, [findings])
+
+  const queryClient = useQueryClient()
+
+  const runGeneralFindings = useMemo(() => {
+    const baseGeneral =
+      runFindings?.filter(
+        (f) =>
+          !f.page_id ||
+          f.check_factor === "project_plan" ||
+          f.check_factor === "dead_links" ||
+          f.check_factor === "hero_media",
+      ) || []
+    return consolidateDeadLinks(baseGeneral)
+  }, [runFindings])
 
   const findingToTaskMap = useMemo(() => {
-    const map: Record<string, { taskIds: string[], assignedUsers: any[] }> = {};
-    if (!tasksData?.data) return map;
+    const map: Record<string, { taskIds: string[]; assignedUsers: any[] }> = {}
+    if (!tasksData?.data) return map
 
-    tasksData.data.forEach(task => {
+    // 1. Map tasks to their exact finding_id
+    tasksData.data.forEach((task) => {
       if (task.finding_id) {
         if (!map[task.finding_id]) {
-          map[task.finding_id] = { taskIds: [], assignedUsers: [] };
+          map[task.finding_id] = { taskIds: [], assignedUsers: [] }
         }
-        map[task.finding_id].taskIds.push(task.id);
-        if (task.users && !map[task.finding_id].assignedUsers.some(u => u.id === task.users.id)) {
-          map[task.finding_id].assignedUsers.push(task.users);
+        map[task.finding_id].taskIds.push(task.id)
+        if (
+          task.users &&
+          !map[task.finding_id].assignedUsers.some(
+            (u) => u.id === task.users.id,
+          )
+        ) {
+          map[task.finding_id].assignedUsers.push(task.users)
         }
       }
-    });
-    return map;
-  }, [tasksData]);
+    })
 
-  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
-  const [assignTarget, setAssignTarget] = useState<{ type: 'single' | 'bulk'; ids: string[] }>({ type: 'single', ids: [] });
+    // 2. Map the consolidated dead links combined ID to tasks associated with any individual finding ID
+    const deadLinks =
+      runFindings?.filter((f) => f.check_factor === "dead_links") || []
+    if (deadLinks.length > 0) {
+      const combinedId = deadLinks.map((f) => f.id).join(",")
+      const combinedTaskIds: string[] = []
+      const combinedAssignedUsers: any[] = []
+
+      deadLinks.forEach((f) => {
+        const taskInfo = map[f.id]
+        if (taskInfo) {
+          taskInfo.taskIds.forEach((tid) => {
+            if (!combinedTaskIds.includes(tid)) {
+              combinedTaskIds.push(tid)
+            }
+          })
+          taskInfo.assignedUsers.forEach((user) => {
+            if (!combinedAssignedUsers.some((u) => u.id === user.id)) {
+              combinedAssignedUsers.push(user)
+            }
+          })
+        }
+      })
+
+      if (combinedTaskIds.length > 0) {
+        map[combinedId] = {
+          taskIds: combinedTaskIds,
+          assignedUsers: combinedAssignedUsers,
+        }
+      }
+    }
+
+    return map
+  }, [tasksData, runFindings])
+
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false)
+  const [assignTarget, setAssignTarget] = useState<{
+    type: "single" | "bulk"
+    ids: string[]
+  }>({ type: "single", ids: [] })
 
   useEffect(() => {
     if (!selectedPageId && run?.pages && run.pages.length > 0) {
-      setSelectedPageId(run.pages[0].id);
+      setSelectedPageId(run.pages[0].id)
     }
-  }, [run?.pages, selectedPageId]);
+  }, [run?.pages, selectedPageId])
 
-  const [eta, setEta] = useState<string | null>(null);
+  const [eta, setEta] = useState<string | null>(null)
 
   useEffect(() => {
-    if (run?.status === 'running' && run.started_at && pagesTotal > 0 && pagesProcessed > 0) {
-      const startTime = new Date(run.started_at).getTime();
-      const now = new Date().getTime();
-      const elapsedMs = now - startTime;
-      
-      const msPerPage = elapsedMs / pagesProcessed;
-      const remainingPages = pagesTotal - pagesProcessed;
-      const remainingMs = remainingPages * msPerPage;
+    if (
+      run?.status === "running" &&
+      run.started_at &&
+      pagesTotal > 0 &&
+      pagesProcessed > 0
+    ) {
+      const startTime = new Date(run.started_at).getTime()
+      const now = new Date().getTime()
+      const elapsedMs = now - startTime
+
+      const msPerPage = elapsedMs / pagesProcessed
+      const remainingPages = pagesTotal - pagesProcessed
+      const remainingMs = remainingPages * msPerPage
 
       if (remainingMs > 0) {
-        const remainingSecs = Math.ceil(remainingMs / 1000);
+        const remainingSecs = Math.ceil(remainingMs / 1000)
         if (remainingSecs < 60) {
-          setEta(`${remainingSecs}s remaining`);
+          setEta(`${remainingSecs}s remaining`)
         } else {
-          setEta(`${Math.ceil(remainingSecs / 60)}m remaining`);
+          setEta(`${Math.ceil(remainingSecs / 60)}m remaining`)
         }
       }
     } else {
-      setEta(null);
+      setEta(null)
     }
-  }, [pagesProcessed, pagesTotal, run?.status, run?.started_at]);
+  }, [pagesProcessed, pagesTotal, run?.status, run?.started_at])
 
-  const isLoading = isLoadingRun || isLoadingProject;
+  const isLoading = isLoadingRun || isLoadingProject
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 text-accent animate-spin" />
+      <div className="flex flex-col items-center justify-center min-h-[60vh] font-sans mt-[100px]">
+        <div className="flex flex-col items-center space-y-4 animate-pulse">
+          <img
+            src="https://growth99.com/storage/2024/09/LOGO.svg"
+            alt="QACC Logo"
+            className="h-48 w-48"
+            style={{ objectFit: "contain" }}
+          />
+        </div>
       </div>
-    );
+    )
   }
 
   if (!run || !project) {
     return (
       <div className="p-8 text-center">
         <h2 className="text-xl font-bold text-slate-900">Run not found</h2>
-        <Link to={`/projects/${projectId}`} className="text-accent hover:underline mt-4 inline-block">
+        <Link
+          to={`/projects/${projectId}`}
+          className="text-accent hover:underline mt-4 inline-block"
+        >
           Back to Project
         </Link>
       </div>
-    );
+    )
   }
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed': return <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
-      case 'running': return (
-        <div className="relative flex h-3 w-3 mr-1">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
-        </div>
-      );
-      case 'failed': return <AlertCircle className="w-4 h-4 text-red-500" />;
-      default: return <Clock className="w-4 h-4 text-slate-400" />;
+      case "completed":
+        return <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+      case "running":
+        return (
+          <div className="relative flex h-3 w-3 mr-1">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+          </div>
+        )
+      case "failed":
+        return <AlertCircle className="w-4 h-4 text-red-500" />
+      default:
+        return <Clock className="w-4 h-4 text-slate-400" />
     }
-  };
+  }
 
-  const isDiscovering = run.status === 'running' && pagesTotal === 0 && (!run.selected_urls || run.selected_urls.length === 0);
+  const isDiscovering =
+    run.status === "running" &&
+    pagesTotal === 0 &&
+    (!run.selected_urls || run.selected_urls.length === 0)
 
   const handlePause = () => {
-    updateStatus.mutate({ runId: run.id, status: 'paused' });
-  };
+    updateStatus.mutate({ runId: run.id, status: "paused" })
+  }
 
   const handleResume = () => {
-    updateStatus.mutate({ runId: run.id, status: 'running' });
-  };
+    updateStatus.mutate({ runId: run.id, status: "running" })
+  }
 
   const handleStop = () => {
-    if (confirm('Are you sure you want to stop this scan? It cannot be resumed.')) {
-      updateStatus.mutate({ runId: run.id, status: 'cancelled' });
+    if (
+      confirm("Are you sure you want to stop this scan? It cannot be resumed.")
+    ) {
+      updateStatus.mutate({ runId: run.id, status: "cancelled" })
     }
-  };
+  }
+
+  const handleCaptureScreenshots = async () => {
+    if (!selectedPage?.url) return
+    setIsCapturingScreenshots(true)
+    const toastId = toast.loading("Capturing multiview screenshots... ")
+    try {
+      const response = await axios.post(
+        "/api/proxy-browser/capture-multiview",
+        {
+          url: selectedPage.url,
+          type: "screenshots",
+        },
+      )
+
+      const results = response.data // { desktop, laptop, tablet, mobile }
+      const galleryImages = [
+        results.desktop,
+        results.laptop,
+        results.tablet,
+        results.mobile,
+      ].filter(Boolean)
+
+      const urlObj = new URL(selectedPage.url)
+      const pageName = `${urlObj.hostname}${urlObj.pathname}`
+      const dateStr = new Date().toLocaleDateString("en-US", {
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
+      })
+      const timeStr = new Date().toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+
+      const taskTitle = `Screenshots for ${pageName} on ${dateStr} at ${timeStr}`
+
+      createTask({
+        project_id: projectId!,
+        title: taskTitle,
+        description: `Automated multiview screenshots for ${selectedPage.url}`,
+        severity: "medium",
+        gallery_images: galleryImages,
+      })
+
+      toast.success("Screenshots captured and staged as a task", {
+        id: toastId,
+      })
+    } catch (err) {
+      console.error(err)
+      toast.error("Failed to capture multiview screenshots", { id: toastId })
+    } finally {
+      setIsCapturingScreenshots(false)
+    }
+  }
+
+  const handleCaptureVideo = async () => {
+    if (!selectedPage?.url) return
+    setIsRecordingVideo(true)
+    try {
+      toast.success("Video recording started...")
+    } catch (err) {
+      toast.error("Failed to start video recording")
+    } finally {
+      setIsRecordingVideo(false)
+    }
+  }
 
   const handleConfirmFinding = async (id: string) => {
-    updateFindingMutation.mutate({ findingId: id, data: { status: 'confirmed' } });
-  };
+    const ids = id.split(",")
+    await Promise.all(
+      ids.map((findingId) =>
+        updateFindingMutation.mutateAsync({
+          findingId,
+          data: { status: "confirmed" },
+        }),
+      ),
+    )
+    queryClient.invalidateQueries({ queryKey: ["run-findings", runId] })
+  }
 
   const handleFalsePositiveFinding = async (id: string) => {
-    updateFindingMutation.mutate({ findingId: id, data: { status: 'false_positive' } });
-  };
+    const ids = id.split(",")
+    await Promise.all(
+      ids.map((findingId) =>
+        updateFindingMutation.mutateAsync({
+          findingId,
+          data: { status: "false_positive" },
+        }),
+      ),
+    )
+    queryClient.invalidateQueries({ queryKey: ["run-findings", runId] })
+  }
 
   const handleCreateTaskForFinding = (finding: QAFinding) => {
     // Merge gallery images from store at the entry point
     const mergedFinding = {
       ...finding,
-      gallery_images: allGalleryImages[finding.id] || finding.gallery_images
-    };
-    setPrefillFinding(mergedFinding);
-    setIsCreateTaskModalOpen(true);
-  };
+      gallery_images: allGalleryImages[finding.id] || finding.gallery_images,
+    }
+    setPrefillFinding(mergedFinding)
+    setIsCreateTaskModalOpen(true)
+  }
 
   const handleBulkConfirm = async (ids: string[]) => {
-    ids.forEach(id => {
-      updateFindingMutation.mutate({ findingId: id, data: { status: 'confirmed' } });
-    });
-  };
+    const flatIds = ids.flatMap((id) => id.split(","))
+    await Promise.all(
+      flatIds.map((id) =>
+        updateFindingMutation.mutateAsync({
+          findingId: id,
+          data: { status: "confirmed" },
+        }),
+      ),
+    )
+    queryClient.invalidateQueries({ queryKey: ["run-findings", runId] })
+  }
 
   const handleBulkFalsePositive = async (ids: string[]) => {
-    ids.forEach(id => {
-      updateFindingMutation.mutate({ findingId: id, data: { status: 'false_positive' } });
-    });
-  };
+    const flatIds = ids.flatMap((id) => id.split(","))
+    await Promise.all(
+      flatIds.map((id) =>
+        updateFindingMutation.mutateAsync({
+          findingId: id,
+          data: { status: "false_positive" },
+        }),
+      ),
+    )
+    queryClient.invalidateQueries({ queryKey: ["run-findings", runId] })
+  }
 
   const handleBulkAssign = (ids: string[]) => {
-    setAssignTarget({ type: 'bulk', ids });
-    setIsAssignModalOpen(true);
-  };
+    setAssignTarget({ type: "bulk", ids })
+    setIsAssignModalOpen(true)
+  }
 
   const handleSingleAssign = (id: string) => {
-    setAssignTarget({ type: 'single', ids: [id] });
-    setIsAssignModalOpen(true);
-  };
+    setAssignTarget({ type: "single", ids: [id] })
+    setIsAssignModalOpen(true)
+  }
 
   const handleAssignFinding = async (userId: string) => {
     try {
-      const targets = (findings || []).filter(f => assignTarget.ids.includes(f.id));
+      const allPossibleFindings = [
+        ...(findings || []),
+        ...(runGeneralFindings || []),
+      ]
+      const targets = allPossibleFindings.filter((f) =>
+        assignTarget.ids.includes(f.id),
+      )
       for (const finding of targets) {
-        // Merge gallery images from store
-        const galleryImages = allGalleryImages[finding.id] || [];
-        
+        const galleryImages =
+          allGalleryImages[finding.id] ||
+          allGalleryImages[finding.id.split(",")[0]] ||
+          []
+
         createTask({
           project_id: projectId!,
-          finding_id: finding.id,
+          finding_id: finding.id.includes(",")
+            ? finding.id.split(",")[0]
+            : finding.id,
           title: finding.title,
-          description: finding.description || '',
+          description: finding.description || "",
           severity: finding.severity,
           assigned_to: userId,
-          gallery_images: galleryImages.length > 0 ? galleryImages : finding.gallery_images
-        });
+          gallery_images:
+            galleryImages.length > 0 ? galleryImages : finding.gallery_images,
+        })
       }
-      setIsAssignModalOpen(false);
+      setIsAssignModalOpen(false)
     } catch (error) {
-      toast.error('Failed to assign findings');
+      toast.error("Failed to assign findings")
     }
-  };
+  }
 
   const handleBulkCreateTasks = (selectedFindings: QAFinding[]) => {
-    selectedFindings.forEach(finding => {
-      // Merge gallery images from store
-      const galleryImages = allGalleryImages[finding.id] || [];
+    selectedFindings.forEach((finding) => {
+      const galleryImages =
+        allGalleryImages[finding.id] ||
+        allGalleryImages[finding.id.split(",")[0]] ||
+        []
 
       createTask({
         project_id: projectId!,
-        finding_id: finding.id,
+        finding_id: finding.id.includes(",")
+          ? finding.id.split(",")[0]
+          : finding.id,
         title: finding.title,
-        description: finding.description || '',
+        description: finding.description || "",
         severity: finding.severity,
-        gallery_images: galleryImages.length > 0 ? galleryImages : finding.gallery_images
-      });
-    });
-  };
+        gallery_images:
+          galleryImages.length > 0 ? galleryImages : finding.gallery_images,
+      })
+    })
+  }
 
+  const handleAddToStage = async (findingsToStage: QAFinding[]) => {
+    try {
+      const response = await axios.get(
+        `/api/tasks/count/unique?project_id=${projectId}`,
+      )
+      const baseCount = response.data.count
+      const currentStagedCount = stagedFindings.length
+      let nextIssueNum = baseCount + currentStagedCount + 1
+
+      const mergedFindings = findingsToStage.map((f) => {
+        return {
+          ...f,
+          issue_number: nextIssueNum++,
+          title: f.title.replace(/^Issue #\d+:?\s*/, ""),
+          gallery_images:
+            allGalleryImages[f.id] ||
+            allGalleryImages[f.id.split(",")[0]] ||
+            f.gallery_images,
+        }
+      })
+      addToStage(mergedFindings as any)
+    } catch (error) {
+      console.error("Failed to fetch next issue number:", error)
+      toast.error("Failed to calculate issue numbers")
+    }
+  }
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-8 animate-in fade-in duration-500">
+    <div className="max-w-5xl mx-auto p-6 space-y-8 animate-in fade-in duration-200">
       {/* Header */}
       <div className="flex flex-col space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Link to={`/projects/${projectId}`} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+            <Link
+              to={`/projects/${projectId}`}
+              className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+            >
               <ChevronLeft className="w-5 h-5 text-slate-600" />
             </Link>
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-slate-900">{project.name}</h1>
+                <h1 className="text-2xl font-bold text-slate-900">
+                  {project.name}
+                </h1>
                 {isLive && (
-                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-[10px] font-black text-emerald-600 border border-emerald-100 uppercase tracking-tighter">
+                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-[10px] font-bold text-emerald-600 border border-emerald-100 uppercase tracking-tighter">
                     <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
                     Live
                   </span>
                 )}
               </div>
               <div className="flex items-center space-x-3 mt-1">
-                <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">{run.run_type.replace('_', ' ')}</span>
+                <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">
+                  {run.run_type.replace("_", " ")}
+                </span>
                 <span className="text-slate-300">•</span>
                 <div className="flex items-center space-x-1.5">
                   {getStatusIcon(run.status)}
-                  <span className="text-sm font-bold text-slate-700 uppercase">{run.status}</span>
+                  <span className="text-sm font-bold text-slate-700 uppercase">
+                    {run.status}
+                  </span>
                 </div>
                 {run.created_by_name && (
                   <>
                     <span className="text-slate-300">•</span>
                     <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-50 border border-slate-100">
                       <User size={12} className="text-slate-400" />
-                      <span className="text-[10px] font-bold text-slate-600 uppercase">{run.created_by_name}</span>
+                      <span className="text-[10px] font-bold text-slate-600 uppercase">
+                        {run.created_by_name}
+                      </span>
                     </div>
                   </>
                 )}
@@ -307,9 +657,11 @@ export const RunDetailPage = () => {
           </div>
 
           <div className="flex items-center space-x-4">
-            {(run.status === 'running' || run.status === 'pending' || run.status === 'paused') && (
+            {(run.status === "running" ||
+              run.status === "pending" ||
+              run.status === "paused") && (
               <div className="flex items-center gap-2 bg-white p-1 rounded-lg border border-slate-200 shadow-sm mr-4">
-                {run.status === 'running' ? (
+                {run.status === "running" ? (
                   <button
                     onClick={handlePause}
                     disabled={updateStatus.isPending}
@@ -318,7 +670,7 @@ export const RunDetailPage = () => {
                   >
                     <Pause size={16} fill="currentColor" />
                   </button>
-                ) : run.status === 'paused' ? (
+                ) : run.status === "paused" ? (
                   <button
                     onClick={handleResume}
                     disabled={updateStatus.isPending}
@@ -340,7 +692,7 @@ export const RunDetailPage = () => {
             )}
 
             <a
-              href={`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/admin/queues`}
+              href={`${import.meta.env.VITE_API_URL || "http://localhost:3001"}/admin/queues`}
               target="_blank"
               rel="noreferrer"
               className="btn-unified flex items-center gap-2"
@@ -350,64 +702,74 @@ export const RunDetailPage = () => {
               <span>Queue Dashboard</span>
             </a>
 
-            {run.status === 'running' && !isDiscovering && (
+            {run.status === "running" && !isDiscovering && (
               <div className="text-right">
-                <p className="text-2xl font-black text-slate-900 leading-none">{Math.round(progress)}%</p>
-                {eta && <p className="text-xs font-bold text-blue-500 uppercase mt-1 tracking-widest">{eta}</p>}
+                <p className="text-2xl font-bold text-slate-900 leading-none">
+                  {Math.round(progress)}%
+                </p>
+                {eta && (
+                  <p className="text-xs font-bold text-blue-500 uppercase mt-1 tracking-widest">
+                    {eta}
+                  </p>
+                )}
               </div>
             )}
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div className="bg-white p-6 rounded-md border border-slate-200 shadow-sm space-y-4">
           <div className="flex justify-between items-end">
             <div className="space-y-1">
               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                <Activity size={16} className="text-blue-500" />
-                {isDiscovering ? 'Phase 1: Sitemap Discovery' : 'Phase 2: Scanning Pages'}
+                {isDiscovering
+                  ? "Phase 1: Sitemap Discovery"
+                  : "Phase 2: Scanning Pages"}
               </h3>
               <p className="text-xs text-slate-500 font-medium">
-                {isDiscovering 
-                  ? 'Identifying all target URLs...' 
-                  : run.status === 'completed'
-                    ? 'Scan complete. All pages verified.'
-                    : `Scanning: ${(run.pages || []).filter((p) => p.status === 'processing' || p.status === 'screenshotted').length} active | ${pagesProcessed} / ${pagesTotal} total`
-                }
+                {isDiscovering
+                  ? "Identifying all target URLs..."
+                  : run.status === "completed"
+                    ? "Scan complete. All pages verified."
+                    : `Scanning: ${(run.pages || []).filter((p) => p.status === "processing" || p.status === "screenshotted").length} active | ${pagesProcessed} / ${pagesTotal} total`}
               </p>
             </div>
-            
+
             <div className="text-right flex items-center gap-4">
               {canActionManual && (
-                <button 
+                <button
                   onClick={() => {
-                    setSelectedManualPageId(null);
-                    setIsManualScanOpen(true);
+                    setSelectedManualPageId(null)
+                    setIsManualScanOpen(true)
                   }}
-                  className="px-2 py-1 border border-accent rounded text-accent text-[10px] font-black uppercase tracking-tighter hover:bg-accent/5 transition-colors"
+                  className="px-2 py-1 border border-accent rounded-sm text-accent text-[10px] font-bold uppercase tracking-tighter hover:bg-accent/5 transition-colors"
                 >
                   Manual Scan
                 </button>
               )}
-              <p className="text-xl font-black text-slate-900">
-                {isDiscovering ? '...' : run.status === 'completed' ? '100%' : `${Math.max(1, Math.round(progress))}%`}
+              <p className="text-xl font-bold text-slate-900">
+                {isDiscovering
+                  ? "..."
+                  : run.status === "completed"
+                    ? "100%"
+                    : `${Math.max(1, Math.round(progress))}%`}
               </p>
             </div>
           </div>
 
           <div className="w-full h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200 p-1">
-            <div 
+            <div
               className={`h-full rounded-full transition-all duration-500 ease-out shadow-sm ${
-                run.status === 'failed' ? 'bg-red-500' : 'bg-accent'
+                run.status === "failed" ? "bg-red-500" : "bg-accent"
               }`}
-              style={{ 
-                width: isDiscovering 
-                  ? '40%' 
-                  : run.status === 'completed'
-                    ? '100%'
-                    : `${Math.max(2, progress)}%` 
+              style={{
+                width: isDiscovering
+                  ? "40%"
+                  : run.status === "completed"
+                    ? "100%"
+                    : `${Math.max(2, progress)}%`,
               }}
             >
-              {(run.status === 'running' || isDiscovering) && (
+              {(run.status === "running" || isDiscovering) && (
                 <div className="w-full h-full opacity-30 bg-[linear-gradient(45deg,rgba(255,255,255,.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,.15)_50%,rgba(255,255,255,.15)_75%,transparent_75%,transparent)] bg-[length:1rem_1rem] animate-[progress-bar-stripes_1s_linear_infinite]" />
               )}
             </div>
@@ -416,46 +778,57 @@ export const RunDetailPage = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 p-1 bg-slate-100/50 rounded-xl border border-slate-200 w-full overflow-x-auto scrollbar-hide">
+      <div className="flex items-center gap-1 p-1 bg-slate-100/50 rounded-md border border-slate-200 w-full overflow-x-auto scrollbar-hide">
         <button
-          onClick={() => setActiveTab('overview')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
-            activeTab === 'overview' 
-              ? 'bg-white text-slate-900 shadow-sm border border-slate-200' 
-              : 'text-slate-500 hover:text-slate-700'
+          onClick={() => setActiveTab("overview")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
+            activeTab === "overview"
+              ? "bg-white text-slate-900 shadow-sm border border-slate-200"
+              : "text-slate-500 hover:text-slate-700"
           }`}
         >
           <BarChart3 size={14} />
           Overview
         </button>
         <button
-          onClick={() => setActiveTab('pages')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
-            activeTab === 'pages' 
-              ? 'bg-white text-slate-900 shadow-sm border border-slate-200' 
-              : 'text-slate-500 hover:text-slate-700'
+          onClick={() => setActiveTab("pages")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
+            activeTab === "pages"
+              ? "bg-white text-slate-900 shadow-sm border border-slate-200"
+              : "text-slate-500 hover:text-slate-700"
           }`}
         >
           <FileSearch size={14} />
           Pages
         </button>
         <button
-          onClick={() => setActiveTab('findings')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
-            activeTab === 'findings' 
-              ? 'bg-white text-slate-900 shadow-sm border border-slate-200' 
-              : 'text-slate-500 hover:text-slate-700'
+          onClick={() => setActiveTab("general")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
+            activeTab === "general"
+              ? "bg-white text-slate-900 shadow-sm border border-slate-200"
+              : "text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          <ClipboardList size={14} />
+          General
+        </button>
+        <button
+          onClick={() => setActiveTab("findings")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
+            activeTab === "findings"
+              ? "bg-white text-slate-900 shadow-sm border border-slate-200"
+              : "text-slate-500 hover:text-slate-700"
           }`}
         >
           <Search size={14} />
-          Findings
+          Functional Findings
         </button>
         <button
-          onClick={() => setActiveTab('visual_diff')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
-            activeTab === 'visual_diff' 
-              ? 'bg-white text-slate-900 shadow-sm border border-slate-200' 
-              : 'text-slate-500 hover:text-slate-700'
+          onClick={() => setActiveTab("visual_diff")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
+            activeTab === "visual_diff"
+              ? "bg-white text-slate-900 shadow-sm border border-slate-200"
+              : "text-slate-500 hover:text-slate-700"
           }`}
         >
           <Eye size={14} />
@@ -463,11 +836,11 @@ export const RunDetailPage = () => {
         </button>
         {run.is_woocommerce && (
           <button
-            onClick={() => setActiveTab('woocommerce')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
-              activeTab === 'woocommerce' 
-                ? 'bg-white text-slate-900 shadow-sm border border-slate-200' 
-                : 'text-slate-500 hover:text-slate-700'
+            onClick={() => setActiveTab("woocommerce")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
+              activeTab === "woocommerce"
+                ? "bg-white text-slate-900 shadow-sm border border-slate-200"
+                : "text-slate-500 hover:text-slate-700"
             }`}
           >
             <ShoppingCart size={14} />
@@ -475,11 +848,11 @@ export const RunDetailPage = () => {
           </button>
         )}
         <button
-          onClick={() => setActiveTab('report')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
-            activeTab === 'report' 
-              ? 'bg-white text-slate-900 shadow-sm border border-slate-200' 
-              : 'text-slate-500 hover:text-slate-700'
+          onClick={() => setActiveTab("report")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
+            activeTab === "report"
+              ? "bg-white text-slate-900 shadow-sm border border-slate-200"
+              : "text-slate-500 hover:text-slate-700"
           }`}
         >
           <ClipboardList size={14} />
@@ -487,56 +860,60 @@ export const RunDetailPage = () => {
         </button>
       </div>
 
-      {activeTab === 'overview' && (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-          <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+      {activeTab === "overview" && (
+        <div className="space-y-8 animate-in fade-in duration-200">
+          <div className="bg-white p-8 rounded-md border border-slate-200 shadow-sm space-y-6">
             <div className="flex justify-between items-end">
               <div className="space-y-1">
-                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                  <Activity size={16} className="text-accent" />
-                  {isDiscovering ? 'Phase 1: Sitemap Discovery' : 'Phase 2: Scanning Pages'}
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                  {isDiscovering
+                    ? "Phase 1: Sitemap Discovery"
+                    : "Phase 2: Scanning Pages"}
                 </h3>
                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">
-                  {isDiscovering 
-                    ? 'Identifying all target URLs...' 
-                    : run.status === 'completed'
-                      ? 'Scan complete. All pages verified.'
-                      : `Scanning: ${(run.pages || []).filter((p) => p.status === 'processing' || p.status === 'screenshotted').length} active | ${pagesProcessed} / ${pagesTotal} total`
-                  }
+                  {isDiscovering
+                    ? "Identifying all target URLs..."
+                    : run.status === "completed"
+                      ? "Scan complete. All pages verified."
+                      : `Scanning: ${(run.pages || []).filter((p) => p.status === "processing" || p.status === "screenshotted").length} active | ${pagesProcessed} / ${pagesTotal} total`}
                 </p>
               </div>
               <div className="text-right flex items-center gap-4">
                 {canActionManual && (
-                  <button 
+                  <button
                     onClick={() => {
-                      setSelectedManualPageId(null);
-                      setIsManualScanOpen(true);
+                      setSelectedManualPageId(null)
+                      setIsManualScanOpen(true)
                     }}
-                    className="px-2 py-1 border border-accent rounded text-accent text-[10px] font-black uppercase tracking-tighter hover:bg-accent/5 transition-colors"
+                    className="px-2 py-1 border border-accent rounded text-accent text-[10px] font-bold uppercase tracking-tighter hover:bg-accent/5 transition-colors"
                   >
                     Manual Scan
                   </button>
                 )}
-                <p className="text-2xl font-black text-slate-900">
-                  {isDiscovering ? '...' : run.status === 'completed' ? '100%' : `${Math.max(1, Math.round(progress))}%`}
+                <p className="text-2xl font-bold text-slate-900">
+                  {isDiscovering
+                    ? "..."
+                    : run.status === "completed"
+                      ? "100%"
+                      : `${Math.max(1, Math.round(progress))}%`}
                 </p>
               </div>
             </div>
 
             <div className="w-full h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200 p-1">
-              <div 
+              <div
                 className={`h-full rounded-full transition-all duration-500 ease-out shadow-sm ${
-                  run.status === 'failed' ? 'bg-red-500' : 'bg-accent'
+                  run.status === "failed" ? "bg-red-500" : "bg-accent"
                 }`}
-                style={{ 
-                  width: isDiscovering 
-                    ? '40%' 
-                    : run.status === 'completed'
-                      ? '100%'
-                      : `${Math.max(2, progress)}%` 
+                style={{
+                  width: isDiscovering
+                    ? "40%"
+                    : run.status === "completed"
+                      ? "100%"
+                      : `${Math.max(2, progress)}%`,
                 }}
               >
-                {(run.status === 'running' || isDiscovering) && (
+                {(run.status === "running" || isDiscovering) && (
                   <div className="w-full h-full opacity-30 bg-[linear-gradient(45deg,rgba(255,255,255,.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,.15)_50%,rgba(255,255,255,.15)_75%,transparent_75%,transparent)] bg-[length:1rem_1rem] animate-[progress-bar-stripes_1s_linear_infinite]" />
                 )}
               </div>
@@ -544,151 +921,240 @@ export const RunDetailPage = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Pages</p>
-              <p className="text-2xl font-black text-slate-900">{pagesTotal}</p>
+            <div className="bg-white p-6 rounded-md border border-slate-200 shadow-sm">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                Total Pages
+              </p>
+              <p className="text-2xl font-bold text-slate-900">{pagesTotal}</p>
             </div>
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Processed</p>
-              <p className="text-2xl font-black text-slate-900">{pagesProcessed}</p>
-            </div>
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Issues</p>
-              <p className="text-2xl font-black text-red-600">
-                {Object.values(run.finding_counts || {}).reduce((a, b) => a + b, 0)}
+            <div className="bg-white p-6 rounded-md border border-slate-200 shadow-sm">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                Processed
+              </p>
+              <p className="text-2xl font-bold text-slate-900">
+                {pagesProcessed}
               </p>
             </div>
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
+            <div className="bg-white p-6 rounded-md border border-slate-200 shadow-sm">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                Total Issues
+              </p>
+              <p className="text-2xl font-bold text-red-600">
+                {Object.values(run.finding_counts || {}).reduce(
+                  (a, b) => a + b,
+                  0,
+                )}
+              </p>
+            </div>
+            <div className="bg-white p-6 rounded-md border border-slate-200 shadow-sm">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                Status
+              </p>
               <div className="flex items-center gap-2">
                 {getStatusIcon(run.status)}
-                <p className="text-base font-black text-slate-900 uppercase tracking-tighter">{run.status}</p>
+                <p className="text-base font-bold text-slate-900 uppercase tracking-tighter">
+                  {run.status}
+                </p>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {activeTab === 'pages' && (
-        <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+      {activeTab === "pages" && (
+        <div className="animate-in fade-in duration-200">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-slate-900">Scan Steps</h2>
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-slate-100 px-3 py-1.5 rounded-md border border-slate-200">
               {pagesProcessed} / {pagesTotal} Completed
             </span>
           </div>
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <PagesTable 
-              pages={run.pages || []} 
+          <div className="bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden">
+            <PagesTable
+              pages={run.pages || []}
               onPageSelect={(page) => {
-                setSelectedPageId(page.id);
-                setActiveTab('findings');
-              }} 
-              onManualScan={(page) => {
-                setSelectedManualPageId(page.id);
-                setIsManualScanOpen(true);
+                setSelectedPageId(page.id)
+                setActiveTab("findings")
               }}
-              showVisuals={run.enabled_checks?.includes('visual_regression') && !!run.figma_url}
+              onManualScan={(page) => {
+                setSelectedManualPageId(page.id)
+                setIsManualScanOpen(true)
+              }}
+              showVisuals={
+                run.enabled_checks?.includes("visual_regression") &&
+                !!run.figma_url
+              }
             />
           </div>
         </div>
       )}
 
-      {activeTab === 'findings' && (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      {activeTab === "general" && (
+        <div className="space-y-6 animate-in fade-in duration-200">
           <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-            <h2 className="text-xl font-bold text-slate-900">Findings Details</h2>
+            <h2 className="text-xl font-bold text-slate-900">
+              General Findings
+            </h2>
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-md overflow-hidden shadow-sm w-full">
+            <div className="bg-slate-50 border-b border-slate-100 p-6">
+              <h3 className="font-bold text-slate-900 text-lg">
+                Run-level & Project Plan Findings
+              </h3>
+              <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest">
+                {runGeneralFindings.length} General Issues Detected
+              </p>
+            </div>
+
+            <div className="p-8">
+              {isLoadingRunFindings ? (
+                <div className="py-20 text-center">
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-accent" />
+                </div>
+              ) : runGeneralFindings.length > 0 ? (
+                <FindingReviewPanel
+                  findings={runGeneralFindings}
+                  generalFindings={[]}
+                  onSingleConfirm={handleConfirmFinding}
+                  onSingleFalsePositive={handleFalsePositiveFinding}
+                  onSingleCreateTask={(finding) => handleAddToStage([finding])}
+                  onConfirmBulk={handleBulkConfirm}
+                  onFalsePositiveBulk={handleBulkFalsePositive}
+                  onCreateTasksBulk={handleBulkCreateTasks}
+                  onAddToStage={handleAddToStage}
+                  onAssignBulk={handleBulkAssign}
+                  onSingleAssign={handleSingleAssign}
+                  findingToTaskMap={findingToTaskMap}
+                />
+              ) : (
+                <div className="py-20 text-center bg-emerald-50/20 rounded-md border border-dashed border-emerald-100">
+                  <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto mb-4" />
+                  <p className="text-slate-900 font-bold uppercase tracking-tight">
+                    No General Issues
+                  </p>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-2">
+                    All run-level audits passed successfully.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "findings" && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+            <h2 className="text-xl font-bold text-slate-900">
+              Findings Details
+            </h2>
           </div>
 
           {selectedPage ? (
-            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm w-full">
+            <div className="bg-white border border-slate-200 rounded-md overflow-hidden shadow-sm w-full">
               <div className="bg-slate-50 border-b border-slate-100 p-6 flex items-center justify-between">
                 <div>
-                  <h3 className="font-bold text-slate-900 truncate text-lg">{selectedPage.url}</h3>
+                  <h3 className="font-bold text-slate-900 truncate text-lg">
+                    {selectedPage.url}
+                  </h3>
                   <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest">
                     {findings?.length || 0} Issues Detected on this page
                   </p>
                 </div>
-                <button 
-                  onClick={() => setActiveTab('pages')}
-                  className="text-[10px] font-black text-accent uppercase tracking-widest hover:text-black transition-colors"
-                >
-                  Change Page
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setActiveTab("pages")}
+                    className="btn-unified btn-small"
+                  >
+                    Change Page
+                  </button>
+
+                  {selectedPage?.url && (
+                    <>
+                      <button
+                        onClick={handleCaptureScreenshots}
+                        disabled={isCapturingScreenshots || isRecordingVideo}
+                        className="flex items-center justify-center gap-2 btn-unified btn-small"
+                      >
+                        {isCapturingScreenshots ? (
+                          <Loader2
+                            size={14}
+                            className="animate-spin text-[#fff]"
+                          />
+                        ) : (
+                          <Camera size={18} className="text-[#fff]-500" />
+                        )}
+                      </button>
+
+                      <button
+                        onClick={handleCaptureVideo}
+                        disabled={isRecordingVideo || isCapturingScreenshots}
+                        className="flex items-center justify-center gap-2 btn-unified btn-small"
+                      >
+                        {isRecordingVideo ? (
+                          <Loader2
+                            size={14}
+                            className="animate-spin text-[#fff]"
+                          />
+                        ) : (
+                          <Video size={18} className="text-[#fff]-500" />
+                        )}
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
 
               <div className="p-8">
-                {/* Visual Evidence */}
-                {run.enabled_checks?.includes('visual_regression') && selectedPage && (
-                  <div className="mb-12">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-                      <div className="space-y-2">
-                        <span className="text-[10px] font-black uppercase text-slate-400">Desktop</span>
-                        <div className="aspect-[16/10] bg-slate-100 rounded-xl overflow-hidden">
-                          {selectedPage.screenshot_url_desktop && <img src={selectedPage.screenshot_url_desktop} className="w-full h-full object-cover object-top" alt="Desktop" />}
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <span className="text-[10px] font-black uppercase text-slate-400">Tablet</span>
-                        <div className="aspect-[3/4] bg-slate-100 rounded-xl overflow-hidden">
-                          {selectedPage.screenshot_url_tablet && <img src={selectedPage.screenshot_url_tablet} className="w-full h-full object-cover object-top" alt="Tablet" />}
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <span className="text-[10px] font-black uppercase text-slate-400">Mobile</span>
-                        <div className="aspect-[9/16] bg-slate-100 rounded-xl overflow-hidden">
-                          {selectedPage.screenshot_url_mobile && <img src={selectedPage.screenshot_url_mobile} className="w-full h-full object-cover object-top" alt="Mobile" />}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 {/* Findings List */}
                 {isLoadingFindings ? (
                   <div className="py-20 text-center">
                     <Loader2 className="w-8 h-8 animate-spin mx-auto text-accent" />
                   </div>
-                ) : findings && findings.length > 0 && selectedPage ? (
-                  <FindingReviewPanel 
-                    findings={findings}
+                ) : ((pageFindings && pageFindings.length > 0) ||
+                    (generalFindings && generalFindings.length > 0)) &&
+                  selectedPage ? (
+                  <FindingReviewPanel
+                    findings={pageFindings}
+                    generalFindings={[]}
                     pageScreenshots={{
                       desktop: selectedPage.screenshot_url_desktop,
                       tablet: selectedPage.screenshot_url_tablet,
-                      mobile: selectedPage.screenshot_url_mobile
+                      mobile: selectedPage.screenshot_url_mobile,
                     }}
                     onSingleConfirm={handleConfirmFinding}
                     onSingleFalsePositive={handleFalsePositiveFinding}
-                    onSingleCreateTask={handleCreateTaskForFinding}
+                    onSingleCreateTask={(finding) =>
+                      handleAddToStage([finding])
+                    }
                     onConfirmBulk={handleBulkConfirm}
                     onFalsePositiveBulk={handleBulkFalsePositive}
                     onCreateTasksBulk={handleBulkCreateTasks}
-                    onAddToStage={(findings) => {
-                      const mergedFindings = findings.map(f => ({
-                        ...f,
-                        gallery_images: allGalleryImages[f.id] || f.gallery_images
-                      }));
-                      addToStage(mergedFindings);
-                    }}
+                    onAddToStage={handleAddToStage}
                     onAssignBulk={handleBulkAssign}
                     onSingleAssign={handleSingleAssign}
                     findingToTaskMap={findingToTaskMap}
                   />
                 ) : (
-                  <div className="py-20 text-center bg-emerald-50/20 rounded-3xl border border-dashed border-emerald-100">
+                  <div className="py-20 text-center bg-emerald-50/20 rounded-md border border-dashed border-emerald-100">
                     <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto mb-4" />
-                    <p className="text-slate-900 font-black uppercase tracking-tight">Audit Cleared</p>
+                    <p className="text-slate-900 font-bold uppercase tracking-tight">
+                      Audit Cleared
+                    </p>
                   </div>
                 )}
               </div>
             </div>
           ) : (
-            <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-24 text-center">
+            <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-md p-24 text-center">
               <Search className="w-10 h-10 text-slate-200 mx-auto mb-4" />
-              <p className="text-slate-900 font-black uppercase tracking-tight">Intelligence Ready</p>
-              <button 
-                onClick={() => setActiveTab('pages')}
-                className="mt-4 text-[10px] font-black text-accent uppercase tracking-widest hover:text-black transition-colors"
+              <p className="text-slate-900 font-bold uppercase tracking-tight">
+                Intelligence Ready
+              </p>
+              <button
+                onClick={() => setActiveTab("pages")}
+                className="mt-4 text-[10px] font-bold text-accent uppercase tracking-widest hover:text-black transition-colors"
               >
                 Select a page to view findings
               </button>
@@ -697,18 +1163,20 @@ export const RunDetailPage = () => {
         </div>
       )}
 
-      {activeTab === 'visual_diff' && (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      {activeTab === "visual_diff" && (
+        <div className="space-y-6 animate-in fade-in duration-200">
           <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-            <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">Visual Diff Analysis</h2>
-            {run.status === 'completed' && (
-              <button 
+            <h2 className="text-xl font-bold text-slate-900 uppercase tracking-tight">
+              Visual Diff Analysis
+            </h2>
+            {run.status === "completed" && (
+              <button
                 onClick={async () => {
                   try {
-                    await startVisualDiff(axios, runId!);
-                    toast.success('Visual diff analysis started');
+                    await startVisualDiff(axios, runId!)
+                    toast.success("Visual diff analysis started")
                   } catch (err) {
-                    toast.error('Failed to start visual diff');
+                    toast.error("Failed to start visual diff")
                   }
                 }}
                 className="btn-unified"
@@ -718,19 +1186,23 @@ export const RunDetailPage = () => {
             )}
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+          <div className="bg-white border border-slate-200 rounded-md overflow-hidden shadow-sm">
             <div className="p-12 text-center max-w-2xl mx-auto">
-              <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-blue-100">
-                <Eye size={40} className="text-blue-500" />
+              <div className="w-8 h-8 bg-[#93C0B1] rounded-full flex items-center justify-center mx-auto mb-6 border border-[#93C0B1]">
+                <Eye size={20} className="text-[#fff]" />
               </div>
-              <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-2">Compare Design vs. Implementation</h3>
+              <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight mb-2">
+                Compare Design vs. Implementation
+              </h3>
               <p className="text-sm text-slate-500 leading-relaxed mb-8">
-                The Visual Diff engine uses AI to compare your Figma designs against the live site screenshots across desktop, tablet, and mobile breakpoints.
+                The Visual Diff engine uses AI to compare your Figma designs
+                against the live site screenshots across desktop, tablet, and
+                mobile breakpoints.
               </p>
-              
-              <Link 
+
+              <Link
                 to={`/projects/${projectId}/runs/${runId}/diff`}
-                className="btn-unified inline-flex items-center gap-2 px-4 py-2 bg-black text-white text-[10px] font-black uppercase tracking-widest hover:bg-#93c0b1-800 transition-all shadow-sm active:scale-95"
+                className="btn-unified inline-flex items-center gap-2 px-4 py-2 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-#93c0b1-800 transition-all shadow-sm active:scale-95"
               >
                 Open Diff Workspace
                 <ChevronRight size={16} />
@@ -739,19 +1211,30 @@ export const RunDetailPage = () => {
 
             <div className="bg-slate-50 p-6 border-t border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Frames</p>
-                <p className="text-xl font-black text-slate-900">{run.pages_total || 0}</p>
-              </div>
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Visual Issues</p>
-                <p className="text-xl font-black text-red-600">
-                  {runFindings?.filter(f => f.check_factor === 'visual_diff').length || 0}
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">
+                  Total Frames
+                </p>
+                <p className="text-xl font-bold text-slate-900">
+                  {run.pages_total || 0}
                 </p>
               </div>
               <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Figma Baseline</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">
+                  Visual Issues
+                </p>
+                <p className="text-xl font-bold text-red-600">
+                  {runFindings?.filter((f) => f.check_factor === "visual_diff")
+                    .length || 0}
+                </p>
+              </div>
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">
+                  Figma Baseline
+                </p>
                 <p className="text-xs font-bold text-slate-600 truncate max-w-[200px]">
-                  {run.figma_url ? run.figma_url.split('/').pop() : 'No baseline set'}
+                  {run.figma_url
+                    ? run.figma_url.split("/").pop()
+                    : "No baseline set"}
                 </p>
               </div>
             </div>
@@ -759,12 +1242,14 @@ export const RunDetailPage = () => {
         </div>
       )}
 
-      {activeTab === 'woocommerce' && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
+      {activeTab === "woocommerce" && (
+        <div className="bg-white border border-slate-200 rounded-md p-8 shadow-sm animate-in fade-in duration-200">
           {isLoadingRunFindings ? (
             <div className="py-20 text-center">
               <Loader2 className="w-8 h-8 animate-spin mx-auto text-accent" />
-              <p className="text-[10px] text-slate-400 font-bold uppercase mt-4 tracking-widest">Loading commerce reports...</p>
+              <p className="text-[10px] text-slate-400 font-bold uppercase mt-4 tracking-widest">
+                Loading commerce reports...
+              </p>
             </div>
           ) : (
             <WooCommerceSection findings={runFindings || []} />
@@ -772,83 +1257,150 @@ export const RunDetailPage = () => {
         </div>
       )}
 
-      {activeTab === 'report' && (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      {activeTab === "report" && (
+        <div className="space-y-8 animate-in fade-in duration-200">
           {/* Report Header */}
           <div className="flex items-center justify-between border-b border-slate-200 pb-6">
             <div>
-              <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Executive QA Report</h2>
-              <p className="text-xs text-slate-500 font-medium mt-1">Summary and official sign-off for Run #{runId?.substring(0, 8)}</p>
+              <h2 className="text-2xl font-bold text-slate-900 uppercase tracking-tight">
+                Executive QA Report
+              </h2>
+              <p className="text-xs text-slate-500 font-medium mt-1">
+                Summary and official sign-off for Run #{runId?.substring(0, 8)}
+              </p>
             </div>
             <div className="flex items-center gap-3">
-              <button 
-                className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-900 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-200 transition-all border border-slate-200"
-                onClick={() => toast.success('PDF Generation started')}
+              <button
+                className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-900 text-[10px] font-bold uppercase tracking-widest rounded-md hover:bg-slate-200 transition-all border border-slate-200"
+                onClick={() => toast.success("PDF Generation started")}
               >
                 <Download size={14} />
                 Export PDF
               </button>
-              {run.status === 'completed' && (
-                <SignOffButton runId={runId!} />
-              )}
+              {run.status === "completed" && <SignOffButton runId={runId!} />}
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column: Stats & Summary */}
             <div className="lg:col-span-2 space-y-8">
-              <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden">
                 <div className="p-8 border-b border-slate-50">
-                  <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Quality Score</h3>
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-6">
+                    Quality Score
+                  </h3>
                   <div className="flex items-end gap-4">
-                    <p className="text-6xl font-black text-slate-900 leading-none">
-                      {Math.max(0, 100 - (Object.values(run.finding_counts || {}).reduce((a, b) => a + b, 0) * 2))}%
+                    <p className="text-6xl font-bold text-slate-900 leading-none">
+                      {Math.max(
+                        0,
+                        100 -
+                          Object.values(run.finding_counts || {}).reduce(
+                            (a, b) => a + b,
+                            0,
+                          ) *
+                            2,
+                      )}
+                      %
                     </p>
                     <div className="pb-1">
-                      <p className="text-xs font-bold text-emerald-600 uppercase">Healthy</p>
-                      <p className="text-[10px] text-slate-400 font-medium">Based on issue density</p>
+                      <p className="text-xs font-bold text-emerald-600 uppercase">
+                        Healthy
+                      </p>
+                      <p className="text-[10px] text-slate-400 font-medium">
+                        Based on issue density
+                      </p>
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="p-8 grid grid-cols-2 sm:grid-cols-4 gap-8">
                   <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Critical</p>
-                    <p className="text-2xl font-black text-red-600">{run.finding_counts?.critical || 0}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                      Critical
+                    </p>
+                    <p className="text-2xl font-bold text-red-600">
+                      {run.finding_counts?.critical || 0}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">High</p>
-                    <p className="text-2xl font-black text-orange-500">{run.finding_counts?.high || 0}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                      High
+                    </p>
+                    <p className="text-2xl font-bold text-orange-500">
+                      {run.finding_counts?.high || 0}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Medium</p>
-                    <p className="text-2xl font-black text-amber-500">{run.finding_counts?.medium || 0}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                      Medium
+                    </p>
+                    <p className="text-2xl font-bold text-amber-500">
+                      {run.finding_counts?.medium || 0}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Low</p>
-                    <p className="text-2xl font-black text-blue-500">{run.finding_counts?.low || 0}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                      Low
+                    </p>
+                    <p className="text-2xl font-bold text-blue-500">
+                      {run.finding_counts?.low || 0}
+                    </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Finding Categories</h3>
+              <div className="bg-white rounded-md border border-slate-200 shadow-sm p-8">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-6">
+                  Finding Categories
+                </h3>
                 <div className="space-y-4">
                   {[
-                    { label: 'Visual Consistency', count: runFindings?.filter(f => f.check_factor === 'visual_diff').length || 0, color: 'bg-blue-500' },
-                    { label: 'Performance', count: runFindings?.filter(f => f.check_factor === 'performance').length || 0, color: 'bg-emerald-500' },
-                    { label: 'Accessibility', count: runFindings?.filter(f => f.check_factor === 'accessibility').length || 0, color: 'bg-purple-500' },
-                    { label: 'Console Errors', count: runFindings?.filter(f => f.check_factor === 'console_error').length || 0, color: 'bg-red-500' },
+                    {
+                      label: "Visual Consistency",
+                      count:
+                        runFindings?.filter(
+                          (f) => f.check_factor === "visual_diff",
+                        ).length || 0,
+                      color: "bg-blue-500",
+                    },
+                    {
+                      label: "Performance",
+                      count:
+                        runFindings?.filter(
+                          (f) => f.check_factor === "performance",
+                        ).length || 0,
+                      color: "bg-emerald-500",
+                    },
+                    {
+                      label: "Accessibility",
+                      count:
+                        runFindings?.filter(
+                          (f) => f.check_factor === "accessibility",
+                        ).length || 0,
+                      color: "bg-purple-500",
+                    },
+                    {
+                      label: "Console Errors",
+                      count:
+                        runFindings?.filter(
+                          (f) => f.check_factor === "console_error",
+                        ).length || 0,
+                      color: "bg-red-500",
+                    },
                   ].map((cat, i) => (
                     <div key={i} className="space-y-2">
-                      <div className="flex justify-between text-[10px] font-black uppercase tracking-tight">
+                      <div className="flex justify-between text-[10px] font-bold uppercase tracking-tight">
                         <span className="text-slate-600">{cat.label}</span>
-                        <span className="text-slate-900">{cat.count} Issues</span>
+                        <span className="text-slate-900">
+                          {cat.count} Issues
+                        </span>
                       </div>
                       <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full ${cat.color} rounded-full`} 
-                          style={{ width: `${Math.min(100, (cat.count / (runFindings?.length || 1)) * 100)}%` }} 
+                        <div
+                          className={`h-full ${cat.color} rounded-full`}
+                          style={{
+                            width: `${Math.min(100, (cat.count / (runFindings?.length || 1)) * 100)}%`,
+                          }}
                         />
                       </div>
                     </div>
@@ -859,25 +1411,43 @@ export const RunDetailPage = () => {
 
             {/* Right Column: Run Info & Actions */}
             <div className="space-y-8">
-              <div className="bg-slate-900 rounded-3xl p-8 text-white">
-                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-6">Run Details</h3>
+              <div className="bg-slate-900 rounded-md p-8 text-white">
+                <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-6">
+                  Run Details
+                </h3>
                 <div className="space-y-6">
                   <div>
-                    <p className="text-[10px] font-bold text-slate-500 uppercase">Started At</p>
-                    <p className="text-sm font-bold mt-1">{run.started_at ? new Date(run.started_at).toLocaleString() : 'N/A'}</p>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase">
+                      Started At
+                    </p>
+                    <p className="text-sm font-bold mt-1">
+                      {run.started_at
+                        ? new Date(run.started_at).toLocaleString()
+                        : "N/A"}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-slate-500 uppercase">Completed At</p>
-                    <p className="text-sm font-bold mt-1">{run.completed_at ? new Date(run.completed_at).toLocaleString() : 'N/A'}</p>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase">
+                      Completed At
+                    </p>
+                    <p className="text-sm font-bold mt-1">
+                      {run.completed_at
+                        ? new Date(run.completed_at).toLocaleString()
+                        : "N/A"}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-slate-500 uppercase">Run Type</p>
-                    <p className="text-sm font-bold mt-1 uppercase">{run.run_type.replace('_', ' ')}</p>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase">
+                      Run Type
+                    </p>
+                    <p className="text-sm font-bold mt-1 uppercase">
+                      {run.run_type.replace("_", " ")}
+                    </p>
                   </div>
                   <div className="pt-4 border-t border-white/10">
-                    <button 
-                      className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/5 flex items-center justify-center gap-2"
-                      onClick={() => toast.success('Report shared with team')}
+                    <button
+                      className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all border border-white/5 flex items-center justify-center gap-2"
+                      onClick={() => toast.success("Report shared with team")}
                     >
                       <Send size={14} />
                       Share Report
@@ -890,41 +1460,51 @@ export const RunDetailPage = () => {
         </div>
       )}
 
-      <CreateTaskModal 
+      <CreateTaskModal
         isOpen={isCreateTaskModalOpen}
         onClose={() => {
-          setIsCreateTaskModalOpen(false);
-          setPrefillFinding(null);
+          setIsCreateTaskModalOpen(false)
+          setPrefillFinding(null)
         }}
         projectId={projectId}
-        prefillData={prefillFinding ? {
-          finding_id: prefillFinding.id,
-          title: prefillFinding.title,
-          description: prefillFinding.description || '',
-          severity: prefillFinding.severity,
-          gallery_images: prefillFinding.gallery_images
-        } : undefined}
+        prefillData={
+          prefillFinding
+            ? {
+                finding_id: prefillFinding.id.includes(",")
+                  ? prefillFinding.id.split(",")[0]
+                  : prefillFinding.id,
+                title: prefillFinding.title,
+                description: prefillFinding.description || "",
+                severity: prefillFinding.severity,
+                gallery_images: prefillFinding.gallery_images,
+              }
+            : undefined
+        }
       />
-      
-      <AssignMemberModal 
+
+      <AssignMemberModal
         isOpen={isAssignModalOpen}
         onClose={() => setIsAssignModalOpen(false)}
         projectId={projectId!}
         onAssign={handleAssignFinding}
-        title={assignTarget.type === 'bulk' ? `Assign ${assignTarget.ids.length} Findings` : "Assign Finding"}
+        title={
+          assignTarget.type === "bulk"
+            ? `Assign ${assignTarget.ids.length} Findings`
+            : "Assign Finding"
+        }
       />
 
-      <ManualScanOverlay 
+      <ManualScanOverlay
         run={run}
         isOpen={isManualScanOpen}
         initialPageId={selectedManualPageId}
         onClose={() => {
-          setIsManualScanOpen(false);
-          setSelectedManualPageId(null);
+          setIsManualScanOpen(false)
+          setSelectedManualPageId(null)
         }}
       />
 
       <TaskStagingOverlay projectId={projectId!} />
     </div>
-  );
-};
+  )
+}

@@ -1,4 +1,4 @@
+import { GoogleGenAI } from "@google/genai";
 import 'dotenv/config';
-export declare const geminiFlash: import("@google/generative-ai").GenerativeModel;
-export declare const geminiEmbedding: import("@google/generative-ai").GenerativeModel;
+export declare const genAI: GoogleGenAI;
 //# sourceMappingURL=geminiClient.d.ts.map

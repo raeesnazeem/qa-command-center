@@ -26,6 +26,7 @@
     "pino": "^8.19.0",
     "pino-pretty": "^11.3.0",
     "playwright": "^1.42.1",
+    "puppeteer": "^24.43.0",
     "sharp": "^0.34.5"
   },
   "devDependencies": {

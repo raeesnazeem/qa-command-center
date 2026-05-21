@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express';
 import axios from 'axios';
 import { clerkAuth } from '../middleware/clerkAuth';
-import { qaQueue } from '../lib/queue';
+import { qaQueue, qaQueueEvents } from '../lib/queue';
+import { uploadScreenshot } from '../lib/supabaseStorage';
 
 const router: Router = Router();
 
@@ -9,6 +10,7 @@ const router: Router = Router();
 const WHITELISTED_DOMAINS = [
   'bosthetics.com',
   'ruma.com',
+  'growth99.com',
   'example.com'
 ];
 
@@ -21,7 +23,7 @@ router.post(
   '/proxy-browser/capture',
   clerkAuth,
   async (req: Request, res: Response) => {
-    const { url, scrollX, scrollY, width, height } = req.body;
+    const { url, scrollX, scrollY, width, height, fullPage, viewportWidth, viewportHeight } = req.body;
     const userId = (req as any).auth?.userId;
 
     if (!url) {
@@ -29,20 +31,24 @@ router.post(
     }
 
     try {
+      const sanitizedWidth = Math.floor(Number(viewportWidth)) || Math.floor(Number(width)) || 1280;
+      const sanitizedHeight = Math.floor(Number(viewportHeight)) || Math.floor(Number(height)) || 720;
+
       const job = await qaQueue.add('capture_screenshot', { 
         url, 
         userId,
-        scrollX: Number(scrollX) || 0,
-        scrollY: Number(scrollY) || 0,
-        width: Number(width) || 1280,
-        height: Number(height) || 720
+        scrollX: Math.floor(Number(scrollX)) || 0,
+        scrollY: Math.floor(Number(scrollY)) || 0,
+        width: sanitizedWidth,
+        height: sanitizedHeight,
+        fullPage: !!fullPage,
+        viewportWidth: sanitizedWidth,
+        viewportHeight: sanitizedHeight
       }, {
         removeOnComplete: true,
       });
 
-      const result = await job.waitUntilFinished(new (require('bullmq').QueueEvents)('qa-jobs', { 
-        connection: qaQueue.opts.connection 
-      }));
+      const result = await job.waitUntilFinished(qaQueueEvents);
 
       return res.json(result);
     } catch (error: any) {
@@ -56,18 +62,117 @@ router.post(
 );
 
 /**
+ * POST /proxy-browser/upload-clip
+ * Uploads a base64 encoded clip to Supabase storage.
+ */
+router.post(
+  '/proxy-browser/upload-clip',
+  clerkAuth,
+  async (req: Request, res: Response) => {
+    const { base64, findingId } = req.body;
+    const userId = (req as any).auth?.userId;
+
+    if (!base64) {
+      return res.status(400).json({ error: 'Base64 data is required' });
+    }
+
+    try {
+      // Remove data:image/jpeg;base64, prefix
+      const base64Data = base64.replace(/^data:image\/\w+;base64,/, '');
+      const buffer = Buffer.from(base64Data, 'base64');
+      
+      const timestamp = Date.now();
+      const storagePath = `capture/${userId || 'manual'}/${findingId || 'clip'}_${timestamp}.jpg`;
+      
+      const publicUrl = await uploadScreenshot(buffer, storagePath, {
+        bucket: 'evidence',
+        isPublic: true
+      });
+
+      return res.json({ imageUrl: publicUrl });
+    } catch (error: any) {
+      console.error('[Upload Clip Error]:', error.message, error.stack);
+      return res.status(500).json({ 
+        error: 'Failed to upload clip',
+        details: error.message
+      });
+    }
+  }
+);
+
+/**
+ * POST /proxy-browser/capture-multiview
+ * Triggers multiple screenshot captures (Desktop, Laptop, Tablet, Mobile) of a URL.
+ */
+router.post(
+  '/proxy-browser/capture-multiview',
+  clerkAuth,
+  async (req: Request, res: Response) => {
+    const { url, type } = req.body;
+    const userId = (req as any).auth?.userId;
+
+    if (!url) {
+      return res.status(400).json({ error: 'URL is required' });
+    }
+
+    try {
+      const job = await qaQueue.add('capture_multiview_screenshots', { 
+        url, 
+        userId,
+        type: type || 'screenshots'
+      }, {
+        removeOnComplete: true,
+      });
+
+      const result = await job.waitUntilFinished(qaQueueEvents);
+
+      return res.json(result);
+    } catch (error: any) {
+      console.error('[Capture Multiview Error]:', error.message);
+      return res.status(500).json({ 
+        error: 'Failed to capture multiview screenshots',
+        details: error.message 
+      });
+    }
+  }
+);
+
+/**
  * Helper to resolve relative URLs and rewrite them to go through the proxy
  */
 function rewriteLinks(html: string, baseUrl: string, proxyOrigin: string): string {
   const urlObj = new URL(baseUrl);
   const baseHref = `${urlObj.protocol}//${urlObj.host}/`;
 
-  // Inject <base> tag to fix all relative images, scripts, and stylesheets natively
+  // Inject <base> tag and Global Proxy Interceptor to fix CORS for dynamic fetch/XHR
   const baseTag = `<base href="${baseHref}">`;
+  const interceptorScript = `
+    <script>
+      (function() {
+        const proxyPrefix = '${proxyOrigin}/api/proxy-browser?url=';
+        const originalFetch = window.fetch;
+        window.fetch = function(input, init) {
+          if (typeof input === 'string' && input.startsWith('http') && !input.includes(window.location.host)) {
+            input = proxyPrefix + encodeURIComponent(input);
+          }
+          return originalFetch(input, init);
+        };
+        const originalOpen = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function(method, url) {
+          if (typeof url === 'string' && url.startsWith('http') && !url.includes(window.location.host)) {
+            url = proxyPrefix + encodeURIComponent(url);
+          }
+          return originalOpen.apply(this, arguments);
+        };
+      })();
+    </script>
+  `;
+
+  const headContent = `\n  ${baseTag}\n  ${interceptorScript}`;
   if (/<head>/i.test(html)) {
-    html = html.replace(/<head>/i, `<head>\n  ${baseTag}`);
+    html = html.replace(/<head>/i, `<head>${headContent}`);
   } else {
-    html = baseTag + '\n' + html;
+    html = `<head>${headContent}</head>\n` + html;
   }
 
   // Resolve URL using native URL API

@@ -1,7 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import 'dotenv/config';
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || "");
-
-export const geminiFlash = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-export const geminiEmbedding = genAI.getGenerativeModel({ model: "text-embedding-004" });
+export const genAI = new GoogleGenAI({ apiKey: process.env.GOOGLE_AI_API_KEY || "" });

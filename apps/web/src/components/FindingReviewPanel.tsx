@@ -18,6 +18,7 @@ import { CheckFactorFilter, FILTER_TABS, FilterTab } from "./CheckFactorFilter"
 
 interface FindingReviewPanelProps {
   findings: QAFinding[]
+  generalFindings?: QAFinding[]
   pageScreenshots?: {
     desktop?: string | null
     tablet?: string | null
@@ -32,7 +33,7 @@ interface FindingReviewPanelProps {
   onSingleFalsePositive?: (id: string) => void
   onSingleCreateTask?: (finding: QAFinding) => void
   onAddToStage?: (findings: QAFinding[]) => void
-  findingToTaskMap?: Record<string, { taskIds: string[], assignedUsers: any[] }>
+  findingToTaskMap?: Record<string, { taskIds: string[]; assignedUsers: any[] }>
 }
 
 const DonutChart = ({
@@ -81,10 +82,10 @@ const DonutChart = ({
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-xl font-black text-slate-900 leading-none">
+        <span className="text-xl font-bold text-slate-900 leading-none">
           {percentage}%
         </span>
-        <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter mt-1">
+        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter mt-1">
           Resolved
         </span>
       </div>
@@ -94,6 +95,7 @@ const DonutChart = ({
 
 export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
   findings,
+  generalFindings,
   pageScreenshots,
   onConfirmBulk,
   onFalsePositiveBulk,
@@ -119,26 +121,36 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
 
   // Summary Stats
   const stats = useMemo(() => {
-    const total = findings.length
-    const confirmed = findings.filter((f) => f.status === "confirmed").length
-    const falsePositives = findings.filter(
+    const allUniqueFindings = [...findings]
+    if (generalFindings) {
+      generalFindings.forEach((gf) => {
+        if (!allUniqueFindings.some((f) => f.id === gf.id)) {
+          allUniqueFindings.push(gf)
+        }
+      })
+    }
+    const total = allUniqueFindings.length
+    const confirmed = allUniqueFindings.filter(
+      (f) => f.status === "confirmed",
+    ).length
+    const falsePositives = allUniqueFindings.filter(
       (f) => f.status === "false_positive",
     ).length
-    const open = findings.filter((f) => f.status === "open").length
+    const open = allUniqueFindings.filter((f) => f.status === "open").length
     const resolved = confirmed + falsePositives
-
     return {
       open,
       confirmed,
       falsePositives,
-      critical: findings.filter((f) => f.severity === "critical").length,
-      high: findings.filter((f) => f.severity === "high").length,
-      medium: findings.filter((f) => f.severity === "medium").length,
-      low: findings.filter((f) => f.severity === "low").length,
+      critical: allUniqueFindings.filter((f) => f.severity === "critical")
+        .length,
+      high: allUniqueFindings.filter((f) => f.severity === "high").length,
+      medium: allUniqueFindings.filter((f) => f.severity === "medium").length,
+      low: allUniqueFindings.filter((f) => f.severity === "low").length,
       total,
       resolvedPercentage: total > 0 ? Math.round((resolved / total) * 100) : 0,
     }
-  }, [findings])
+  }, [findings, generalFindings])
 
   // Filtered Findings
   const filteredFindings = useMemo(() => {
@@ -192,14 +204,14 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
   return (
     <div className="flex flex-col w-full space-y-8">
       {/* Summary Dashboard */}
-      <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm overflow-hidden relative group">
+      <div className="bg-white rounded-md p-8 border border-slate-200 shadow-sm overflow-hidden relative group">
         <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none group-hover:scale-110 transition-transform duration-700">
           <BarChart3 size={160} />
         </div>
 
         <div className="flex flex-col lg:flex-row items-center gap-10 relative z-10">
           {/* Resolved Progress Donut */}
-          <div className="shrink-0 bg-slate-50 p-4 rounded-3xl border border-slate-100 shadow-inner">
+          <div className="shrink-0 bg-slate-50 p-4 rounded-md border border-slate-100 shadow-inner">
             <DonutChart percentage={stats.resolvedPercentage} />
           </div>
 
@@ -207,14 +219,13 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
             {/* Severity Breakdown Text */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-slate-400">
-                <ShieldAlert size={14} />
-                <h4 className="text-[10px] font-black uppercase tracking-[0.2em]">
+                <h4 className="text-[10px] font-bold uppercase tracking-[0.2em]">
                   Audit Summary
                 </h4>
               </div>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xl font-black text-red-600">
+                  <span className="text-xl font-bold text-red-600">
                     {stats.critical}
                   </span>
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
@@ -223,7 +234,7 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
                 </div>
                 <div className="h-4 w-px bg-slate-200" />
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xl font-black text-orange-500">
+                  <span className="text-xl font-bold text-orange-500">
                     {stats.high}
                   </span>
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
@@ -232,7 +243,7 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
                 </div>
                 <div className="h-4 w-px bg-slate-200" />
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xl font-black text-amber-500">
+                  <span className="text-xl font-bold text-amber-500">
                     {stats.medium}
                   </span>
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
@@ -241,7 +252,7 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
                 </div>
                 <div className="h-4 w-px bg-slate-200" />
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xl font-black text-blue-500">
+                  <span className="text-xl font-bold text-blue-500">
                     {stats.low}
                   </span>
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
@@ -257,15 +268,14 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
             {/* Status Breakdown Text */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-slate-400">
-                <Activity size={14} />
-                <h4 className="text-[10px] font-black uppercase tracking-[0.2em]">
+                <h4 className="text-[10px] font-bold uppercase">
                   Status Overview
                 </h4>
               </div>
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                  <span className="text-sm font-black text-slate-900">
+                  <span className="text-sm font-bold text-slate-900">
                     {stats.confirmed}
                   </span>
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
@@ -274,7 +284,7 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-slate-400" />
-                  <span className="text-sm font-black text-slate-900">
+                  <span className="text-sm font-bold text-slate-900">
                     {stats.falsePositives}
                   </span>
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
@@ -283,7 +293,7 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                  <span className="text-sm font-black text-slate-900">
+                  <span className="text-sm font-bold text-slate-900">
                     {stats.open}
                   </span>
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
@@ -296,8 +306,43 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
         </div>
       </div>
 
+      {/* General Run Findings Section */}
+      {generalFindings && generalFindings.length > 0 && (
+        <div className="space-y-4 bg-slate-50/50 p-6 rounded-md border border-slate-100">
+          <div className="flex items-center gap-2 border-b border-slate-200/60 pb-3">
+            <ShieldAlert className="w-5 h-5 text-slate-800" />
+            <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider">
+              General Run Findings
+            </h3>
+            <span className="text-[10px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded-full border border-slate-200 shadow-sm ml-1">
+              {generalFindings.length}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {generalFindings.map((finding) => (
+              <div key={finding.id} className="relative group/wrapper">
+                <FindingCard
+                  key={finding.id}
+                  finding={finding}
+                  pageScreenshots={pageScreenshots}
+                  onConfirm={onSingleConfirm}
+                  onFalsePositive={onSingleFalsePositive}
+                  onCreateTask={onSingleCreateTask}
+                  onAssign={onSingleAssign}
+                  isSelected={selectedIds.has(finding.id)}
+                  onToggleSelect={() => toggleSelect(finding.id)}
+                  assignedTaskIds={findingToTaskMap[finding.id]?.taskIds}
+                  assignedUsers={findingToTaskMap[finding.id]?.assignedUsers}
+                  isAssigned={!!findingToTaskMap[finding.id]}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Filter Tabs */}
-      <div className="bg-white border border-slate-100 p-2 rounded-2xl shadow-sm">
+      <div className="bg-white border border-slate-100 p-2 rounded-md shadow-sm">
         <CheckFactorFilter
           findings={findings}
           selectedFactor={selectedFactor}
@@ -311,7 +356,7 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
       {/* Bulk Action Toolbar */}
       {canAction && (
         <div
-          className={`sticky top-4 z-20 bg-black rounded-2xl p-4 border border-slate-800 shadow-2xl transition-all duration-300 ${
+          className={`sticky top-4 z-20 bg-black rounded-md p-4 border border-slate-800 shadow-2xl transition-all duration-300 ${
             selectedIds.size > 0
               ? "translate-y-0 opacity-100 visible"
               : "-translate-y-4 opacity-0 invisible h-0 overflow-hidden !p-0 !m-0"
@@ -330,7 +375,7 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
                 )}
               </button>
               <div>
-                <p className="text-white font-black text-sm leading-none">
+                <p className="text-white font-bold text-sm leading-none">
                   {selectedIds.size} Selected
                 </p>
                 <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">
@@ -341,24 +386,15 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
 
             <div className="flex items-center gap-2">
               <button
-                onClick={handleBulkConfirm}
-                className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-[10px] hover:bg-emerald-600 transition-all active:scale-95"
-              >
-                <CheckCircle size={14} />
-                Confirm All
-              </button>
-              <button
                 onClick={handleBulkFalsePositive}
-                className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-[10px] hover:bg-white/20 border border-white/10 transition-all active:scale-95"
+                className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white text-[10px] font-bold uppercase tracking-widest rounded-sm hover:bg-white/20 border border-white/10 transition-all active:scale-95"
               >
-                <XCircle size={14} />
                 Mark False Positives
               </button>
               <button
                 onClick={handleBulkCreateTasks}
-                className="flex items-center gap-2 px-4 py-2 bg-accent text-black text-[10px] font-black uppercase tracking-widest rounded-[10px] hover:bg-accent/90 transition-all active:scale-95"
+                className="flex items-center gap-2 px-4 py-2 bg-accent text-black text-[10px] font-bold uppercase tracking-widest rounded-sm hover:bg-accent/90 border border-accent transition-all active:scale-95"
               >
-                <Plus size={14} />
                 Create Tasks
               </button>
             </div>
@@ -370,29 +406,29 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
         {filteredFindings.map((finding) => (
           <div key={finding.id} className="relative group/wrapper">
-          <FindingCard
-            key={finding.id}
-            finding={finding}
-            pageScreenshots={pageScreenshots}
-            onConfirm={onSingleConfirm}
-            onFalsePositive={onSingleFalsePositive}
-            onCreateTask={onSingleCreateTask}
-            onAssign={onSingleAssign}
-            isSelected={selectedIds.has(finding.id)}
-            onToggleSelect={() => toggleSelect(finding.id)}
-            assignedTaskIds={findingToTaskMap[finding.id]?.taskIds}
-            assignedUsers={findingToTaskMap[finding.id]?.assignedUsers}
-            isAssigned={!!findingToTaskMap[finding.id]}
-          />
+            <FindingCard
+              key={finding.id}
+              finding={finding}
+              pageScreenshots={pageScreenshots}
+              onConfirm={onSingleConfirm}
+              onFalsePositive={onSingleFalsePositive}
+              onCreateTask={onSingleCreateTask}
+              onAssign={onSingleAssign}
+              isSelected={selectedIds.has(finding.id)}
+              onToggleSelect={() => toggleSelect(finding.id)}
+              assignedTaskIds={findingToTaskMap[finding.id]?.taskIds}
+              assignedUsers={findingToTaskMap[finding.id]?.assignedUsers}
+              isAssigned={!!findingToTaskMap[finding.id]}
+            />
           </div>
         ))}
 
         {filteredFindings.length === 0 && (
-          <div className="col-span-full py-20 bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl text-center">
+          <div className="col-span-full py-20 bg-slate-50 border-2 border-dashed border-slate-200 rounded-md text-center">
             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100">
               <Filter className="w-8 h-8 text-slate-200" />
             </div>
-            <p className="text-slate-900 font-black text-base uppercase tracking-tight">
+            <p className="text-slate-900 font-bold text-base uppercase tracking-tight">
               No findings match filter
             </p>
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-2">

@@ -173,3 +173,6 @@ export const createFinding = async (
   const response = await axios.post<QAFinding>('/api/findings', data);
   return response.data;
 };
+export const deleteRuns = async (axios: AxiosInstance, runIds: string[]): Promise<void> => {
+  await axios.delete('/api/runs', { data: { runIds } });
+};

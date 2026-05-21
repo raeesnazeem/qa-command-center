@@ -17,6 +17,10 @@ import {
   VisualDiffPage,
   Week1TestPage,
   Week2TestPage,
+  QueueHistoryPage,
+  ActivityLogPage,
+  StatsPage,
+  AllTasksPage,
 } from "@/pages"
 import { AuthenticateWithRedirectCallback } from "@clerk/react"
 
@@ -113,12 +117,33 @@ export const router = createBrowserRouter(
               element: <TasksPage />,
             },
             {
+              path: "/all-tasks",
+              element: <AllTasksPage />,
+            },
+            {
               path: "/settings",
               element: <SettingsPage />,
             },
             {
               path: "/team",
               element: <TeamPage />,
+            },
+            {
+              path: "/team",
+              element: <TeamPage />,
+            },
+            {
+              path: "/stats",
+              element: <StatsPage />,
+            },
+
+            {
+              path: "/admin/queue-history",
+              element: <QueueHistoryPage />,
+            },
+            {
+              path: "/admin/activity-logs",
+              element: <ActivityLogPage />,
             },
           ],
         },

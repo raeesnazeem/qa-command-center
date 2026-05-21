@@ -34,6 +34,7 @@ export const FILTER_TABS: FilterTab[] = [
     label: "Responsive",
     factors: ["visual_regression"],
   },
+  { id: "hero_media", label: "Hero Media", factors: ["hero_media"] },
 ]
 
 export const CheckFactorFilter: React.FC<CheckFactorFilterProps> = ({
@@ -93,7 +94,7 @@ export const CheckFactorFilter: React.FC<CheckFactorFilterProps> = ({
               className={`flex items-center gap-2 ${isActive ? "btn-unified" : "btn-unified-secondary"}`}
             >
               <span
-                className={`text-[11px] font-black uppercase tracking-wider ${
+                className={`text-[11px] font-bold uppercase tracking-wider ${
                   isActive ? "text-white" : "text-black"
                 }`}
               >
@@ -101,7 +102,7 @@ export const CheckFactorFilter: React.FC<CheckFactorFilterProps> = ({
               </span>
               {count > 0 && (
                 <span
-                  className={`px-1.5 py-0.5 rounded-15px text-[9px] font-black ${
+                  className={`px-1.5 py-0.5 rounded-15px text-[9px] font-bold ${
                     isActive
                       ? "bg-accent text-black"
                       : "bg-slate-100 text-slate-500"

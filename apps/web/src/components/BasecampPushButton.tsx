@@ -32,10 +32,6 @@ export const BasecampTaskLink = ({ url }: { url: string | undefined }) => {
 };
 
 export const BasecampPushButton = ({ task, onPush, isPending, isSuccess }: BasecampPushButtonProps) => {
-  // If the task already has a basecamp_url in the database, show the link
-  if (task.basecamp_url) {
-    return <BasecampTaskLink url={task.basecamp_url} />;
-  }
 
   return (
     <CanDo role="qa_engineer">

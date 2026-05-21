@@ -1,4 +1,4 @@
-import { chromium } from 'playwright';
+import { launchBrowser, injectPopupKiller, disableAnimations, wakeUpLazyImages, delay } from '../lib/puppeteerBrowser';
 import sharp from 'sharp';
 import { uploadScreenshot } from '../lib/supabaseStorage';
 import pino from 'pino';
@@ -53,10 +53,7 @@ export async function screenshotPage(
         `Capturing ${viewport.name} screenshot...`
       );
     }
-    const browser = await chromium.launch({ 
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
-    });
+    const browser = await launchBrowser();
     try {
       if (onProgress) {
         await onProgress(
@@ -64,11 +61,8 @@ export async function screenshotPage(
           `Opening browser (${viewport.name})...`
         );
       }
-      const context = await browser.newContext({
-        viewport: { width: viewport.width, height: viewport.height },
-        deviceScaleFactor: 1,
-      });
-      const page = await context.newPage();
+      const page = await browser.newPage();
+      await page.setViewport({ width: viewport.width, height: viewport.height, deviceScaleFactor: 1 });
 
       logger.info({ url, viewport: viewport.name }, `Taking screenshot`);
 
@@ -78,6 +72,10 @@ export async function screenshotPage(
           `Navigating to URL (${viewport.name})...`
         );
       }
+
+      // Inject popup/cookie killer BEFORE navigation
+      await injectPopupKiller(page);
+
       // Navigate to URL
       await page.goto(url, { timeout: 30000, waitUntil: 'load' });
 
@@ -95,8 +93,22 @@ export async function screenshotPage(
         logger.debug({ url, viewport: viewport.name }, 'Elementor detected');
       } catch (e) {
         logger.debug({ url, viewport: viewport.name }, 'Elementor not detected, waiting for networkidle');
-        await page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => null);
+        await page.waitForNetworkIdle({ timeout: 20000 }).catch(() => null);
       }
+
+      if (onProgress) {
+        await onProgress(
+          Math.round((completedViewports / totalViewports) * 100) + 18,
+          `Waking up lazy loaders (${viewport.name})...`
+        );
+      }
+
+      await disableAnimations(page);
+      await wakeUpLazyImages(page);
+      
+      // Wait for network to settle and final stabilize
+      await page.waitForNetworkIdle({ timeout: 10000 }).catch(() => null);
+      await delay(5000);
 
       if (onProgress) {
         await onProgress(
@@ -105,7 +117,10 @@ export async function screenshotPage(
         );
       }
       // Take full-page screenshot
-      const buffer = await page.screenshot({ fullPage: true });
+      const buffer = await page.screenshot({ 
+        fullPage: true,
+        captureBeyondViewport: true,
+      });
 
       if (onProgress) {
         await onProgress(

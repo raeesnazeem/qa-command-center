@@ -26,6 +26,7 @@ import { chatRouter } from './routes/chat'
 import { basecampIntegrationRouter } from './routes/basecampIntegration'
 import { onboardingRouter } from './routes/onboarding'
 import { proxyRouter } from './routes/proxy'
+import { storageRouter } from './routes/storage'
 import { clerkMiddleware, getAuth } from '@clerk/express'
 import { createBullBoard } from '@bull-board/api'
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter'
@@ -56,7 +57,7 @@ app.use(
 app.use('/webhooks', express.raw({ type: 'application/json' }), webhookRouter)
 app.use('/webhooks', express.raw({ type: 'application/json' }), basecampIntegrationRouter)
 
-app.use(express.json())
+app.use(express.json({ limit: '50mb' }))
 app.use(defaultRateLimiter)
 
 // Clerk middleware for other routes
@@ -90,21 +91,22 @@ app.use('/api', proxyRouter)
 
 // Resource Routes
 app.use('/api/health', healthRouter)
+app.use('/api/projects', projectSettingsRouter)
 app.use('/api/projects', projectsRouter)
+app.use('/api/users', userSettingsRouter)
 app.use('/api/users', onboardingRouter)
 app.use('/api/users', usersRouter)
-app.use('/api/users', userSettingsRouter)
 app.use('/api/runs', runsRouter)
 app.use('/api/runs', signOffRouter)
 app.use('/api/tasks', tasksRouter)
 app.use('/api/stats', statsRouter)
 app.use('/api/admin', adminRouter)
-app.use('/api/projects', projectSettingsRouter)
 app.use('/api/findings', findingsRouter)
 app.use('/api/visual-diff', visualDiffRouter)
 app.use('/api/chat', chatRouter)
 app.use('/api/tasks', basecampIntegrationRouter)
 app.use('/api/basecamp', basecampIntegrationRouter)
+app.use('/api/storage', storageRouter)
 app.use('/debug', debugRouter)
 
 // 404 handler

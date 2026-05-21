@@ -1,6 +1,7 @@
 import { Job } from 'bullmq';
 import { supabase } from '../lib/supabase';
 import { analyzeRebuttal } from '@qacc/ai';
+import * as activityService from '../services/activityService';
 import pino from 'pino';
 
 const logger = pino({
@@ -137,6 +138,24 @@ export async function processAnalyzeRebuttalJob(job: Job) {
 
   if (commentError) {
     logger.error({ error: commentError.message }, 'Failed to insert AI verdict comment into task thread');
+  } else {
+    // Notify the task creator that AI analysis is complete
+    try {
+      const { data: projectData } = await supabase
+        .from('projects')
+        .select('name')
+        .eq('id', task.project_id)
+        .single();
+      
+      await activityService.notifyCommentAdded(
+        { id: 'ai-assistant', name: 'AI Assistant' },
+        { id: taskId, title: task.title },
+        projectData?.name || 'Project',
+        [task.created_by]
+      );
+    } catch (notifyErr) {
+      logger.error({ error: notifyErr }, 'Failed to send AI analysis notification');
+    }
   }
 
   // Broadcast update via Realtime to alert frontend subscribers

@@ -10,6 +10,9 @@ export default {
         accent: '#93C0B1',
         'bg-main': '#FAFAFA',
       },
+      fontFamily: {
+        sans: ['Plus Jakarta Sans', 'sans-serif'],
+      },
     },
   },
   plugins: [],

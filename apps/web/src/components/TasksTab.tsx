@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ProjectWithMembers } from '../api/projects.api';
 import { useTasks, useUpdateTask, useDeleteTask, useBulkDeleteTasks } from '../hooks/useTasks';
 import { 
@@ -11,13 +12,18 @@ import {
   Plus,
   CheckCircle2,
   ExternalLink,
-  Trash2
+  Trash2,
+  Bell
 } from 'lucide-react';
 import { TaskStatus } from '@qacc/shared';
 import { CreateTaskModal } from './CreateTaskModal';
 import { CanDo } from './CanDo';
 import { BulkBasecampPush } from './BulkBasecampPush';
+import { PendingReminderModal } from './PendingReminderModal';
 import { TaskDetailPanel } from './TaskDetailPanel';
+import { NotResolvedModal } from './NotResolvedModal';
+import { ResolveTaskModal } from './ResolveTaskModal';
+import { useRole } from '../hooks/useRole';
 import { Task } from '../api/tasks.api';
 
 interface TasksTabProps {
@@ -30,6 +36,22 @@ export const TasksTab = ({ project }: TasksTabProps) => {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [searchParams] = useSearchParams();
+  const taskIdParam = searchParams.get('taskId');
+
+  useEffect(() => {
+    if (taskIdParam && tasks.length > 0) {
+      const task = tasks.find(t => t.id === taskIdParam);
+      if (task) {
+        setSelectedTask(task);
+      }
+    }
+  }, [taskIdParam, tasks]);
+
+  const [notResolvedTask, setNotResolvedTask] = useState<Task | null>(null);
+  const [resolveTaskData, setResolveTaskData] = useState<Task | null>(null);
+  const [isPendingReminderOpen, setIsPendingReminderOpen] = useState(false);
+  const { isDeveloper } = useRole();
   const { mutate: updateTask } = useUpdateTask();
   const { mutate: deleteTask } = useDeleteTask();
   const { mutate: bulkDelete } = useBulkDeleteTasks();
@@ -77,6 +99,10 @@ export const TasksTab = ({ project }: TasksTabProps) => {
 
   const groupedTasks = groupTasksForUI(tasks);
 
+  const selectedInProgressTasks = tasks.filter(t => 
+    selectedTaskIds.includes(t.id) && t.status === 'in_progress'
+  );
+
   const columns: { id: TaskStatus; title: string }[] = [
     { id: 'open', title: 'To Do' },
     { id: 'in_progress', title: 'In Progress' },
@@ -84,8 +110,12 @@ export const TasksTab = ({ project }: TasksTabProps) => {
     { id: 'closed', title: 'Closed' },
   ];
 
-  const handleStatusChange = (taskId: string, newStatus: TaskStatus) => {
-    updateTask({ id: taskId, data: { status: newStatus } });
+  const handleStatusChange = (task: Task, newStatus: TaskStatus) => {
+    if (isDeveloper && newStatus === 'resolved') {
+      setResolveTaskData(task);
+      return;
+    }
+    updateTask({ id: task.id, data: { status: newStatus } });
   };
 
   const handleDelete = (taskId: string) => {
@@ -136,6 +166,15 @@ export const TasksTab = ({ project }: TasksTabProps) => {
                 onComplete={() => setSelectedTaskIds([])} 
                 mode="comment"
               />
+              {selectedInProgressTasks.length > 1 && (
+                <button 
+                  onClick={() => setIsPendingReminderOpen(true)}
+                  className="inline-flex items-center space-x-2 px-4 py-2 rounded-md font-bold text-sm bg-amber-50 text-amber-600 border border-amber-100 hover:bg-amber-100 transition-all shadow-sm active:scale-95"
+                >
+                  <Bell className="w-4 h-4" />
+                  <span>Pending reminder</span>
+                </button>
+              )}
               <CanDo role="qa_engineer">
                 <button 
                   onClick={handleBulkDelete}
@@ -251,7 +290,7 @@ export const TasksTab = ({ project }: TasksTabProps) => {
                         <select
                           value={task.status}
                           onClick={(e) => e.stopPropagation()}
-                          onChange={(e) => handleStatusChange(task.id, e.target.value as TaskStatus)}
+                          onChange={(e) => handleStatusChange(task, e.target.value as TaskStatus)}
                           className="text-[10px] font-bold uppercase tracking-wider bg-slate-50 border-none rounded px-1.5 py-0.5 focus:ring-0 cursor-pointer appearance-none text-slate-400 hover:text-slate-600 transition-colors"
                         >
                           {columns.map(col => (
@@ -273,7 +312,18 @@ export const TasksTab = ({ project }: TasksTabProps) => {
                       </div>
                     </div>
                     <h4 className="text-sm font-bold text-slate-900 group-hover:text-accent transition-colors leading-tight mb-4">
-                      {task.title}
+                      {(() => {
+                        const match = task.title.match(/^(Issue #\d+):?\s*(.*)$/);
+                        if (match) {
+                          return (
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-accent font-bold whitespace-nowrap">{match[1]}</span>
+                              <span className="text-slate-900 font-bold truncate">{match[2]}</span>
+                            </div>
+                          );
+                        }
+                        return task.title;
+                      })()}
                     </h4>
                     <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-50">
                       <div className="flex items-center space-x-3 text-slate-400">
@@ -293,6 +343,21 @@ export const TasksTab = ({ project }: TasksTabProps) => {
                           </a>
                         )}
                       </div>
+                      
+                      {column.id === 'resolved' && (
+                        <CanDo role="qa_engineer">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setNotResolvedTask(task);
+                            }}
+                            className="btn-unified-secondary py-1 px-3 text-[10px] bg-red-50 text-red-600 border-red-100 hover:bg-red-100"
+                          >
+                            Not Resolved
+                          </button>
+                        </CanDo>
+                      )}
+
                       <div className="flex items-center -space-x-2">
                         {task.assignees?.map((user: any) => (
                           <div 
@@ -322,6 +387,26 @@ export const TasksTab = ({ project }: TasksTabProps) => {
         task={selectedTask}
         isOpen={!!selectedTask}
         onClose={() => setSelectedTask(null)}
+      />
+
+      <NotResolvedModal 
+        task={notResolvedTask}
+        isOpen={!!notResolvedTask}
+        onClose={() => setNotResolvedTask(null)}
+      />
+
+      <ResolveTaskModal 
+        task={resolveTaskData}
+        isOpen={!!resolveTaskData}
+        onClose={() => setResolveTaskData(null)}
+      />
+
+      <PendingReminderModal 
+        tasks={selectedInProgressTasks}
+        project={project}
+        isOpen={isPendingReminderOpen}
+        onClose={() => setIsPendingReminderOpen(false)}
+        onSuccess={() => setSelectedTaskIds([])}
       />
     </div>
   );

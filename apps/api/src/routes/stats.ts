@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { supabase } from '../lib/supabase';
 import { clerkAuth } from '../middleware/clerkAuth';
+import * as statsService from '../services/statsService';
+
 
 const router: Router = Router();
 
@@ -158,5 +160,30 @@ router.get('/', clerkAuth, async (req: Request, res: Response) => {
     return res.status(500).json({ error: error.message });
   }
 });
+
+/**
+ * GET /api/stats/leaderboard
+ * Get performance leaderboard for Developers and QAs.
+ */
+router.get('/leaderboard', clerkAuth, async (req: Request, res: Response) => {
+  const { orgId } = req.auth!;
+  const { year, month } = req.query;
+
+  if (!orgId) {
+    return res.status(400).json({ error: 'Organization ID is required' });
+  }
+
+  try {
+    const data = await statsService.getLeaderboards(
+      (year as string) || 'all',
+      (month as string) || 'all',
+      orgId
+    );
+    return res.json(data);
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 
 export { router as statsRouter };

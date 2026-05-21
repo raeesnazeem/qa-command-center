@@ -1,26 +1,46 @@
-import { useForm, useWatch } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { CreateRunSchema, CreateRunInput } from '@qacc/shared';
-import { useCreateRun, useUpdateRunStatus, useStartRun, useFetchUrls } from '../hooks/useRuns';
-import { Project } from '../api/projects.api';
-import { X, Loader2, Globe, PlayCircle, Layout, ChevronDown, ChevronRight, Square, CheckSquare } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useForm, useWatch } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { CreateRunSchema, CreateRunInput } from "@qacc/shared"
+import {
+  useCreateRun,
+  useUpdateRunStatus,
+  useStartRun,
+  useFetchUrls,
+} from "../hooks/useRuns"
+import { Project } from "../api/projects.api"
+import {
+  X,
+  Loader2,
+  Globe,
+  PlayCircle,
+  Layout,
+  ChevronDown,
+  ChevronRight,
+  Square,
+  CheckSquare,
+} from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { createPortal } from "react-dom"
 
 interface StartRunModalProps {
-  project: Project;
-  isOpen: boolean;
-  onClose: () => void;
+  project: Project
+  isOpen: boolean
+  onClose: () => void
 }
 
-export const StartRunModal = ({ project, isOpen, onClose }: StartRunModalProps) => {
-  const navigate = useNavigate();
-  const { mutate: createRun, isPending: isCreating } = useCreateRun();
-  const { mutate: startRun, isPending: isStarting } = useStartRun();
-  const { mutate: updateStatus, isPending: isUpdating } = useUpdateRunStatus();
-  const [isUrlsExpanded, setIsUrlsExpanded] = useState(false);
-  const [selectedUrls, setSelectedUrls] = useState<string[]>([]);
-  
+export const StartRunModal = ({
+  project,
+  isOpen,
+  onClose,
+}: StartRunModalProps) => {
+  const navigate = useNavigate()
+  const { mutate: createRun, isPending: isCreating } = useCreateRun()
+  const { mutate: startRun, isPending: isStarting } = useStartRun()
+  const { isPending: isUpdating } = useUpdateRunStatus()
+  const [isUrlsExpanded, setIsUrlsExpanded] = useState(false)
+  const [selectedUrls, setSelectedUrls] = useState<string[]>([])
+
   const {
     register,
     handleSubmit,
@@ -31,97 +51,228 @@ export const StartRunModal = ({ project, isOpen, onClose }: StartRunModalProps) 
     resolver: zodResolver(CreateRunSchema),
     defaultValues: {
       project_id: project.id,
-      run_type: 'pre_release',
+      run_type: "pre_release",
       site_url: project.site_url,
-      figma_url: '',
-      enabled_checks: ['visual_regression', 'accessibility', 'console_errors'],
+      figma_url: "",
+      enabled_checks: [
+        "visual_regression",
+        "accessibility",
+        "console_errors",
+        "project_plan",
+      ],
       is_woocommerce: project.is_woocommerce,
-      device_matrix: ['desktop'],
+      device_matrix: ["desktop"],
       selected_urls: [],
     },
-  });
+  })
 
-  const siteUrl = useWatch({ control, name: 'site_url' });
-  const { data: fetchedUrls, isLoading: isFetchingUrls } = useFetchUrls(siteUrl);
+  const enabledChecks = useWatch({ control, name: "enabled_checks" }) || []
+  const isGeneralOnly = enabledChecks.every(
+    (c) => c === "project_plan" || c === "dead_links",
+  )
+
+  const siteUrl = useWatch({ control, name: "site_url" })
+  const { data: fetchedUrls, isLoading: isFetchingUrls } = useFetchUrls(siteUrl)
 
   useEffect(() => {
     if (fetchedUrls) {
-      setSelectedUrls(fetchedUrls);
-      setValue('selected_urls', fetchedUrls);
+      setSelectedUrls(fetchedUrls)
+      setValue("selected_urls", fetchedUrls)
     }
-  }, [fetchedUrls, setValue]);
+  }, [fetchedUrls, setValue])
 
   const toggleUrl = (url: string) => {
     const newSelection = selectedUrls.includes(url)
-      ? selectedUrls.filter(u => u !== url)
-      : [...selectedUrls, url];
-    setSelectedUrls(newSelection);
-    setValue('selected_urls', newSelection);
-  };
+      ? selectedUrls.filter((u) => u !== url)
+      : [...selectedUrls, url]
+    setSelectedUrls(newSelection)
+    setValue("selected_urls", newSelection)
+  }
 
   const selectAll = () => {
     if (fetchedUrls) {
-      setSelectedUrls(fetchedUrls);
-      setValue('selected_urls', fetchedUrls);
+      setSelectedUrls(fetchedUrls)
+      setValue("selected_urls", fetchedUrls)
     }
-  };
+  }
 
   const deselectAll = () => {
-    setSelectedUrls([]);
-    setValue('selected_urls', []);
-  };
+    setSelectedUrls([])
+    setValue("selected_urls", [])
+  }
 
   const onSubmit = (data: CreateRunInput) => {
-    if (selectedUrls.length === 0) {
-      return;
+    // 1. First, list down all factors that require looking at real website pages
+    const PAGE_CHECKS = [
+      "visual_regression",
+      "accessibility",
+      "console_errors",
+      "performance",
+      "seo",
+      "spelling",
+      "broken_links",
+      "dummy_content",
+      "image_compliance",
+      "ai_content_audit",
+      "hero_media",
+      "dead_links",
+    ]
+    // 2. Check if any of these page scan checks are selected by the user
+    const requiresPageScan = data.enabled_checks.some((c) =>
+      PAGE_CHECKS.includes(c),
+    )
+
+    // 3. If a page scan check is enabled but the user unchecked all page URLs, block submission!
+    if (requiresPageScan && selectedUrls.length === 0) {
+      return
     }
 
-    // Ensure empty string is sent as null
+    // 4. If we are ONLY doing general checks (like Project Plan select), we don't need any page URLs!
+    // const urlsToSubmit = requiresPageScan ? selectedUrls : []
+    const requiresUrls = data.enabled_checks.some(
+      (c) => c !== "project_plan" && c !== "dead_links",
+    )
+    if (requiresUrls && selectedUrls.length === 0) {
+      return
+    }
+
+    // 5. Construct the payload safely
     const payload = {
       ...data,
-      figma_url: data.figma_url === '' ? null : data.figma_url,
-      selected_urls: selectedUrls
-    };
+      figma_url: data.figma_url === "" ? null : data.figma_url,
+      selected_urls: requiresUrls ? selectedUrls : [],
+    }
 
     createRun(payload, {
       onSuccess: (newRun) => {
         // Correctly enqueue the job using startRun mutation
         startRun(newRun.id, {
           onSuccess: () => {
-            onClose();
+            onClose()
             // Redirect to detail page to see live progress
-            navigate(`/projects/${project.id}/runs/${newRun.id}`);
-          }
-        });
+            navigate(`/projects/${project.id}/runs/${newRun.id}`)
+          },
+        })
       },
-    });
-  };
+    })
+  }
 
-  const isPending = isCreating || isStarting || isUpdating;
+  const isPending = isCreating || isStarting || isUpdating
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   const checkOptions = [
-    { id: 'visual_regression', label: 'Visual Regression', description: 'Compare layout against baseline or Figma' },
-    { id: 'accessibility', label: 'Accessibility (a11y)', description: 'Check for WCAG compliance issues' },
-    { id: 'console_errors', label: 'Console Errors', description: 'Detect JS errors and failed network requests' },
-    { id: 'performance', label: 'Performance', description: 'Basic Lighthouse performance metrics' },
-  ];
+    {
+      id: "visual_regression",
+      label: "Visual Regression",
+      description: "Compare layout against baseline or Figma",
+    },
+    {
+      id: "accessibility",
+      label: "Accessibility (a11y)",
+      description: "Check for WCAG compliance issues",
+    },
+    {
+      id: "console_errors",
+      label: "Console Errors",
+      description: "Detect JS errors and failed network requests",
+    },
+    {
+      id: "performance",
+      label: "Performance",
+      description: "Basic Lighthouse performance metrics",
+    },
+    {
+      id: "project_plan",
+      label: "Project Plan",
+      description: "Fetch project plan from Basecamp",
+    },
+    {
+      id: "hero_media",
+      label: "Hero Video & Image Load",
+      description:
+        "Verify that the hero section video and fallback image load immediately on page load",
+    },
+    {
+      id: "dead_links",
+      label: "Dead Link & Anchor Checker",
+      description:
+        "Detect dead links and broken anchors (#hash) using a super-fast native Playwright + Got hybrid approach",
+    },
+    {
+      id: "paid_media",
+      label: "Paid Media Check",
+      description:
+        "Verify Google and Facebook Ads campaigns are started in Basecamp for this project",
+    },
+    {
+      id: "privacy_policy",
+      label: "Privacy Policy Check",
+      description:
+        "Check if Privacy Policy page is added on the footer and WooCommerce checkout page",
+    },
+    {
+      id: "footer_logo",
+      label: "Footer Logo Check",
+      description:
+        "Ensure footer logo is the brand-new logo with no tagline text across all views",
+    },
+    {
+      id: "single_script",
+      label: "Single Script Features",
+      description:
+        "Verify single script tag is injected and widgets are configured and displayed",
+    },
+    {
+      id: "top_bar_sticky",
+      label: "Top Bar & Sticky Header Check",
+      description:
+        "Verify phone, email, social links in top bar, and ensure header remains sticky on scroll",
+    },
+    {
+      id: "favicon",
+      label: "Favicon Check",
+      description: "Verify favicon link is present in head and loads correctly",
+    },
+    {
+      id: "url_matching",
+      label: "URL & Tab Name Matching",
+      description:
+        "Compare dev site sitemap against old site sitemap to make sure no page is missed",
+    },
+    {
+      id: "contact_form",
+      label: "Growth99 Contact Form Check",
+      description:
+        "Test responsive rendering and mock submission of contact forms on all pages",
+    },
+    {
+      id: "chatbot_consultation",
+      label: "Chatbot & Virtual Consultation Check",
+      description:
+        "Verify that chatbot and virtual consultation modals open and function correctly",
+    },
+    {
+      id: "text_share",
+      label: "Text Share Metadata Check",
+      description:
+        "Verify that social preview tags (og:title, og:site_name) match the business name",
+    },
+  ]
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-200">
-      <div 
-        className="absolute inset-0 bg-transparent" 
-        onClick={onClose} 
-      />
-      
+      <div className="absolute inset-0 bg-transparent" onClick={onClose} />
+
       <div className="relative w-full max-w-lg bg-white border border-slate-200 rounded-md shadow-sm overflow-hidden transition-all duration-200">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
           <div className="flex items-center space-x-2">
             <div className="p-1.5 bg-accent/10 rounded-md text-accent">
               <PlayCircle className="w-5 h-5" />
             </div>
-            <h2 className="text-xl font-bold text-slate-900">Start New QA Run</h2>
+            <h2 className="text-xl font-bold text-slate-900">
+              Start New QA Run
+            </h2>
           </div>
           <button
             onClick={onClose}
@@ -142,23 +293,27 @@ export const StartRunModal = ({ project, isOpen, onClose }: StartRunModalProps) 
                 <label className="relative cursor-pointer">
                   <input
                     type="radio"
-                    {...register('run_type')}
+                    {...register("run_type")}
                     value="pre_release"
                     className="sr-only peer"
                   />
                   <div className="p-3 border border-slate-200 rounded-md text-center peer-checked:border-accent peer-checked:bg-accent/5 transition-all">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-600 peer-checked:text-accent">Pre-Release</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-600 peer-checked:text-accent">
+                      Pre-Release
+                    </span>
                   </div>
                 </label>
                 <label className="relative cursor-pointer">
                   <input
                     type="radio"
-                    {...register('run_type')}
+                    {...register("run_type")}
                     value="post_release"
                     className="sr-only peer"
                   />
                   <div className="p-3 border border-slate-200 rounded-md text-center peer-checked:border-accent peer-checked:bg-accent/5 transition-all">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-600 peer-checked:text-accent">Post-Release</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-600 peer-checked:text-accent">
+                      Post-Release
+                    </span>
                   </div>
                 </label>
               </div>
@@ -172,30 +327,37 @@ export const StartRunModal = ({ project, isOpen, onClose }: StartRunModalProps) 
               <div className="relative">
                 <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
-                  {...register('site_url')}
+                  {...register("site_url")}
                   className="w-full bg-slate-50 border border-slate-200 rounded-md pl-10 pr-4 py-2.5 text-slate-900 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
                 />
               </div>
               {errors.site_url && (
-                <p className="mt-1.5 text-xs text-red-500 font-medium">{errors.site_url.message}</p>
+                <p className="mt-1.5 text-xs text-red-500 font-medium">
+                  {errors.site_url.message}
+                </p>
               )}
             </div>
 
             {/* Figma URL */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                Figma Design URL <span className="text-slate-400 text-[10px] uppercase ml-1">(Optional)</span>
+                Figma Design URL{" "}
+                <span className="text-slate-400 text-[10px] uppercase ml-1">
+                  (Optional)
+                </span>
               </label>
               <div className="relative">
                 <Layout className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
-                  {...register('figma_url')}
+                  {...register("figma_url")}
                   placeholder="https://figma.com/file/..."
                   className="w-full bg-white border border-slate-200 rounded-md pl-10 pr-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
                 />
               </div>
               {errors.figma_url && (
-                <p className="mt-1.5 text-xs text-red-500 font-medium">{errors.figma_url.message}</p>
+                <p className="mt-1.5 text-xs text-red-500 font-medium">
+                  {errors.figma_url.message}
+                </p>
               )}
             </div>
 
@@ -209,11 +371,18 @@ export const StartRunModal = ({ project, isOpen, onClose }: StartRunModalProps) 
                 <div className="flex items-center space-x-2">
                   <Globe className="w-4 h-4 text-slate-500" />
                   <span className="text-sm font-semibold text-slate-700">
-                    Select Pages to Test ({selectedUrls.length}/{fetchedUrls?.length || 0})
+                    Select Pages to Test ({selectedUrls.length}/
+                    {fetchedUrls?.length || 0})
                   </span>
-                  {isFetchingUrls && <Loader2 className="w-3 h-3 animate-spin text-accent" />}
+                  {isFetchingUrls && (
+                    <Loader2 className="w-3 h-3 animate-spin text-accent" />
+                  )}
                 </div>
-                {isUrlsExpanded ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+                {isUrlsExpanded ? (
+                  <ChevronDown className="w-4 h-4 text-slate-400" />
+                ) : (
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                )}
               </button>
 
               {isUrlsExpanded && (
@@ -237,12 +406,16 @@ export const StartRunModal = ({ project, isOpen, onClose }: StartRunModalProps) 
 
                   <div className="max-h-48 overflow-y-auto space-y-1.5 pr-2 custom-scrollbar">
                     {!fetchedUrls && !isFetchingUrls && (
-                      <p className="text-xs text-slate-500 italic py-2">Enter a URL to fetch pages</p>
+                      <p className="text-xs text-slate-500 italic py-2">
+                        Enter a URL to fetch pages
+                      </p>
                     )}
                     {isFetchingUrls && (
                       <div className="flex items-center justify-center py-4 space-x-2">
                         <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
-                        <span className="text-xs text-slate-500">Fetching pages...</span>
+                        <span className="text-xs text-slate-500">
+                          Fetching pages...
+                        </span>
                       </div>
                     )}
                     {fetchedUrls?.map((url) => (
@@ -256,13 +429,20 @@ export const StartRunModal = ({ project, isOpen, onClose }: StartRunModalProps) 
                         ) : (
                           <Square className="w-4 h-4 text-slate-300 group-hover:text-slate-400" />
                         )}
-                        <span className="text-xs text-slate-600 truncate">{url}</span>
+                        <span className="text-xs text-slate-600 truncate">
+                          {url}
+                        </span>
                       </div>
                     ))}
                   </div>
-                  {selectedUrls.length === 0 && !isFetchingUrls && fetchedUrls && (
-                    <p className="text-[10px] text-red-500 font-medium italic">* At least one page must be selected</p>
-                  )}
+                  {selectedUrls.length === 0 &&
+                    !isGeneralOnly &&
+                    !isFetchingUrls &&
+                    fetchedUrls && (
+                      <p className="text-[10px] text-red-500 font-medium italic">
+                        * At least one page must be selected
+                      </p>
+                    )}
                 </div>
               )}
             </div>
@@ -272,20 +452,27 @@ export const StartRunModal = ({ project, isOpen, onClose }: StartRunModalProps) 
               <label className="block text-sm font-semibold text-slate-700 mb-2">
                 Checks to Run
               </label>
-              <div className="space-y-2">
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
                 {checkOptions.map((check) => (
-                  <label key={check.id} className="flex items-start p-3 border border-slate-100 rounded-md bg-slate-50/50 hover:bg-slate-50 cursor-pointer transition-colors group">
+                  <label
+                    key={check.id}
+                    className="flex items-start p-3 border border-slate-100 rounded-md bg-slate-50/50 hover:bg-slate-50 cursor-pointer transition-colors group"
+                  >
                     <div className="flex items-center h-5 mr-3">
                       <input
                         type="checkbox"
-                        {...register('enabled_checks')}
+                        {...register("enabled_checks")}
                         value={check.id}
                         className="w-4 h-4 text-accent border-slate-300 rounded focus:ring-accent accent-accent"
                       />
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-slate-900 uppercase tracking-wider">{check.label}</div>
-                      <p className="text-[10px] text-slate-500 font-medium">{check.description}</p>
+                      <div className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                        {check.label}
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-medium">
+                        {check.description}
+                      </p>
                     </div>
                   </label>
                 ))}
@@ -303,7 +490,9 @@ export const StartRunModal = ({ project, isOpen, onClose }: StartRunModalProps) 
             </button>
             <button
               type="submit"
-              disabled={isPending || selectedUrls.length === 0}
+              disabled={
+                isPending || (selectedUrls.length === 0 && !isGeneralOnly)
+              }
               className="btn-unified flex-[2] flex items-center justify-center space-x-2"
             >
               {isPending ? (
@@ -321,6 +510,7 @@ export const StartRunModal = ({ project, isOpen, onClose }: StartRunModalProps) 
           </div>
         </form>
       </div>
-    </div>
-  );
-};
+    </div>,
+    document.body,
+  )
+}

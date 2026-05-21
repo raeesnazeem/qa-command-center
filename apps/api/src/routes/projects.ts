@@ -6,6 +6,7 @@ import { zodValidate } from '../middleware/zodValidate';
 import { CreateProjectSchema, UpdateProjectSchema } from '@qacc/shared';
 import { logger } from '../lib/logger';
 import { encrypt, decrypt } from '../lib/encryption';
+import * as activityService from '../services/activityService';
 import axios from 'axios';
 
 const router: Router = Router();
@@ -87,6 +88,23 @@ router.post(
         project_id: project.id,
         notification_prefs: {},
       });
+
+      // [Step 3.1 - 3.2] Log Project Creation
+      try {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('full_name')
+          .eq('id', supabaseUserId)
+          .single();
+
+        await activityService.notifyProjectCreated(
+          { id: supabaseUserId, name: userData?.full_name || 'Unknown User' },
+          { id: project.id, name: project.name }
+        );
+      } catch (logError) {
+        logger.error(logError, '[ActivityService] Failed to log project creation');
+      }
+
 
       return res.status(201).json(project);
     } catch (error: any) {
@@ -187,7 +205,7 @@ router.post(
       // 1. Find user in the ORG's users table
       const { data: user, error: userError } = await supabase
         .from('users')
-        .select('id')
+        .select('id, full_name')
         .eq('email', email)
         .eq('org_id', req.auth?.orgId)
         .single();
@@ -208,6 +226,37 @@ router.post(
         .single();
 
       if (insertError) throw insertError;
+
+
+            // [Step 3.11 - 3.12] Log Member Addition
+      try {
+        const { userId: clerkUserId } = req.auth!;
+        const [performerRes, projectRes] = await Promise.all([
+          supabase.from('users').select('id, full_name').eq('clerk_user_id', clerkUserId).single(),
+          supabase.from('projects').select('name').eq('id', project_id).single()
+        ]);
+
+        const performerName = performerRes.data?.full_name || 'Admin';
+        const projectName = projectRes.data?.name || 'Project';
+
+        // We use logActivity directly for this specific message format
+        await activityService.logActivity(
+          { id: performerRes.data?.id || '', name: performerName },
+          { 
+            type: 'MEMBER_ADDED', 
+            details: { 
+              memberEmail: email, 
+              projectName,
+              message: `${user.full_name || email} was added to project by ${performerName}`
+            } 
+          },
+          { id: project_id, type: 'project' },
+          [user.id] // [Step 3.12] Notify the specific member
+        );
+      } catch (logError) {
+        logger.error(logError, '[ActivityService] Failed to log member addition');
+      }
+
 
       return res.status(201).json(data);
     } catch (error: any) {
@@ -337,6 +386,39 @@ router.patch(
 
       if (error) throw error;
 
+      //Log Project Update
+      try {
+        const { userId: clerkUserId } = req.auth!;
+        const supabaseUserId = await getSupabaseUserId(clerkUserId);
+        const { data: userData } = await supabase
+          .from('users')
+          .select('full_name')
+          .eq('id', supabaseUserId)
+          .single();
+
+        const changes = [];
+        if (req.body.name) changes.push(`name to "${req.body.name}"`);
+        if (req.body.status) changes.push(`status to "${req.body.status}"`);
+        if (req.body.site_url) changes.push(`URL to "${req.body.site_url}"`);
+
+        if (changes.length > 0) {
+          await activityService.logActivity(
+            { id: supabaseUserId, name: userData?.full_name || 'Unknown User' },
+            { 
+              type: 'PROJECT_UPDATED', 
+              details: { 
+                projectName: data.name, 
+                message: `Updated ${changes.join(', ')}` 
+              } 
+            },
+            { id, type: 'project' }
+          );
+        }
+      } catch (logError) {
+        logger.error(logError, '[ActivityService] Failed to log project update');
+      }
+
+
       // Handle project_settings upsert
       const settingsUpdate: any = {};
       if (req.body.figma_access_token !== undefined) {
@@ -389,6 +471,35 @@ router.delete(
   requireRole('admin'),
   async (req: Request, res: Response) => {
     const { id } = req.params;
+
+          // [Step 3.5] Log Project Deletion before it's gone
+      try {
+        const { userId: clerkUserId } = req.auth!;
+        const supabaseUserId = await getSupabaseUserId(clerkUserId);
+        
+        // Fetch project and user info first
+        const [projRes, userRes] = await Promise.all([
+          supabase.from('projects').select('name').eq('id', id).single(),
+          supabase.from('users').select('full_name').eq('id', supabaseUserId).single()
+        ]);
+
+        if (projRes.data) {
+          await activityService.logActivity(
+            { id: supabaseUserId, name: userRes.data?.full_name || 'Unknown User' },
+            { 
+              type: 'PROJECT_DELETED', 
+              details: { projectName: projRes.data.name },
+              isAdminOnly: true // Deletions are high-level actions
+            },
+            { id, type: 'project' }
+          );
+        }
+      } catch (logError) {
+        logger.error(logError, '[ActivityService] Failed to log project deletion');
+      }
+
+
+
     try {
       const { error } = await supabase
         .from('projects')

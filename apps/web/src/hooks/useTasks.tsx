@@ -13,6 +13,8 @@ import {
   addRebuttal,
   pushToBasecamp,
   bulkPushToBasecamp,
+  notResolvedTask,
+  resolveTask,
   TaskFilters
 } from '../api/tasks.api';
 import { CreateTaskInput, UpdateTaskInput, RebuttalInput } from '@qacc/shared';
@@ -239,3 +241,38 @@ export const useBulkDeleteTasks = () => {
   });
 };
 
+export const useNotResolvedTask = () => {
+  const axios = useAuthAxios();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ taskId, data }: { taskId: string; data: { comment: string; assignees: string[] } }) => 
+      notResolvedTask(axios, taskId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks', variables.taskId] });
+      toast.success('Task re-opened and synced with Basecamp');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to update task');
+    },
+  });
+};
+
+export const useResolveTask = () => {
+  const axios = useAuthAxios();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ taskId, data }: { taskId: string; data: { comment: string; screenshot_url?: string } }) => 
+      resolveTask(axios, taskId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks', variables.taskId] });
+      toast.success('Task marked as resolved and synced with Basecamp');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to update task');
+    },
+  });
+};

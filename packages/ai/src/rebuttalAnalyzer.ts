@@ -1,4 +1,4 @@
-import { geminiFlash } from './geminiClient';
+import { genAI } from './geminiClient';
 
 export interface RebuttalVerdict {
   verdict: 'resolved' | 'disputed';
@@ -8,7 +8,7 @@ export interface RebuttalVerdict {
 
 export async function analyzeRebuttal(params: {
   findingDescription: string;
-  findingScreenshotBuffer: Buffer;
+  findingScreenshotBuffer?: Buffer;
   rebuttalText: string;
   rebuttalScreenshotBuffer?: Buffer;
 }): Promise<RebuttalVerdict> {
@@ -22,10 +22,10 @@ ${params.rebuttalText}`;
 
   // Use array of Parts format for Gemini multi-modal input
   const promptParts: any[] = [
-    promptText,
+    { text: promptText },
     {
       inlineData: {
-        data: params.findingScreenshotBuffer.toString('base64'),
+        data: params.findingScreenshotBuffer?.toString('base64'),
         mimeType: 'image/png'
       }
     }
@@ -41,8 +41,11 @@ ${params.rebuttalText}`;
   }
 
   try {
-    const response = await geminiFlash.generateContent(promptParts);
-    const resultText = response.response.text();
+    const response = await genAI.models.generateContent({
+      model: "gemini-1.5-flash",
+      contents: [{ role: 'user', parts: promptParts }]
+    });
+    const resultText = response.text();
 
     // Strip markdown JSON block fences
     let cleanJsonText = resultText.trim();

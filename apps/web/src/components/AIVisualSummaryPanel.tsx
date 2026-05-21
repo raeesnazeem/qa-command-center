@@ -1,58 +1,66 @@
-import React, { useState } from 'react';
-import { QAFinding } from '../api/runs.api';
-import { 
-  AlertCircle, 
-  ShieldAlert, 
-  AlertTriangle, 
-  Info, 
+import React, { useState } from "react"
+import { QAFinding } from "../api/runs.api"
+import {
+  AlertCircle,
+  ShieldAlert,
+  AlertTriangle,
+  Info,
   ExternalLink,
   Plus,
   Filter,
-  CheckCircle2
-} from 'lucide-react';
+  CheckCircle2,
+} from "lucide-react"
 
 interface AIVisualSummaryPanelProps {
-  findings: QAFinding[];
-  onConfirmFinding: (findingId: string) => void;
-  onCreateTask: (finding: QAFinding) => void;
+  findings: QAFinding[]
+  onConfirmFinding: (findingId: string) => void
+  onCreateTask: (finding: QAFinding) => void
 }
 
 const SeverityBadge = ({ severity }: { severity: string }) => {
   const styles = {
-    critical: 'bg-red-100 text-red-700 border-red-200',
-    high: 'bg-orange-100 text-orange-700 border-orange-200',
-    medium: 'bg-amber-100 text-amber-700 border-amber-200',
-    low: 'bg-blue-100 text-blue-700 border-blue-200'
-  };
+    critical: "bg-red-100 text-red-700 border-red-200",
+    high: "bg-orange-100 text-orange-700 border-orange-200",
+    medium: "bg-amber-100 text-amber-700 border-amber-200",
+    low: "bg-blue-100 text-blue-700 border-blue-200",
+  }
 
-  const Icon = severity === 'critical' ? ShieldAlert : 
-               severity === 'high' ? AlertCircle : 
-               severity === 'medium' ? AlertTriangle : Info;
+  const Icon =
+    severity === "critical"
+      ? ShieldAlert
+      : severity === "high"
+        ? AlertCircle
+        : severity === "medium"
+          ? AlertTriangle
+          : Info
 
   return (
-    <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[10px] font-black uppercase tracking-tight ${styles[severity as keyof typeof styles] || styles.low}`}>
+    <div
+      className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-tight ${styles[severity as keyof typeof styles] || styles.low}`}
+    >
       <Icon size={10} />
       {severity}
     </div>
-  );
-};
+  )
+}
 
-export const AIVisualSummaryPanel: React.FC<AIVisualSummaryPanelProps> = ({ 
+export const AIVisualSummaryPanel: React.FC<AIVisualSummaryPanelProps> = ({
   findings,
   onConfirmFinding,
-  onCreateTask
+  onCreateTask,
 }) => {
-  const [filter, setFilter] = useState<'all' | 'confirmed'>('all');
+  const [filter, setFilter] = useState<"all" | "confirmed">("all")
 
-  const filteredFindings = filter === 'all' 
-    ? findings 
-    : findings.filter(f => f.status === 'confirmed');
+  const filteredFindings =
+    filter === "all"
+      ? findings
+      : findings.filter((f) => f.status === "confirmed")
 
   return (
     <div className="bg-white border-t border-slate-200 flex flex-col h-full">
       <div className="p-4 border-b border-slate-100 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+          <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest flex items-center gap-2">
             AI Visual Analysis
             <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full text-[10px]">
               {findings.length} Issues Found
@@ -61,19 +69,23 @@ export const AIVisualSummaryPanel: React.FC<AIVisualSummaryPanelProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center bg-slate-100 p-1 rounded-xl">
-            <button 
-              onClick={() => setFilter('all')}
-              className={`px-3 py-1 text-[10px] font-black uppercase tracking-tight rounded-lg transition-all ${
-                filter === 'all' ? 'bg-white text-black shadow-sm' : 'text-slate-400 hover:text-slate-600'
+          <div className="flex items-center bg-slate-100 p-1 rounded-md">
+            <button
+              onClick={() => setFilter("all")}
+              className={`px-3 py-1 text-[10px] font-bold uppercase tracking-tight rounded-md transition-all ${
+                filter === "all"
+                  ? "bg-white text-black shadow-sm"
+                  : "text-slate-400 hover:text-slate-600"
               }`}
             >
               All Issues
             </button>
-            <button 
-              onClick={() => setFilter('confirmed')}
-              className={`px-3 py-1 text-[10px] font-black uppercase tracking-tight rounded-lg transition-all ${
-                filter === 'confirmed' ? 'bg-white text-black shadow-sm' : 'text-slate-400 hover:text-slate-600'
+            <button
+              onClick={() => setFilter("confirmed")}
+              className={`px-3 py-1 text-[10px] font-bold uppercase tracking-tight rounded-md transition-all ${
+                filter === "confirmed"
+                  ? "bg-white text-black shadow-sm"
+                  : "text-slate-400 hover:text-slate-600"
               }`}
             >
               Confirmed
@@ -90,28 +102,32 @@ export const AIVisualSummaryPanel: React.FC<AIVisualSummaryPanelProps> = ({
             </div>
             <p className="text-sm font-bold text-slate-900">No issues found</p>
             <p className="text-[10px] text-slate-400 uppercase tracking-widest mt-1">
-              {filter === 'confirmed' ? 'No confirmed issues yet' : 'Designs match perfectly'}
+              {filter === "confirmed"
+                ? "No confirmed issues yet"
+                : "Designs match perfectly"}
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredFindings.map((finding) => (
-              <div 
-                key={finding.id} 
-                className={`p-4 bg-white border rounded-2xl shadow-sm hover:shadow-md transition-all group relative overflow-hidden ${
-                  finding.status === 'confirmed' ? 'border-emerald-200 bg-emerald-50/10' : 'border-slate-100'
+              <div
+                key={finding.id}
+                className={`p-4 bg-white border rounded-md shadow-sm hover:shadow-md transition-all group relative overflow-hidden ${
+                  finding.status === "confirmed"
+                    ? "border-emerald-200 bg-emerald-50/10"
+                    : "border-slate-100"
                 }`}
               >
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <div className="space-y-1">
                     <SeverityBadge severity={finding.severity} />
-                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] pt-1">
-                      {finding.title.replace('[VISUAL DIFF] ', '')}
+                    <span className="block text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] pt-1">
+                      {finding.title.replace("[VISUAL DIFF] ", "")}
                     </span>
                   </div>
-                  
+
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button 
+                    <button
                       onClick={() => onCreateTask(finding)}
                       className="p-1.5 bg-black text-white rounded-lg hover:bg-slate-800 transition-colors"
                       title="Convert to Task"
@@ -126,22 +142,20 @@ export const AIVisualSummaryPanel: React.FC<AIVisualSummaryPanelProps> = ({
                 </p>
 
                 <div className="flex items-center justify-between pt-3 border-t border-slate-50">
-                  {finding.status === 'confirmed' ? (
-                    <div className="flex items-center gap-1 text-[9px] font-black text-emerald-600 uppercase tracking-widest">
+                  {finding.status === "confirmed" ? (
+                    <div className="flex items-center gap-1 text-[9px] font-bold text-emerald-600 uppercase tracking-widest">
                       <CheckCircle2 size={10} />
                       Confirmed
                     </div>
                   ) : (
-                    <button 
+                    <button
                       onClick={() => onConfirmFinding(finding.id)}
-                      className="text-[9px] font-black text-emerald-600 uppercase tracking-widest hover:text-emerald-700 transition-colors"
+                      className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest hover:text-emerald-700 transition-colors"
                     >
                       Confirm Issue
                     </button>
                   )}
-                  <button 
-                    className="text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors flex items-center gap-1"
-                  >
+                  <button className="text-[9px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors flex items-center gap-1">
                     View Details
                     <ExternalLink size={10} />
                   </button>
@@ -152,5 +166,5 @@ export const AIVisualSummaryPanel: React.FC<AIVisualSummaryPanelProps> = ({
         )}
       </div>
     </div>
-  );
-};
+  )
+}
