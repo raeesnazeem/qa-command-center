@@ -2,6 +2,7 @@ import { Job } from "bullmq"
 import { supabase } from "../lib/supabase"
 import { decrypt } from "../../../api/src/lib/encryption"
 import { checkProjectPlan } from "../checks/projectPlanCheck"
+import { checkPaidMedia } from "../checks/preReleaseSuite"
 import pino from "pino"
 
 const logger = pino({
@@ -78,29 +79,59 @@ export async function processCheckProjectPlanJob(job: Job) {
     return
   }
 
-  // Step 3: Call the projectPlanCheck function
-  logger.info("Calling checkProjectPlan with basecamp settings")
-  let findings = []
+  // Step 3: Call the general check functions
+  let findings: any[] = []
   try {
-    // Fetch run to get the site_url for the reviews page screenshot
+    // Fetch run to get site_url and enabled_checks
     const { data: run } = await supabase
       .from("qa_runs")
-      .select("site_url")
+      .select("site_url, enabled_checks")
       .eq("id", runId)
       .single()
 
-    findings = await checkProjectPlan(
-      {
+    const enabledChecks = run?.enabled_checks || []
+
+    // 1. Run Project Plan Check if enabled
+    if (enabledChecks.includes("project_plan")) {
+      logger.info("Calling checkProjectPlan with basecamp settings")
+      const planFindings = await checkProjectPlan(
+        {
+          basecamp_token: decryptedToken,
+          basecamp_account_id,
+          basecamp_project_id,
+        },
+        { id: pageId, siteUrl: run?.site_url },
+      )
+      findings = [...findings, ...planFindings]
+    }
+
+    // 2. Run Paid Media Check if enabled
+    if (enabledChecks.includes("paid_media")) {
+      logger.info("Calling checkPaidMedia with basecamp settings")
+      const { data: project } = await supabase
+        .from("projects")
+        .select("has_paid_media")
+        .eq("id", projectId)
+        .single()
+
+      const projectSettings = {
+        has_paid_media: project?.has_paid_media || false,
         basecamp_token: decryptedToken,
         basecamp_account_id,
         basecamp_project_id,
-      },
-      { id: pageId, siteUrl: run?.site_url },
-    )
+      }
+
+      const paidMediaFindings = await checkPaidMedia(
+        null as any,
+        run,
+        projectSettings,
+      )
+      findings = [...findings, ...paidMediaFindings]
+    }
   } catch (checkErr: any) {
     logger.error(
       { error: checkErr.message },
-      "Error during project plan check execution",
+      "Error during general checks execution",
     )
     throw checkErr
   }

@@ -92,7 +92,13 @@ export const FindingCard: React.FC<FindingCardProps> = ({
   const { galleryImages: allGalleryImages, addImage } = useGalleryStore()
   const galleryImages = allGalleryImages[finding.id] || []
 
+  const FULL_WIDTH_FACTORS = ["dead_links", "paid_media", "hero_media"]
+
   const isProjectPlan = finding.check_factor === "project_plan"
+  const isPaidMedia = finding.check_factor === "paid_media"
+  const isHeroMedia = finding.check_factor === "hero_media"
+  const isFullWidth = FULL_WIDTH_FACTORS.includes(finding.check_factor)
+
   const [isPushing, setIsPushing] = React.useState(false)
   const [isPushed, setIsPushed] = React.useState(finding.status === "confirmed")
   const [isBasecampModalOpen, setIsBasecampModalOpen] = React.useState(false)
@@ -300,16 +306,56 @@ export const FindingCard: React.FC<FindingCardProps> = ({
           </div>
         ) : (
           <div
-            className={`grid grid-cols-1 ${finding.check_factor === "dead_links" ? "w-full" : "lg:grid-cols-2"} gap-8 items-start`}
+            className={`grid grid-cols-1 ${isFullWidth ? "w-full" : "lg:grid-cols-2"} gap-8 items-start`}
           >
             {/* Details Column */}
-            <div
-              className={`space-y-4 ${finding.check_factor === "dead_links" ? "col-span-full" : ""}`}
-            >
+            <div className={`space-y-4 ${isFullWidth ? "col-span-full" : ""}`}>
               <div>
-                <h5 className="font-bold text-slate-900 text-sm uppercase tracking-tight mb-2">
-                  {finding.check_factor.replace(/_/g, " ")} found
-                </h5>
+                {isHeroMedia ? (
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    {/* Video Found / Not Found Tag */}
+                    {finding.title === "Hero section video element missing" ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-50 text-[10px] font-bold text-rose-600 border border-rose-100 uppercase tracking-tighter">
+                        <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></div>
+                        Hero Video Not Found
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-[10px] font-bold text-emerald-600 border border-emerald-100 uppercase tracking-tighter">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                        Hero Video Found
+                      </span>
+                    )}
+
+                    {/* Fallback Present / Absent Tag */}
+                    {(finding.context_text?.includes("Fallback Image URL:") ||
+                      finding.context_text?.includes("Fallback Setup: Yes") ||
+                      (finding.context_text?.includes("Fallback Image:") &&
+                        !finding.context_text?.includes(
+                          "Fallback Image: None",
+                        ))) &&
+                    !finding.title
+                      ?.toLowerCase()
+                      .includes("missing fallback") &&
+                    !finding.context_text?.includes(
+                      "No fallback image configured",
+                    ) ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-[10px] font-bold text-emerald-600 border border-emerald-100 uppercase tracking-tighter">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                        Fallback Present
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-50 text-[10px] font-bold text-rose-600 border border-rose-100 uppercase tracking-tighter">
+                        <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></div>
+                        Fallback Absent
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <h5 className="font-bold text-slate-900 text-sm uppercase tracking-tight mb-2">
+                    {finding.check_factor.replace(/_/g, " ")} found
+                  </h5>
+                )}
+
                 <div className="space-y-3">
                   <p
                     className={`text-[11px] text-slate-500 font-medium leading-relaxed break-words ${
@@ -340,7 +386,7 @@ export const FindingCard: React.FC<FindingCardProps> = ({
             </div>
 
             {/* Screenshot Column (Hidden for dead_links!) */}
-            {finding.check_factor !== "dead_links" && (
+            {!isFullWidth && (
               <div className="relative group/ss">
                 {/* <div className="aspect-video bg-slate-50 rounded-md overflow-hidden border border-slate-100 shadow-inner group-hover/ss:shadow-md transition-all">
                   <FindingCardWithScreenshot
@@ -373,7 +419,23 @@ export const FindingCard: React.FC<FindingCardProps> = ({
         {!isProjectPlan && (
           <div className="flex items-center justify-between pt-4 border-t border-slate-50 mt-auto">
             <div className="flex items-center gap-2">
-              {isFalsePositive ? (
+              {isPaidMedia ? (
+                <button
+                  onClick={handlePushToBasecamp}
+                  disabled={isPushing || isPushed}
+                  className={`btn-unified font-bold text-[11px] transition-all active:scale-95 ${
+                    isPushed
+                      ? "bg-emerald-100 text-emerald-800 border border-emerald-200 cursor-default animate-fade-in"
+                      : "bg-[#F97315] hover:bg-accent/90 text-white"
+                  }`}
+                >
+                  {isPushing
+                    ? "Pushing..."
+                    : isPushed
+                      ? "✓ Pushed to Basecamp"
+                      : "Push to Basecamp"}
+                </button>
+              ) : isFalsePositive ? (
                 <button
                   onClick={() => onConfirm?.(finding.id)}
                   className="btn-unified"
@@ -404,6 +466,7 @@ export const FindingCard: React.FC<FindingCardProps> = ({
                     >
                       {hasTask || isAssigned ? "Task Linked" : "Add to Tasks"}
                     </button>
+
                     {(hasTask || isAssigned) &&
                       assignedTaskIds &&
                       assignedTaskIds.length > 0 &&

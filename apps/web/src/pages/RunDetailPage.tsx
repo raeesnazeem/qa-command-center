@@ -199,7 +199,8 @@ export const RunDetailPage = () => {
         (f) =>
           f.check_factor !== "project_plan" &&
           f.check_factor !== "hero_media" &&
-          f.check_factor !== "dead_links",
+          f.check_factor !== "dead_links" &&
+          f.check_factor !== "paid_media",
       ) || []
     )
   }, [findings])
@@ -213,7 +214,8 @@ export const RunDetailPage = () => {
           !f.page_id ||
           f.check_factor === "project_plan" ||
           f.check_factor === "dead_links" ||
-          f.check_factor === "hero_media",
+          f.check_factor === "hero_media" ||
+          f.check_factor === "paid_media",
       ) || []
     return consolidateDeadLinks(baseGeneral)
   }, [runFindings])

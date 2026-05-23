@@ -15,6 +15,18 @@ import { checkWooCommerce } from "../checks/wooCommerceCheck"
 import { checkResponsiveVisual } from "../checks/responsiveVisualCheck"
 import { checkHeroMedia } from "../checks/heroMediaCheck"
 import { checkOptimizedLinks } from "../checks/optimizedLinksCheck"
+import {
+  checkPrivacyPolicy,
+  checkFooterLogo,
+  checkSingleScript,
+  checkTopBarAndStickyHeader,
+  checkFavicon,
+  checkUrlAndTabMatching,
+  checkGrowth99ContactForm,
+  checkChatbotAndConsultation,
+  checkTextShareMetadata,
+} from "../checks/preReleaseSuite"
+
 import pino from "pino"
 
 const logger = pino({
@@ -39,7 +51,7 @@ export async function processCrawlPageJob(job: Job) {
   // Fetch run settings for conditional checks
   const { data: run, error: runError } = await supabase
     .from("qa_runs")
-    .select("status, is_woocommerce, site_url, enabled_checks")
+    .select("status, is_woocommerce, site_url, enabled_checks, project_id")
     .eq("id", runId)
     .single()
 
@@ -221,6 +233,31 @@ export async function processCrawlPageJob(job: Job) {
       const enabledChecks = run?.enabled_checks || []
       const checkPromises: Promise<any[]>[] = []
 
+      // Fetch project details and settings for pre-release checks
+      let projectName = ""
+      let devUrls: string[] = []
+
+      if (
+        enabledChecks.includes("text_share") ||
+        enabledChecks.includes("url_matching")
+      ) {
+        const { data: project } = await supabase
+          .from("projects")
+          .select("name")
+          .eq("id", run.project_id)
+          .single()
+
+        projectName = project?.name || ""
+
+        if (enabledChecks.includes("url_matching")) {
+          const { data: runPages } = await supabase
+            .from("pages")
+            .select("url")
+            .eq("run_id", runId)
+          devUrls = runPages?.map((p) => p.url) || []
+        }
+      }
+
       if (enabledChecks.includes("hero_media")) {
         checkPromises.push(
           checkHeroMedia(page, screenshots).catch((e) => {
@@ -291,12 +328,14 @@ export async function processCrawlPageJob(job: Job) {
 
       if (enabledChecks.includes("dead_links")) {
         checkPromises.push(
-          checkOptimizedLinks(page, { id: pageId, run_id: runId }).catch(
-            (e) => {
-              logger.error("Dead links check failed:", e)
-              return []
-            },
-          ),
+          checkOptimizedLinks(
+            page,
+            { id: pageId, run_id: runId },
+            updateProgress,
+          ).catch((e) => {
+            logger.error("Dead links check failed:", e)
+            return []
+          }),
         )
       }
 
@@ -313,6 +352,96 @@ export async function processCrawlPageJob(job: Job) {
               await wooPage.close()
             }
           })(),
+        )
+      }
+
+      // 1. Privacy Policy Page Check
+      if (enabledChecks.includes("privacy_policy")) {
+        checkPromises.push(
+          checkPrivacyPolicy(page, run.is_woocommerce).catch((e) => {
+            logger.error("Privacy policy check failed:", e)
+            return []
+          }),
+        )
+      }
+
+      // 2. Footer Logo Check
+      if (enabledChecks.includes("footer_logo")) {
+        checkPromises.push(
+          checkFooterLogo(page).catch((e) => {
+            logger.error("Footer logo check failed:", e)
+            return []
+          }),
+        )
+      }
+
+      // 4. Single Script Features Check
+      if (enabledChecks.includes("single_script")) {
+        checkPromises.push(
+          checkSingleScript(page).catch((e) => {
+            logger.error("Single script check failed:", e)
+            return []
+          }),
+        )
+      }
+
+      // 5. Top Bar & Sticky Header Check
+      if (enabledChecks.includes("top_bar_sticky")) {
+        checkPromises.push(
+          checkTopBarAndStickyHeader(page).catch((e) => {
+            logger.error("Top bar & sticky header check failed:", e)
+            return []
+          }),
+        )
+      }
+
+      // 6. Add Favicon Check
+      if (enabledChecks.includes("favicon")) {
+        checkPromises.push(
+          checkFavicon(page).catch((e) => {
+            logger.error("Favicon check failed:", e)
+            return []
+          }),
+        )
+      }
+
+      // 7. URL & Tab Name Matching Check
+      if (enabledChecks.includes("url_matching")) {
+        checkPromises.push(
+          checkUrlAndTabMatching(page, devUrls, run.site_url).catch((e) => {
+            logger.error("URL and tab matching check failed:", e)
+            return []
+          }),
+        )
+      }
+
+      // 8. Growth99 Contact Form Check
+      if (enabledChecks.includes("contact_form")) {
+        checkPromises.push(
+          checkGrowth99ContactForm(page).catch((e) => {
+            logger.error("Contact form check failed:", e)
+            return []
+          }),
+        )
+      }
+
+      // 9. Chatbot & Virtual Consultation Check
+      if (enabledChecks.includes("chatbot_consultation")) {
+        checkPromises.push(
+          checkChatbotAndConsultation(page).catch((e) => {
+            logger.error("Chatbot consultation check failed:", e)
+            return []
+          }),
+        )
+      }
+
+      // 10. Text Share Metadata Check
+      if (enabledChecks.includes("text_share")) {
+        checkPromises.push(
+          checkTextShareMetadata(page, projectName).catch((e) => {
+            logger.error("Text share metadata check failed:", e)
+            return []
+          }),
         )
       }
 

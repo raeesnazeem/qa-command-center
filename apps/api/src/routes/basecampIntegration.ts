@@ -449,12 +449,15 @@ router.post(
           </div>
         `.trim()
       } else {
+        const formattedDescription = (
+          task.description || "No description provided."
+        ).replace(/\n/g, "<br/>")
         description = `${issueHeader}
 <div>[PENDING]</div>
 ${mentions ? `<div>${mentions}</div>` : ""}
 <br/>
 <strong>${task.title}</strong><br/>
-<div>${task.description || "No description provided."}</div><br/>
+<div style="white-space: pre-wrap;">${formattedDescription}</div><br/>
 URL: ${findingUrl}${galleryHtml}
 <br/><br/>
 Created via QA Command Center`.trim()
@@ -867,14 +870,16 @@ router.post(
         const issueHeader = issueMatch
           ? `<div style="color: #EAB308;"><h1>Issue no: #${issueMatch[1]}</h1></div>`
           : ""
-
+        const formattedDescription = (
+          firstTask.description || "No description provided."
+        ).replace(/\n/g, "<br/>")
         const taskCommentContent = `
           ${issueHeader}
           <div>[PENDING]</div>
           ${mentionsHtml ? `<div>${mentionsHtml}</div>` : ""}
           <br/>
           <strong>${firstTask.title}</strong><br/>
-          <div>${firstTask.description || "No description provided."}</div><br/>
+          <div style="white-space: pre-wrap;">${formattedDescription}</div><br/>
           URL: ${taskFindingUrl || "N/A"}${galleryHtml}<br/><br/>
           Created via QA Command Center
         `.trim()
