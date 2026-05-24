@@ -8,6 +8,7 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@playwright/test": "^1.42.1",
     "@qacc/ai": "workspace:*",
     "@qacc/shared": "workspace:*",

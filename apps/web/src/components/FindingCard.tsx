@@ -311,6 +311,20 @@ export const FindingCard: React.FC<FindingCardProps> = ({
             {/* Details Column */}
             <div className={`space-y-4 ${isFullWidth ? "col-span-full" : ""}`}>
               <div>
+                {finding.check_factor === "dead_links" &&
+                  finding.context_text?.includes(
+                    "Total unique URLs checked",
+                  ) && (
+                    <div className="flex flex-wrap items-center gap-2 mb-3">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-[10px] font-bold text-slate-600 border border-slate-200 uppercase tracking-tighter">
+                        <Activity size={10} />
+                        {finding.context_text.match(
+                          /Total unique URLs checked in run so far: (\d+)/,
+                        )?.[1] || "0"}{" "}
+                        URLs Scanned
+                      </span>
+                    </div>
+                  )}
                 {isHeroMedia ? (
                   <div className="flex flex-wrap items-center gap-2 mb-3">
                     {/* Video Found / Not Found Tag */}

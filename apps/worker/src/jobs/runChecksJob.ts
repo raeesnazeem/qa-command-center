@@ -10,6 +10,8 @@ import { checkImageCompliance } from "../checks/imageComplianceCheck"
 import { checkHeroMedia } from "../checks/heroMediaCheck"
 import { processCheckProjectPlanJob } from "./checkProjectPlanJob"
 import { checkOptimizedLinks } from "../checks/optimizedLinksCheck"
+import { Client } from "@modelcontextprotocol/sdk/client/index.js"
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import pino from "pino"
 
 const logger = pino({
@@ -122,7 +124,27 @@ export async function processRunChecksJob(job: Job) {
       }
 
       if (checksToRun.includes("dead_links")) {
-        checkPromises.push(checkOptimizedLinks(playwrightPage, page))
+        checkPromises.push(
+          (async () => {
+            try {
+              const transport = new StdioClientTransport({
+                command: "node",
+                args: ["/Users/ikkaavaforever/Documents/Work/react-projects/feature-mcp/packages/elementor-mcp/index.js"],
+              })
+              const mcpClient = new Client({ name: "qacc-worker", version: "1.0.0" }, { capabilities: {} })
+              await mcpClient.connect(transport)
+
+              return await checkOptimizedLinks(
+                playwrightPage,
+                page,
+                mcpClient
+              )
+            } catch (e) {
+              logger.error("Dead links check failed:", e)
+              return []
+            }
+          })()
+        )
       }
 
       // Execute enabled checks in parallel

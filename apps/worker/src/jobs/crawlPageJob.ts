@@ -26,7 +26,6 @@ import {
   checkChatbotAndConsultation,
   checkTextShareMetadata,
 } from "../checks/preReleaseSuite"
-
 import pino from "pino"
 
 const logger = pino({
@@ -193,42 +192,53 @@ export async function processCrawlPageJob(job: Job) {
     logger.info({ pageId }, "Running automated checks")
     await updateProgress(90, "Running quality checks...")
 
-    const browser = await chromium.launch({
-      headless: true,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-      ],
-    })
+    const isOnlyDeadLinks =
+      enabledChecks.length === 1 && enabledChecks.includes("dead_links")
+
+    let browser: any = null
+    let context: any = null
+    let page: any = null
+    const consoleErrors: string[] = []
+    const criticalErrors: string[] = []
+    let hasForms = false
+
+    if (!isOnlyDeadLinks) {
+      browser = await chromium.launch({
+        headless: true,
+        args: [
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--disable-dev-shm-usage",
+        ],
+      })
+    }
 
     try {
-      const context = await browser.newContext()
-      const page = await context.newPage()
+      if (!isOnlyDeadLinks) {
+        context = await browser.newContext()
+        page = await context.newPage()
 
-      // Console error check listener must be attached before goto
-      const consoleErrors: string[] = []
-      const criticalErrors: string[] = []
+        // Console error check listener must be attached before goto
+        page.on("console", (msg) => {
+          if (
+            msg.type() === "error" &&
+            consoleErrors.length + criticalErrors.length < 80
+          ) {
+            consoleErrors.push(msg.text())
+          }
+        })
 
-      page.on("console", (msg) => {
-        if (
-          msg.type() === "error" &&
-          consoleErrors.length + criticalErrors.length < 80
-        ) {
-          consoleErrors.push(msg.text())
-        }
-      })
+        page.on("pageerror", (err) => {
+          if (consoleErrors.length + criticalErrors.length < 80) {
+            criticalErrors.push(err.message)
+          }
+        })
 
-      page.on("pageerror", (err) => {
-        if (consoleErrors.length + criticalErrors.length < 80) {
-          criticalErrors.push(err.message)
-        }
-      })
+        await page.goto(pageUrl, { waitUntil: "load", timeout: 60000 })
 
-      await page.goto(pageUrl, { waitUntil: "load", timeout: 60000 })
-
-      // Check for forms on page
-      const hasForms = (await page.$("form")) !== null
+        // Check for forms on page
+        hasForms = (await page.$("form")) !== null
+      }
 
       const enabledChecks = run?.enabled_checks || []
       const checkPromises: Promise<any[]>[] = []
@@ -328,14 +338,19 @@ export async function processCrawlPageJob(job: Job) {
 
       if (enabledChecks.includes("dead_links")) {
         checkPromises.push(
-          checkOptimizedLinks(
-            page,
-            { id: pageId, run_id: runId },
-            updateProgress,
-          ).catch((e) => {
-            logger.error("Dead links check failed:", e)
-            return []
-          }),
+          (async () => {
+            try {
+              return await checkOptimizedLinks(page, {
+                id: pageId,
+                run_id: runId,
+                site_url: run.site_url,
+                url: pageUrl,
+              })
+            } catch (e) {
+              logger.error("Dead links check failed:", e)
+              return []
+            }
+          })(),
         )
       }
 
@@ -495,9 +510,11 @@ export async function processCrawlPageJob(job: Job) {
         })
         .eq("id", pageId)
     } finally {
-      await browser
-        .close()
-        .catch((e) => logger.error({ err: e }, "Failed to close browser"))
+      if (browser) {
+        await browser
+          .close()
+          .catch((e) => logger.error({ err: e }, "Failed to close browser"))
+      }
     }
   } catch (error: any) {
     logger.error(
@@ -532,7 +549,6 @@ export async function processCrawlPageJob(job: Job) {
         .select("pages_processed")
         .eq("id", runId)
         .single()
-
       if (runData) {
         await supabase
           .from("qa_runs")

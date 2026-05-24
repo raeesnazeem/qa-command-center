@@ -1,8 +1,250 @@
-import { Page as PlaywrightPage } from "playwright"
+// import { Finding } from "@qacc/shared"
+// import got from "got"
+// import pLimit from "p-limit"
+// import pino from "pino"
+
+// const logger = pino({
+//   level: process.env.LOG_LEVEL || "info",
+//   transport: {
+//     target: "pino-pretty",
+//     options: { colorize: true },
+//   },
+// })
+
+// // Global caches — keyed by runId so they survive across multiple jobs in a single run
+// const runCheckedLinks = new Map<string, Set<string>>()
+// const runBrokenLinks = new Map<
+//   string,
+//   { url: string; reason: string; text: string; statusCode?: number }[]
+// >()
+
+// const BROWSER_HEADERS = {
+//   "User-Agent":
+//     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+//   Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+//   "Accept-Language": "en-US,en;q=0.9",
+// }
+
+// /**
+//  * Extract ALL URLs from rendered HTML — matches what deadlinkchecker.com does.
+//  * Pulls URLs from: <a href>, <img src>, <img srcset>, <script src>, <link href>,
+//  * <source src>, <video src>, <audio src>, <iframe src>, <embed src>, <object data>,
+//  * and CSS url() references.
+//  */
+// function extractUrlsFromHTML(html: string, baseUrl: string): string[] {
+//   const urls: Set<string> = new Set()
+
+//   // 1. Extract href="..." from <a>, <link>, <area> tags
+//   const hrefRegex =
+//     /(?:href|src|data|action|poster)=["']([^"'#\s][^"']*?)["']/gi
+//   let match: RegExpExecArray | null
+//   while ((match = hrefRegex.exec(html)) !== null) {
+//     urls.add(match[1])
+//   }
+
+//   // 2. Extract srcset="..." (responsive images have comma-separated URLs)
+//   const srcsetRegex = /srcset=["']([^"']+?)["']/gi
+//   while ((match = srcsetRegex.exec(html)) !== null) {
+//     const srcsetValue = match[1]
+//     // srcset format: "url1 1x, url2 2x" or "url1 300w, url2 600w"
+//     const entries = srcsetValue.split(",")
+//     for (const entry of entries) {
+//       const url = entry.trim().split(/\s+/)[0]
+//       if (url) urls.add(url)
+//     }
+//   }
+
+//   // 3. Extract CSS url(...) references (background images, fonts, etc.)
+//   const cssUrlRegex = /url\(["']?([^"')]+?)["']?\)/gi
+//   while ((match = cssUrlRegex.exec(html)) !== null) {
+//     urls.add(match[1])
+//   }
+
+//   // 4. Normalize all URLs to absolute
+//   const absoluteUrls: Set<string> = new Set()
+//   // Remove trailing slash from baseUrl for consistent joining
+//   const cleanBase = baseUrl.replace(/\/$/, "")
+
+//   let baseOrigin: string
+//   try {
+//     baseOrigin = new URL(baseUrl).origin
+//   } catch {
+//     baseOrigin = cleanBase
+//   }
+
+//   for (const raw of urls) {
+//     try {
+//       let absolute: string
+
+//       if (raw.startsWith("http://") || raw.startsWith("https://")) {
+//         absolute = raw
+//       } else if (raw.startsWith("//")) {
+//         absolute = "https:" + raw
+//       } else if (raw.startsWith("/")) {
+//         absolute = baseOrigin + raw
+//       } else if (
+//         raw.startsWith("data:") ||
+//         raw.startsWith("mailto:") ||
+//         raw.startsWith("tel:") ||
+//         raw.startsWith("javascript:")
+//       ) {
+//         continue // Skip non-HTTP URLs
+//       } else {
+//         // Relative URL like "page.html" or "../page.html"
+//         absolute = cleanBase + "/" + raw
+//       }
+
+//       // Remove fragment identifiers
+//       absolute = absolute.split("#")[0]
+
+//       if (absolute) {
+//         absoluteUrls.add(absolute)
+//       }
+//     } catch {
+//       // Skip malformed URLs
+//     }
+//   }
+
+//   return [...absoluteUrls]
+// }
+
+// export async function checkOptimizedLinks(
+//   page: any,
+//   pageRecord: any,
+// ): Promise<Finding[]> {
+//   const siteUrl = pageRecord.site_url
+//   const pageUrl = page ? page.url() : pageRecord.url
+//   let extractedLinks: string[] = []
+
+//   try {
+//     // 1. Fetch the rendered HTML of the page (same approach as deadlinkchecker.com)
+//     logger.info({ pageUrl }, "Fetching rendered HTML for dead link extraction")
+//     const response = await got.get(pageUrl, {
+//       headers: BROWSER_HEADERS,
+//       timeout: { request: 15000 },
+//       retry: { limit: 1 },
+//       followRedirect: true,
+//     })
+
+//     // 2. Extract ALL URLs from the rendered HTML
+//     extractedLinks = extractUrlsFromHTML(response.body, pageUrl)
+
+//     logger.info(
+//       { pageUrl, linkCount: extractedLinks.length },
+//       "Extracted links from rendered HTML",
+//     )
+//   } catch (error) {
+//     logger.error(
+//       { pageUrl, error },
+//       "Failed to fetch page HTML for dead link check",
+//     )
+//     return []
+//   }
+
+//   // 3. Now we check the status of each link concurrently
+//   const brokenLinks: { url: string; status: number; sourceUrl: string }[] = []
+//   const checkLimit = pLimit(50) // Check 50 links at once (HEAD requests are lightweight)
+//   const runId = pageRecord.run_id
+//   if (!runCheckedLinks.has(runId)) runCheckedLinks.set(runId, new Set())
+//   if (!runBrokenLinks.has(runId)) runBrokenLinks.set(runId, [])
+
+//   const checkedLinks = runCheckedLinks.get(runId)!
+//   const knownBrokenLinks = runBrokenLinks.get(runId)!
+
+//   const checkPromises = extractedLinks.map((urlToCheck) =>
+//     checkLimit(async () => {
+//       // Skip non-http URLs
+//       if (
+//         !urlToCheck.startsWith("http://") &&
+//         !urlToCheck.startsWith("https://")
+//       ) {
+//         return
+//       }
+
+//       // --- CACHE CHECK: skip if we already checked this URL in this run ---
+//       if (checkedLinks.has(urlToCheck)) {
+//         // We do not add it to brokenLinks again.
+//         // The UI consolidates all dead links run-wide, so reporting it on the first page prevents duplication.
+//         return
+//       }
+//       checkedLinks.add(urlToCheck)
+
+//       try {
+//         // First try HEAD (fast, lightweight)
+//         const headResponse = await got.head(urlToCheck, {
+//           headers: BROWSER_HEADERS,
+//           throwHttpErrors: false,
+//           timeout: { request: 8000 },
+//           retry: { limit: 0 },
+//           followRedirect: true,
+//         })
+
+//         if (headResponse.statusCode >= 400) {
+//           // Some servers reject HEAD, confirm with GET
+//           const getResponse = await got.get(urlToCheck, {
+//             headers: BROWSER_HEADERS,
+//             throwHttpErrors: false,
+//             timeout: { request: 8000 },
+//             retry: { limit: 0 },
+//             followRedirect: true,
+//           })
+
+//           if (getResponse.statusCode >= 400) {
+//             brokenLinks.push({
+//               url: urlToCheck,
+//               status: getResponse.statusCode,
+//               sourceUrl: pageUrl,
+//             })
+//             knownBrokenLinks.push({
+//               url: urlToCheck,
+//               reason: `HTTP ${getResponse.statusCode}`,
+//               text: "",
+//               statusCode: getResponse.statusCode,
+//             })
+//           }
+//         }
+//       } catch (e) {
+//         // Network error / timeout = broken
+//         brokenLinks.push({ url: urlToCheck, status: 0, sourceUrl: pageUrl })
+//         knownBrokenLinks.push({
+//           url: urlToCheck,
+//           reason: "Connection failed",
+//           text: "",
+//           statusCode: 0,
+//         })
+//       }
+//     }),
+//   )
+//   await Promise.all(checkPromises)
+
+//   // 4. Return the final report to the UI
+//   if (brokenLinks.length === 0) return []
+//   return [
+//     {
+//       check_factor: "dead_links",
+//       severity: brokenLinks.length > 5 ? "critical" : "medium",
+//       title: `${brokenLinks.length} broken link${brokenLinks.length === 1 ? "" : "s"} found`,
+//       // IMPORTANT: The UI's RunDetailPage.tsx expects the string "- **" to parse and count dead links!
+//       // Do not change the "- **" prefix, or the UI heading will say "0 dead link found".
+//       description: brokenLinks
+//         .map(
+//           (b) =>
+//             `- **${b.url}** (Status: ${b.status || "Connection Failed"} | Found on: ${b.sourceUrl})`,
+//         )
+//         .join("\n"),
+//       status: "open",
+//       ai_generated: false,
+//       screenshot_url: null,
+//       context_text: `URLs scanned on this page: ${extractedLinks.length} | Total unique URLs checked in run so far: ${runCheckedLinks.get(runId)!.size}`,
+//     },
+//   ]
+// }
+
 import { Finding } from "@qacc/shared"
 import got from "got"
 import pLimit from "p-limit"
 import pino from "pino"
+import * as cheerio from "cheerio"
 
 const logger = pino({
   level: process.env.LOG_LEVEL || "info",
@@ -14,8 +256,6 @@ const logger = pino({
 
 // Global caches — keyed by runId so they survive across multiple jobs in a single run
 const runCheckedLinks = new Map<string, Set<string>>()
-const runReportedBroken = new Map<string, Set<string>>()
-const runStartedSite = new Map<string, boolean>()
 const runBrokenLinks = new Map<
   string,
   { url: string; reason: string; text: string; statusCode?: number }[]
@@ -28,236 +268,200 @@ const BROWSER_HEADERS = {
   "Accept-Language": "en-US,en;q=0.9",
 }
 
-const IGNORED_EXTENSIONS =
-  /\.(pdf|jpg|jpeg|png|gif|svg|zip|mp4|webp|mp3|ico|css|js|woff|woff2|ttf|eot)$/i
+interface ExtractedLink {
+  url: string
+  text: string
+}
 
-/**
- * Fast HTTP check for dead links
- */
-async function isLinkBroken(
-  url: string,
-): Promise<{ broken: boolean; statusCode: number }> {
-  try {
-    const response = await got.head(url, {
-      timeout: { request: 10000 },
-      retry: { limit: 0 },
-      followRedirect: true,
-      throwHttpErrors: false,
-      headers: BROWSER_HEADERS,
-    })
+function extractUrlsFromHTML(html: string, baseUrl: string): ExtractedLink[] {
+  const $ = cheerio.load(html)
+  const linksMap = new Map<string, string>()
 
-    if (response.statusCode >= 400) {
-      const getResponse = await got.get(url, {
-        timeout: { request: 10000 },
-        retry: { limit: 0 },
-        followRedirect: true,
-        throwHttpErrors: false,
-        headers: BROWSER_HEADERS,
-      })
-      return {
-        broken: getResponse.statusCode >= 400,
-        statusCode: getResponse.statusCode,
-      }
+  // 1. Anchor tags
+  $("a[href]").each((_, el) => {
+    const url = $(el).attr("href")
+    if (url) {
+      linksMap.set(
+        url,
+        $(el).text().trim().substring(0, 50) || "No text content",
+      )
     }
+  })
 
-    return { broken: false, statusCode: response.statusCode }
-  } catch (error: any) {
-    return { broken: true, statusCode: 0 }
+  // 2. Images, scripts, links
+  $("[src]").each((_, el) => {
+    const url = $(el).attr("src")
+    if (url && !linksMap.has(url)) {
+      linksMap.set(url, `[Image/Media]`)
+    }
+  })
+
+  $("[href]:not(a)").each((_, el) => {
+    const url = $(el).attr("href")
+    if (url && !linksMap.has(url)) {
+      linksMap.set(url, `[Resource]`)
+    }
+  })
+
+  const absoluteUrls = new Map<string, string>()
+  const cleanBase = baseUrl.replace(/\/$/, "")
+  let baseOrigin: string
+  try {
+    baseOrigin = new URL(baseUrl).origin
+  } catch {
+    baseOrigin = cleanBase
   }
+
+  for (const [raw, text] of linksMap.entries()) {
+    try {
+      let absolute: string
+      if (raw.startsWith("http://") || raw.startsWith("https://")) {
+        absolute = raw
+      } else if (raw.startsWith("//")) {
+        absolute = "https:" + raw
+      } else if (raw.startsWith("/")) {
+        absolute = baseOrigin + raw
+      } else if (
+        raw.startsWith("data:") ||
+        raw.startsWith("mailto:") ||
+        raw.startsWith("tel:") ||
+        raw.startsWith("javascript:")
+      ) {
+        continue
+      } else {
+        absolute = cleanBase + "/" + raw
+      }
+
+      absolute = absolute.split("#")[0]
+      if (absolute && !absoluteUrls.has(absolute)) {
+        absoluteUrls.set(absolute, text)
+      }
+    } catch {
+      // Skip malformed
+    }
+  }
+
+  return Array.from(absoluteUrls.entries()).map(([url, text]) => ({
+    url,
+    text,
+  }))
 }
 
 export async function checkOptimizedLinks(
-  page: PlaywrightPage,
+  page: any,
   pageRecord: any,
-  updateProgress?: (progress: number, step: string) => Promise<void>,
 ): Promise<Finding[]> {
-  const runId = pageRecord.run_id || "default_run"
+  const pageUrl = pageRecord.url
+  let extractedLinks: ExtractedLink[] = []
+
+  try {
+    const response = await got.get(pageUrl, {
+      headers: BROWSER_HEADERS,
+      timeout: { request: 15000 },
+      retry: { limit: 2 },
+    })
+
+    extractedLinks = extractUrlsFromHTML(response.body, pageUrl)
+
+    logger.info(
+      { pageUrl, linkCount: extractedLinks.length },
+      "Extracted links from rendered HTML",
+    )
+  } catch (error: any) {
+    logger.error(
+      { pageUrl, error: error.message },
+      "Failed to fetch HTML for link extraction",
+    )
+    return []
+  }
+
+  if (extractedLinks.length === 0) return []
+
+  const brokenLinks: {
+    url: string
+    status: number
+    sourceUrl: string
+    text: string
+  }[] = []
+  const checkLimit = pLimit(50)
+  const runId = pageRecord.run_id
 
   if (!runCheckedLinks.has(runId)) runCheckedLinks.set(runId, new Set())
-  if (!runReportedBroken.has(runId)) runReportedBroken.set(runId, new Set())
   if (!runBrokenLinks.has(runId)) runBrokenLinks.set(runId, [])
 
   const checkedLinks = runCheckedLinks.get(runId)!
-  const reportedBroken = runReportedBroken.get(runId)!
-  const brokenLinks = runBrokenLinks.get(runId)!
+  const knownBrokenLinks = runBrokenLinks.get(runId)!
 
-  const currentPageUrl = page.url()
-  const siteOrigin = new URL(currentPageUrl).origin
+  const checkPromises = extractedLinks.map(
+    ({ url: urlToCheck, text: linkText }) =>
+      checkLimit(async () => {
+        // --- CACHE CHECK: skip if we already checked this URL in this run ---
+        if (checkedLinks.has(urlToCheck)) {
+          // We do not add it to brokenLinks again to prevent massive UI duplication
+          return
+        }
+        checkedLinks.add(urlToCheck)
 
-  // Guarantee this massive 500+ page scan only executes on the FIRST page job of the run
-  if (runStartedSite.get(runId)) {
-    logger.info({ runId }, "Deep spider already ran for this run — skipping")
-    return []
-  }
-  runStartedSite.set(runId, true)
-
-  logger.info(
-    { runId, siteOrigin },
-    "Starting deep Playwright SPA dead link spider",
-  )
-
-  const visitedPages = new Set<string>()
-  const pageQueue: string[] = []
-
-  const startUrl = currentPageUrl.split("#")[0]
-  visitedPages.add(startUrl)
-  pageQueue.push(startUrl)
-
-  const MAX_PAGES = 600
-  let totalPagesScraped = 0
-
-  const spiderLimit = pLimit(3) // Run 3 headless tabs concurrently
-  const checkLimit = pLimit(20) // Check 20 HTTP links concurrently
-  const context = page.context()
-
-  while (pageQueue.length > 0 && totalPagesScraped < MAX_PAGES) {
-    const batch = pageQueue.splice(0, 3)
-    totalPagesScraped += batch.length
-
-    logger.info(
-      { runId, totalPagesScraped, queueRemaining: pageQueue.length },
-      "Playwright spider batch",
-    )
-
-    // Broadcast real-time progress to the UI
-    if (updateProgress) {
-      await updateProgress(
-        90,
-        `Deep Spider: Crawled ${totalPagesScraped} pages (${pageQueue.length} remaining)... [${brokenLinks.length} dead links found]`,
-      ).catch(() => {})
-    }
-
-    await Promise.all(
-      batch.map((scrapeUrl) =>
-        spiderLimit(async () => {
-          const spiderPage = await context.newPage()
-
-          // DO NOT block stylesheets — React needs them to hydrate properly
-          await spiderPage.route("**/*", (route) => {
-            const type = route.request().resourceType()
-            if (["image", "media", "font"].includes(type)) {
-              route.abort()
-            } else {
-              route.continue()
-            }
+        try {
+          const response = await got.head(urlToCheck, {
+            headers: BROWSER_HEADERS,
+            timeout: { request: 10000 },
+            retry: { limit: 1 },
+            followRedirect: true,
           })
 
-          try {
-            // Use domcontentloaded for speed, safely catch timeouts
-            await spiderPage
-              .goto(scrapeUrl, {
-                waitUntil: "domcontentloaded",
-                timeout: 20000,
-              })
-              .catch(() => {})
-
-            // Give React SPA an extra moment to mount before grabbing links
-            await spiderPage.waitForTimeout(1500).catch(() => {})
-
-            // Safely evaluate so execution context errors don't crash the entire spider
-            const pageLinks = await spiderPage
-              .$$eval("a[href]", (els) =>
-                els.map((el) => ({
-                  href: (el as HTMLAnchorElement).href,
-                  text: el.textContent?.trim() || "No text content",
-                })),
-              )
-              .catch(() => [] as { href: string; text: string }[])
-
-            const linkTasks = pageLinks.map((link) =>
-              checkLimit(async () => {
-                let fullUrl: string
-                try {
-                  fullUrl = new URL(link.href, scrapeUrl).toString()
-                } catch {
-                  return
-                }
-
-                const baseUrl = fullUrl.split("#")[0]
-                if (!baseUrl.startsWith("http")) return
-                if (IGNORED_EXTENSIONS.test(baseUrl)) return
-
-                // --- SPIDER QUEUE ---
-                if (
-                  baseUrl.startsWith(siteOrigin) &&
-                  !visitedPages.has(baseUrl)
-                ) {
-                  visitedPages.add(baseUrl)
-                  pageQueue.push(baseUrl)
-                }
-
-                // --- DEAD LINK HTTP CHECK ---
-                if (checkedLinks.has(baseUrl)) return
-                checkedLinks.add(baseUrl)
-
-                const { broken, statusCode } = await isLinkBroken(baseUrl)
-
-                if (broken && !reportedBroken.has(baseUrl)) {
-                  reportedBroken.add(baseUrl)
-                  brokenLinks.push({
-                    url: baseUrl,
-                    reason: `HTTP Error ${statusCode === 0 ? "Connection Failed" : statusCode}`,
-                    text: link.text,
-                    statusCode,
-                  })
-                  logger.warn({ url: baseUrl, statusCode }, "Broken link found")
-                }
-              }),
-            )
-
-            await Promise.all(linkTasks)
-          } catch (err) {
-            // Ignore fatal navigation errors for a single page
-          } finally {
-            await spiderPage.close()
+          if (response.statusCode >= 400) {
+            brokenLinks.push({
+              url: urlToCheck,
+              status: response.statusCode,
+              sourceUrl: pageUrl,
+              text: linkText,
+            })
+            knownBrokenLinks.push({
+              url: urlToCheck,
+              reason: `Status ${response.statusCode}`,
+              text: linkText,
+              statusCode: response.statusCode,
+            })
           }
-        }),
-      ),
-    )
-  }
-
-  logger.info(
-    { runId, totalPagesScraped, brokenFound: brokenLinks.length },
-    "Playwright deep spider finished",
+        } catch (error: any) {
+          const statusCode = error.response?.statusCode || 0
+          if (statusCode >= 400 || statusCode === 0) {
+            brokenLinks.push({
+              url: urlToCheck,
+              status: statusCode,
+              sourceUrl: pageUrl,
+              text: linkText,
+            })
+            knownBrokenLinks.push({
+              url: urlToCheck,
+              reason:
+                statusCode === 0 ? "Connection Failed" : `Status ${statusCode}`,
+              text: linkText,
+              statusCode,
+            })
+          }
+        }
+      }),
   )
-
-  if (updateProgress) {
-    await updateProgress(
-      95,
-      "Deep Spider: Compiling final dead link report...",
-    ).catch(() => {})
-  }
+  await Promise.all(checkPromises)
 
   if (brokenLinks.length === 0) return []
-
-  const count = brokenLinks.length
-  let severity: "medium" | "high" | "critical" = "medium"
-  if (count >= 10) severity = "critical"
-  else if (count >= 5) severity = "high"
-
-  const description =
-    `The following dead or broken links were detected during a deep site-wide scan (${totalPagesScraped} pages crawled):\n\n` +
-    brokenLinks
-      .map(
-        (l) =>
-          `- **${l.url}**\n  * Reason: ${l.reason}\n  * Link Text: "${l.text}"`,
-      )
-      .join("\n\n")
-
-  const contextText = brokenLinks
-    .map((l) => `Link Text: "${l.text}" | URL: ${l.url}`)
-    .join("\n")
-
   return [
     {
       check_factor: "dead_links",
-      severity,
-      title: `${count} dead link${count > 1 ? "s" : ""} found site-wide`,
-      description,
-      context_text: contextText,
-      screenshot_url: null,
+      severity: brokenLinks.length > 5 ? "critical" : "medium",
+      title: `${brokenLinks.length} broken link${brokenLinks.length === 1 ? "" : "s"} found`,
+      description: brokenLinks
+        .map(
+          (b) =>
+            `- **${b.url}**\n  * Reason: ${b.status || "Failed"}\n  * Link Text: ${b.text}\n  * Found on: ${b.sourceUrl}`,
+        )
+        .join("\n"),
       status: "open",
       ai_generated: false,
+      screenshot_url: null,
+      context_text: `URLs scanned on this page: ${extractedLinks.length} | Total unique URLs checked in run so far: ${runCheckedLinks.get(runId)!.size}`,
     },
   ]
 }

@@ -121,6 +121,7 @@ export const RunDetailPage = () => {
     if (deadLinks.length === 0) return nonDeadLinks
 
     const violations: string[] = []
+    const uniqueLinks = new Set<string>()
     let totalDeadLinksCount = 0
 
     deadLinks.forEach((f) => {
@@ -130,8 +131,13 @@ export const RunDetailPage = () => {
         if (index === 0) return // Before the first "- **"
         const cleanPart = part.trim()
         if (cleanPart) {
-          violations.push(`- **${cleanPart}`)
-          totalDeadLinksCount++
+          // Deduplicate by the URL (everything before the closing **)
+          const urlMatch = cleanPart.split("**")[0]
+          if (!uniqueLinks.has(urlMatch)) {
+            uniqueLinks.add(urlMatch)
+            violations.push(`- **${cleanPart}`)
+            totalDeadLinksCount++
+          }
         }
       })
     })
@@ -140,6 +146,9 @@ export const RunDetailPage = () => {
       deadLinks.forEach((f) => {
         if (f.description) {
           violations.push(f.description)
+          // Fallback to safely counting bullet points instead of URLs (which double-counted)
+          const fallbackCount = (f.description.match(/- /g) || []).length
+          totalDeadLinksCount += fallbackCount > 0 ? fallbackCount : 1
         }
       })
     }
