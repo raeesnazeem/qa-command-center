@@ -199,9 +199,17 @@ export async function processCheckProjectPlanJob(job: Job) {
     "image_compliance",
     "ai_content_audit",
     "hero_media",
-    "project_plan",
     "dead_links",
+    "footer_logo",
+    "single_script",
+    "top_bar_sticky",
+    "favicon",
+    "url_matching",
+    "contact_form",
+    "chatbot_consultation",
+    "text_share",
   ]
+
   const needsPageScan = runData?.enabled_checks?.some((c: string) =>
     PAGE_CHECKS.includes(c),
   )

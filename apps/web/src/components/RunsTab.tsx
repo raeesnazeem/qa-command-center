@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import { Project } from '../api/projects.api';
-import { useRuns, useUpdateRunStatus, useDeleteRuns } from '../hooks/useRuns';
-import { CreateRunModal } from './CreateRunModal';
-import { CanDo } from './CanDo';
-import { 
-  PlayCircle, 
-  ChevronRight, 
+import { useState, useEffect } from "react"
+import { Project } from "../api/projects.api"
+import { useRuns, useUpdateRunStatus, useDeleteRuns } from "../hooks/useRuns"
+import { CreateRunModal } from "./CreateRunModal"
+import { CanDo } from "./CanDo"
+import {
+  PlayCircle,
+  ChevronRight,
   Calendar,
   Clock,
   CheckCircle2,
@@ -17,25 +17,25 @@ import {
   User,
   AlertCircle,
   Trash2,
-  CheckSquare
-} from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
+  CheckSquare,
+} from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import { format } from "date-fns"
 
 interface RunsTabProps {
-  project: Project;
+  project: Project
 }
 
 const StatusBadge = ({ status }: { status: string }) => {
   switch (status) {
-    case 'pending':
+    case "pending":
       return (
         <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 border border-slate-200">
           <Clock className="w-3 h-3 mr-1" />
           Pending
         </span>
-      );
-    case 'running':
+      )
+    case "running":
       return (
         <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-600 border border-blue-100">
           <span className="relative flex h-2 w-2 mr-1.5">
@@ -44,83 +44,118 @@ const StatusBadge = ({ status }: { status: string }) => {
           </span>
           Running
         </span>
-      );
-    case 'completed':
+      )
+    case "completed":
       return (
         <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-100">
           <CheckCircle2 className="w-3 h-3 mr-1" />
           Completed
         </span>
-      );
-    case 'failed':
+      )
+    case "failed":
       return (
         <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-red-50 text-red-600 border border-red-100">
           <XCircle className="w-3 h-3 mr-1" />
           Failed
         </span>
-      );
-    case 'paused':
+      )
+    case "paused":
       return (
         <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-600 border border-amber-100">
           <Clock className="w-3 h-3 mr-1" />
           Paused
         </span>
-      );
-    case 'cancelled':
+      )
+    case "cancelled":
       return (
         <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 border border-slate-200">
           <AlertCircle className="w-3 h-3 mr-1" />
           Stopped
         </span>
-      );
+      )
     default:
-      return null;
+      return null
   }
-};
+}
 
 export const RunsTab = ({ project }: RunsTabProps) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [page, setPage] = useState(1);
-  const { data: runsData, isLoading } = useRuns(project.id, page);
-  const updateStatus = useUpdateRunStatus();
-  const deleteRuns = useDeleteRuns(project.id);
-  const navigate = useNavigate();
-  const [selectedRunIds, setSelectedRunIds] = useState<string[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [page, setPage] = useState(1)
+  const { data: runsData, isLoading } = useRuns(project.id, page)
+  const updateStatus = useUpdateRunStatus()
+  const deleteRuns = useDeleteRuns(project.id)
+  const navigate = useNavigate()
+  const [selectedRunIds, setSelectedRunIds] = useState<string[]>([])
+  const [showLimitModal, setShowLimitModal] = useState(false)
+  const [isDeletingLimit, setIsDeletingLimit] = useState(false)
+
+  useEffect(() => {
+    // Detect if we have more than 3 total runs, and we have enough data loaded to slice
+    if (
+      runsData &&
+      runsData.pagination.total > 3 &&
+      runsData.data &&
+      runsData.data.length > 3 &&
+      !isDeletingLimit
+    ) {
+      setIsDeletingLimit(true)
+      setShowLimitModal(true)
+
+      // Get all runs except the 3 most recent
+      const runsToDelete = runsData.data.slice(3).map((run) => run.id)
+
+      if (runsToDelete.length > 0) {
+        deleteRuns.mutate(runsToDelete, {
+          onSettled: () => {
+            // Keep modal visible slightly longer so the user can read it
+            setTimeout(() => {
+              setShowLimitModal(false)
+              setIsDeletingLimit(false)
+            }, 4000)
+          },
+        })
+      }
+    }
+  }, [runsData, isDeletingLimit, deleteRuns])
 
   const handleToggleSelectAll = () => {
-    if (!runsData?.data) return;
+    if (!runsData?.data) return
     if (selectedRunIds.length === runsData.data.length) {
-      setSelectedRunIds([]);
+      setSelectedRunIds([])
     } else {
-      setSelectedRunIds(runsData.data.map(run => run.id));
+      setSelectedRunIds(runsData.data.map((run) => run.id))
     }
-  };
+  }
 
   const handleDeleteSelected = () => {
-    if (selectedRunIds.length === 0) return;
-    if (confirm(`Are you sure you want to delete ${selectedRunIds.length} run(s)? This will permanently remove all associated findings and data.`)) {
+    if (selectedRunIds.length === 0) return
+    if (
+      confirm(
+        `Are you sure you want to delete ${selectedRunIds.length} run(s)? This will permanently remove all associated findings and data.`,
+      )
+    ) {
       deleteRuns.mutate(selectedRunIds, {
         onSuccess: () => setSelectedRunIds([]),
-      });
+      })
     }
-  };
+  }
 
   const handlePause = (e: React.MouseEvent, runId: string) => {
-    e.stopPropagation();
-    updateStatus.mutate({ runId, status: 'paused' });
-  };
+    e.stopPropagation()
+    updateStatus.mutate({ runId, status: "paused" })
+  }
 
   const handleResume = (e: React.MouseEvent, runId: string) => {
-    e.stopPropagation();
-    updateStatus.mutate({ runId, status: 'running' });
-  };
+    e.stopPropagation()
+    updateStatus.mutate({ runId, status: "running" })
+  }
 
   const handleStop = (e: React.MouseEvent, runId: string) => {
-    e.stopPropagation();
-    if (confirm('Are you sure you want to stop this scan?')) {
-      updateStatus.mutate({ runId, status: 'cancelled' });
+    e.stopPropagation()
+    if (confirm("Are you sure you want to stop this scan?")) {
+      updateStatus.mutate({ runId, status: "cancelled" })
     }
-  };
+  }
 
   return (
     <div className="space-y-6">
@@ -130,7 +165,9 @@ export const RunsTab = ({ project }: RunsTabProps) => {
             <History className="w-5 h-5 mr-2 text-slate-400" />
             QA Run History
           </h3>
-          <p className="text-sm text-slate-500 mt-1">Monitor and trigger automated QA sessions for this project.</p>
+          <p className="text-sm text-slate-500 mt-1">
+            Monitor and trigger automated QA sessions for this project.
+          </p>
         </div>
         <CanDo role="qa_engineer">
           <div className="flex items-center space-x-3">
@@ -148,12 +185,18 @@ export const RunsTab = ({ project }: RunsTabProps) => {
               onClick={handleToggleSelectAll}
               className="flex items-center space-x-2 px-4 py-2 bg-white text-slate-900 border border-slate-200 rounded-md text-sm font-bold hover:bg-slate-50 transition-all shadow-sm active:scale-95"
             >
-              {selectedRunIds.length === (runsData?.data?.length || 0) && (runsData?.data?.length || 0) > 0 ? (
+              {selectedRunIds.length === (runsData?.data?.length || 0) &&
+              (runsData?.data?.length || 0) > 0 ? (
                 <Square className="w-4 h-4" />
               ) : (
                 <CheckSquare className="w-4 h-4" />
               )}
-              <span>{selectedRunIds.length === (runsData?.data?.length || 0) && (runsData?.data?.length || 0) > 0 ? 'Deselect All' : 'Select All'}</span>
+              <span>
+                {selectedRunIds.length === (runsData?.data?.length || 0) &&
+                (runsData?.data?.length || 0) > 0
+                  ? "Deselect All"
+                  : "Select All"}
+              </span>
             </button>
           </div>
         </CanDo>
@@ -165,13 +208,27 @@ export const RunsTab = ({ project }: RunsTabProps) => {
             <thead>
               <tr className="bg-slate-50/50 border-b border-slate-100">
                 <th className="px-6 py-4 w-10"></th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Run #</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Type</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Creator</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Status</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Issues Found</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Date</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Actions</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
+                  Run #
+                </th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
+                  Type
+                </th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
+                  Creator
+                </th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
+                  Status
+                </th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">
+                  Issues Found
+                </th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
+                  Date
+                </th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -190,47 +247,65 @@ export const RunsTab = ({ project }: RunsTabProps) => {
                       <div className="p-3 bg-slate-100 rounded-full mb-3">
                         <History className="w-6 h-6 text-slate-400" />
                       </div>
-                      <p className="text-sm font-medium text-slate-900">No runs recorded yet</p>
-                      <p className="text-xs text-slate-500 mt-1">Start your first QA session to see results here.</p>
+                      <p className="text-sm font-medium text-slate-900">
+                        No runs recorded yet
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Start your first QA session to see results here.
+                      </p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 runsData.data.map((run, index) => (
-                  <tr 
-                    key={run.id} 
-                    className={`hover:bg-slate-50 cursor-pointer group transition-colors ${selectedRunIds.includes(run.id) ? 'bg-slate-50' : ''}`}
-                    onClick={() => navigate(`/projects/${project.id}/runs/${run.id}`)}
+                  <tr
+                    key={run.id}
+                    className={`hover:bg-slate-50 cursor-pointer group transition-colors ${selectedRunIds.includes(run.id) ? "bg-slate-50" : ""}`}
+                    onClick={() =>
+                      navigate(`/projects/${project.id}/runs/${run.id}`)
+                    }
                   >
-                    <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
-                      <input 
-                        type="checkbox" 
+                    <td
+                      className="px-6 py-4"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <input
+                        type="checkbox"
                         checked={selectedRunIds.includes(run.id)}
                         onChange={(e) => {
-                          setSelectedRunIds(prev => 
-                            e.target.checked ? [...prev, run.id] : prev.filter(id => id !== run.id)
-                          );
+                          setSelectedRunIds((prev) =>
+                            e.target.checked
+                              ? [...prev, run.id]
+                              : prev.filter((id) => id !== run.id),
+                          )
                         }}
                         className="w-4 h-4 rounded border-slate-300 text-black focus:ring-black cursor-pointer"
                       />
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-sm font-bold text-slate-900 tracking-tight">
-                        #{(runsData.pagination.total - (page - 1) * runsData.pagination.limit) - index}
+                        #
+                        {runsData.pagination.total -
+                          (page - 1) * runsData.pagination.limit -
+                          index}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                        run.run_type === 'pre_release' ? 'bg-amber-50 text-amber-600 border border-amber-100' : 'bg-purple-50 text-purple-600 border border-purple-100'
-                      }`}>
-                        {run.run_type.replace('_', '-')}
+                      <span
+                        className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                          run.run_type === "pre_release"
+                            ? "bg-amber-50 text-amber-600 border border-amber-100"
+                            : "bg-purple-50 text-purple-600 border border-purple-100"
+                        }`}
+                      >
+                        {run.run_type.replace("_", "-")}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-1.5">
                         <User size={12} className="text-slate-400" />
                         <span className="text-xs font-bold text-slate-600 truncate max-w-[100px]">
-                          {run.created_by_name || 'System'}
+                          {run.created_by_name || "System"}
                         </span>
                       </div>
                     </td>
@@ -238,13 +313,25 @@ export const RunsTab = ({ project }: RunsTabProps) => {
                       <StatusBadge status={run.status} />
                     </td>
                     <td className="px-6 py-4 text-center">
-                      {run.status === 'completed' || run.status === 'failed' ? (
-                        <div className={`inline-flex items-center px-2 py-0.5 rounded font-bold text-xs ${
-                          (run.finding_counts ? Object.values(run.finding_counts).reduce((a, b) => (a as number) + (b as number), 0) : 0) > 0 
-                            ? 'text-red-600' 
-                            : 'text-emerald-600'
-                        }`}>
-                          {run.finding_counts ? Object.values(run.finding_counts).reduce((a, b) => (a as number) + (b as number), 0) : 0}
+                      {run.status === "completed" || run.status === "failed" ? (
+                        <div
+                          className={`inline-flex items-center px-2 py-0.5 rounded font-bold text-xs ${
+                            (run.finding_counts
+                              ? Object.values(run.finding_counts).reduce(
+                                  (a, b) => (a as number) + (b as number),
+                                  0,
+                                )
+                              : 0) > 0
+                              ? "text-red-600"
+                              : "text-emerald-600"
+                          }`}
+                        >
+                          {run.finding_counts
+                            ? Object.values(run.finding_counts).reduce(
+                                (a, b) => (a as number) + (b as number),
+                                0,
+                              )
+                            : 0}
                         </div>
                       ) : (
                         <span className="text-slate-300 text-xs">—</span>
@@ -253,14 +340,19 @@ export const RunsTab = ({ project }: RunsTabProps) => {
                     <td className="px-6 py-4">
                       <div className="flex items-center text-sm text-slate-600">
                         <Calendar className="w-3.5 h-3.5 mr-2 text-slate-400" />
-                        {format(new Date(run.created_at), 'MMM d, HH:mm')}
+                        {format(new Date(run.created_at), "MMM d, HH:mm")}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end space-x-3">
-                        {(run.status === 'running' || run.status === 'pending' || run.status === 'paused') && (
-                          <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-md border border-slate-100 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                            {run.status === 'running' ? (
+                        {(run.status === "running" ||
+                          run.status === "pending" ||
+                          run.status === "paused") && (
+                          <div
+                            className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-md border border-slate-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {run.status === "running" ? (
                               <button
                                 onClick={(e) => handlePause(e, run.id)}
                                 disabled={updateStatus.isPending}
@@ -269,7 +361,7 @@ export const RunsTab = ({ project }: RunsTabProps) => {
                               >
                                 <Pause size={14} fill="currentColor" />
                               </button>
-                            ) : run.status === 'paused' ? (
+                            ) : run.status === "paused" ? (
                               <button
                                 onClick={(e) => handleResume(e, run.id)}
                                 disabled={updateStatus.isPending}
@@ -303,19 +395,34 @@ export const RunsTab = ({ project }: RunsTabProps) => {
       {runsData && runsData.pagination.total > runsData.pagination.limit && (
         <div className="flex items-center justify-between pt-4">
           <p className="text-xs text-slate-500 font-medium">
-            Showing <span className="text-slate-900">{(page - 1) * runsData.pagination.limit + 1}</span> to <span className="text-slate-900">{Math.min(page * runsData.pagination.limit, runsData.pagination.total)}</span> of <span className="text-slate-900">{runsData.pagination.total}</span> runs
+            Showing{" "}
+            <span className="text-slate-900">
+              {(page - 1) * runsData.pagination.limit + 1}
+            </span>{" "}
+            to{" "}
+            <span className="text-slate-900">
+              {Math.min(
+                page * runsData.pagination.limit,
+                runsData.pagination.total,
+              )}
+            </span>{" "}
+            of{" "}
+            <span className="text-slate-900">{runsData.pagination.total}</span>{" "}
+            runs
           </p>
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => setPage(p => Math.max(1, p - 1))}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
               className="px-3 py-1 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50 transition-colors"
             >
               Previous
             </button>
             <button
-              onClick={() => setPage(p => p + 1)}
-              disabled={page * runsData.pagination.limit >= runsData.pagination.total}
+              onClick={() => setPage((p) => p + 1)}
+              disabled={
+                page * runsData.pagination.limit >= runsData.pagination.total
+              }
               className="px-3 py-1 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50 transition-colors"
             >
               Next
@@ -324,11 +431,38 @@ export const RunsTab = ({ project }: RunsTabProps) => {
         </div>
       )}
 
-      <CreateRunModal 
-        project={project} 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      <CreateRunModal
+        project={project}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
       />
+
+      {/* Limitation Modal */}
+      {showLimitModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-center w-12 h-12 mx-auto bg-amber-100 rounded-full mb-4">
+              <AlertCircle className="w-6 h-6 text-amber-600" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 text-center mb-2">
+              Limit Exceeded
+            </h3>
+            <p className="text-sm text-slate-600 text-center mb-6">
+              More than 3 QA runs exist for this project. We are automatically
+              deleting older runs to keep only the latest 3 records.
+            </p>
+            <div className="flex justify-center">
+              <span className="inline-flex items-center px-4 py-2 bg-slate-100 text-slate-700 rounded-md text-sm font-bold">
+                <span className="relative flex h-2 w-2 mr-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-slate-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-slate-500"></span>
+                </span>
+                Cleaning up...
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  );
-};
+  )
+}

@@ -433,12 +433,13 @@ router.post(
           We have successfully verified Basecamp project plan: <br/><br/>
           
           <strong>1. Plan (Project Order Details):</strong><br/>
-          <img src="${screenshot1Url}" width="500" style="border: 1px solid #e3e4e6; border-radius: 6px; margin-bottom: 16px;" /><br/><br/><br/>
+                   <a href="${screenshot1Url}" target="_blank"><img src="${screenshot1Url}" width="500" style="border: 1px solid #e3e4e6; border-radius: 6px; margin-bottom: 16px;" /></a><br/><br/><br/>
+
           
           <strong>2. <br/> Website Screenshot (${siteUrl}/reviews):</strong><br/><br/>
           ${
             screenshot2Url
-              ? `<img src="${screenshot2Url}" width="500" style="border: 1px solid #e3e4e6; border-radius: 6px;" />`
+              ? `<a href="${screenshot2Url}" target="_blank"><img src="${screenshot2Url}" width="500" style="border: 1px solid #e3e4e6; border-radius: 6px;" /></a>`
               : `<em style="color: #EF4444;">Failed to capture live website reviews screenshot, please confirm manually.</em>`
           }<br/><br/>
           
