@@ -24,8 +24,8 @@
     transition: background-color 0.2s;
   }
 
-  .btn-unified:hover {
-    background-color: #93C0B1;
+  .btn-unified:not(:disabled):hover {
+    background-color: #93c0b1;
   }
 
   .btn-unified-secondary {
@@ -43,8 +43,8 @@
     transition: background-color 0.2s;
   }
 
-  .btn-unified-secondary:hover {
-    background-color: #e2e2e2;
+  .btn-unified:not(:disabled):hover {
+    background-color: #93c0b1;
   }
 
   .btn-unified-danger {
@@ -78,18 +78,18 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #93C0B1;
+  background: #93c0b1;
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #7DA89A;
+  background: #7da89a;
 }
 
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #93C0B1 transparent;
+  scrollbar-color: #93c0b1 transparent;
 }
 
 @keyframes shimmer {

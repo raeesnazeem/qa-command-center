@@ -72,7 +72,6 @@ export async function processStartRunJob(job: Job) {
       "ai_content_audit",
       "hero_media",
       "dead_links",
-      "privacy_policy",
       "footer_logo",
       "single_script",
       "top_bar_sticky",
@@ -265,9 +264,10 @@ export async function processStartRunJob(job: Job) {
 
     // Enqueue project plan check if enabled (Always enqueued regardless of page scan skipping!)
     if (
-      run.enabled_checks &&
-      (run.enabled_checks.includes("project_plan") ||
-        run.enabled_checks.includes("paid_media"))
+      (run.enabled_checks &&
+        (run.enabled_checks.includes("project_plan") ||
+          run.enabled_checks.includes("paid_media"))) ||
+      run.enabled_checks.includes("privacy_policy")
     ) {
       await qaQueue.add(
         "check_project_plan",

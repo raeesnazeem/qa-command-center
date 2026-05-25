@@ -183,11 +183,16 @@ router.post(
       const isDeadLink =
         task.findings?.check_factor === "dead_links" ||
         (task as any).check_factor === "dead_links"
+      const isPrivacyPolicy =
+        task.findings?.check_factor === "privacy_policy" ||
+        (task as any).check_factor === "privacy_policy"
+
       let appUrl = ""
-      if (isHeroMedia || isDeadLink) {
+      if (isHeroMedia || isDeadLink || isPrivacyPolicy) {
         console.log(
-          `[BasecampPush] Task is a ${isHeroMedia ? "Hero Media" : "Dead Link"} finding. Locating specific checklist item...`,
+          `[BasecampPush] Task is a ${isHeroMedia ? "Hero Media" : isDeadLink ? "Dead Link" : "Privacy Policy"} finding. Locating specific checklist item...`,
         )
+
         const headers = {
           Authorization: `Bearer ${projectSettings.basecamp_token}`,
           "User-Agent": "QACC (raees.nazeem@growth99.com)",
@@ -268,9 +273,22 @@ router.post(
               `To-do checklist item "QA-Verify that the hero section video and fallback image load immediately on page load." not found in Basecamp checklist "${targetList.name}".`,
             )
           }
+        } else if (isPrivacyPolicy) {
+          targetTodo = allTodos.find((todo: any) =>
+            todo.content
+              .toLowerCase()
+              .includes("privacy policy page added on the website"),
+          )
+
+          if (!targetTodo) {
+            throw new Error(
+              `To-do checklist item "QA- Check if Privacy policy page added on the website." not found in Basecamp checklist "${targetList.name}".`,
+            )
+          }
         } else {
           // isDeadLink
           const targetTodoName = "qa - verify deadlink"
+
           targetTodo = allTodos.find((todo: any) =>
             todo.content.toLowerCase().includes(targetTodoName),
           )

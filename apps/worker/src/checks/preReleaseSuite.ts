@@ -151,7 +151,7 @@ export async function checkPaidMedia(
       findings.push({
         check_factor: "paid_media",
         severity: "low",
-        title: "QA - Paid Media Campaign Active",
+        title: "Paid Media Campaign Active",
         description: `Verified: A Paid Media campaign was successfully found on Basecamp! Matched ${matchedItem}.`,
         status: "open",
         ai_generated: false,
@@ -161,7 +161,7 @@ export async function checkPaidMedia(
       findings.push({
         check_factor: "paid_media",
         severity: "high",
-        title: "QA - Paid Media Campaign Not Found",
+        title: "Paid Media Campaign Not Found",
         description: `We checked the Basecamp project but could not find an active or created Google/Facebook Ads campaign. @Pankhila Kamble @Trixie Kate please provide details if campaign created for Google and Facebook ADS and all services created under campaign`,
         status: "open",
         ai_generated: false,
@@ -175,7 +175,7 @@ export async function checkPaidMedia(
       {
         check_factor: "paid_media",
         severity: "medium",
-        title: "QA - Paid Media Check Error",
+        title: "Paid Media Check Error",
         description: `Failed to fetch details from Basecamp: ${error.message}. @Pankhila Kamble @Trixie Kate please provide details if campaign created for Google and Facebook ADS and all services created under campaign`,
         status: "open",
         ai_generated: false,

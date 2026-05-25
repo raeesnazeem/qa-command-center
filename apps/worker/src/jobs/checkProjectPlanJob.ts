@@ -3,6 +3,8 @@ import { supabase } from "../lib/supabase"
 import { decrypt } from "../../../api/src/lib/encryption"
 import { checkProjectPlan } from "../checks/projectPlanCheck"
 import { checkPaidMedia } from "../checks/preReleaseSuite"
+import { checkPrivacyPolicy } from "../checks/privacyPolicyCheck"
+
 import pino from "pino"
 
 const logger = pino({
@@ -127,6 +129,12 @@ export async function processCheckProjectPlanJob(job: Job) {
         projectSettings,
       )
       findings = [...findings, ...paidMediaFindings]
+    }
+    // 3. Run Privacy Policy Check if enabled
+    if (enabledChecks.includes("privacy_policy")) {
+      logger.info("Calling checkPrivacyPolicy for general check")
+      const privacyFindings = await checkPrivacyPolicy(run?.site_url, runId)
+      findings = [...findings, ...privacyFindings]
     }
   } catch (checkErr: any) {
     logger.error(

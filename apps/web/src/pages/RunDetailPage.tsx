@@ -188,28 +188,31 @@ export const RunDetailPage = () => {
     return [...nonDeadLinks, consolidatedDeadLinks]
   }
 
+  const GENERAL_CHECK_FACTORS = [
+    "project_plan",
+    "dead_links",
+    "hero_media",
+    "paid_media",
+    "privacy_policy",
+  ]
+
   // 1. Extract any general run-level findings (null page_id OR project plan factor OR hero_media matching selected page)
   const generalFindings = useMemo(() => {
     const baseGeneral =
       runFindings?.filter(
         (f) =>
           !f.page_id ||
-          f.check_factor === "project_plan" ||
-          f.check_factor === "dead_links" ||
-          (f.check_factor === "hero_media" && f.page_id === selectedPageId),
+          (GENERAL_CHECK_FACTORS.includes(f.check_factor) &&
+            (f.check_factor !== "hero_media" || f.page_id === selectedPageId)),
       ) || []
     return consolidateDeadLinks(baseGeneral)
   }, [runFindings, selectedPageId])
 
-  // 2. Filter out project_plan and hero_media from page-specific findings to avoid duplicate rendering
+  // 2. Filter out general findings from page-specific findings to avoid duplicate rendering
   const pageFindings = useMemo(() => {
     return (
       findings?.filter(
-        (f) =>
-          f.check_factor !== "project_plan" &&
-          f.check_factor !== "hero_media" &&
-          f.check_factor !== "dead_links" &&
-          f.check_factor !== "paid_media",
+        (f) => !GENERAL_CHECK_FACTORS.includes(f.check_factor),
       ) || []
     )
   }, [findings])
@@ -219,13 +222,9 @@ export const RunDetailPage = () => {
   const runGeneralFindings = useMemo(() => {
     const baseGeneral =
       runFindings?.filter(
-        (f) =>
-          !f.page_id ||
-          f.check_factor === "project_plan" ||
-          f.check_factor === "dead_links" ||
-          f.check_factor === "hero_media" ||
-          f.check_factor === "paid_media",
+        (f) => !f.page_id || GENERAL_CHECK_FACTORS.includes(f.check_factor),
       ) || []
+
     return consolidateDeadLinks(baseGeneral)
   }, [runFindings])
 

@@ -247,15 +247,17 @@ router.post(
         basecamp_project_id: bcProjectId,
       } = settings
       const rawPlan = finding.context_text || ""
-      if (
-        !rawPlan ||
-        rawPlan.toLowerCase().includes("no plan details") ||
-        rawPlan.toLowerCase().includes("not listed")
-      ) {
-        return res.status(400).json({
-          error:
-            "Cannot push to Basecamp: No project plan was identified during the scan. Please verify that the 'Project Order Details' todo has comments listing the Growth99 Plan.",
-        })
+      if (finding.check_factor === "project_plan") {
+        if (
+          !rawPlan ||
+          rawPlan.toLowerCase().includes("no plan details") ||
+          rawPlan.toLowerCase().includes("not listed")
+        ) {
+          return res.status(400).json({
+            error:
+              "Cannot push to Basecamp: No project plan was identified during the scan. Please verify that the 'Project Order Details' todo has comments listing the Growth99 Plan.",
+          })
+        }
       }
 
       const plan = rawPlan.trim()
@@ -303,8 +305,10 @@ router.post(
       }
 
       // D. Fetch all checklist items under the matched list and look for "QA-Check if reviews are added for Accelerator plan"
-      let page = 1
       let allTodos: any[] = []
+
+      // 1. Fetch active to-dos
+      let page = 1
       while (true) {
         const todosResponse = await axios.get(
           `${targetList.todos_url}?page=${page}`,
@@ -316,25 +320,43 @@ router.post(
         if (pageTodos.length < 15) break // Basecamp's default page size is 15
         page++
       }
-      const targetTodoName = `qa-check if reviews are added for accelerator plan`
-      let targetTodo = allTodos.find((todo: any) =>
-        todo.content.toLowerCase().includes(targetTodoName),
-      )
-      // Fallback: look for other potential reviews checks in this checklist group if the specific one is absent
-      if (!targetTodo) {
-        targetTodo = allTodos.find(
-          (todo: any) =>
-            todo.content
-              .toLowerCase()
-              .includes("qa-check if reviews are added for") ||
-            todo.content.toLowerCase().includes("review and reputation") ||
-            todo.content.toLowerCase().includes("reviews"),
+
+      // 2. Fetch completed to-dos
+      let completedPage = 1
+      while (true) {
+        const completedResponse = await axios.get(
+          `${targetList.todos_url}?completed=true&page=${completedPage}`,
+          { headers },
         )
+        const pageCompletedTodos = completedResponse.data || []
+        if (pageCompletedTodos.length === 0) break
+        allTodos = allTodos.concat(pageCompletedTodos)
+        if (pageCompletedTodos.length < 15) break
+        completedPage++
       }
-      if (!targetTodo) {
-        throw new Error(
-          `To-do checklist item "QA-Check if reviews are added for Accelerator plan" not found in Basecamp checklist "${targetList.name}".`,
+
+      let targetTodo
+      if (finding.check_factor === "paid_media") {
+        targetTodo = allTodos.find((todo: any) =>
+          todo.content.toLowerCase().includes("qa- paid media"),
         )
+        if (!targetTodo) {
+          throw new Error(
+            `To-do checklist item "QA- Paid Media" not found in Basecamp checklist "${targetList.name}".`,
+          )
+        }
+      } else if (finding.check_factor === "privacy_policy") {
+        targetTodo = allTodos.find((todo: any) =>
+          todo.content
+            .toLowerCase()
+            .includes("privacy policy page added on the website"),
+        )
+
+        if (!targetTodo) {
+          throw new Error(
+            `To-do checklist item "QA- Check if Privacy policy page added on the website." not found in Basecamp checklist "${targetList.name}".`,
+          )
+        }
       }
 
       // 4. Extract screenshots: split comma-separated list and reuse the worker's pre-captured reviews proof
@@ -347,7 +369,11 @@ router.post(
       }
 
       // Fallback: if we don't already have the pre-captured reviews screenshot, capture it live via Playwright
-      if (!screenshot2Url && siteUrl) {
+      if (
+        finding.check_factor === "project_plan" &&
+        !screenshot2Url &&
+        siteUrl
+      ) {
         const { chromium } = require("playwright")
         const sharp = require("sharp")
         const { uploadScreenshot } = require("../lib/supabaseStorage")
@@ -391,34 +417,133 @@ router.post(
         }
       }
 
-      const commentHtml = `
-      <div style="font-family: sans-serif; line-height: 1.5;">
-        <strong style="color: #10B981; font-size: 16px;">✓ Plan Match Confirmed</strong><br/>
-        We have successfully verified that the live website reviews widget aligns with the registered Basecamp project plan: <strong>${plan} Plan</strong>.<br/><br/>
-        
-        <strong>1. Plan (Project Order Details):</strong><br/>
-        <img src="${screenshot1Url}" width="500" style="border: 1px solid #e3e4e6; border-radius: 6px; margin-bottom: 16px;" /><br/><br/><br/>
-        
-        <strong>2. <br/> Website Screenshot (${siteUrl}/reviews):</strong><br/><br/>
-        ${
-          screenshot2Url
-            ? `<img src="${screenshot2Url}" width="500" style="border: 1px solid #e3e4e6; border-radius: 6px;" />`
-            : `<em style="color: #EF4444;">Failed to capture live website reviews screenshot, please confirm manually.</em>`
-        }<br/><br/>
-        
-        <em>Sent automatically via QA Command Center</em>
-      </div>
-    `.trim()
+      let commentHtml = ""
+      if (finding.check_factor === "paid_media") {
+        commentHtml = `
+        <div style="font-family: sans-serif; line-height: 1.5;">
+          ${finding.description.replace(/\n/g, "<br/>")}
+          <br/><br/>
+          <em>Sent automatically via QA Command Center</em>
+        </div>
+        `.trim()
+      } else if (finding.check_factor === "project_plan") {
+        commentHtml = `
+        <div style="font-family: sans-serif; line-height: 1.5;">
+         <br/>
+          We have successfully verified Basecamp project plan: <br/><br/>
+          
+          <strong>1. Plan (Project Order Details):</strong><br/>
+          <img src="${screenshot1Url}" width="500" style="border: 1px solid #e3e4e6; border-radius: 6px; margin-bottom: 16px;" /><br/><br/><br/>
+          
+          <strong>2. <br/> Website Screenshot (${siteUrl}/reviews):</strong><br/><br/>
+          ${
+            screenshot2Url
+              ? `<img src="${screenshot2Url}" width="500" style="border: 1px solid #e3e4e6; border-radius: 6px;" />`
+              : `<em style="color: #EF4444;">Failed to capture live website reviews screenshot, please confirm manually.</em>`
+          }<br/><br/>
+          
+          <em>Sent automatically via QA Command Center</em>
+        </div>
+        `.trim()
+      } else if (finding.check_factor === "privacy_policy") {
+        const {
+          isScreenshotVerified,
+          isPageVerified,
+          isContentVerified,
+          hasTask,
+          assigneeNames,
+        } = req.body || {}
+        const allVerified =
+          isScreenshotVerified && isPageVerified && isContentVerified
+        const heading = `<strong>Privacy Policy ${allVerified ? "Verified" : "Unverified"}</strong>`
+
+        let contentHtml = ""
+        if (hasTask) {
+          contentHtml = `
+          ${heading}<br/><br/>
+          <strong>Assignees:</strong> ${assigneeNames || "None"}<br/><br/>
+          <strong>Verification Status:</strong><br/>
+          - Footer Screenshot: ${isScreenshotVerified ? "Verified" : "Unverified"}<br/>
+          - Full Page: ${isPageVerified ? "Verified" : "Unverified"}<br/>
+          - Content: ${isContentVerified ? "Verified" : "Unverified"}<br/><br/>
+          `
+        } else {
+          contentHtml = `
+          ${heading}<br/><br/>
+          <strong>Footer Screenshot:</strong><br/>
+          <a href="${screenshot1Url}" target="_blank"><img src="${screenshot1Url}" width="500" style="border: 1px solid #e3e4e6; border-radius: 6px; margin-bottom: 16px;" /></a><br/><br/>
+          ${
+            screenshot2Url
+              ? `
+          <strong>Full Privacy Policy Page:</strong><br/>
+          <a href="${screenshot2Url}" target="_blank"><img src="${screenshot2Url}" width="500" style="border: 1px solid #e3e4e6; border-radius: 6px; margin-bottom: 16px;" /></a><br/><br/>
+          `
+              : ""
+          }
+
+          <strong>Confirm verification:</strong><br/>
+          - Footer Screenshot: ${isScreenshotVerified ? "Verified" : "Unverified"}<br/>
+          - Full Page Screenshot: ${isPageVerified ? "Verified" : "Unverified"}<br/>
+          - Content Verification: ${isContentVerified ? "Verified" : "Unverified"}<br/><br/>
+          `
+        }
+
+        commentHtml = `
+        <div style="font-family: sans-serif; line-height: 1.5;">
+          ${contentHtml}
+          <em>Sent automatically via QA Command Center</em>
+        </div>
+        `.trim()
+      }
 
       const postCommentUrl = `https://3.basecampapi.com/${accountId}/buckets/${bcProjectId}/recordings/${targetTodo.id}/comments.json`
       await axios.post(postCommentUrl, { content: commentHtml }, { headers })
+
+      if (finding.check_factor === "paid_media") {
+        try {
+          const {
+            notifyOnGoogleChat,
+          } = require("../services/googleChatNotificationService")
+
+          // Fetch users assigned to this finding's tasks to properly @mention them in Google Chat
+          const { data: relatedTasks } = await supabase
+            .from("tasks")
+            .select("assigned_to")
+            .eq("finding_id", id)
+
+          const assignedUserIds = relatedTasks
+            ? Array.from(
+                new Set(
+                  relatedTasks.map((t: any) => t.assigned_to).filter(Boolean),
+                ),
+              )
+            : []
+
+          await notifyOnGoogleChat({
+            taskId: finding.id,
+            projectId: projectId,
+            issueNumber: finding.issue_number || 0,
+            projectName: siteUrl || "Project",
+            issueHeading: finding.title || "Paid Media Finding",
+            findingsUrl: targetTodo.app_url || "", // The "View Task" button in Google Chat will link directly to the Basecamp To-do!
+            assignedUserIds: assignedUserIds,
+            category: (finding.severity || "Finding").toUpperCase(),
+            description: finding.description || "",
+            thumbnails: screenshot1Url ? [screenshot1Url] : [],
+          })
+        } catch (gcError: any) {
+          logger.error(
+            { error: gcError.message },
+            "Failed to send Google Chat notification",
+          )
+        }
+      }
 
       // 6. Update finding status to 'confirmed' upon successful push
       await supabase
         .from("findings")
         .update({ status: "confirmed", updated_at: new Date().toISOString() })
         .eq("id", id)
-
       return res
         .status(200)
         .json({ success: true, todoUrl: targetTodo.app_url })
