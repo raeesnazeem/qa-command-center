@@ -54,7 +54,7 @@ export const DashboardPage = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-32 w-full rounded-md" />
+            <Skeleton key={i} className="h-32 w-full rounded-lg" />
           ))}
         </div>
 
@@ -62,14 +62,14 @@ export const DashboardPage = () => {
           <Skeleton className="h-4 w-32" />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-48 w-full rounded-md" />
+              <Skeleton key={i} className="h-48 w-full rounded-lg" />
             ))}
           </div>
         </section>
 
         <section className="space-y-6">
           <Skeleton className="h-4 w-32" />
-          <div className="bg-white border border-slate-100 rounded-md h-64 overflow-hidden relative">
+          <div className="bg-white border border-slate-100 rounded-lg h-64 overflow-hidden relative">
             <Skeleton className="absolute inset-0" />
           </div>
         </section>
@@ -127,7 +127,7 @@ export const DashboardPage = () => {
               </div>
 
               {data?.pre_release_projects?.length === 0 ? (
-                <div className="bg-slate-50 border border-slate-100 rounded-md p-8 text-center text-slate-500 text-sm">
+                <div className="bg-slate-50 border border-slate-100 rounded-lg p-8 text-center text-slate-500 text-sm">
                   No pending pre-release projects.
                 </div>
               ) : (
@@ -136,7 +136,7 @@ export const DashboardPage = () => {
                     <Link
                       key={project.id}
                       to={`/projects/${project.id}`}
-                      className="bg-white border-2 rounded-md p-4 shadow-sm hover:shadow-lg hover:border-accent transition-all group relative overflow-hidden min-w-[240px] flex-shrink-0 flex flex-col"
+                      className="bg-white border-2 rounded-lg p-4 shadow-sm hover:shadow-lg hover:border-accent transition-all group relative overflow-hidden min-w-[240px] flex-shrink-0 flex flex-col"
                     >
                       <h4 className="font-bold text-slate-900 text-base mb-0.5 group-hover:text-accent transition-colors leading-tight truncate">
                         {project.name}
@@ -174,7 +174,7 @@ export const DashboardPage = () => {
               </div>
 
               {data?.post_release_projects?.length === 0 ? (
-                <div className="bg-slate-50 border border-slate-100 rounded-md p-8 text-center text-slate-500 text-sm">
+                <div className="bg-slate-50 border border-slate-100 rounded-lg p-8 text-center text-slate-500 text-sm">
                   No post-release projects found.
                 </div>
               ) : (
@@ -183,7 +183,7 @@ export const DashboardPage = () => {
                     <Link
                       key={project.id}
                       to={`/projects/${project.id}`}
-                      className="bg-white border border-slate-100 rounded-md p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group relative overflow-hidden"
+                      className="bg-white border border-slate-100 rounded-lg p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group relative overflow-hidden"
                     >
                       <h4 className="font-bold text-slate-900 text-xl mb-1 group-hover:text-accent transition-colors leading-tight">
                         {project.name}
@@ -222,8 +222,8 @@ export const DashboardPage = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {data?.my_tasks.length === 0 ? (
-                  <div className="md:col-span-2 bg-white border-2 border-dashed border-slate-200 rounded-md p-12 text-center">
-                    <div className="bg-slate-50 w-16 h-16 rounded-md flex items-center justify-center mx-auto mb-4">
+                  <div className="md:col-span-2 bg-white border-2 border-dashed border-slate-200 rounded-lg p-12 text-center">
+                    <div className="bg-slate-50 w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-4">
                       <CheckCircle2 className="w-8 h-8 text-slate-300" />
                     </div>
                     <h4 className="font-bold text-slate-900">All caught up!</h4>
@@ -236,7 +236,7 @@ export const DashboardPage = () => {
                     <Link
                       key={task.id}
                       to={`/tasks?taskId=${task.id}`}
-                      className="bg-white border border-slate-100 rounded-md p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group flex flex-col h-full"
+                      className="bg-white border border-slate-100 rounded-lg p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group flex flex-col h-full"
                     >
                       <div className="flex justify-between items-start mb-4">
                         <span
@@ -280,7 +280,7 @@ export const DashboardPage = () => {
               <Clock className="w-4 h-4 text-slate-400" />
               Quick Stats
             </h3>
-            <div className="bg-white rounded-md p-6 text-slate-900 space-y-6 shadow-xl">
+            <div className="bg-white rounded-lg p-6 text-slate-900 space-y-6 shadow-xl">
               <div>
                 <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">
                   Total Assigned
@@ -330,7 +330,7 @@ export const DashboardPage = () => {
           </div>
 
           {data?.pre_release_projects?.length === 0 ? (
-            <div className="bg-slate-50 border border-slate-100 rounded-md p-8 text-center text-slate-500 text-sm">
+            <div className="bg-slate-50 border border-slate-100 rounded-lg p-8 text-center text-slate-500 text-sm">
               No pending pre-release projects.
             </div>
           ) : (
@@ -339,7 +339,7 @@ export const DashboardPage = () => {
                 <Link
                   key={project.id}
                   to={`/projects/${project.id}`}
-                  className="bg-white border-2 border-slate-100 rounded-md p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group relative overflow-hidden min-w-[300px] flex-shrink-0"
+                  className="bg-white border-2 border-slate-100 rounded-lg p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group relative overflow-hidden min-w-[300px] flex-shrink-0"
                 >
                   <h4 className="text-xl font-bold text-slate-900 group-hover:text-accent transition-colors truncate pr-2">
                     {project.name}
@@ -359,7 +359,7 @@ export const DashboardPage = () => {
                         ).length || 0}
                       </span>
                     </div>
-                    <div className="bg-[#fff] text-accent p-1.5 rounded-md group-hover:bg-[#fff] group-hover:text-black transition-colors">
+                    <div className="bg-[#fff] text-accent p-1.5 rounded-lg group-hover:bg-[#fff] group-hover:text-black transition-colors">
                       <ArrowUpRight size={18} />
                     </div>
                   </div>
@@ -379,7 +379,7 @@ export const DashboardPage = () => {
           </div>
 
           {data?.post_release_projects?.length === 0 ? (
-            <div className="bg-slate-50 border border-slate-100 rounded-md p-8 text-center text-slate-500 text-sm">
+            <div className="bg-slate-50 border border-slate-100 rounded-lg p-8 text-center text-slate-500 text-sm">
               No post-release projects found.
             </div>
           ) : (
@@ -388,7 +388,7 @@ export const DashboardPage = () => {
                 <Link
                   key={project.id}
                   to={`/projects/${project.id}`}
-                  className="bg-white border border-slate-100 rounded-md p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group relative overflow-hidden min-w-[300px] flex-shrink-0"
+                  className="bg-white border border-slate-100 rounded-lg p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group relative overflow-hidden min-w-[300px] flex-shrink-0"
                 >
                   <h4 className="text-xl font-bold text-slate-900 group-hover:text-accent transition-colors truncate pr-2">
                     {project.name}
@@ -406,7 +406,7 @@ export const DashboardPage = () => {
                         {project.open_issues_count || 0}
                       </span>
                     </div>
-                    <div className="bg-[#fff] text-accent p-1.5 rounded-md group-hover:bg-[#fff] group-hover:text-black transition-colors">
+                    <div className="bg-[#fff] text-accent p-1.5 rounded-lg group-hover:bg-[#fff] group-hover:text-black transition-colors">
                       <ArrowUpRight size={18} />
                     </div>
                   </div>
@@ -435,7 +435,7 @@ export const DashboardPage = () => {
             </div>
           </div>
 
-          <div className="bg-white border border-slate-100 rounded-md overflow-hidden shadow-sm overflow-x-auto">
+          <div className="bg-white border border-slate-100 rounded-lg overflow-hidden shadow-sm overflow-x-auto">
             <div className="min-w-[800px]">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -562,11 +562,7 @@ export const DashboardPage = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Link
-            to="/projects"
-            className="btn-unified-secondary h-11 flex items-center gap-2"
-          >
-            <Layers size={18} />
+          <Link to="/projects" className="btn-unified flex items-center gap-2">
             Browse Projects
           </Link>
         </div>
@@ -577,7 +573,7 @@ export const DashboardPage = () => {
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="bg-white border border-slate-100 rounded-md p-6 shadow-sm hover:shadow-xl transition-all group"
+            className="bg-white border border-slate-100 rounded-lg p-6 shadow-sm hover:shadow-xl transition-all group"
           >
             <div className="flex items-center justify-between mb-4"></div>
             <div
@@ -601,12 +597,12 @@ export const DashboardPage = () => {
           {data?.pre_release_projects?.map((project) => (
             <div
               key={project.id}
-              className="bg-white border border-slate-100 rounded-md p-6 shadow-sm hover:shadow-xl transition-all group relative flex flex-col"
+              className="bg-white border border-slate-100 rounded-lg p-6 shadow-sm hover:shadow-xl transition-all group relative flex flex-col"
             >
               <div className="absolute top-4 right-4 flex gap-2">
                 <button
                   onClick={() => setEditingProject(project)}
-                  className="p-1.5 bg-slate-50 hover:bg-slate-100 rounded-md text-slate-400 hover:text-accent transition-all"
+                  className="p-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-accent transition-all"
                 >
                   <Edit size={18} />
                 </button>
@@ -642,7 +638,7 @@ export const DashboardPage = () => {
           {data?.post_release_projects?.map((project) => (
             <div
               key={project.id}
-              className="bg-white border border-slate-100 rounded-md p-6 shadow-sm hover:shadow-xl transition-all group relative flex flex-col"
+              className="bg-white border border-slate-100 rounded-lg p-6 shadow-sm hover:shadow-xl transition-all group relative flex flex-col"
             >
               <div className="absolute top-4 right-4">
                 <button
@@ -678,7 +674,7 @@ export const DashboardPage = () => {
             <PlayCircle className="w-4 h-4 text-slate-400" />
             Real-time QA Activity
           </h3>
-          <div className="bg-white border border-slate-100 rounded-md overflow-hidden shadow-sm">
+          <div className="bg-white border border-slate-100 rounded-lg overflow-hidden shadow-sm">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50/50 border-b border-slate-100">
@@ -782,7 +778,7 @@ export const DashboardPage = () => {
               <CheckSquare className="w-4 h-4 text-slate-400" />
               Critical Assignments
             </h3>
-            <div className="bg-white border border-slate-100 rounded-md shadow-sm divide-y divide-slate-50 overflow-hidden">
+            <div className="bg-white border border-slate-100 rounded-lg shadow-sm divide-y divide-slate-50 overflow-hidden">
               {data?.my_tasks.length === 0 ? (
                 <div className="p-12 text-center">
                   <p className="text-xs text-slate-400 font-medium italic">
@@ -819,7 +815,7 @@ export const DashboardPage = () => {
               <CheckCircle2 className="w-4 h-4 text-slate-400" />
               Pending Global Sign-offs
             </h3>
-            <div className="bg-amber-50/50 border border-amber-100 rounded-md p-6 space-y-4">
+            <div className="bg-amber-50/50 border border-amber-100 rounded-lg p-6 space-y-4">
               {data?.pending_signoffs.length === 0 ? (
                 <div className="text-center py-4">
                   <p className="text-xs text-emerald-600 font-bold uppercase tracking-widest">
@@ -834,7 +830,7 @@ export const DashboardPage = () => {
                 ).map((run) => (
                   <div
                     key={run.id}
-                    className="flex items-center justify-between bg-white p-4 rounded-md border border-amber-100 shadow-sm hover:shadow-md transition-all group"
+                    className="flex items-center justify-between bg-white p-4 rounded-lg border border-amber-100 shadow-sm hover:shadow-md transition-all group"
                   >
                     <div className="flex-1 min-w-0 mr-4">
                       <p className="text-xs font-bold text-slate-900 truncate uppercase tracking-tight">

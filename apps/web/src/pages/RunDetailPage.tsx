@@ -47,7 +47,7 @@ import {
   Camera,
   Video,
 } from "lucide-react"
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState, useMemo, useRef } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import toast from "react-hot-toast"
 
@@ -104,11 +104,49 @@ export const RunDetailPage = () => {
   const [isCapturingScreenshots, setIsCapturingScreenshots] = useState(false)
   const [isRecordingVideo, setIsRecordingVideo] = useState(false)
 
-  const { data: findings, isLoading: isLoadingFindings } =
-    useFindings(selectedPageId)
-  const { data: runFindings, isLoading: isLoadingRunFindings } = useRunFindings(
-    runId!,
-  )
+  const {
+    data: findings,
+    isLoading: isLoadingFindings,
+    isFetching: isFetchingFindings,
+    refetch: refetchFindings,
+  } = useFindings(selectedPageId)
+  const {
+    data: runFindings,
+    isLoading: isLoadingRunFindings,
+    isFetching: isFetchingRunFindings,
+    refetch: refetchRunFindings,
+  } = useRunFindings(runId!)
+
+  const [findingsLoaded, setFindingsLoaded] = useState(false)
+  const [hasRefetched, setHasRefetched] = useState(false)
+  const initialStatusRef = useRef<string | undefined>(undefined)
+
+  useEffect(() => {
+    // Capture the FIRST known status of the run
+    if (!initialStatusRef.current && run?.status) {
+      initialStatusRef.current = run.status
+    }
+
+    // If the run was ALREADY completed when we opened the page, skip the 99% fake state
+    if (initialStatusRef.current === "completed") {
+      setFindingsLoaded(true)
+      return
+    }
+
+    // If we watched it transition from running -> completed LIVE:
+    if (run?.status === "completed" && !hasRefetched) {
+      setHasRefetched(true)
+      Promise.all([refetchFindings(), refetchRunFindings()]).then(() => {
+        setFindingsLoaded(true)
+      })
+    }
+  }, [run?.status, hasRefetched, refetchFindings, refetchRunFindings])
+
+  const displayStatus =
+    run?.status === "completed" && !findingsLoaded ? "running" : run?.status
+  const displayProgress =
+    run?.status === "completed" && !findingsLoaded ? 99 : progress
+
   const { data: tasksData } = useTasks({ projectId: projectId! })
   const updateFindingMutation = useUpdateFinding(selectedPageId)
   const { mutate: createTask } = useCreateTask()
@@ -617,7 +655,7 @@ export const RunDetailPage = () => {
     }
   }
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-8 animate-in fade-in duration-200">
+    <div className="max-w-7xl mx-auto p-6 space-y-8 animate-in fade-in duration-200">
       {/* Header */}
       <div className="flex flex-col space-y-6">
         <div className="flex items-center justify-between">
@@ -646,9 +684,9 @@ export const RunDetailPage = () => {
                 </span>
                 <span className="text-slate-300">•</span>
                 <div className="flex items-center space-x-1.5">
-                  {getStatusIcon(run.status)}
+                  {getStatusIcon(displayStatus as any)}
                   <span className="text-sm font-bold text-slate-700 uppercase">
-                    {run.status}
+                    {displayStatus}
                   </span>
                 </div>
                 {run.created_by_name && (
@@ -715,7 +753,7 @@ export const RunDetailPage = () => {
             {run.status === "running" && !isDiscovering && (
               <div className="text-right">
                 <p className="text-2xl font-bold text-slate-900 leading-none">
-                  {Math.round(progress)}%
+                  {Math.round(displayProgress)}%
                 </p>
                 {eta && (
                   <p className="text-xs font-bold text-blue-500 uppercase mt-1 tracking-widest">
@@ -738,7 +776,7 @@ export const RunDetailPage = () => {
               <p className="text-xs text-slate-500 font-medium">
                 {isDiscovering
                   ? "Identifying all target URLs..."
-                  : run.status === "completed"
+                  : displayStatus === "completed"
                     ? "Scan complete. All pages verified."
                     : `Scanning: ${(run.pages || []).filter((p) => p.status === "processing" || p.status === "screenshotted").length} active | ${pagesProcessed} / ${pagesTotal} total`}
               </p>
@@ -759,9 +797,9 @@ export const RunDetailPage = () => {
               <p className="text-xl font-bold text-slate-900">
                 {isDiscovering
                   ? "..."
-                  : run.status === "completed"
+                  : displayStatus === "completed"
                     ? "100%"
-                    : `${Math.max(1, Math.round(progress))}%`}
+                    : `${Math.max(1, Math.round(displayProgress))}%`}
               </p>
             </div>
           </div>
@@ -774,9 +812,9 @@ export const RunDetailPage = () => {
               style={{
                 width: isDiscovering
                   ? "40%"
-                  : run.status === "completed"
+                  : displayStatus === "completed"
                     ? "100%"
-                    : `${Math.max(2, progress)}%`,
+                    : `${Math.max(2, displayProgress)}%`,
               }}
             >
               {(run.status === "running" || isDiscovering) && (
@@ -811,28 +849,33 @@ export const RunDetailPage = () => {
           <FileSearch size={14} />
           Pages
         </button>
-        <button
-          onClick={() => setActiveTab("general")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
-            activeTab === "general"
-              ? "bg-white text-slate-900 shadow-sm border border-slate-200"
-              : "text-slate-500 hover:text-slate-700"
-          }`}
-        >
-          <ClipboardList size={14} />
-          General
-        </button>
-        <button
-          onClick={() => setActiveTab("findings")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
-            activeTab === "findings"
-              ? "bg-white text-slate-900 shadow-sm border border-slate-200"
-              : "text-slate-500 hover:text-slate-700"
-          }`}
-        >
-          <Search size={14} />
-          Functional Findings
-        </button>
+        {findingsLoaded && (
+          <>
+            <button
+              onClick={() => setActiveTab("general")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
+                activeTab === "general"
+                  ? "bg-white text-slate-900 shadow-sm border border-slate-200"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              <ClipboardList size={14} />
+              General
+            </button>
+            <button
+              onClick={() => setActiveTab("findings")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
+                activeTab === "findings"
+                  ? "bg-white text-slate-900 shadow-sm border border-slate-200"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              <Search size={14} />
+              Functional Findings
+            </button>
+          </>
+        )}
+
         <button
           onClick={() => setActiveTab("visual_diff")}
           className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
@@ -872,7 +915,7 @@ export const RunDetailPage = () => {
 
       {activeTab === "overview" && (
         <div className="space-y-8 animate-in fade-in duration-200">
-          <div className="bg-white p-8 rounded-md border border-slate-200 shadow-sm space-y-6">
+          <div className="bg-white p-6 rounded-md border border-slate-200 shadow-sm space-y-6">
             <div className="flex justify-between items-end">
               <div className="space-y-1">
                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest flex items-center gap-2">
@@ -910,24 +953,149 @@ export const RunDetailPage = () => {
               </div>
             </div>
 
-            <div className="w-full h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200 p-1">
-              <div
-                className={`h-full rounded-full transition-all duration-500 ease-out shadow-sm ${
-                  run.status === "failed" ? "bg-red-500" : "bg-accent"
-                }`}
-                style={{
-                  width: isDiscovering
-                    ? "40%"
-                    : run.status === "completed"
-                      ? "100%"
-                      : `${Math.max(2, progress)}%`,
-                }}
-              >
-                {(run.status === "running" || isDiscovering) && (
+            {/* Check-wise Progress Bars */}
+            {isDiscovering ? (
+              <div className="w-full h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200 p-1">
+                <div className="h-full rounded-full transition-all duration-500 ease-out shadow-sm bg-accent w-[40%]">
                   <div className="w-full h-full opacity-30 bg-[linear-gradient(45deg,rgba(255,255,255,.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,.15)_50%,rgba(255,255,255,.15)_75%,transparent_75%,transparent)] bg-[length:1rem_1rem] animate-[progress-bar-stripes_1s_linear_infinite]" />
-                )}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-8 mt-4">
+                {/* Current Run Overall Progress */}
+                <div className="space-y-3">
+                  <h3 className="text-sm font-mono text-slate-800">
+                    Current Run
+                  </h3>
+                  <div className="border border-slate-400 rounded-xl p-3 bg-white">
+                    <div className="flex justify-between items-center mb-2 text-xs font-mono text-slate-800">
+                      <span>
+                        current task:{" "}
+                        {(() => {
+                          if (isDiscovering) return "sitemap discovery"
+                          if (run.status === "paused") return "scan paused"
+                          if (
+                            run.status === "cancelled" ||
+                            run.status === "failed"
+                          )
+                            return `scan ${run.status}`
+                          if (run.status === "completed" && !findingsLoaded)
+                            return "getting findings ready"
+                          if (findingsLoaded) return "findings available"
+
+                          const activePage = (run.pages || []).find(
+                            (p) => p.status === "processing",
+                          )
+                          return (
+                            activePage?.current_step?.toLowerCase() ||
+                            "scanning pages"
+                          )
+                        })()}
+                      </span>
+                      <span className="font-bold">
+                        {findingsLoaded
+                          ? "100%"
+                          : `${Math.max(1, Math.round(displayProgress))}%`}
+                      </span>
+                    </div>
+                    <div className="w-full h-3 bg-white border border-slate-400 rounded-md p-px">
+                      <div
+                        className="h-full bg-[#b5e4b5] rounded-sm transition-all duration-500"
+                        style={{
+                          width: `${findingsLoaded ? 100 : Math.max(1, displayProgress)}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {(run.enabled_checks || []).map((checkKey) => {
+                  const checkNameMap: Record<string, string> = {
+                    project_plan: "Project Plan Check",
+                    dead_links: "Dead-Link Check",
+                    privacy_policy: "Privacy Policy Check",
+                    hero_media: "Hero Media Check",
+                    paid_media: "Paid Media Check",
+                    visual_regression: "Visual Regression Check",
+                    accessibility: "Accessibility Check",
+                    console_errors: "Console Errors Check",
+                    woocommerce: "WooCommerce Check",
+                  }
+                  const checkName =
+                    checkNameMap[checkKey] ||
+                    checkKey
+                      .replace(/_/g, " ")
+                      .replace(/\b\w/g, (l) => l.toUpperCase())
+
+                  // Targeted Checks limit progress bars to the main domain
+                  let relevantPages = run.pages || []
+                  if (
+                    checkKey === "privacy_policy" ||
+                    checkKey === "project_plan" ||
+                    checkKey === "hero_media"
+                  ) {
+                    relevantPages = relevantPages.filter(
+                      (p) =>
+                        p.url === run.site_url ||
+                        p.url.replace(/\/$/, "") ===
+                          run.site_url.replace(/\/$/, ""),
+                    )
+                    if (
+                      relevantPages.length === 0 &&
+                      (run.pages || []).length > 0
+                    )
+                      relevantPages = [run.pages![0]]
+                  }
+
+                  return (
+                    <details key={checkKey} className="group space-y-3" open>
+                      <summary className="text-sm font-mono text-slate-800 cursor-pointer list-none [&::-webkit-details-marker]:hidden flex justify-between items-center outline-none">
+                        <span>{checkName}</span>
+                        <span className="text-xs text-slate-400 group-open:rotate-180 transition-transform">
+                          ▼
+                        </span>
+                      </summary>
+                      <div className="space-y-3 mt-3">
+                        {relevantPages.map((page) => {
+                          const isCompleted =
+                            run.status === "completed" ||
+                            page.status === "done" ||
+                            page.status === "checked"
+                          const pageProgress = isCompleted
+                            ? 100
+                            : page.progress || 0
+
+                          return (
+                            <div
+                              key={page.id}
+                              className="border border-slate-400 rounded-xl p-3 bg-white"
+                            >
+                              <div className="flex justify-between items-center mb-2 text-xs font-mono text-slate-800">
+                                <span>
+                                  scanning:{" "}
+                                  {page.url.replace(/https?:\/\//, "")}
+                                </span>
+                                <span className="font-bold">
+                                  {isCompleted
+                                    ? "completed 100%"
+                                    : `${pageProgress}%`}
+                                </span>
+                              </div>
+                              <div className="w-full h-3 bg-white border border-slate-400 rounded-md p-px mb-1">
+                                <div
+                                  className="h-full bg-[#b5e4b5] rounded-sm transition-all duration-500"
+                                  style={{ width: `${pageProgress}%` }}
+                                />
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </details>
+                  )
+                })}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

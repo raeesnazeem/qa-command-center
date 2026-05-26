@@ -357,6 +357,32 @@ router.post(
             `To-do checklist item "QA- Check if Privacy policy page added on the website." not found in Basecamp checklist "${targetList.name}".`,
           )
         }
+      } else if (finding.check_factor === "project_plan") {
+        targetTodo = allTodos.find((todo: any) =>
+          todo.content
+            .toLowerCase()
+            .includes("qa-check if reviews are added for accelerator plan"),
+        )
+
+        if (!targetTodo) {
+          throw new Error(
+            `To-do checklist item "QA-Check if reviews are added for Accelerator plan" not found in Basecamp checklist "${targetList.name}".`,
+          )
+        }
+      } else if (finding.check_factor === "hero_media") {
+        targetTodo = allTodos.find((todo: any) =>
+          todo.content
+            .toLowerCase()
+            .includes(
+              "qa-verify that the hero section video and fallback image load immediately on page load.",
+            ),
+        )
+
+        if (!targetTodo) {
+          throw new Error(
+            `To-do checklist item for Hero Media not found in Basecamp checklist "${targetList.name}".`,
+          )
+        }
       }
 
       // 4. Extract screenshots: split comma-separated list and reuse the worker's pre-captured reviews proof
@@ -492,6 +518,15 @@ router.post(
         commentHtml = `
         <div style="font-family: sans-serif; line-height: 1.5;">
           ${contentHtml}
+          <em>Sent automatically via QA Command Center</em>
+        </div>
+        `.trim()
+      } else if (finding.check_factor === "hero_media") {
+        commentHtml = `
+        <div style="font-family: sans-serif; line-height: 1.5;">
+          <strong>Hero Media Check</strong><br/><br/>
+          ${finding.description.replace(/\n/g, "<br/>")}
+          <br/><br/>
           <em>Sent automatically via QA Command Center</em>
         </div>
         `.trim()

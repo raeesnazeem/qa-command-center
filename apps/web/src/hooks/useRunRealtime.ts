@@ -106,16 +106,20 @@ export const useRunRealtime = (runId: string) => {
           console.log(`Supabase Realtime closed for run ${runId}:`, status)
         }
       })
+    let progressDebounceTimer: ReturnType<typeof setTimeout> | null = null
 
     // 2. Subscribe to custom broadcast channel for progress events
     const broadcastChannel = supabase
       .channel(`run:${runId}`)
       .on("broadcast", { event: "progress" }, (payload) => {
         console.log("Granular progress broadcast received:", payload)
-        // Refresh the caches so new findings and page statuses update in the UI in real-time!
-        queryClient.invalidateQueries({ queryKey: ["run", runId] })
-        queryClient.invalidateQueries({ queryKey: ["findings"] })
-        queryClient.invalidateQueries({ queryKey: ["run-findings", runId] })
+        // Debounce: when many pages finish at once, batch invalidations to avoid 429s
+        if (progressDebounceTimer) clearTimeout(progressDebounceTimer)
+        progressDebounceTimer = setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ["run", runId] })
+          queryClient.invalidateQueries({ queryKey: ["findings"] })
+          queryClient.invalidateQueries({ queryKey: ["run-findings", runId] })
+        }, 2000)
       })
       .on("broadcast", { event: "page_progress" }, (payload) => {
         console.log("Per-page progress broadcast received:", payload)
@@ -123,6 +127,7 @@ export const useRunRealtime = (runId: string) => {
       .subscribe()
 
     return () => {
+      if (progressDebounceTimer) clearTimeout(progressDebounceTimer)
       runChannel.unsubscribe()
       broadcastChannel.unsubscribe()
     }

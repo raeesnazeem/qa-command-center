@@ -27,7 +27,6 @@ import { QAFinding } from "../api/runs.api"
 import { BrowserOverlay } from "./BrowserOverlay"
 import { useGalleryStore } from "../store/galleryStore"
 import { useAuthAxios } from "../lib/useAuthAxios"
-import { FindingCardWithScreenshot } from "./FindingCardWithScreenshot"
 
 interface FindingCardProps {
   finding: QAFinding
@@ -64,7 +63,7 @@ const CHECK_FACTOR_ICONS: Record<string, React.ReactNode> = {
   dead_links: <Globe size={14} className="text-accent" />,
 }
 
-export const HeroMediaFindingCard: React.FC<FindingCardProps> = ({
+export const DeadLinksFindingCard: React.FC<FindingCardProps> = ({
   finding,
   pageScreenshots,
   onConfirm,
@@ -88,10 +87,8 @@ export const HeroMediaFindingCard: React.FC<FindingCardProps> = ({
   const { galleryImages: allGalleryImages, addImage } = useGalleryStore()
   const galleryImages = allGalleryImages[finding.id] || []
 
-  // Ensure factors that require full width get it here
-  const FULL_WIDTH_FACTORS = ["dead_links", "paid_media", "hero_media"]
-  const isPaidMedia = finding.check_factor === "paid_media"
-  const isFullWidth = FULL_WIDTH_FACTORS.includes(finding.check_factor)
+  // Dead Links is ALWAYS full width
+  const isFullWidth = true
 
   const [isPushing, setIsPushing] = React.useState(false)
   const [isPushed, setIsPushed] = React.useState(finding.status === "confirmed")
@@ -104,7 +101,6 @@ export const HeroMediaFindingCard: React.FC<FindingCardProps> = ({
   const handlePushToBasecamp = async () => {
     setIsPushing(true)
     try {
-      // Empty payload for paid media just like the original logic
       const response = await api.post(
         `/api/findings/${finding.id}/push-basecamp`,
         {},
@@ -203,78 +199,125 @@ export const HeroMediaFindingCard: React.FC<FindingCardProps> = ({
 
             {finding.description && (
               <div className="mb-4">
-                <div className="flex flex-wrap items-center gap-2 mb-3">
-                  {/* Video Found / Not Found Tag */}
-                  {/* Video Found / Not Found Tag */}
-                  {(finding.title?.toLowerCase().includes("missing") ||
-                    finding.title?.toLowerCase().includes("no hero video") ||
-                    finding.title?.toLowerCase().includes("not detected") ||
-                    finding.title?.toLowerCase().includes("not found")) &&
-                  !finding.title?.toLowerCase().includes("fallback") ? (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-50 text-[10px] font-bold text-rose-600 border border-rose-100 uppercase tracking-tighter">
-                      <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></div>
-                      Hero Video Not Found
+                {finding.context_text?.includes(
+                  "Total unique URLs checked",
+                ) && (
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-600 border border-emerald-200 uppercase">
+                      {finding.context_text.match(
+                        /Total unique URLs checked in run so far: (\d+)/,
+                      )?.[1] || "0"}{" "}
+                      URLs Scanned
                     </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-[10px] font-bold text-emerald-600 border border-emerald-100 uppercase tracking-tighter">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                      Hero Video Found
-                    </span>
-                  )}
-
-                  {/* Fallback Present / Absent Tag */}
-                  {(finding.context_text?.includes("Fallback Image URL:") ||
-                    finding.context_text?.includes("Fallback Setup: Yes") ||
-                    (finding.context_text?.includes("Fallback Image:") &&
-                      !finding.context_text?.includes(
-                        "Fallback Image: None",
-                      ))) &&
-                  !finding.title?.toLowerCase().includes("missing fallback") &&
-                  !finding.context_text?.includes(
-                    "No fallback image configured",
-                  ) ? (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-[10px] font-bold text-emerald-600 border border-emerald-100 uppercase tracking-tighter">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                      Fallback Present
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-50 text-[10px] font-bold text-rose-600 border border-rose-100 uppercase tracking-tighter">
-                      <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></div>
-                      Fallback Absent
-                    </span>
-                  )}
-                </div>
-
-                <p
-                  className={`text-[11px] text-slate-500 font-medium leading-relaxed break-words ${
-                    isFalsePositive ? "text-slate-400" : ""
-                  } ${!isExpanded ? "line-clamp-3" : ""}`}
-                >
-                  {finding.description}
-                </p>
-                {finding.description.length > 150 && (
-                  <button
-                    onClick={() => setIsExpanded(!isExpanded)}
-                    className="text-[10px] font-bold text-accent uppercase tracking-widest mt-1 hover:text-black transition-colors"
-                  >
-                    {isExpanded ? "See less" : "See more"}
-                  </button>
+                  </div>
                 )}
-              </div>
-            )}
+                {(() => {
+                  if (!finding.description) return null
 
-            {(finding.screenshot_url || pageScreenshots?.desktop) && (
-              <div className="mb-4">
-                <button
-                  onClick={() => setIsBrowserOpen(true)}
-                  className="btn-unified w-fit flex justify-start items-center gap-2 mt-3"
-                >
-                  <span className="text-white">See in </span>
-                  <MonitorSmartphone
-                    size={14}
-                    className="text-white-400 group-hover/btn:text-black transition-colors"
-                  />
-                </button>
+                  try {
+                    let links: any[] = []
+
+                    try {
+                      // 1. Try to parse as JSON first
+                      links = JSON.parse(finding.description)
+                    } catch (e) {
+                      // 2. If it's not JSON, extract columns from the Markdown text format
+                      const regex =
+                        /- \*\*(.*?)\*\*\s*\* Reason:\s*(.*?)\s*\* Link Text:\s*(.*?)\s*\* Found on:\s*(.*?)(?=\s+- \*\*|$)/gs
+
+                      let match
+                      while (
+                        (match = regex.exec(finding.description)) !== null
+                      ) {
+                        links.push({
+                          url: match[1].trim(),
+                          reason: match[2].trim(),
+                          link_text: match[3].trim(),
+                          found_on: match[4].trim(),
+                        })
+                      }
+                    }
+
+                    if (Array.isArray(links) && links.length > 0) {
+                      return (
+                        <div className="overflow-x-auto overflow-y-auto max-h-[140px] border border-slate-200 rounded-md my-2 relative [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-200 hover:[&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent">
+                          <table className="w-full text-[10px] text-left">
+                            <thead className="bg-slate-50 text-slate-500 sticky top-0 z-10 shadow-[0_1px_0_0_#e2e8f0]">
+                              <tr>
+                                <th className="px-3 py-2 font-bold uppercase tracking-wider">
+                                  URL
+                                </th>
+                                <th className="px-3 py-2 font-bold uppercase tracking-wider">
+                                  Reason
+                                </th>
+                                <th className="px-3 py-2 font-bold uppercase tracking-wider">
+                                  Link Text
+                                </th>
+                                <th className="px-3 py-2 font-bold uppercase tracking-wider">
+                                  Found On
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 text-slate-600">
+                              {links.map((link: any, idx: number) => (
+                                <tr key={idx} className="hover:bg-slate-50/50">
+                                  <td className="px-3 py-2 break-all text-blue-500 min-w-[150px]">
+                                    <a
+                                      href={link.url}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="hover:underline"
+                                    >
+                                      {link.url}
+                                    </a>
+                                  </td>
+                                  <td className="px-3 py-2">{link.reason}</td>
+                                  <td className="px-3 py-2">
+                                    {link["Link text"] || link.link_text}
+                                  </td>
+                                  <td className="px-3 py-2 break-all text-blue-500 min-w-[150px]">
+                                    {link.found_on ? (
+                                      <a
+                                        href={link.found_on}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="hover:underline"
+                                      >
+                                        {link.found_on}
+                                      </a>
+                                    ) : (
+                                      "-"
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )
+                    }
+                  } catch (e) {}
+
+                  // Ultimate fallback to raw text if no links could be extracted
+                  return (
+                    <>
+                      <p
+                        className={`text-[11px] text-slate-500 font-medium leading-relaxed break-words ${isFalsePositive ? "text-slate-400" : ""} ${!isExpanded ? "line-clamp-3" : ""}`}
+                      >
+                        {finding.description}
+                      </p>
+                      {finding.description &&
+                        finding.description.length > 150 && (
+                          <button
+                            onClick={() => setIsExpanded(!isExpanded)}
+                            className="text-[10px] font-bold text-accent uppercase tracking-widest mt-1 hover:text-black transition-colors"
+                          >
+                            {isExpanded ? "See less" : "See more"}
+                          </button>
+                        )}
+                    </>
+                  )
+                })()}
               </div>
             )}
 
@@ -414,59 +457,122 @@ export const HeroMediaFindingCard: React.FC<FindingCardProps> = ({
         className={`grid grid-cols-1 ${isFullWidth ? "w-full" : "lg:grid-cols-2"} gap-8 items-start`}
       >
         <div className={`space-y-4 ${isFullWidth ? "col-span-full" : ""}`}>
-          <div className="flex flex-wrap items-center gap-2 mb-3">
-            {/* Video Found / Not Found Tag */}
-            {(finding.title?.toLowerCase().includes("missing") ||
-              finding.title?.toLowerCase().includes("no hero video") ||
-              finding.title?.toLowerCase().includes("not detected") ||
-              finding.title?.toLowerCase().includes("not found")) &&
-            !finding.title?.toLowerCase().includes("fallback") ? (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-50 text-[10px] font-bold text-rose-600 border border-rose-100 uppercase tracking-tighter">
-                <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></div>
-                Hero Video Not Found
+          {finding.context_text?.includes("Total unique URLs checked") && (
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-600 border border-emerald-200 uppercase">
+                {finding.context_text.match(
+                  /Total unique URLs checked in run so far: (\d+)/,
+                )?.[1] || "0"}{" "}
+                URLs Scanned
               </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-[10px] font-bold text-emerald-600 border border-emerald-100 uppercase tracking-tighter">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                Hero Video Found
-              </span>
-            )}
-
-            {/* Fallback Present / Absent Tag */}
-            {(finding.context_text?.includes("Fallback Image URL:") ||
-              finding.context_text?.includes("Fallback Setup: Yes") ||
-              (finding.context_text?.includes("Fallback Image:") &&
-                !finding.context_text?.includes("Fallback Image: None"))) &&
-            !finding.title?.toLowerCase().includes("missing fallback") &&
-            !finding.context_text?.includes("No fallback image configured") ? (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-[10px] font-bold text-emerald-600 border border-emerald-100 uppercase tracking-tighter">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                Fallback Present
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-50 text-[10px] font-bold text-rose-600 border border-rose-100 uppercase tracking-tighter">
-                <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></div>
-                Fallback Absent
-              </span>
-            )}
-          </div>
+            </div>
+          )}
 
           <div className="space-y-3">
-            <p
-              className={`text-[11px] text-slate-500 font-medium leading-relaxed break-words ${
-                isExpanded ? "" : "line-clamp-3"
-              }`}
-            >
-              {finding.description}
-            </p>
-            {finding.description && finding.description.length > 150 && (
-              <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="text-[9px] font-bold text-accent uppercase tracking-[0.2em] hover:text-black transition-colors"
-              >
-                {isExpanded ? "See less" : "See more"}
-              </button>
-            )}
+            {(() => {
+              if (!finding.description) return null
+
+              try {
+                let links: any[] = []
+
+                try {
+                  // 1. Try to parse as JSON first
+                  links = JSON.parse(finding.description)
+                } catch (e) {
+                  // 2. If it's not JSON, extract columns from the Markdown text format
+                  const regex =
+                    /- \*\*(.*?)\*\*\s*\* Reason:\s*(.*?)\s*\* Link Text:\s*(.*?)\s*\* Found on:\s*(.*?)(?=\s+- \*\*|$)/gs
+
+                  let match
+                  while ((match = regex.exec(finding.description)) !== null) {
+                    links.push({
+                      url: match[1].trim(),
+                      reason: match[2].trim(),
+                      link_text: match[3].trim(),
+                      found_on: match[4].trim(),
+                    })
+                  }
+                }
+
+                if (Array.isArray(links) && links.length > 0) {
+                  return (
+                    <div className="overflow-x-auto border border-slate-200 rounded-md my-2">
+                      <table className="w-full text-[10px] text-left">
+                        <thead className="bg-slate-50 text-slate-500 border-b border-slate-200">
+                          <tr>
+                            <th className="px-3 py-2 font-bold uppercase tracking-wider">
+                              URL
+                            </th>
+                            <th className="px-3 py-2 font-bold uppercase tracking-wider">
+                              Reason
+                            </th>
+                            <th className="px-3 py-2 font-bold uppercase tracking-wider">
+                              Link Text
+                            </th>
+                            <th className="px-3 py-2 font-bold uppercase tracking-wider">
+                              Found On
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 text-slate-600">
+                          {links.map((link: any, idx: number) => (
+                            <tr key={idx} className="hover:bg-slate-50/50">
+                              <td className="px-3 py-2 break-all text-blue-500 min-w-[150px]">
+                                <a
+                                  href={link.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="hover:underline"
+                                >
+                                  {link.url}
+                                </a>
+                              </td>
+                              <td className="px-3 py-2">{link.reason}</td>
+                              <td className="px-3 py-2">
+                                {link["Link text"] || link.link_text}
+                              </td>
+                              <td className="px-3 py-2 break-all text-blue-500 min-w-[150px]">
+                                {link.found_on ? (
+                                  <a
+                                    href={link.found_on}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="hover:underline"
+                                  >
+                                    {link.found_on}
+                                  </a>
+                                ) : (
+                                  "-"
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )
+                }
+              } catch (e) {}
+
+              // Ultimate fallback to raw text if no links could be extracted
+              return (
+                <>
+                  <p
+                    className={`text-[11px] text-slate-500 font-medium leading-relaxed break-words ${isFalsePositive ? "text-slate-400" : ""} ${!isExpanded ? "line-clamp-3" : ""}`}
+                  >
+                    {finding.description}
+                  </p>
+                  {finding.description && finding.description.length > 150 && (
+                    <button
+                      onClick={() => setIsExpanded(!isExpanded)}
+                      className="text-[10px] font-bold text-accent uppercase tracking-widest mt-1 hover:text-black transition-colors"
+                    >
+                      {isExpanded ? "See less" : "See more"}
+                    </button>
+                  )}
+                </>
+              )
+            })()}
           </div>
 
           <div className="pt-2 flex flex-col items-start gap-3">
@@ -478,25 +584,10 @@ export const HeroMediaFindingCard: React.FC<FindingCardProps> = ({
             </button>
           </div>
         </div>
-
-        {!isFullWidth && (
-          <div className="relative group/ss">
-            <button
-              onClick={() => setIsBrowserOpen(true)}
-              className="btn-unified w-fit ml-auto flex justify-end items-center gap-2 mt-3"
-            >
-              <span className="text-white">See in </span>
-              <MonitorSmartphone
-                size={14}
-                className="text-white-400 group-hover/btn:text-black transition-colors"
-              />
-            </button>
-          </div>
-        )}
       </div>
 
       <div className="flex items-center justify-between pt-4 border-t border-slate-50 mt-auto">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2">
           {isFalsePositive ? (
             <button
               onClick={() => onConfirm?.(finding.id)}
@@ -506,19 +597,6 @@ export const HeroMediaFindingCard: React.FC<FindingCardProps> = ({
             </button>
           ) : (
             <>
-              {/* See in Monitor Button */}
-              <button
-                onClick={() => setIsBrowserOpen(true)}
-                className="btn-unified flex items-center gap-2"
-              >
-                <span className="text-white">See in </span>
-                <MonitorSmartphone
-                  size={14}
-                  className="text-white-400 group-hover/btn:text-black transition-colors"
-                />
-              </button>
-
-              {/* False Positive Button */}
               {!(hasTask || isAssigned) && (
                 <button
                   onClick={() => onFalsePositive?.(finding.id)}
@@ -527,8 +605,6 @@ export const HeroMediaFindingCard: React.FC<FindingCardProps> = ({
                   False Positive
                 </button>
               )}
-
-              {/* Add to Tasks Button */}
               <div className="flex items-center gap-2">
                 <button
                   onClick={() =>
@@ -558,52 +634,6 @@ export const HeroMediaFindingCard: React.FC<FindingCardProps> = ({
                     </Link>
                   )}
               </div>
-
-              {/* Push to Basecamp Button */}
-              {!(hasTask || isAssigned) && (
-                <button
-                  onClick={handlePushToBasecamp}
-                  disabled={isPushing || isPushed}
-                  title="Push to Basecamp"
-                  className={`btn-unified px-3 flex items-center justify-center transition-all active:scale-95 ${
-                    isPushed
-                      ? "bg-emerald-100 text-emerald-800 border border-emerald-200 cursor-default animate-fade-in"
-                      : "bg-[#0b1016] hover:bg-slate-800 text-white"
-                  }`}
-                >
-                  {isPushing ? (
-                    <span className="text-[11px] font-bold px-1">...</span>
-                  ) : isPushed ? (
-                    <>
-                      <span className="text-slate">Success </span>
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 35 30"
-                        fill="currentColor"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="pl-1"
-                      >
-                        <path d="M18.088.27c9.1 0 15.215 10.518 15.977 21.937.02.313-.053.626-.212.896-3.14 5.35-10.061 6.527-15.737 6.558-5.487.1-10.7-2.188-14.412-6.301a1.566 1.566 0 0 1-.303-1.6 36.177 36.177 0 0 1 1.912-4.147c1.052-1.928 2.644-4.681 5.154-4.763 2.343 0 3.516 2.174 5.114 3.519 1.633-1.672 2.552-3.94 3.567-6.014a1.565 1.565 0 0 1 2.837 1.326c-.885 1.829-1.814 3.651-2.954 5.336-1.172 1.732-2.073 2.636-3.33 2.636-.746 0-1.385-.292-2.03-.801-1.103-.92-1.937-2.088-3.15-2.873-1.567.785-2.99 4.079-3.824 5.98 2.925 2.88 6.898 4.55 11.008 4.573 4.622-.028 10.286-.49 13.197-4.62-.575-7.111-4.013-18.377-12.814-18.51-7.097 0-11.754 5.047-14.775 13.644A1.565 1.565 0 1 1 .36 16.008C3.771 6.299 9.333.27 18.088.27Z"></path>
-                      </svg>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-white">Push to </span>
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 35 30"
-                        fill="currentColor"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="pl-1"
-                      >
-                        <path d="M18.088.27c9.1 0 15.215 10.518 15.977 21.937.02.313-.053.626-.212.896-3.14 5.35-10.061 6.527-15.737 6.558-5.487.1-10.7-2.188-14.412-6.301a1.566 1.566 0 0 1-.303-1.6 36.177 36.177 0 0 1 1.912-4.147c1.052-1.928 2.644-4.681 5.154-4.763 2.343 0 3.516 2.174 5.114 3.519 1.633-1.672 2.552-3.94 3.567-6.014a1.565 1.565 0 0 1 2.837 1.326c-.885 1.829-1.814 3.651-2.954 5.336-1.172 1.732-2.073 2.636-3.33 2.636-.746 0-1.385-.292-2.03-.801-1.103-.92-1.937-2.088-3.15-2.873-1.567.785-2.99 4.079-3.824 5.98 2.925 2.88 6.898 4.55 11.008 4.573 4.622-.028 10.286-.49 13.197-4.62-.575-7.111-4.013-18.377-12.814-18.51-7.097 0-11.754 5.047-14.775 13.644A1.565 1.565 0 1 1 .36 16.008C3.771 6.299 9.333.27 18.088.27Z"></path>
-                      </svg>
-                    </>
-                  )}
-                </button>
-              )}
             </>
           )}
         </div>
@@ -622,16 +652,14 @@ export const HeroMediaFindingCard: React.FC<FindingCardProps> = ({
                   {u.avatar_url ? (
                     <img
                       src={u.avatar_url}
-                      alt={u.first_name || ""}
+                      alt={u.full_name || ""}
                       className="w-full h-full rounded-full object-cover"
                     />
-                  ) : u.full_name ? (
-                    u.full_name.charAt(0).toUpperCase()
                   ) : (
-                    "U"
+                    u.full_name?.[0] || ""
                   )}
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-[10px] rounded opacity-0 group-hover/avatar:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
-                    {u.full_name || "Assigned User"}
+                    {u.full_name}
                   </div>
                 </div>
               ))}
@@ -681,15 +709,6 @@ export const HeroMediaFindingCard: React.FC<FindingCardProps> = ({
           </div>
         </div>
       )}
-
-      <BrowserOverlay
-        isOpen={isBrowserOpen}
-        onClose={() => setIsBrowserOpen(false)}
-        url={finding.pages?.url || ""}
-        onCapture={(img) => addImage(finding.id, img)}
-        galleryCount={galleryImages.length}
-        findingId={finding.id}
-      />
     </div>
   )
 }

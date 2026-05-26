@@ -87,7 +87,7 @@ export const AppLayout = () => {
                 `flex items-center space-x-3 px-4 py-3 rounded-md text-[11px] font-bold uppercase tracking-widest transition-all ${
                   isActive
                     ? "bg-slate-50 text-accent border border-slate-100 shadow-sm"
-                    : "text-slate-400 hover:bg-slate-50 hover:text-slate-900 border border-transparent"
+                    : "text-[#6b7280] hover:bg-slate-50 hover:text-slate-900 border border-transparent"
                 }`
               }
             >

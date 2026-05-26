@@ -269,12 +269,18 @@ export async function processCrawlPageJob(job: Job) {
       }
 
       if (enabledChecks.includes("hero_media")) {
-        checkPromises.push(
-          checkHeroMedia(page, screenshots).catch((e) => {
-            logger.error("Hero media check failed:", e)
-            return []
-          }),
-        )
+        const isHomepage =
+          pageUrl.replace(/\/$/, "").toLowerCase() ===
+          run.site_url.replace(/\/$/, "").toLowerCase()
+
+        if (isHomepage) {
+          checkPromises.push(
+            checkHeroMedia(page, screenshots).catch((e) => {
+              logger.error("Hero media check failed:", e)
+              return []
+            }),
+          )
+        }
       }
 
       if (enabledChecks.includes("visual_regression")) {
@@ -460,29 +466,39 @@ export async function processCrawlPageJob(job: Job) {
         )
       }
 
-      // Resolve only selected checks
-      const checkResults = await Promise.all(checkPromises)
-
-      const allFindings = [...checkResults.flat(), ...responsiveFindings].map(
-        (f) => ({
-          ...f,
-          page_id: pageId,
-          run_id: runId,
+      // Attach a .then to stream findings into DB the instant each individual check finishes
+      const streamingPromises = checkPromises.map((p) =>
+        p.then(async (results) => {
+          if (results && results.length > 0) {
+            const findingsToInsert = results.map((f) => ({
+              ...f,
+              page_id: pageId,
+              run_id: runId,
+            }))
+            const { error: insertError } = await supabase
+              .from("findings")
+              .insert(findingsToInsert)
+            if (insertError) {
+              logger.error(
+                { pageId, error: insertError.message },
+                "Failed to stream insert finding",
+              )
+            }
+          }
         }),
       )
 
-      if (allFindings.length > 0) {
-        logger.info({ pageId, count: allFindings.length }, "Inserting findings")
-        const { error: findingsError } = await supabase
-          .from("findings")
-          .insert(allFindings)
+      // Wait for all streamed checks to finish
+      await Promise.all(streamingPromises)
 
-        if (findingsError) {
-          logger.error(
-            { pageId, error: findingsError.message },
-            "Failed to insert findings",
-          )
-        }
+      // Insert responsive findings immediately since they resolve synchronously
+      if (responsiveFindings && responsiveFindings.length > 0) {
+        const responsiveToInsert = responsiveFindings.map((f) => ({
+          ...f,
+          page_id: pageId,
+          run_id: runId,
+        }))
+        await supabase.from("findings").insert(responsiveToInsert)
       }
 
       // Add AI Check jobs decoupled to perform asynchronously
@@ -528,51 +544,51 @@ export async function processCrawlPageJob(job: Job) {
 
     throw error
   } finally {
-    // Step 6: Increment run.pages_processed by 1
-    // This MUST run regardless of success/failure so the run doesn't get stuck
-    const { error: incrementError } = await supabase.rpc(
-      "increment_pages_processed",
-      {
-        run_id_param: runId,
-      },
+    // Step 6 & 7: Atomically increment pages_processed and check for run completion
+    const { data: isComplete, error: rpcError } = await supabase.rpc(
+      "increment_and_check_completion",
+      { run_id_param: runId },
     )
 
-    // Fallback if RPC doesn't exist yet
-    if (incrementError) {
+    if (rpcError) {
       logger.warn(
-        { runId, error: incrementError.message },
-        "RPC increment_pages_processed failed, trying manual update",
+        { runId, error: rpcError.message },
+        "RPC increment_and_check_completion failed, falling back",
       )
 
-      const { data: runData } = await supabase
+      // Fallback: use old increment RPC
+      await supabase.rpc("increment_pages_processed", { run_id_param: runId })
+
+      // Fallback: check completion separately
+      const { data: runCheck } = await supabase
         .from("qa_runs")
-        .select("pages_processed")
+        .select("pages_processed, pages_total, status")
         .eq("id", runId)
         .single()
-      if (runData) {
+
+      if (
+        runCheck &&
+        runCheck.status === "running" &&
+        runCheck.pages_total > 0 &&
+        runCheck.pages_processed >= runCheck.pages_total
+      ) {
         await supabase
           .from("qa_runs")
-          .update({ pages_processed: (runData.pages_processed || 0) + 1 })
+          .update({
+            status: "completed",
+            completed_at: new Date().toISOString(),
+          })
           .eq("id", runId)
+
+        logger.info({ runId }, "Run marked as completed (fallback)")
+
+        qaQueue
+          .add("generate_embeddings", { runId })
+          .catch((e) => logger.error("Failed to queue generate_embeddings:", e))
       }
-    }
-
-    // Step 7: Check for run completion
-    const { data: runCheck } = await supabase
-      .from("qa_runs")
-      .select("pages_processed, pages_total")
-      .eq("id", runId)
-      .single()
-
-    if (runCheck && runCheck.pages_processed >= runCheck.pages_total) {
-      await supabase
-        .from("qa_runs")
-        .update({ status: "completed", completed_at: new Date().toISOString() })
-        .eq("id", runId)
-
+    } else if (isComplete) {
       logger.info({ runId }, "Run marked as completed")
 
-      // Trigger embeddings generation
       qaQueue
         .add("generate_embeddings", { runId })
         .catch((e) => logger.error("Failed to queue generate_embeddings:", e))

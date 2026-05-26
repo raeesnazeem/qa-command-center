@@ -86,9 +86,9 @@ export const FindingSeverityEditor: React.FC<FindingSeverityEditorProps> = ({
         onChange={handleChange}
         disabled={updateFinding.isPending}
         title={currentSeverity}
-        className={`appearance-none rounded-lg border font-bold uppercase tracking-wider cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all ${
+        className={`appearance-none rounded-md border font-bold uppercase tracking-wider cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all ${
           symbolOnly
-            ? "w-8 h-8 flex items-center justify-center p-0 text-center text-[0px]"
+            ? "w-5 h-5 flex items-center justify-center p-0 text-center text-[0px]"
             : "pl-2 pr-6 py-0.5 text-[9px]"
         } ${currentOption?.color || ""}`}
       >

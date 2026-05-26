@@ -189,3 +189,6 @@ summary.md
 #other mds
 **/*.md.resolved
 **/*.md
+
+#backup files
+apps/web/src/components/FindingCardBackup.tsx
