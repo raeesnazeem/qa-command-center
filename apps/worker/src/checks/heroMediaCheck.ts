@@ -246,5 +246,35 @@ export async function checkHeroMedia(
     }
   }
 
+  // --- 4. SUCCESS / INFORMATIONAL FINDING IF NO ISSUES FOUND ---
+  if (findings.length === 0) {
+    const screenshotUrl =
+      pageRecord?.desktopUrl || pageRecord?.screenshot_url_desktop || null
+
+    if (isHeroVideo) {
+      findings.push({
+        check_factor: "hero_media",
+        severity: "low",
+        title: "Hero media loaded successfully",
+        description: `- <strong>Hero Video</strong>: Found (Loaded properly)\n- <strong>Fallback Image</strong>: Present (${fallbackImageLink})\n\nThe hero video was detected, loaded successfully within benchmark limits, and a fallback image is properly configured.`,
+        context_text: `Fallback Image URL: ${fallbackImageLink}\nMeasured Load Duration: Fast\nFallback Setup: Yes`,
+        screenshot_url: screenshotUrl,
+        status: "open",
+        ai_generated: false,
+      })
+    } else {
+      findings.push({
+        check_factor: "hero_media",
+        severity: "low",
+        title: "No hero video detected (Standard images loaded)",
+        description: `No background hero video was detected on this page. All standard hero section images loaded successfully without issues.`,
+        context_text: `Status: No Hero Video.\nFallback Setup: N/A`,
+        screenshot_url: screenshotUrl,
+        status: "open",
+        ai_generated: false,
+      })
+    }
+  }
+
   return findings
 }

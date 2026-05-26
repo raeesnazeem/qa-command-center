@@ -28,6 +28,9 @@ import { useParams, Link } from "react-router-dom"
 import { FindingSeverityEditor } from "./FindingSeverityEditor"
 import { SpellingFindingCard } from "./SpellingFindingCard"
 import { FindingCardWithScreenshot } from "./FindingCardWithScreenshot"
+import { PrivacyPolicyFindingCard } from "./PrivacyPolicyFindingCard"
+import { ProjectPlanFindingCard } from "./ProjectPlanFindingCard"
+import { HeroMediaFindingCard } from "./HeroMediaFindingCard"
 import { RebuttalVerdictCard } from "./RebuttalVerdictCard"
 import { QAFinding } from "../api/runs.api"
 import { BrowserOverlay } from "./BrowserOverlay"
@@ -186,6 +189,60 @@ export const FindingCard: React.FC<FindingCardProps> = ({
         onConfirm={onConfirm}
         onFalsePositive={onFalsePositive}
         onCreateTask={onCreateTask}
+        assignedTaskIds={assignedTaskIds}
+        assignedUsers={assignedUsers}
+        isAssigned={isAssigned}
+      />
+    )
+  }
+
+  if (finding.check_factor === "privacy_policy") {
+    return (
+      <PrivacyPolicyFindingCard
+        finding={finding}
+        pageScreenshots={pageScreenshots}
+        onConfirm={onConfirm}
+        onFalsePositive={onFalsePositive}
+        onCreateTask={onCreateTask}
+        onAssign={onAssign}
+        isSelected={isSelected}
+        onToggleSelect={onToggleSelect}
+        assignedTaskIds={assignedTaskIds}
+        assignedUsers={assignedUsers}
+        isAssigned={isAssigned}
+      />
+    )
+  }
+
+  if (finding.check_factor === "project_plan") {
+    return (
+      <ProjectPlanFindingCard
+        finding={finding}
+        pageScreenshots={pageScreenshots}
+        onConfirm={onConfirm}
+        onFalsePositive={onFalsePositive}
+        onCreateTask={onCreateTask}
+        onAssign={onAssign}
+        isSelected={isSelected}
+        onToggleSelect={onToggleSelect}
+        assignedTaskIds={assignedTaskIds}
+        assignedUsers={assignedUsers}
+        isAssigned={isAssigned}
+      />
+    )
+  }
+
+  if (finding.check_factor === "hero_media") {
+    return (
+      <HeroMediaFindingCard
+        finding={finding}
+        pageScreenshots={pageScreenshots}
+        onConfirm={onConfirm}
+        onFalsePositive={onFalsePositive}
+        onCreateTask={onCreateTask}
+        onAssign={onAssign}
+        isSelected={isSelected}
+        onToggleSelect={onToggleSelect}
         assignedTaskIds={assignedTaskIds}
         assignedUsers={assignedUsers}
         isAssigned={isAssigned}
