@@ -10,6 +10,8 @@ import {
   History,
   ChevronLeft,
   ChevronRight,
+  Sun,
+  Moon,
 } from "lucide-react"
 import { useRole } from "../hooks/useRole"
 import { useEffect, useState } from "react"
@@ -25,6 +27,26 @@ export const AppLayout = () => {
   const { role, profile, isLoading, isAdmin } = useRole()
   const navigate = useNavigate()
   const location = useLocation()
+
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return (
+      localStorage.getItem("theme") === "dark" ||
+      (!("theme" in localStorage) &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches)
+    )
+  })
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark")
+      localStorage.setItem("theme", "dark")
+    } else {
+      document.documentElement.classList.remove("dark")
+      localStorage.setItem("theme", "light")
+    }
+  }, [isDarkMode])
+
+  const toggleDarkMode = () => setIsDarkMode(!isDarkMode)
 
   // Initialize global real-time listeners
   useRealtimeTasks()
@@ -69,14 +91,14 @@ export const AppLayout = () => {
   ]
 
   return (
-    <div className="flex h-screen bg-bg-main font-sans">
+    <div className="flex h-screen bg-bg-main dark:bg-slate-950 font-sans">
       {/* Sidebar */}
       <aside
-        className={`${isCollapsed ? "w-20" : "w-64"} bg-transparent text-slate-900 flex flex-col border-r border-slate-200 transition-all duration-300 relative`}
+        className={`${isCollapsed ? "w-20" : "w-64"} bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col border-r border-slate-200 dark:border-slate-800 transition-all duration-300 relative`}
       >
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute -right-3 top-6 bg-white border border-slate-200 rounded-full p-1 z-20 hover:bg-slate-50 transition-colors shadow-sm"
+          className="absolute -right-3 top-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full p-1 z-20 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
         >
           {isCollapsed ? (
             <ChevronRight className="w-4 h-4 text-slate-500" />
@@ -85,13 +107,15 @@ export const AppLayout = () => {
           )}
         </button>
         <div
-          className={`p-6 text-xl font-bold border-b border-slate-100 tracking-tight flex items-center ${isCollapsed ? "justify-center space-x-0" : "space-x-2"}`}
+          className={`p-6 text-xl font-bold border-b border-slate-100 dark:border-slate-800 tracking-tight flex items-center ${isCollapsed ? "justify-center space-x-0" : "space-x-2"}`}
         >
           <img
             src={
               isCollapsed
                 ? "/images/qacc-mobile.png"
-                : "https://growth99.com/storage/2024/09/LOGO.svg"
+                : isDarkMode
+                  ? "https://aspire-cc.com/storage/2026/03/G99-Logo.svg"
+                  : "https://growth99.com/storage/2024/09/LOGO.svg"
             }
             style={{
               objectFit: "contain",
@@ -112,10 +136,10 @@ export const AppLayout = () => {
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `relative group border bg-white/20 border-transparent flex items-center ${isCollapsed ? "justify-center px-0 gap-0" : "gap-3 px-4"} py-2 rounded-md text-[13px] font-medium capitalize transition-all ${
+                `relative group border bg-white/20 dark:bg-transparent border-transparent flex items-center ${isCollapsed ? "justify-center px-0 gap-0" : "gap-3 px-4"} py-2 rounded-md text-[13px] font-medium capitalize transition-all ${
                   isActive
-                    ? "text-accent shadow-sm bg-white"
-                    : "text-[#6b7280] hover:bg-slate-50/50 hover:text-slate-900"
+                    ? "text-accent shadow-sm bg-white dark:bg-slate-800"
+                    : "text-[#6b7280] dark:text-slate-400 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
                 }`
               }
               title={isCollapsed ? item.label : undefined}
@@ -141,8 +165,9 @@ export const AppLayout = () => {
                   )}
 
                   <item.icon
-                    className={`relative z-10 w-4 h-4 transition-colors flex-shrink-0 ${isActive ? "text-accent" : "text-slate-400 group-hover:text-black"}`}
+                    className={`relative z-10 w-4 h-4 transition-colors flex-shrink-0 ${isActive ? "text-accent" : "text-slate-400 group-hover:text-black dark:group-hover:text-white"}`}
                   />
+
                   {!isCollapsed && (
                     <span className="relative z-10 whitespace-nowrap">
                       {item.label}
@@ -158,7 +183,7 @@ export const AppLayout = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
         {/* Topbar */}
-        <header className="h-16 bg-transparent border-b border-slate-200 flex items-center justify-between px-8 shadow-sm z-10">
+        <header className="h-16 bg-white dark:bg-transparent border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 shadow-sm z-10">
           <div className="flex items-center space-x-2">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2.5 py-1 rounded-md">
               {role?.replace("_", " ")}
@@ -166,6 +191,17 @@ export const AppLayout = () => {
           </div>
 
           <div className="flex items-center space-x-6">
+            <button
+              onClick={toggleDarkMode}
+              className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              aria-label="Toggle dark mode"
+            >
+              {isDarkMode ? (
+                <Sun className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+              ) : (
+                <Moon className="w-5 h-5 text-slate-600" />
+              )}
+            </button>
             <NotificationBell />
             <div className="flex items-center space-x-4">
               {user?.firstName && (
@@ -186,7 +222,7 @@ export const AppLayout = () => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-8 bg-slate-50/30">
+        <main className="flex-1 overflow-auto p-8 bg-bg-main dark:bg-slate-900">
           <Outlet />
         </main>
         {isAdmin && <ChatSidebar />}

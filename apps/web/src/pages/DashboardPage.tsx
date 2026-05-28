@@ -71,7 +71,7 @@ export const DashboardPage = () => {
 
         <section className="space-y-6">
           <Skeleton className="h-4 w-32" />
-          <div className="bg-white border border-slate-100 rounded-lg h-64 overflow-hidden relative">
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg h-64 overflow-hidden relative">
             <Skeleton className="absolute inset-0" />
           </div>
         </section>
@@ -94,12 +94,12 @@ export const DashboardPage = () => {
       <div className="max-w-7xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 px-4">
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-slate-900 tracking-tight">
+            <h1 className="text-4xl font-bold text-slate-900 dark:text-white tracking-tight">
               {getTimeGreeting()}, {user?.firstName || "Developer"}
             </h1>
-            <p className="text-slate-500 mt-2 font-medium">
+            <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
               You have{" "}
-              <span className="text-indigo-600 font-bold">
+              <span className="text-indigo-600 dark:text-indigo-400 font-bold">
                 {data?.my_open_tasks ?? 0}
               </span>{" "}
               tasks assigned to you across projects.
@@ -122,14 +122,14 @@ export const DashboardPage = () => {
             {/* 1. Pre-release Projects */}
             <section className="space-y-6">
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-slate-900 flex items-center gap-2 uppercase tracking-widest text-xs">
+                <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 uppercase tracking-widest text-xs">
                   <Zap className="w-4 h-4 text-slate-500" />
                   Pre-release Audits
                 </h3>
               </div>
 
               {data?.pre_release_projects?.length === 0 ? (
-                <div className="bg-slate-50 border border-slate-100 rounded-lg p-8 text-center text-slate-500 text-sm">
+                <div className="bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg p-8 text-center text-slate-500 dark:text-slate-400 text-sm">
                   No pending pre-release projects.
                 </div>
               ) : (
@@ -138,25 +138,37 @@ export const DashboardPage = () => {
                     <Link
                       key={project.id}
                       to={`/projects/${project.id}`}
-                      className="bg-white border-2 rounded-lg p-4 shadow-sm hover:shadow-lg hover:border-accent transition-all group relative overflow-hidden min-w-[240px] flex-shrink-0 flex flex-col"
+                      className="bg-white dark:bg-slate-900 border-2 dark:border-slate-800 rounded-lg p-4 shadow-sm hover:shadow-lg hover:border-accent dark:hover:border-accent transition-all group relative overflow-hidden min-w-[240px] flex-shrink-0 flex flex-col"
                     >
+                      <div
+                        className="hidden dark:block absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
+                        style={{
+                          WebkitMask:
+                            "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                          WebkitMaskComposite: "xor",
+                          maskComposite: "exclude",
+                        }}
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-br from-white via-accent/30 to-white/30 group-hover:opacity-50 transition-opacity duration-700" />
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300%] aspect-square bg-[conic-gradient(from_0deg,transparent_0_45deg,theme(colors.accent)_135deg,transparent_180deg_225deg,#a3d4c7_315deg,transparent_360deg)] opacity-0 group-hover:opacity-100 group-hover:animate-[spin_4s_linear_infinite]" />
+                      </div>
                       <h4 className="font-bold text-slate-900 text-base mb-0.5 group-hover:text-accent transition-colors leading-tight truncate">
                         {project.name}
                       </h4>
-                      <p className="text-[10px] text-slate-400 font-medium mb-4 uppercase tracking-wider">
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mb-4 uppercase tracking-wider">
                         {project.client_name || "Internal"}
                       </p>
 
-                      <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-50">
+                      <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-50 dark:border-slate-800">
                         <div className="flex flex-col">
-                          <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                          <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                             Open Issues
                           </span>
-                          <span className="text-xs font-bold text-slate-900">
+                          <span className="text-xs font-bold text-slate-900 dark:text-white">
                             {project.open_issues_count || 0}
                           </span>
                         </div>
-                        <div className="bg-[#fff] text-[#000] p-1.5 rounded-lg group-hover:bg-[#fff] group-hover:text-[#933] transition-colors">
+                        <div className="bg-[#fff] dark:bg-slate-800 text-[#000] dark:text-white p-1.5 rounded-lg group-hover:bg-[#fff] group-hover:text-[#933] dark:group-hover:text-red-400 transition-colors">
                           <ArrowUpRight size={14} />
                         </div>
                       </div>
@@ -169,14 +181,14 @@ export const DashboardPage = () => {
             {/* 2. Post-release Projects */}
             <section className="space-y-6">
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-slate-900 flex items-center gap-2 uppercase tracking-widest text-xs">
+                <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 uppercase tracking-widest text-xs">
                   <Layers className="w-4 h-4 text-slate-400" />
                   Post-release Projects
                 </h3>
               </div>
 
               {data?.post_release_projects?.length === 0 ? (
-                <div className="bg-slate-50 border border-slate-100 rounded-lg p-8 text-center text-slate-500 text-sm">
+                <div className="bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg p-8 text-center text-slate-500 dark:text-slate-400 text-sm">
                   No post-release projects found.
                 </div>
               ) : (
@@ -185,25 +197,37 @@ export const DashboardPage = () => {
                     <Link
                       key={project.id}
                       to={`/projects/${project.id}`}
-                      className="bg-white border border-slate-100 rounded-lg p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group relative overflow-hidden"
+                      className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group relative overflow-hidden"
                     >
-                      <h4 className="font-bold text-slate-900 text-xl mb-1 group-hover:text-accent transition-colors leading-tight">
+                      <div
+                        className="hidden dark:block absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
+                        style={{
+                          WebkitMask:
+                            "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                          WebkitMaskComposite: "xor",
+                          maskComposite: "exclude",
+                        }}
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-br from-white via-accent/30 to-white/30 group-hover:opacity-50 transition-opacity duration-700" />
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300%] aspect-square bg-[conic-gradient(from_0deg,transparent_0_45deg,theme(colors.accent)_135deg,transparent_180deg_225deg,#a3d4c7_315deg,transparent_360deg)] opacity-0 group-hover:opacity-100 group-hover:animate-[spin_4s_linear_infinite]" />
+                      </div>
+                      <h4 className="font-bold text-slate-900 dark:text-white text-xl mb-1 group-hover:text-accent transition-colors leading-tight">
                         {project.name}
                       </h4>
-                      <p className="text-xs text-slate-400 font-medium mb-6 uppercase tracking-wider">
+                      <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mb-6 uppercase tracking-wider">
                         {project.client_name || "Internal"}
                       </p>
 
-                      <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50">
+                      <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50 dark:border-slate-800">
                         <div className="flex flex-col">
-                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                          <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                             Open Issues
                           </span>
-                          <span className="text-sm font-bold text-slate-900">
+                          <span className="text-sm font-bold text-slate-900 dark:text-white">
                             {project.open_issues_count || 0}
                           </span>
                         </div>
-                        <div className="bg-[#fff] text-[#000] p-1.5 rounded-lg group-hover:bg-[#fff] group-hover:text-[#933] transition-colors">
+                        <div className="bg-[#fff] dark:bg-slate-800 text-[#000] dark:text-white p-1.5 rounded-lg group-hover:bg-[#fff] group-hover:text-[#933] dark:group-hover:text-red-400 transition-colors">
                           <ArrowUpRight size={18} />
                         </div>
                       </div>
@@ -216,7 +240,7 @@ export const DashboardPage = () => {
             {/* 3. Your Active Tasks */}
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-slate-900 flex items-center gap-2 uppercase tracking-widest text-xs">
+                <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 uppercase tracking-widest text-xs">
                   <Zap className="w-4 h-4 text-slate-500" />
                   Your Active Tasks
                 </h3>
@@ -224,11 +248,13 @@ export const DashboardPage = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {data?.my_tasks.length === 0 ? (
-                  <div className="md:col-span-2 bg-white border-2 border-dashed border-slate-200 rounded-lg p-12 text-center">
-                    <div className="bg-slate-50 w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <div className="md:col-span-2 bg-white dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-lg p-12 text-center">
+                    <div className="bg-slate-50 dark:bg-slate-800 w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-4">
                       <CheckCircle2 className="w-8 h-8 text-slate-300" />
                     </div>
-                    <h4 className="font-bold text-slate-900">All caught up!</h4>
+                    <h4 className="font-bold text-slate-900 dark:text-white">
+                      All caught up!
+                    </h4>
                     <p className="text-slate-500 text-sm mt-1">
                       No open tasks currently assigned to you.
                     </p>
@@ -238,16 +264,28 @@ export const DashboardPage = () => {
                     <Link
                       key={task.id}
                       to={`/tasks?taskId=${task.id}`}
-                      className="bg-white border border-slate-100 rounded-lg p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group flex flex-col h-full"
+                      className="bg-white border border-slate-100 rounded-lg p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group flex flex-col h-full relative overflow-hidden"
                     >
-                      <div className="flex justify-between items-start mb-4">
+                      <div
+                        className="hidden dark:block absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
+                        style={{
+                          WebkitMask:
+                            "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                          WebkitMaskComposite: "xor",
+                          maskComposite: "exclude",
+                        }}
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-br from-white via-accent/30 to-white/30 group-hover:opacity-50 transition-opacity duration-700" />
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300%] aspect-square bg-[conic-gradient(from_0deg,transparent_0_45deg,theme(colors.accent)_135deg,transparent_180deg_225deg,#a3d4c7_315deg,transparent_360deg)] opacity-0 group-hover:opacity-100 group-hover:animate-[spin_4s_linear_infinite]" />
+                      </div>
+                      <div className="flex justify-between items-start mb-4 relative z-10">
                         <span
                           className={`text-[9px] font-bold uppercase tracking-[0.2em] px-2.5 py-1 rounded-full border ${
                             task.severity === "critical"
                               ? "bg-red-50 text-red-600 border-red-100"
                               : task.severity === "high"
                                 ? "bg-orange-50 text-orange-600 border-orange-100"
-                                : "bg-slate-50 text-slate-600 border-slate-100"
+                                : "bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-100 dark:border-slate-700"
                           }`}
                         >
                           {task.severity}
@@ -257,13 +295,13 @@ export const DashboardPage = () => {
                           {format(new Date(task.created_at), "MMM d")}
                         </span>
                       </div>
-                      <h4 className="font-bold text-slate-900 text-lg mb-2 group-hover:text-accent transition-colors line-clamp-2 leading-tight">
+                      <h4 className="font-bold text-slate-900 dark:text-white text-lg mb-2 group-hover:text-accent transition-colors line-clamp-2 leading-tight">
                         {task.title}
                       </h4>
-                      <p className="text-xs text-slate-500 font-medium mb-6 line-clamp-2">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-6 line-clamp-2">
                         {(task as any).projects?.name}
                       </p>
-                      <div className="mt-auto pt-4 border-t border-slate-50 flex items-center justify-between text-accent font-bold text-[10px] uppercase tracking-widest">
+                      <div className="mt-auto pt-4 border-t border-slate-50 dark:border-slate-800 flex items-center justify-between text-accent font-bold text-[10px] uppercase tracking-widest">
                         <span>View Details</span>
                         <ChevronRight
                           size={14}
@@ -278,11 +316,11 @@ export const DashboardPage = () => {
           </div>
 
           <div className="space-y-6">
-            <h3 className="font-bold text-slate-900 flex items-center gap-2 uppercase tracking-widest text-xs">
+            <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 uppercase tracking-widest text-xs">
               <Clock className="w-4 h-4 text-slate-400" />
               Quick Stats
             </h3>
-            <div className="bg-white rounded-lg p-6 text-slate-900 space-y-6 shadow-xl">
+            <div className="bg-white dark:bg-slate-900 rounded-lg p-6 text-slate-900 dark:text-white space-y-6 shadow-xl">
               <div>
                 <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">
                   Total Assigned
@@ -313,10 +351,10 @@ export const DashboardPage = () => {
     return (
       <div className="max-w-7xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 px-4">
         <header>
-          <h1 className="text-4xl font-bold text-slate-900 tracking-tight">
+          <h1 className="text-4xl font-bold text-slate-900 dark:text-white tracking-tight">
             QA Command Center
           </h1>
-          <p className="text-slate-500 mt-2 font-medium italic">
+          <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium italic">
             Welcome back. Prioritize pre-release audits or search for specific
             projects.
           </p>
@@ -325,14 +363,14 @@ export const DashboardPage = () => {
         {/* 1. Pre-release Projects */}
         <section className="space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="font-bold text-slate-900 flex items-center gap-2 uppercase tracking-widest text-xs">
+            <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 uppercase tracking-widest text-xs">
               <Zap className="w-4 h-4 text-slate-500" />
               Pre-release Audits
             </h3>
           </div>
 
           {data?.pre_release_projects?.length === 0 ? (
-            <div className="bg-slate-50 border border-slate-100 rounded-lg p-8 text-center text-slate-500 text-sm">
+            <div className="bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg p-8 text-center text-slate-500 dark:text-slate-400 text-sm">
               No pending pre-release projects.
             </div>
           ) : (
@@ -341,27 +379,39 @@ export const DashboardPage = () => {
                 <Link
                   key={project.id}
                   to={`/projects/${project.id}`}
-                  className="bg-white border-2 border-slate-100 rounded-lg p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group relative overflow-hidden min-w-[300px] flex-shrink-0"
+                  className="bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-lg p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group relative overflow-hidden min-w-[300px] flex-shrink-0"
                 >
-                  <h4 className="text-xl font-bold text-slate-900 group-hover:text-accent transition-colors truncate pr-2">
+                  <div
+                    className="hidden dark:block absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
+                    style={{
+                      WebkitMask:
+                        "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                      WebkitMaskComposite: "xor",
+                      maskComposite: "exclude",
+                    }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-white via-accent/30 to-white/30 group-hover:opacity-50 transition-opacity duration-700" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300%] aspect-square bg-[conic-gradient(from_0deg,transparent_0_45deg,theme(colors.accent)_135deg,transparent_180deg_225deg,#a3d4c7_315deg,transparent_360deg)] opacity-0 group-hover:opacity-100 group-hover:animate-[spin_4s_linear_infinite]" />
+                  </div>
+                  <h4 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-accent transition-colors truncate pr-2">
                     {project.name}
                   </h4>
-                  <p className="text-xs text-slate-400 font-medium mb-6 uppercase tracking-wider">
+                  <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mb-6 uppercase tracking-wider">
                     {project.client_name || "Internal"}
                   </p>
 
-                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50">
+                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50 dark:border-slate-800">
                     <div className="flex flex-col">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                      <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                         Active Runs
                       </span>
-                      <span className="text-sm font-bold text-slate-900">
+                      <span className="text-sm font-bold text-slate-900 dark:text-white">
                         {project.qa_runs?.filter(
                           (r: any) => r.status === "running",
                         ).length || 0}
                       </span>
                     </div>
-                    <div className="bg-[#fff] text-accent p-1.5 rounded-lg group-hover:bg-[#fff] group-hover:text-black transition-colors">
+                    <div className="bg-[#fff] dark:bg-slate-800 text-accent p-1.5 rounded-lg group-hover:bg-[#fff] dark:group-hover:bg-slate-700 group-hover:text-black dark:group-hover:text-white transition-colors">
                       <ArrowUpRight size={18} />
                     </div>
                   </div>
@@ -374,14 +424,14 @@ export const DashboardPage = () => {
         {/* 2. Post-release Projects */}
         <section className="space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="font-bold text-slate-900 flex items-center gap-2 uppercase tracking-widest text-xs">
+            <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 uppercase tracking-widest text-xs">
               <Layers className="w-4 h-4 text-slate-500" />
               Post-release Projects
             </h3>
           </div>
 
           {data?.post_release_projects?.length === 0 ? (
-            <div className="bg-slate-50 border border-slate-100 rounded-lg p-8 text-center text-slate-500 text-sm">
+            <div className="bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg p-8 text-center text-slate-500 dark:text-slate-400 text-sm">
               No post-release projects found.
             </div>
           ) : (
@@ -390,25 +440,37 @@ export const DashboardPage = () => {
                 <Link
                   key={project.id}
                   to={`/projects/${project.id}`}
-                  className="bg-white border border-slate-100 rounded-lg p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group relative overflow-hidden min-w-[300px] flex-shrink-0"
+                  className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group relative overflow-hidden min-w-[300px] flex-shrink-0"
                 >
-                  <h4 className="text-xl font-bold text-slate-900 group-hover:text-accent transition-colors truncate pr-2">
+                  <div
+                    className="hidden dark:block absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
+                    style={{
+                      WebkitMask:
+                        "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                      WebkitMaskComposite: "xor",
+                      maskComposite: "exclude",
+                    }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-white via-accent/30 to-white/30 group-hover:opacity-50 transition-opacity duration-700" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300%] aspect-square bg-[conic-gradient(from_0deg,transparent_0_45deg,theme(colors.accent)_135deg,transparent_180deg_225deg,#a3d4c7_315deg,transparent_360deg)] opacity-0 group-hover:opacity-100 group-hover:animate-[spin_4s_linear_infinite]" />
+                  </div>
+                  <h4 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-accent transition-colors truncate pr-2">
                     {project.name}
                   </h4>
-                  <p className="text-xs text-slate-400 font-medium mb-6 uppercase tracking-wider">
+                  <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mb-6 uppercase tracking-wider">
                     {project.client_name || "Internal"}
                   </p>
 
-                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50">
+                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50 dark:border-slate-800">
                     <div className="flex flex-col">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                      <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                         Open Issues
                       </span>
-                      <span className="text-sm font-bold text-slate-900">
+                      <span className="text-sm font-bold text-slate-900 dark:text-white">
                         {project.open_issues_count || 0}
                       </span>
                     </div>
-                    <div className="bg-[#fff] text-accent p-1.5 rounded-lg group-hover:bg-[#fff] group-hover:text-black transition-colors">
+                    <div className="bg-[#fff] dark:bg-slate-800 text-accent p-1.5 rounded-lg group-hover:bg-[#fff] dark:group-hover:bg-slate-700 group-hover:text-black dark:group-hover:text-white transition-colors">
                       <ArrowUpRight size={18} />
                     </div>
                   </div>
@@ -421,7 +483,7 @@ export const DashboardPage = () => {
         {/* 3. Project Explorer */}
         <section className="space-y-6 pt-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <h3 className="font-bold text-slate-900 flex items-center gap-2 uppercase tracking-widest text-xs">
+            <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 uppercase tracking-widest text-xs">
               <Search className="w-4 h-4 text-slate-400" />
               Project Explorer
             </h3>
@@ -432,16 +494,16 @@ export const DashboardPage = () => {
                 value={projectSearch}
                 onChange={(e) => setProjectSearch(e.target.value)}
                 placeholder="Search database..."
-                className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-accent focus:ring-4 focus:ring-accent/5 transition-all shadow-sm"
+                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 dark:text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-accent focus:ring-4 focus:ring-accent/5 transition-all shadow-sm"
               />
             </div>
           </div>
 
-          <div className="bg-white border border-slate-100 rounded-lg overflow-hidden shadow-sm overflow-x-auto">
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg overflow-hidden shadow-sm overflow-x-auto">
             <div className="min-w-[800px]">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-slate-50/50 border-b border-slate-100">
+                  <tr className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
                     <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                       Project Database
                     </th>
@@ -456,7 +518,7 @@ export const DashboardPage = () => {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
+                <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
                   {filteredProjects.length === 0 ? (
                     <tr>
                       <td
@@ -470,7 +532,7 @@ export const DashboardPage = () => {
                     filteredProjects.map((project) => (
                       <tr
                         key={project.id}
-                        className="hover:bg-slate-50 transition-colors group"
+                        className="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group"
                       >
                         <td className="px-8 py-5">
                           <div className="flex items-center gap-3">
@@ -479,14 +541,14 @@ export const DashboardPage = () => {
                             />
                             <Link
                               to={`/projects/${project.id}`}
-                              className="text-sm font-bold text-slate-900 group-hover:text-accent transition-colors truncate pr-2 group-hover:text-accent transition-colors"
+                              className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-accent transition-colors truncate pr-2 group-hover:text-accent transition-colors"
                             >
                               {project.name}
                             </Link>
                           </div>
                         </td>
                         <td className="px-8 py-5">
-                          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-100 px-2 py-1 rounded-lg">
+                          <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">
                             {project.client_name || "Internal"}
                           </span>
                         </td>
@@ -501,7 +563,7 @@ export const DashboardPage = () => {
                         <td className="px-8 py-5">
                           <Link
                             to={`/projects/${project.id}`}
-                            className="text-accent hover:text-black transition-colors"
+                            className="text-accent hover:text-black dark:hover:text-white transition-colors"
                           >
                             <ExternalLink size={18} />
                           </Link>
@@ -553,13 +615,13 @@ export const DashboardPage = () => {
   ]
 
   return (
-    <div className="min-h-screen bg-bg-main p-6 lg:p-10 space-y-10">
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-slate-100 pb-8">
+    <div className="min-h-screen bg-bg-main dark:bg-slate-900 p-6 lg:p-10 space-y-10">
+      <header className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-6 border-slate-100 pb-8">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
             Global Overview
           </h1>
-          <p className="text-slate-500 text-sm">
+          <p className="text-slate-500 dark:text-slate-400 text-sm">
             Monitoring across all projects.
           </p>
         </div>
@@ -575,15 +637,27 @@ export const DashboardPage = () => {
       </header>
 
       {/* 1. Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="bg-white border border-slate-100 rounded-lg p-6 shadow-sm hover:shadow-xl transition-all group"
+            className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg p-6 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden"
           >
-            <div className="flex items-center justify-between mb-4"></div>
             <div
-              className={`text-4xl font-bold ${stat.label === "Open Issues" && (data?.open_issues ?? 0) > 0 ? "text-red-600" : "text-slate-900"}`}
+              className="hidden dark:block absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
+              style={{
+                WebkitMask:
+                  "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                WebkitMaskComposite: "xor",
+                maskComposite: "exclude",
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-white via-accent/30 to-white/30 group-hover:opacity-50 transition-opacity duration-700" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300%] aspect-square bg-[conic-gradient(from_0deg,transparent_0_45deg,theme(colors.accent)_135deg,transparent_180deg_225deg,#a3d4c7_315deg,transparent_360deg)] opacity-0 group-hover:opacity-100 group-hover:animate-[spin_4s_linear_infinite]" />
+            </div>
+            <div className="flex items-center justify-between mb-4 relative z-10"></div>
+            <div
+              className={`text-4xl font-bold ${stat.label === "Open Issues" && (data?.open_issues ?? 0) > 0 ? "text-red-600" : "text-slate-900 dark:text-white"}`}
             >
               {stat.value}
             </div>
@@ -595,32 +669,44 @@ export const DashboardPage = () => {
       </div>
 
       {/* 2. Pre-release Projects (Admin) */}
-      <section className="space-y-6">
-        <h3 className="font-bold text-slate-900 flex items-center gap-2 uppercase tracking-widest text-xs">
+      <section className="max-w-7xl mx-auto space-y-6">
+        <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 uppercase tracking-widest text-xs">
           Pre-release Projects
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {data?.pre_release_projects?.map((project) => (
             <div
               key={project.id}
-              className="bg-white border border-slate-100 rounded-lg p-6 shadow-sm hover:shadow-xl transition-all group relative flex flex-col"
+              className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg p-6 shadow-sm hover:shadow-xl transition-all group relative flex flex-col overflow-hidden"
             >
-              <div className="absolute top-4 right-4 flex gap-2">
+              <div
+                className="hidden dark:block absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
+                style={{
+                  WebkitMask:
+                    "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                  WebkitMaskComposite: "xor",
+                  maskComposite: "exclude",
+                }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-white via-accent/30 to-white/30 group-hover:opacity-50 transition-opacity duration-700" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300%] aspect-square bg-[conic-gradient(from_0deg,transparent_0_45deg,theme(colors.accent)_135deg,transparent_180deg_225deg,#a3d4c7_315deg,transparent_360deg)] opacity-0 group-hover:opacity-100 group-hover:animate-[spin_4s_linear_infinite]" />
+              </div>
+              <div className="absolute top-4 right-4 flex gap-2 z-10">
                 <button
                   onClick={() => setEditingProject(project)}
-                  className="p-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-accent transition-all"
+                  className="p-1.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-accent transition-all"
                 >
                   <Edit size={18} />
                 </button>
               </div>
               <Link to={`/projects/${project.id}`} className="flex-1">
-                <h4 className="font-bold text-slate-900 text-lg mb-1 group-hover:text-accent transition-colors">
+                <h4 className="font-bold text-slate-900 dark:text-white text-lg mb-1 group-hover:text-accent transition-colors">
                   {project.name}
                 </h4>
-                <p className="text-xs text-slate-400 font-medium mb-6">
+                <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mb-6">
                   {project.client_name || "Internal"}
                 </p>
-                <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50">
+                <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50 dark:border-slate-800">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                     Active Runs:{" "}
                     {project.qa_runs?.filter((r: any) => r.status === "running")
@@ -635,8 +721,8 @@ export const DashboardPage = () => {
       </section>
 
       {/* 3. Post-release Projects (Admin) */}
-      <section className="space-y-6">
-        <h3 className="font-bold text-slate-900 flex items-center gap-2 uppercase tracking-widest text-xs">
+      <section className="max-w-7xl mx-auto space-y-6">
+        <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 uppercase tracking-widest text-xs">
           <Layers className="w-4 h-4 text-slate-400" />
           Post-release Projects
         </h3>
@@ -644,24 +730,36 @@ export const DashboardPage = () => {
           {data?.post_release_projects?.map((project) => (
             <div
               key={project.id}
-              className="bg-white border border-slate-100 rounded-lg p-6 shadow-sm hover:shadow-xl transition-all group relative flex flex-col"
+              className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg p-6 shadow-sm hover:shadow-xl transition-all group relative flex flex-col overflow-hidden"
             >
-              <div className="absolute top-4 right-4">
+              <div
+                className="hidden dark:block absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
+                style={{
+                  WebkitMask:
+                    "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                  WebkitMaskComposite: "xor",
+                  maskComposite: "exclude",
+                }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-white via-accent/30 to-white/30 group-hover:opacity-50 transition-opacity duration-700" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300%] aspect-square bg-[conic-gradient(from_0deg,transparent_0_45deg,theme(colors.accent)_135deg,transparent_180deg_225deg,#a3d4c7_315deg,transparent_360deg)] opacity-0 group-hover:opacity-100 group-hover:animate-[spin_4s_linear_infinite]" />
+              </div>
+              <div className="absolute top-4 right-4 z-10">
                 <button
                   onClick={() => setEditingProject(project)}
-                  className="p-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-accent transition-all"
+                  className="p-1.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-accent transition-all"
                 >
                   <Edit size={16} />
                 </button>
               </div>
               <Link to={`/projects/${project.id}`} className="flex-1">
-                <h4 className="font-bold text-slate-900 text-lg mb-1 group-hover:text-accent transition-colors">
+                <h4 className="font-bold text-slate-900 dark:text-white text-lg mb-1 group-hover:text-accent transition-colors">
                   {project.name}
                 </h4>
-                <p className="text-xs text-slate-400 font-medium mb-6">
+                <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mb-6">
                   {project.client_name || "Internal"}
                 </p>
-                <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50">
+                <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50 dark:border-slate-800">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                     Open Issues: {project.open_issues_count || 0}
                   </span>
@@ -673,17 +771,17 @@ export const DashboardPage = () => {
         </div>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-10">
         {/* Real-time QA Activity */}
         <div className="lg:col-span-2 space-y-6">
-          <h3 className="font-bold text-slate-900 flex items-center gap-2 uppercase tracking-widest text-xs">
+          <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 uppercase tracking-widest text-xs">
             <PlayCircle className="w-4 h-4 text-slate-400" />
             Real-time QA Activity
           </h3>
-          <div className="bg-white border border-slate-100 rounded-lg overflow-hidden shadow-sm">
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg overflow-hidden shadow-sm">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-100">
+                <tr className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
                   <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                     Project
                   </th>
@@ -695,7 +793,7 @@ export const DashboardPage = () => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
+              <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
                 {data?.recent_runs.length === 0 ? (
                   <tr>
                     <td
@@ -717,7 +815,7 @@ export const DashboardPage = () => {
                       return (
                         <tr
                           key={run.id}
-                          className="hover:bg-slate-50 transition-colors group"
+                          className="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group"
                         >
                           <td
                             className={`px-8 ${isDuplicate ? "py-1" : "py-5"}`}
@@ -726,7 +824,7 @@ export const DashboardPage = () => {
                               {!isDuplicate ? (
                                 <Link
                                   to={`/projects/${run.project_id}/runs/${run.id}`}
-                                  className="text-sm font-bold text-slate-900 group-hover:text-accent transition-colors leading-tight"
+                                  className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-accent transition-colors leading-tight"
                                 >
                                   {projectName}
                                 </Link>
@@ -780,11 +878,11 @@ export const DashboardPage = () => {
         {/* Management Side Column */}
         <div className="space-y-10">
           <div className="space-y-6">
-            <h3 className="font-bold text-slate-900 flex items-center gap-2 uppercase tracking-widest text-xs">
+            <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 uppercase tracking-widest text-xs">
               <CheckSquare className="w-4 h-4 text-slate-400" />
               Critical Assignments
             </h3>
-            <div className="bg-white border border-slate-100 rounded-lg shadow-sm divide-y divide-slate-50 overflow-hidden">
+            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-lg shadow-sm divide-y divide-slate-50 dark:divide-slate-800 overflow-hidden">
               {data?.my_tasks.length === 0 ? (
                 <div className="p-12 text-center">
                   <p className="text-xs text-slate-400 font-medium italic">
@@ -796,11 +894,11 @@ export const DashboardPage = () => {
                   <Link
                     key={task.id}
                     to={`/tasks?taskId=${task.id}`}
-                    className="p-6 hover:bg-slate-50 transition-colors block group"
+                    className="p-6 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors block group"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="space-y-1">
-                        <p className="text-sm font-bold text-slate-900 group-hover:text-accent transition-colors leading-tight line-clamp-2">
+                        <p className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-accent transition-colors leading-tight line-clamp-2">
                           {task.title}
                         </p>
                         <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
@@ -817,11 +915,11 @@ export const DashboardPage = () => {
 
           {/* Pending Sign-offs */}
           <div className="space-y-6">
-            <h3 className="font-bold text-slate-900 flex items-center gap-2 uppercase tracking-widest text-xs">
+            <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 uppercase tracking-widest text-xs">
               <CheckCircle2 className="w-4 h-4 text-slate-400" />
               Pending Global Sign-offs
             </h3>
-            <div className="bg-amber-50/50 border border-amber-100 rounded-lg p-6 space-y-4">
+            <div className="bg-amber-50/50 dark:bg-yellow-900/60 border border-amber-100 dark:border-amber-900/30 rounded-lg p-6 space-y-4">
               {data?.pending_signoffs.length === 0 ? (
                 <div className="text-center py-4">
                   <p className="text-xs text-emerald-600 font-bold uppercase tracking-widest">
@@ -836,10 +934,10 @@ export const DashboardPage = () => {
                 ).map((run) => (
                   <div
                     key={run.id}
-                    className="flex items-center justify-between bg-white p-4 rounded-lg border border-amber-100 shadow-sm hover:shadow-md transition-all group"
+                    className="flex items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-lg border border-amber-100 dark:border-amber-900/30 shadow-sm hover:shadow-md transition-all group"
                   >
                     <div className="flex-1 min-w-0 mr-4">
-                      <p className="text-xs font-bold text-slate-900 truncate uppercase tracking-tight">
+                      <p className="text-xs font-bold text-slate-900 dark:text-white truncate uppercase tracking-tight">
                         {(run as any).projects?.name}
                       </p>
                       <p className="text-[9px] text-slate-400 font-bold mt-1">
@@ -849,7 +947,7 @@ export const DashboardPage = () => {
                     </div>
                     <Link
                       to={`/projects/${run.project_id}/runs/${run.id}`}
-                      className="w-8 h-8 flex items-center justify-center bg-amber-50 text-amber-600 rounded-xl hover:bg-amber-600 hover:text-white transition-all"
+                      className="w-8 h-8 flex items-center justify-center bg-amber-50 dark:bg-amber-900/30 text-amber-600 rounded-xl hover:bg-amber-600 hover:text-white transition-all"
                     >
                       <ChevronRight size={16} />
                     </Link>

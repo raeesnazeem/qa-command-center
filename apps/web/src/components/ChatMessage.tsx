@@ -34,7 +34,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
             ${
               isUser
                 ? "bg-[#76a394] text-white rounded-br-none"
-                : "bg-white border border-slate-100 text-slate-600 rounded-bl-none"
+                : "bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-bl-none"
             }`}
         >
           <div className="whitespace-pre-wrap break-words">
@@ -46,7 +46,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
 
           {/* Timestamp on hover */}
           <div
-            className={`absolute bottom-full mb-1 text-[10px] font-medium text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap
+            className={`absolute bottom-full mb-1 text-[10px] font-medium text-slate-400 dark:text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap
               ${isUser ? "right-0" : "left-0"}`}
           >
             {timestamp.toLocaleTimeString([], {
@@ -63,7 +63,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
           {citations.map((citation, idx) => (
             <div
               key={idx}
-              className="flex items-center space-x-1 px-2 py-0.5 bg-slate-100 border border-slate-200 rounded-full text-[10px] text-slate-500 font-bold uppercase tracking-tighter"
+              className="flex items-center space-x-1 px-2 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-tighter"
             >
               <FileText className="w-3 h-3 text-slate-400" />
               <span>
