@@ -14,6 +14,8 @@ import {
   Zap,
   Settings2,
   Edit,
+  Eye,
+  FolderOpen,
 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { useDashboardStats } from "../hooks/useDashboard"
@@ -551,18 +553,22 @@ export const DashboardPage = () => {
   ]
 
   return (
-    <div className="max-w-7xl mx-auto space-y-10 animate-in fade-in duration-700 pb-12 px-4">
+    <div className="min-h-screen bg-bg-main p-6 lg:p-10 space-y-10">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-slate-100 pb-8">
         <div>
-          <h1 className="text-4xl font-bold text-slate-900 tracking-tight">
-            Executive Overview
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+            Global Overview
           </h1>
-          <p className="text-slate-500 mt-2 font-medium">
-            Global monitoring across all projects.
+          <p className="text-slate-500 text-sm">
+            Monitoring across all projects.
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Link to="/projects" className="btn-unified flex items-center gap-2">
+          <Link
+            to={"/projects"}
+            className="btn-unified flex items-center gap-2 py-[16px]"
+          >
+            <FolderOpen size={16} />
             Browse Projects
           </Link>
         </div>

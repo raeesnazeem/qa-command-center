@@ -765,7 +765,7 @@ export const TasksPage = () => {
                     <div className="pt-4">
                       <button
                         onClick={() => (window.location.href = "/projects")}
-                        className="btn-unified-secondary"
+                        className="btn-unified"
                       >
                         Browse Projects
                       </button>

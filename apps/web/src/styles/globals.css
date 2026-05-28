@@ -22,6 +22,37 @@
     color: white;
     padding: 0 10px;
     transition: background-color 0.2s;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+  }
+
+  .btn-unified::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 250%;
+    height: 250%;
+    background: conic-gradient(
+      transparent 0deg,
+      transparent 178deg,
+      #39ff14 250deg,
+      transparent 360deg
+    );
+    animation: btn-border-spin 8s linear infinite;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  .btn-unified::after {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    background-color: inherit;
+    border-radius: inherit;
+    z-index: -1;
+    pointer-events: none;
   }
 
   .btn-unified:not(:disabled):hover {
@@ -119,4 +150,13 @@
 .skeleton-base::after {
   content: "";
   @apply absolute inset-0 animate-shimmer;
+}
+
+@keyframes btn-border-spin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
 }

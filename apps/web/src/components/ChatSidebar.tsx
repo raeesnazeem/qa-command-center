@@ -1,49 +1,53 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Info } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
-import { ChatMessage } from './ChatMessage';
-import { ChatInput } from './ChatInput';
-import { QuickPromptChips } from './QuickPromptChips';
-import { useChat } from '../hooks/useChat';
-import { useChatContext } from '../contexts/ChatContext';
+import React, { useState, useRef, useEffect } from "react"
+import { MessageCircle, X, Info } from "lucide-react"
+import { useLocation } from "react-router-dom"
+import { ChatMessage } from "./ChatMessage"
+import { ChatInput } from "./ChatInput"
+import { QuickPromptChips } from "./QuickPromptChips"
+import { useChat } from "../hooks/useChat"
+import { useChatContext } from "../contexts/ChatContext"
 
 export const ChatSidebar: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [inputValue, setInputValue] = useState('');
-  const { currentProjectId, currentRunId } = useChatContext();
-  const location = useLocation();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isOpen, setIsOpen] = useState(false)
+  const [inputValue, setInputValue] = useState("")
+  const { currentProjectId, currentRunId } = useChatContext()
+  const location = useLocation()
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const { messages, isLoading, isStreaming, sendMessage, providerMetadata } = useChat();
+  const { messages, isLoading, isStreaming, sendMessage, providerMetadata } =
+    useChat()
 
   // Simple logic to determine if we are on a project-specific page
-  const isProjectPage = location.pathname.includes('/projects/') && currentProjectId;
+  const isProjectPage =
+    location.pathname.includes("/projects/") && currentProjectId
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    scrollToBottom()
+  }, [messages])
 
   const handleSendMessage = (text: string) => {
-    sendMessage(text, currentProjectId, currentRunId);
-    setInputValue('');
-  };
+    sendMessage(text, currentProjectId, currentRunId)
+    setInputValue("")
+  }
 
   return (
-    <div className="fixed bottom-0 right-0 left-64 z-50 flex flex-col pointer-events-none">
+    <div className="absolute bottom-0 right-0 left-0 z-50 flex flex-col pointer-events-none">
       {/* Expanded Panel */}
-      <div 
-        className={`bg-white border-t border-slate-200 shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col transition-all duration-300 ease-in-out pointer-events-auto ${isOpen ? 'h-[500px]' : 'h-0'}`}
+      <div
+        className={`bg-white border-t border-slate-200 shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col transition-all duration-300 ease-in-out pointer-events-auto ${isOpen ? "h-[500px]" : "h-0"}`}
       >
         {/* Header */}
         <div className="bg-white border-b border-slate-100 p-3 flex items-center justify-between shrink-0">
           <div className="flex flex-col">
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 rounded-full bg-accent" />
-              <h3 className="text-[10px] font-bold text-slate-900 uppercase tracking-widest">QA Assistant Console</h3>
+              <h3 className="text-[10px] font-bold text-slate-900 uppercase tracking-widest">
+                QA Assistant Console
+              </h3>
             </div>
             {isProjectPage && (
               <span className="text-[9px] text-slate-400 font-medium mt-0.5">
@@ -52,7 +56,7 @@ export const ChatSidebar: React.FC = () => {
             )}
           </div>
           <div className="flex items-center space-x-2">
-            <button 
+            <button
               onClick={() => setIsOpen(false)}
               className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-md transition-all"
             >
@@ -68,13 +72,17 @@ export const ChatSidebar: React.FC = () => {
               <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center mb-3">
                 <MessageCircle className="w-5 h-5 text-accent" />
               </div>
-              <h4 className="text-xs font-bold text-slate-900 mb-1">Ready for input</h4>
-              <p className="text-[10px] text-slate-500">Ask about projects, tasks, or request mutations.</p>
+              <h4 className="text-xs font-bold text-slate-900 mb-1">
+                Ready for input
+              </h4>
+              <p className="text-[10px] text-slate-500">
+                Ask about projects, tasks, or request mutations.
+              </p>
             </div>
           ) : (
             <>
               {messages.map((msg, idx) => (
-                <ChatMessage 
+                <ChatMessage
                   key={idx}
                   role={msg.role}
                   content={msg.content}
@@ -100,7 +108,7 @@ export const ChatSidebar: React.FC = () => {
         {/* Quick Prompts */}
         {messages.length === 0 && (
           <div className="px-6 pb-2">
-            <QuickPromptChips 
+            <QuickPromptChips
               onSelect={(text) => setInputValue(text)}
               disabled={isLoading || isStreaming}
             />
@@ -121,11 +129,24 @@ export const ChatSidebar: React.FC = () => {
                   {providerMetadata.allStats?.[providerMetadata.provider] && (
                     <div className="flex items-center space-x-1">
                       <span className="text-[8px] font-mono text-accent/80 font-medium">
-                        {(providerMetadata.allStats[providerMetadata.provider].latencyMs / 1000).toFixed(1)}s
+                        {(
+                          providerMetadata.allStats[providerMetadata.provider]
+                            .latencyMs / 1000
+                        ).toFixed(1)}
+                        s
                       </span>
-                      {providerMetadata.allStats[providerMetadata.provider].usage && (
+                      {providerMetadata.allStats[providerMetadata.provider]
+                        .usage && (
                         <span className="text-[7px] font-mono text-slate-400 font-bold border-l border-slate-200 pl-1">
-                          {providerMetadata.allStats[providerMetadata.provider].usage?.promptTokens}/{providerMetadata.allStats[providerMetadata.provider].usage?.completionTokens}
+                          {
+                            providerMetadata.allStats[providerMetadata.provider]
+                              .usage?.promptTokens
+                          }
+                          /
+                          {
+                            providerMetadata.allStats[providerMetadata.provider]
+                              .usage?.completionTokens
+                          }
                         </span>
                       )}
                     </div>
@@ -140,21 +161,39 @@ export const ChatSidebar: React.FC = () => {
                 {/* Failed Providers */}
                 {providerMetadata.failedProviders.length > 0 && (
                   <div className="flex items-center space-x-2">
-                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Exhausted:</span>
+                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">
+                      Exhausted:
+                    </span>
                     <div className="flex items-center space-x-2">
-                      {providerMetadata.failedProviders.map(p => (
-                        <div key={p} className="flex items-center space-x-1 group">
+                      {providerMetadata.failedProviders.map((p) => (
+                        <div
+                          key={p}
+                          className="flex items-center space-x-1 group"
+                        >
                           <span className="text-[8px] font-bold text-red-400/80 uppercase tracking-tighter group-hover:text-red-500 transition-colors">
                             {p}
                           </span>
                           {providerMetadata.allStats?.[p] && (
                             <div className="flex items-center space-x-0.5">
                               <span className="text-[7px] font-mono text-red-300/60 font-medium">
-                                {(providerMetadata.allStats[p].latencyMs / 1000).toFixed(1)}s
+                                {(
+                                  providerMetadata.allStats[p].latencyMs / 1000
+                                ).toFixed(1)}
+                                s
                               </span>
                               {providerMetadata.allStats[p].usage && (
                                 <span className="text-[6px] font-mono text-red-300/40 font-bold">
-                                  [{providerMetadata.allStats[p].usage?.promptTokens}/{providerMetadata.allStats[p].usage?.completionTokens}]
+                                  [
+                                  {
+                                    providerMetadata.allStats[p].usage
+                                      ?.promptTokens
+                                  }
+                                  /
+                                  {
+                                    providerMetadata.allStats[p].usage
+                                      ?.completionTokens
+                                  }
+                                  ]
                                 </span>
                               )}
                             </div>
@@ -167,7 +206,7 @@ export const ChatSidebar: React.FC = () => {
               </div>
             </div>
           )}
-          <ChatInput 
+          <ChatInput
             value={inputValue}
             onChange={setInputValue}
             onSendMessage={handleSendMessage}
@@ -177,20 +216,26 @@ export const ChatSidebar: React.FC = () => {
       </div>
 
       {/* Terminal Bar (Always visible at the bottom) */}
-      <div 
+      <div
         onClick={() => setIsOpen(!isOpen)}
         className="h-10 bg-white border-t border-slate-200 flex items-center justify-between px-4 cursor-pointer hover:bg-slate-50 transition-colors pointer-events-auto shadow-sm"
       >
         <div className="flex items-center space-x-3">
-          <div className={`w-2 h-2 rounded-full ${isStreaming || isLoading ? 'bg-accent animate-pulse shadow-[0_0_8px_rgba(118,163,148,0.6)]' : 'bg-slate-300'}`} />
-          <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">QA Assistant Terminal</span>
+          <div
+            className={`w-2 h-2 rounded-full ${isStreaming || isLoading ? "bg-accent animate-pulse shadow-[0_0_8px_rgba(118,163,148,0.6)]" : "bg-slate-300"}`}
+          />
+          <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+            QA Assistant Terminal
+          </span>
           {isStreaming && (
-            <span className="text-[9px] font-medium text-accent animate-pulse italic">Thinking...</span>
+            <span className="text-[9px] font-medium text-accent animate-pulse italic">
+              Thinking...
+            </span>
           )}
         </div>
         <div className="flex items-center space-x-4">
           <span className="text-[9px] font-medium text-slate-400">
-            {isProjectPage ? `Context: Active` : 'No context'}
+            {isProjectPage ? `Context: Active` : "No context"}
           </span>
           <div className="w-px h-4 bg-slate-200" />
           {isOpen ? (
@@ -201,6 +246,5 @@ export const ChatSidebar: React.FC = () => {
         </div>
       </div>
     </div>
-
-  );
-};
+  )
+}

@@ -1048,13 +1048,14 @@ export const RunDetailPage = () => {
                   }
 
                   return (
-                    <details key={checkKey} className="group space-y-3" open>
+                    <details key={checkKey} className="group space-y-3">
                       <summary className="text-sm font-mono text-slate-800 cursor-pointer list-none [&::-webkit-details-marker]:hidden flex justify-between items-center outline-none">
                         <span>{checkName}</span>
-                        <span className="text-xs text-slate-400 group-open:rotate-180 transition-transform">
+                        <span className="text-sm text-accent transition-all duration-300 group-open:rotate-180 animate-bounce group-open:animate-none">
                           ▼
                         </span>
                       </summary>
+
                       <div className="space-y-3 mt-3">
                         {relevantPages.map((page) => {
                           const isCompleted =

@@ -65,9 +65,25 @@ export const ProjectCard = ({ project }: ProjectCardProps) => {
     <div className="relative group/card flex flex-col h-full">
       <div
         onClick={() => !isManageOpen && navigate(`/projects/${project.id}`)}
-        className="bg-white border border-slate-100 rounded-lg p-6 cursor-pointer hover:border-accent/50 transition-all group flex flex-col h-full shadow-sm hover:shadow-md"
+        className="bg-white/60 backdrop-blur-md border border-transparent rounded-lg p-6 cursor-pointer transition-all group flex flex-col h-full shadow-sm hover:shadow-md relative"
       >
-        <div className="flex justify-between items-start mb-4">
+        <div
+          className="absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
+          style={{
+            WebkitMask:
+              "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+            WebkitMaskComposite: "xor",
+            maskComposite: "exclude",
+          }}
+        >
+          {/* Base Ambient Border (Stays partially visible to anchor the card) */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white via-accent/30 to-white/30 group-hover:opacity-50 transition-opacity duration-700" />
+
+          {/* Iridescent Slow Shimmer (Dual soft beams panning smoothly) */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300%] aspect-square bg-[conic-gradient(from_0deg,transparent_0_45deg,theme(colors.accent)_135deg,transparent_180deg_225deg,#a3d4c7_315deg,transparent_360deg)] opacity-0 group-hover:opacity-100 group-hover:animate-[spin_4s_linear_infinite]" />
+        </div>
+
+        <div className="flex justify-between items-start mb-4 relative z-10">
           <div className="flex-1 min-w-0">
             <h3 className="text-xl font-bold text-slate-900 group-hover:text-accent transition-colors truncate pr-2">
               {project.name}
