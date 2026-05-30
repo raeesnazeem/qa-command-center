@@ -65,10 +65,10 @@ export const ProjectCard = ({ project }: ProjectCardProps) => {
     <div className="relative group/card flex flex-col h-full">
       <div
         onClick={() => !isManageOpen && navigate(`/projects/${project.id}`)}
-        className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-transparent dark:border-slate-800 rounded-lg p-6 cursor-pointer transition-all group flex flex-col h-full shadow-sm hover:shadow-md relative"
+        className="bg-slate-50/60 dark:bg-[#1D2A31] backdrop-blur-md border border-transparent dark:border-slate-800 rounded-lg p-6 cursor-pointer transition-all group flex flex-col h-full shadow-lg hover:shadow-xl dark:shadow-sm dark:hover:shadow-md relative"
       >
         <div
-          className="absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
+          className="absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-100 dark:opacity-50 dark:group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
           style={{
             WebkitMask:
               "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
@@ -77,15 +77,15 @@ export const ProjectCard = ({ project }: ProjectCardProps) => {
           }}
         >
           {/* Base Ambient Border (Stays partially visible to anchor the card) */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white via-accent/30 to-white/30 group-hover:opacity-50 transition-opacity duration-700" />
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-200 via-accent/30 to-slate-200/30 group-hover:opacity-50 transition-opacity duration-700" />
 
-          {/* Iridescent Slow Shimmer (Dual soft beams panning smoothly) */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300%] aspect-square bg-[conic-gradient(from_0deg,transparent_0_45deg,theme(colors.accent)_135deg,transparent_180deg_225deg,#a3d4c7_315deg,transparent_360deg)] opacity-0 group-hover:opacity-100 group-hover:animate-[spin_4s_linear_infinite]" />
+          {/* Conical border: static in light mode, animated on hover in both modes */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300%] aspect-square bg-[conic-gradient(from_0deg,transparent_0_45deg,theme(colors.accent)_135deg,transparent_180deg_225deg,#a3d4c7_315deg,transparent_360deg)] opacity-100 dark:opacity-0 group-hover:opacity-100 group-hover:animate-[spin_4s_linear_infinite]" />
         </div>
 
         <div className="flex justify-between items-start mb-4 relative z-10">
           <div className="flex-1 min-w-0">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-accent transition-colors truncate pr-2">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-200 group-hover:text-accent transition-colors truncate pr-2">
               {project.name}
             </h3>
           </div>
@@ -109,7 +109,7 @@ export const ProjectCard = ({ project }: ProjectCardProps) => {
                 }}
                 className={`p-1.5 rounded-md transition-colors ${
                   isManageOpen
-                    ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900"
+                    ? "bg-slate-900 dark:bg-slate-50 text-white dark:text-slate-900"
                     : "text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
                 }`}
                 title="Manage Team"
@@ -169,12 +169,12 @@ export const ProjectCard = ({ project }: ProjectCardProps) => {
       {/* Manage Team Popover */}
       {isManageOpen && (
         <div
-          className="absolute inset-0 z-20 bg-white/95 backdrop-blur-sm rounded-xl p-6 flex flex-col border border-slate-200 shadow-xl animate-in fade-in zoom-in-95 duration-200"
+          className="absolute inset-0 z-20 bg-slate-50/95 backdrop-blur-sm rounded-xl p-6 flex flex-col border border-slate-200 shadow-xl animate-in fade-in zoom-in-95 duration-200"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center tracking-tight">
+              <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200 flex items-center tracking-tight">
                 <Users className="w-4 h-4 mr-2 text-accent" /> Manage Team
               </h4>
               <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium uppercase tracking-widest mt-0.5">
@@ -199,7 +199,7 @@ export const ProjectCard = ({ project }: ProjectCardProps) => {
                 placeholder="user@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 dark:text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 dark:text-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
                 required
               />
             </div>
@@ -212,8 +212,8 @@ export const ProjectCard = ({ project }: ProjectCardProps) => {
                   onClick={() => setMemberRole(r)}
                   className={`flex-1 py-1.5 px-3 rounded-md text-[10px] font-bold uppercase tracking-widest border transition-all flex items-center justify-center space-x-1 ${
                     memberRole === r
-                      ? "bg-slate-900 dark:bg-white border-slate-900 dark:border-white text-white dark:text-slate-900 shadow-sm"
-                      : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600"
+                      ? "bg-slate-900 dark:bg-slate-50 border-slate-900 dark:border-white text-white dark:text-slate-900 shadow-sm"
+                      : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600"
                   }`}
                 >
                   {memberRole === r && <Check className="w-3 h-3" />}
@@ -255,7 +255,7 @@ export const ProjectCard = ({ project }: ProjectCardProps) => {
           <div className="flex items-center space-x-2 text-[10px] font-bold uppercase tracking-wider">
             <div className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-100 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-slate-50"></span>
             </div>
             <span>Scan Active</span>
             <span className="opacity-80 font-medium">

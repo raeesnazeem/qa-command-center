@@ -304,7 +304,7 @@ export const FreezeAndCrop: React.FC<FreezeAndCropProps> = ({
   return (
     <div className="w-full h-full flex flex-col bg-slate-900 rounded-sm overflow-hidden border border-slate-200">
       {/* Controls Header */}
-      <div className="h-12 bg-white border-b border-slate-200 flex items-center justify-between px-4 shrink-0">
+      <div className="h-12 bg-slate-50 border-b border-slate-200 flex items-center justify-between px-4 shrink-0">
         <div className="flex items-center gap-2">
           <div className={`w-2 h-2 rounded-full ${isFrozen ? "bg-amber-500" : "bg-emerald-500 animate-pulse"}`} />
           <span className="text-[10px] font-bold text-slate-900 uppercase tracking-widest">
@@ -346,7 +346,7 @@ export const FreezeAndCrop: React.FC<FreezeAndCropProps> = ({
 
       {/* Annotation Toolbar — separate bar, only shown when frozen, never overlaps canvas */}
       {isFrozen && (
-        <div className="shrink-0 bg-white border-b border-slate-200 flex items-center gap-3 px-4 py-2">
+        <div className="shrink-0 bg-slate-50 border-b border-slate-200 flex items-center gap-3 px-4 py-2">
           <div className="flex items-center bg-slate-100 rounded-lg p-0.5 gap-0.5">
             {[
               { id: "select", icon: <MousePointer2 size={13} />, label: "Crop" },
@@ -358,7 +358,7 @@ export const FreezeAndCrop: React.FC<FreezeAndCropProps> = ({
                 key={t.id}
                 onClick={() => setTool(t.id as any)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all text-[9px] font-bold uppercase tracking-widest ${
-                  tool === t.id ? "bg-white shadow-sm text-blue-600" : "text-slate-400 hover:text-slate-700"
+                  tool === t.id ? "bg-slate-50 shadow-sm text-blue-600" : "text-slate-400 hover:text-slate-700"
                 }`}
               >
                 {t.icon}{t.label}
@@ -396,7 +396,7 @@ export const FreezeAndCrop: React.FC<FreezeAndCropProps> = ({
       {/* Content Area */}
       <div className="flex-1 relative bg-slate-100 overflow-auto">
         {isLoadingProxy && (
-          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
+          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-50/80 backdrop-blur-sm">
             <Loader2 className="w-8 h-8 text-accent animate-spin mb-2" />
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Loading Live Page...</p>
           </div>
@@ -414,7 +414,7 @@ export const FreezeAndCrop: React.FC<FreezeAndCropProps> = ({
           <iframe
             ref={iframeRef}
             src={iframeUrl}
-            className="w-full h-full border-none bg-white"
+            className="w-full h-full border-none bg-slate-50"
             title="Live Proxy"
           />
         ) : (
@@ -433,7 +433,7 @@ export const FreezeAndCrop: React.FC<FreezeAndCropProps> = ({
               {activeTextId && typingPos && (
                 <textarea
                   ref={textareaRef}
-                  className="absolute bg-white border-2 border-blue-600 shadow-2xl p-2 resize-none font-bold overflow-hidden rounded-lg outline-none text-slate-900 ring-4 ring-blue-500/20"
+                  className="absolute bg-slate-50 border-2 border-blue-600 shadow-2xl p-2 resize-none font-bold overflow-hidden rounded-lg outline-none text-slate-900 ring-4 ring-blue-500/20"
                   value={textInput}
                   onChange={(e) => setTextInput(e.target.value)}
                   onMouseDown={(e) => e.stopPropagation()}

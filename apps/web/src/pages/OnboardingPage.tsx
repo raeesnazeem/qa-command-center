@@ -63,7 +63,7 @@ export const OnboardingPage = () => {
 
   return (
     <div className="min-h-screen bg-bg-main flex flex-col items-center justify-center p-4 font-sans">
-      <div className="w-full max-w-md bg-white rounded-md border border-slate-200 shadow-sm p-8">
+      <div className="w-full max-w-md bg-slate-50 rounded-md border border-slate-200 shadow-sm p-8">
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
             Complete your profile
@@ -106,7 +106,7 @@ export const OnboardingPage = () => {
                   {...register("role")}
                   className="hidden peer"
                 />
-                <div className="w-full flex items-center justify-center h-8 rounded-md border border-slate-200 bg-white text-slate-500 font-bold text-xs uppercase tracking-wider hover:bg-slate-50 hover:text-slate-700 transition-all shadow-sm peer-checked:bg-accent peer-checked:text-white peer-checked:border-accent peer-checked:shadow-[0_0_10px_rgba(var(--accent-rgb),0.2)]">
+                <div className="w-full flex items-center justify-center h-8 rounded-md border border-slate-200 bg-slate-50 text-slate-500 font-bold text-xs uppercase tracking-wider hover:bg-slate-50 hover:text-slate-700 transition-all shadow-sm peer-checked:bg-accent peer-checked:text-white peer-checked:border-accent peer-checked:shadow-[0_0_10px_rgba(var(--accent-rgb),0.2)]">
                   Developer
                 </div>
               </label>
@@ -118,7 +118,7 @@ export const OnboardingPage = () => {
                   {...register("role")}
                   className="hidden peer"
                 />
-                <div className="w-full flex items-center justify-center h-8 rounded-md border border-slate-200 bg-white text-slate-500 font-bold text-xs uppercase tracking-wider hover:bg-slate-50 hover:text-slate-700 transition-all shadow-sm peer-checked:bg-accent peer-checked:text-white peer-checked:border-accent peer-checked:shadow-[0_0_10px_rgba(var(--accent-rgb),0.2)]">
+                <div className="w-full flex items-center justify-center h-8 rounded-md border border-slate-200 bg-slate-50 text-slate-500 font-bold text-xs uppercase tracking-wider hover:bg-slate-50 hover:text-slate-700 transition-all shadow-sm peer-checked:bg-accent peer-checked:text-white peer-checked:border-accent peer-checked:shadow-[0_0_10px_rgba(var(--accent-rgb),0.2)]">
                   QA
                 </div>
               </label>

@@ -82,7 +82,7 @@ const DonutChart = ({
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-xl font-bold text-slate-900 leading-none">
+        <span className="text-xl font-bold text-slate-900 dark:text-slate-200 leading-none">
           {percentage}%
         </span>
         <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter mt-1">
@@ -204,14 +204,14 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
   return (
     <div className="flex flex-col w-full space-y-8">
       {/* Summary Dashboard */}
-      <div className="bg-white rounded-md p-8 border border-slate-200 shadow-sm overflow-hidden relative group">
+      <div className="bg-slate-200/10 dark:bg-slate-700/30 rounded-md p-8 border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden relative group">
         <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none group-hover:scale-110 transition-transform duration-700">
           <BarChart3 size={160} />
         </div>
 
         <div className="flex flex-col lg:flex-row items-center gap-10 relative z-10">
           {/* Resolved Progress Donut */}
-          <div className="shrink-0 bg-slate-50 p-4 rounded-md border border-slate-100 shadow-inner">
+          <div className="shrink-0 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-md border border-slate-100 dark:border-slate-700 shadow-inner">
             <DonutChart percentage={stats.resolvedPercentage} />
           </div>
 
@@ -232,7 +232,7 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
                     Critical
                   </span>
                 </div>
-                <div className="h-4 w-px bg-slate-200" />
+                <div className="h-4 w-px bg-slate-200 dark:bg-slate-700" />
                 <div className="flex items-center gap-1.5">
                   <span className="text-xl font-bold text-orange-500">
                     {stats.high}
@@ -241,7 +241,7 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
                     High
                   </span>
                 </div>
-                <div className="h-4 w-px bg-slate-200" />
+                <div className="h-4 w-px bg-slate-200 dark:bg-slate-700" />
                 <div className="flex items-center gap-1.5">
                   <span className="text-xl font-bold text-amber-500">
                     {stats.medium}
@@ -250,7 +250,7 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
                     Medium
                   </span>
                 </div>
-                <div className="h-4 w-px bg-slate-200" />
+                <div className="h-4 w-px bg-slate-200 dark:bg-slate-700" />
                 <div className="flex items-center gap-1.5">
                   <span className="text-xl font-bold text-blue-500">
                     {stats.low}
@@ -275,7 +275,7 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                  <span className="text-sm font-bold text-slate-900">
+                  <span className="text-sm font-bold text-slate-900 dark:text-slate-200">
                     {stats.confirmed}
                   </span>
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
@@ -284,7 +284,7 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-slate-400" />
-                  <span className="text-sm font-bold text-slate-900">
+                  <span className="text-sm font-bold text-slate-900 dark:text-slate-200">
                     {stats.falsePositives}
                   </span>
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
@@ -293,7 +293,7 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                  <span className="text-sm font-bold text-slate-900">
+                  <span className="text-sm font-bold text-slate-900 dark:text-slate-200">
                     {stats.open}
                   </span>
                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
@@ -308,13 +308,13 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
 
       {/* General Run Findings Section */}
       {generalFindings && generalFindings.length > 0 && (
-        <div className="space-y-4 bg-slate-50/50 p-6 rounded-md border border-slate-100">
-          <div className="flex items-center gap-2 border-b border-slate-200/60 pb-3">
-            <ShieldAlert className="w-5 h-5 text-slate-800" />
-            <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider">
+        <div className="space-y-4 bg-slate-50/50 dark:bg-[#1D2A31] p-6 rounded-md border border-slate-100 dark:border-slate-700">
+          <div className="flex items-center gap-2 border-b border-slate-200/60 dark:border-slate-700 pb-3">
+            <ShieldAlert className="w-5 h-5 text-slate-800 dark:text-slate-200" />
+            <h3 className="font-bold text-slate-900 dark:text-slate-200 text-sm uppercase tracking-wider">
               General Run Findings
             </h3>
-            <span className="text-[10px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded-full border border-slate-200 shadow-sm ml-1">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm ml-1">
               {generalFindings.length}
             </span>
           </div>
@@ -342,7 +342,7 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
       )}
 
       {/* Filter Tabs */}
-      <div className="bg-white border border-slate-100 p-2 rounded-md shadow-sm">
+      <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-700 p-2 rounded-md shadow-sm">
         <CheckFactorFilter
           findings={findings}
           selectedFactor={selectedFactor}
@@ -387,7 +387,7 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
             <div className="flex items-center gap-2">
               <button
                 onClick={handleBulkFalsePositive}
-                className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white text-[10px] font-bold uppercase tracking-widest rounded-sm hover:bg-white/20 border border-white/10 transition-all active:scale-95"
+                className="flex items-center gap-2 px-4 py-2 bg-slate-50/10 text-white text-[10px] font-bold uppercase tracking-widest rounded-sm hover:bg-slate-50/20 border border-white/10 transition-all active:scale-95"
               >
                 Mark False Positives
               </button>
@@ -424,11 +424,11 @@ export const FindingReviewPanel: React.FC<FindingReviewPanelProps> = ({
         ))}
 
         {filteredFindings.length === 0 && (
-          <div className="col-span-full py-20 bg-slate-50 border-2 border-dashed border-slate-200 rounded-md text-center">
-            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100">
-              <Filter className="w-8 h-8 text-slate-200" />
+          <div className="col-span-full py-20 bg-slate-50 dark:bg-[#1D2A31] border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-md text-center">
+            <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100 dark:border-slate-700">
+              <Filter className="w-8 h-8 text-slate-200 dark:text-slate-600" />
             </div>
-            <p className="text-slate-900 font-bold text-base uppercase tracking-tight">
+            <p className="text-slate-900 dark:text-slate-200 font-bold text-base uppercase tracking-tight">
               No findings match filter
             </p>
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-2">

@@ -95,10 +95,10 @@ export const TeamPage = () => {
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-200 tracking-tight">
             Organization Team
           </h1>
-          <p className="text-slate-500 mt-1">
+          <p className="text-slate-500 dark:text-slate-400 mt-1">
             Manage your team members and their global roles.
           </p>
         </div>
@@ -119,7 +119,7 @@ export const TeamPage = () => {
             placeholder="Search by name, email or role..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-white border border-slate-200 rounded-md pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md pl-10 pr-4 py-2 text-sm text-slate-900 dark:text-slate-200 focus:outline-none focus:border-accent transition-all"
           />
         </div>
         <button className="btn-unified-secondary flex items-center space-x-2">
@@ -128,10 +128,10 @@ export const TeamPage = () => {
         </button>
       </div>
 
-      <div className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-sm">
+      <div className="bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-slate-50/50 border-b border-slate-100">
+            <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
               <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                 Member
               </th>
@@ -147,15 +147,24 @@ export const TeamPage = () => {
               <th className="px-6 py-4"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-50">
+          <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
             {isLoading ? (
-              <tr>
-                <td colSpan={5} className="px-6 py-12 text-center">
-                  <div className="flex flex-col items-center space-y-3 animate-pulse font-sans">
+              <tr className={typeof window !== "undefined" && (localStorage.getItem("theme") === "dark" || (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches)) ? "dark" : ""}>
+                <td colSpan={5} className="px-6 py-12 text-center relative overflow-hidden dark:bg-slate-900">
+                  <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-emerald-200/5 dark:bg-teal-500/5 rounded-full blur-2xl animate-gemini-glow"></div>
+                  </div>
+                  <div className="relative z-10 flex flex-col items-center space-y-3 animate-pulse font-sans">
                     <img
                       src="https://growth99.com/storage/2024/09/LOGO.svg"
                       alt="QACC Logo"
-                      className="h-10 w-10"
+                      className="h-10 w-10 dark:hidden block"
+                      style={{ objectFit: "contain" }}
+                    />
+                    <img
+                      src="https://aspire-cc.com/storage/2026/03/G99-Logo.svg"
+                      alt="QACC Logo"
+                      className="h-10 w-10 hidden dark:block"
                       style={{ objectFit: "contain" }}
                     />
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
@@ -177,11 +186,11 @@ export const TeamPage = () => {
               filteredMembers?.map((member) => (
                 <tr
                   key={member.id}
-                  className="hover:bg-slate-50 transition-colors group"
+                  className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group"
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-sm border border-slate-200 group-hover:bg-white group-hover:border-accent/30 transition-all">
+                      <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 font-bold text-sm border border-slate-200 dark:border-slate-700 group-hover:bg-slate-50 dark:group-hover:bg-slate-700 group-hover:border-accent/30 transition-all">
                         {member.full_name
                           ?.split(" ")
                           .map((n: string) => n[0])
@@ -189,7 +198,7 @@ export const TeamPage = () => {
                           .toUpperCase() || "?"}
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-slate-900 leading-none mb-1">
+                        <p className="text-sm font-bold text-slate-900 dark:text-slate-200 leading-none mb-1">
                           {member.full_name || "Incomplete Profile"}
                         </p>
                         <p className="text-[10px] font-medium text-slate-400 uppercase">
@@ -202,15 +211,15 @@ export const TeamPage = () => {
                     <RoleBadge role={member.role as any} />
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center text-slate-500 text-sm">
-                      <Mail className="w-3.5 h-3.5 mr-2 text-slate-300" />
+                    <div className="flex items-center text-slate-500 dark:text-slate-400 text-sm">
+                      <Mail className="w-3.5 h-3.5 mr-2 text-slate-300 dark:text-slate-500" />
                       {member.email}
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center space-x-1.5">
                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                      <span className="text-[10px] font-bold text-slate-600 uppercase tracking-tight">
+                      <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-tight">
                         ACTIVE
                       </span>
                     </div>
@@ -243,20 +252,20 @@ export const TeamPage = () => {
           </p>
         </div>
 
-        <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm">
-          <Users className="w-8 h-8 text-black mb-4" />
-          <h4 className="font-bold text-lg text-slate-900 mb-2">
+        <div className="p-6 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm">
+          <Users className="w-8 h-8 text-black dark:text-white mb-4" />
+          <h4 className="font-bold text-lg text-slate-900 dark:text-slate-200 mb-2">
             QA Engineers
           </h4>
-          <p className="text-xs text-slate-500 leading-relaxed font-medium">
+          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
             Focused on findings. Can create tasks from scan results and review
             developer rebuttals.
           </p>
         </div>
-        <div className="p-6 bg-white border border-slate-200 rounded-xl shadow-sm">
-          <Shield className="w-8 h-8 text-slate-400 mb-4" />
-          <h4 className="font-bold text-lg text-slate-900 mb-2">Developers</h4>
-          <p className="text-xs text-slate-500 leading-relaxed font-medium">
+        <div className="p-6 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm">
+          <Shield className="w-8 h-8 text-slate-400 dark:text-slate-500 mb-4" />
+          <h4 className="font-bold text-lg text-slate-900 dark:text-slate-200 mb-2">Developers</h4>
+          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
             Project specific. Can view assigned tasks, update their status, and
             submit rebuttals for review.
           </p>
@@ -266,9 +275,9 @@ export const TeamPage = () => {
       {/* Manage Modal */}
       {isManaging && selectedMember && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-lg rounded-md shadow-2xl border border-slate-200 overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-              <h3 className="text-lg font-bold text-slate-900 tracking-tight">
+          <div className="bg-slate-50 dark:bg-slate-900 w-full max-w-lg rounded-md shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-200 tracking-tight">
                 Manage Team Member
               </h3>
               <button
@@ -293,7 +302,7 @@ export const TeamPage = () => {
                       full_name: e.target.value,
                     }))
                   }
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-sm font-medium focus:outline-none focus:border-accent transition-all"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm text-slate-900 dark:text-slate-200 font-medium focus:outline-none focus:border-accent transition-all"
                   placeholder="Member name"
                 />
               </div>
@@ -307,7 +316,7 @@ export const TeamPage = () => {
                   onChange={(e) =>
                     setEditForm((prev) => ({ ...prev, role: e.target.value }))
                   }
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-sm font-bold text-slate-900 focus:outline-none focus:border-accent transition-all appearance-none"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm font-bold text-slate-900 dark:text-slate-200 focus:outline-none focus:border-accent transition-all appearance-none"
                 >
                   <option value="super_admin">Super Admin</option>
                   <option value="admin">Admin</option>
@@ -330,7 +339,7 @@ export const TeamPage = () => {
                       basecamp_person_id: e.target.value,
                     }))
                   }
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-sm font-medium focus:outline-none focus:border-accent transition-all"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm text-slate-900 dark:text-slate-200 font-medium focus:outline-none focus:border-accent transition-all"
                   placeholder="e.g. 42235004"
                 />
               </div>

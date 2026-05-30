@@ -94,7 +94,7 @@ export const ResolveTaskModal = ({
   return createPortal(
     <>
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-        <div className="bg-white w-full max-w-lg rounded-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+        <div className="bg-slate-50 w-full max-w-lg rounded-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
           {/* Header */}
           <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
             <div className="flex items-center gap-3">
@@ -198,7 +198,7 @@ export const ResolveTaskModal = ({
                   </div>
                 ) : (
                   <>
-                    <div className="w-12 h-12 rounded-full bg-white shadow-sm border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-emerald-500 transition-colors">
+                    <div className="w-12 h-12 rounded-full bg-slate-50 shadow-sm border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-emerald-500 transition-colors">
                       <ImageIcon className="w-6 h-6" />
                     </div>
                     <div className="text-center">

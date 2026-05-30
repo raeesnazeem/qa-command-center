@@ -30,14 +30,14 @@ const StatusBadge = ({ status }: { status: string }) => {
   switch (status) {
     case "pending":
       return (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 border border-slate-200">
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
           <Clock className="w-3 h-3 mr-1" />
           Pending
         </span>
       )
     case "running":
       return (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-600 border border-blue-100">
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800">
           <span className="relative flex h-2 w-2 mr-1.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
@@ -47,28 +47,28 @@ const StatusBadge = ({ status }: { status: string }) => {
       )
     case "completed":
       return (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-100">
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800">
           <CheckCircle2 className="w-3 h-3 mr-1" />
           Completed
         </span>
       )
     case "failed":
       return (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-red-50 text-red-600 border border-red-100">
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800">
           <XCircle className="w-3 h-3 mr-1" />
           Failed
         </span>
       )
     case "paused":
       return (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-600 border border-amber-100">
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-800">
           <Clock className="w-3 h-3 mr-1" />
           Paused
         </span>
       )
     case "cancelled":
       return (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 border border-slate-200">
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
           <AlertCircle className="w-3 h-3 mr-1" />
           Stopped
         </span>
@@ -161,11 +161,11 @@ export const RunsTab = ({ project }: RunsTabProps) => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-bold text-slate-900 flex items-center">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-200 flex items-center">
             <History className="w-5 h-5 mr-2 text-slate-400" />
             QA Run History
           </h3>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             Monitor and trigger automated QA sessions for this project.
           </p>
         </div>
@@ -175,7 +175,7 @@ export const RunsTab = ({ project }: RunsTabProps) => {
               <button
                 onClick={handleDeleteSelected}
                 disabled={deleteRuns.isPending}
-                className="flex items-center space-x-2 px-4 py-2 bg-red-50 text-red-600 rounded-md text-sm font-bold hover:bg-red-100 transition-all shadow-sm active:scale-95 border border-red-100"
+                className="flex items-center space-x-2 px-4 py-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-md text-sm font-bold hover:bg-red-100 dark:hover:bg-red-900/50 transition-all shadow-sm active:scale-95 border border-red-100 dark:border-red-800"
               >
                 <Trash2 className="w-4 h-4" />
                 <span>Delete ({selectedRunIds.length})</span>
@@ -183,7 +183,7 @@ export const RunsTab = ({ project }: RunsTabProps) => {
             )}
             <button
               onClick={handleToggleSelectAll}
-              className="flex items-center space-x-2 px-4 py-2 bg-white text-slate-900 border border-slate-200 rounded-md text-sm font-bold hover:bg-slate-50 transition-all shadow-sm active:scale-95"
+              className="flex items-center space-x-2 px-4 py-2 bg-slate-50 dark:bg-[#1D2A31] text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-md text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm active:scale-95"
             >
               {selectedRunIds.length === (runsData?.data?.length || 0) &&
               (runsData?.data?.length || 0) > 0 ? (
@@ -202,11 +202,11 @@ export const RunsTab = ({ project }: RunsTabProps) => {
         </CanDo>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-md overflow-hidden shadow-sm">
+      <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50/50 border-b border-slate-100">
+              <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700">
                 <th className="px-6 py-4 w-10"></th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">
                   Run #
@@ -231,12 +231,12 @@ export const RunsTab = ({ project }: RunsTabProps) => {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
               {isLoading ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
                     <td colSpan={6} className="px-6 py-4">
-                      <div className="h-10 bg-slate-100 rounded-md w-full"></div>
+                      <div className="h-10 bg-slate-100 dark:bg-slate-800 rounded-md w-full"></div>
                     </td>
                   </tr>
                 ))
@@ -244,13 +244,13 @@ export const RunsTab = ({ project }: RunsTabProps) => {
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center">
-                      <div className="p-3 bg-slate-100 rounded-full mb-3">
+                      <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-full mb-3">
                         <History className="w-6 h-6 text-slate-400" />
                       </div>
-                      <p className="text-sm font-medium text-slate-900">
+                      <p className="text-sm font-medium text-slate-900 dark:text-slate-200">
                         No runs recorded yet
                       </p>
-                      <p className="text-xs text-slate-500 mt-1">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                         Start your first QA session to see results here.
                       </p>
                     </div>
@@ -260,7 +260,7 @@ export const RunsTab = ({ project }: RunsTabProps) => {
                 runsData.data.map((run, index) => (
                   <tr
                     key={run.id}
-                    className={`hover:bg-slate-50 cursor-pointer group transition-colors ${selectedRunIds.includes(run.id) ? "bg-slate-50" : ""}`}
+                    className={`hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer group transition-colors ${selectedRunIds.includes(run.id) ? "bg-slate-50 dark:bg-slate-800/50" : ""}`}
                     onClick={() =>
                       navigate(`/projects/${project.id}/runs/${run.id}`)
                     }
@@ -283,7 +283,7 @@ export const RunsTab = ({ project }: RunsTabProps) => {
                       />
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm font-bold text-slate-900 tracking-tight">
+                      <span className="text-sm font-bold text-slate-900 dark:text-slate-200 tracking-tight">
                         #
                         {runsData.pagination.total -
                           (page - 1) * runsData.pagination.limit -
@@ -294,8 +294,8 @@ export const RunsTab = ({ project }: RunsTabProps) => {
                       <span
                         className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
                           run.run_type === "pre_release"
-                            ? "bg-amber-50 text-amber-600 border border-amber-100"
-                            : "bg-purple-50 text-purple-600 border border-purple-100"
+                            ? "bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-800"
+                            : "bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-800"
                         }`}
                       >
                         {run.run_type.replace("_", "-")}
@@ -304,7 +304,7 @@ export const RunsTab = ({ project }: RunsTabProps) => {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-1.5">
                         <User size={12} className="text-slate-400" />
-                        <span className="text-xs font-bold text-slate-600 truncate max-w-[100px]">
+                        <span className="text-xs font-bold text-slate-600 dark:text-slate-300 truncate max-w-[100px]">
                           {run.created_by_name || "System"}
                         </span>
                       </div>
@@ -338,7 +338,7 @@ export const RunsTab = ({ project }: RunsTabProps) => {
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center text-sm text-slate-600">
+                      <div className="flex items-center text-sm text-slate-600 dark:text-slate-400">
                         <Calendar className="w-3.5 h-3.5 mr-2 text-slate-400" />
                         {format(new Date(run.created_at), "MMM d, HH:mm")}
                       </div>
@@ -349,14 +349,14 @@ export const RunsTab = ({ project }: RunsTabProps) => {
                           run.status === "pending" ||
                           run.status === "paused") && (
                           <div
-                            className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-md border border-slate-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 p-1 rounded-md border border-slate-100 dark:border-slate-700 opacity-0 group-hover:opacity-100 transition-opacity"
                             onClick={(e) => e.stopPropagation()}
                           >
                             {run.status === "running" ? (
                               <button
                                 onClick={(e) => handlePause(e, run.id)}
                                 disabled={updateStatus.isPending}
-                                className="p-1 hover:bg-amber-50 text-amber-600 rounded transition-colors"
+                                className="p-1 hover:bg-amber-50 dark:hover:bg-amber-900/30 text-amber-600 rounded transition-colors"
                                 title="Pause Scan"
                               >
                                 <Pause size={14} fill="currentColor" />
@@ -365,7 +365,7 @@ export const RunsTab = ({ project }: RunsTabProps) => {
                               <button
                                 onClick={(e) => handleResume(e, run.id)}
                                 disabled={updateStatus.isPending}
-                                className="p-1 hover:bg-emerald-50 text-emerald-600 rounded transition-colors"
+                                className="p-1 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 text-emerald-600 rounded transition-colors"
                                 title="Resume Scan"
                               >
                                 <Play size={14} fill="currentColor" />
@@ -374,7 +374,7 @@ export const RunsTab = ({ project }: RunsTabProps) => {
                             <button
                               onClick={(e) => handleStop(e, run.id)}
                               disabled={updateStatus.isPending}
-                              className="p-1 hover:bg-red-50 text-red-600 rounded transition-colors"
+                              className="p-1 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 rounded transition-colors"
                               title="Stop Scan"
                             >
                               <Square size={14} fill="currentColor" />
@@ -396,25 +396,25 @@ export const RunsTab = ({ project }: RunsTabProps) => {
         <div className="flex items-center justify-between pt-4">
           <p className="text-xs text-slate-500 font-medium">
             Showing{" "}
-            <span className="text-slate-900">
+            <span className="text-slate-900 dark:text-slate-200">
               {(page - 1) * runsData.pagination.limit + 1}
             </span>{" "}
             to{" "}
-            <span className="text-slate-900">
+            <span className="text-slate-900 dark:text-slate-200">
               {Math.min(
                 page * runsData.pagination.limit,
                 runsData.pagination.total,
               )}
             </span>{" "}
             of{" "}
-            <span className="text-slate-900">{runsData.pagination.total}</span>{" "}
+            <span className="text-slate-900 dark:text-slate-200">{runsData.pagination.total}</span>{" "}
             runs
           </p>
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-3 py-1 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50 transition-colors"
+              className="px-3 py-1 text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 transition-colors"
             >
               Previous
             </button>
@@ -423,7 +423,7 @@ export const RunsTab = ({ project }: RunsTabProps) => {
               disabled={
                 page * runsData.pagination.limit >= runsData.pagination.total
               }
-              className="px-3 py-1 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50 transition-colors"
+              className="px-3 py-1 text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 transition-colors"
             >
               Next
             </button>
@@ -440,19 +440,19 @@ export const RunsTab = ({ project }: RunsTabProps) => {
       {/* Limitation Modal */}
       {showLimitModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center justify-center w-12 h-12 mx-auto bg-amber-100 rounded-full mb-4">
+          <div className="bg-slate-50 dark:bg-[#1D2A31] rounded-xl shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-center w-12 h-12 mx-auto bg-amber-100 dark:bg-amber-900/50 rounded-full mb-4">
               <AlertCircle className="w-6 h-6 text-amber-600" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 text-center mb-2">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-200 text-center mb-2">
               Limit Exceeded
             </h3>
-            <p className="text-sm text-slate-600 text-center mb-6">
+            <p className="text-sm text-slate-600 dark:text-slate-300 text-center mb-6">
               More than 3 QA runs exist for this project. We are automatically
               deleting older runs to keep only the latest 3 records.
             </p>
             <div className="flex justify-center">
-              <span className="inline-flex items-center px-4 py-2 bg-slate-100 text-slate-700 rounded-md text-sm font-bold">
+              <span className="inline-flex items-center px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-md text-sm font-bold">
                 <span className="relative flex h-2 w-2 mr-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-slate-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-slate-500"></span>

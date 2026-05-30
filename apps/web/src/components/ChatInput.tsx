@@ -193,11 +193,11 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   }, [value])
 
   return (
-    <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
+    <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
       <div className="relative">
         {showSettings && (
-          <div className="absolute bottom-full mb-2 right-0 w-64 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-3 z-50 animate-in fade-in slide-in-from-bottom-2">
-            <h4 className="text-[10px] font-bold text-slate-900 dark:text-white uppercase tracking-widest mb-2">
+          <div className="absolute bottom-full mb-2 right-0 w-64 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-3 z-50 animate-in fade-in slide-in-from-bottom-2">
+            <h4 className="text-[10px] font-bold text-slate-900 dark:text-slate-200 uppercase tracking-widest mb-2">
               Microphone Settings
             </h4>
 
@@ -259,7 +259,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           }
           disabled={disabled || isTranscribing}
           maxLength={MAX_CHARS}
-          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-white rounded-xl py-3 pl-4 pr-24 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all resize-none min-h-[44px] max-h-[120px] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 rounded-xl py-3 pl-4 pr-24 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all resize-none min-h-[44px] max-h-[120px] disabled:opacity-50 disabled:cursor-not-allowed"
           rows={1}
         />
 

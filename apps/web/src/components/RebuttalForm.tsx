@@ -114,7 +114,7 @@ export const RebuttalForm: React.FC<RebuttalFormProps> = ({
 
   if (isAiAnalyzing) {
     return (
-      <div className="bg-white border border-red-200 rounded-md p-8 shadow-xl flex flex-col items-center justify-center space-y-4 animate-in zoom-in duration-300">
+      <div className="bg-slate-50 border border-red-200 rounded-md p-8 shadow-xl flex flex-col items-center justify-center space-y-4 animate-in zoom-in duration-300">
         <div className="p-4 bg-red-50 rounded-full relative">
           <Loader2 className="w-8 h-8 text-red-600 animate-spin" />
           <div className="absolute inset-0 bg-red-500/10 rounded-full animate-ping" />
@@ -134,7 +134,7 @@ export const RebuttalForm: React.FC<RebuttalFormProps> = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white border border-red-200 rounded-md p-6 shadow-xl space-y-6 ring-4 ring-red-500/5 animate-in slide-in-from-top-4 duration-300"
+      className="bg-slate-50 border border-red-200 rounded-md p-6 shadow-xl space-y-6 ring-4 ring-red-500/5 animate-in slide-in-from-top-4 duration-300"
     >
       <div className="flex items-center justify-between">
         <h4 className="text-[10px] font-bold uppercase tracking-widest text-red-600">
@@ -158,7 +158,7 @@ export const RebuttalForm: React.FC<RebuttalFormProps> = ({
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Explain why this is fixed or not an issue..."
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/40 focus:bg-white transition-all resize-none min-h-[120px]"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/40 focus:bg-slate-50 transition-all resize-none min-h-[120px]"
             required
             minLength={20}
           />

@@ -96,7 +96,7 @@ export const FindingSeverityEditor: React.FC<FindingSeverityEditorProps> = ({
           <option
             key={opt.value}
             value={opt.value}
-            className="bg-white text-slate-900"
+            className="bg-slate-50 text-slate-900"
           >
             {opt.label}
           </option>

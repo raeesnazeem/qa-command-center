@@ -146,7 +146,7 @@ export const NotificationSettingsPage = ({
         }`}
       >
         <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+          className={`inline-block h-4 w-4 transform rounded-full bg-slate-50 transition-transform ${
             checked ? "translate-x-6" : "translate-x-1"
           }`}
         />
@@ -157,9 +157,9 @@ export const NotificationSettingsPage = ({
   return (
     <div className="space-y-8 max-w-4xl animate-in fade-in slide-in-from-bottom-2 duration-500 pb-20">
       {/* Email Notifications */}
-      <section className="bg-white border border-slate-100 rounded-md overflow-hidden shadow-sm">
+      <section className="bg-slate-50 border border-slate-100 rounded-md overflow-hidden shadow-sm">
         <div className="px-6 py-4 border-b border-slate-50 flex items-center space-x-3 bg-slate-50/50">
-          <div className="p-2 bg-white border border-slate-100 rounded-md text-slate-400 shadow-sm">
+          <div className="p-2 bg-slate-50 border border-slate-100 rounded-md text-slate-400 shadow-sm">
             <Mail className="w-5 h-5" />
           </div>
           <div>
@@ -202,9 +202,9 @@ export const NotificationSettingsPage = ({
       </section>
 
       {/* Slack Integration */}
-      {/* <section className="bg-white border border-slate-100 rounded-md overflow-hidden shadow-sm">
+      {/* <section className="bg-slate-50 border border-slate-100 rounded-md overflow-hidden shadow-sm">
         <div className="px-6 py-4 border-b border-slate-50 flex items-center space-x-3 bg-slate-50/50">
-          <div className="p-2 bg-white border border-slate-100 rounded-md text-slate-400 shadow-sm">
+          <div className="p-2 bg-slate-50 border border-slate-100 rounded-md text-slate-400 shadow-sm">
             <Hash className="w-5 h-5" />
           </div>
           <div>
@@ -288,9 +288,9 @@ export const NotificationSettingsPage = ({
       </section> */}
 
       {/* Google Chat Integration */}
-      <section className="bg-white border border-slate-100 rounded-md overflow-hidden shadow-sm">
+      <section className="bg-slate-50 border border-slate-100 rounded-md overflow-hidden shadow-sm">
         <div className="px-6 py-4 border-b border-slate-50 flex items-center space-x-3 bg-slate-50/50">
-          <div className="p-2 bg-white border border-slate-100 rounded-md text-slate-400 shadow-sm">
+          <div className="p-2 bg-slate-50 border border-slate-100 rounded-md text-slate-400 shadow-sm">
             <Bell className="w-5 h-5" />
           </div>
           <div>
@@ -351,9 +351,9 @@ export const NotificationSettingsPage = ({
       </section>
 
       {/* Notification Frequency */}
-      <section className="bg-white border border-slate-100 rounded-md overflow-hidden shadow-sm">
+      <section className="bg-slate-50 border border-slate-100 rounded-md overflow-hidden shadow-sm">
         <div className="px-6 py-4 border-b border-slate-50 flex items-center space-x-3 bg-slate-50/50">
-          <div className="p-2 bg-white border border-slate-100 rounded-md text-slate-400 shadow-sm">
+          <div className="p-2 bg-slate-50 border border-slate-100 rounded-md text-slate-400 shadow-sm">
             <Clock className="w-5 h-5" />
           </div>
           <div>

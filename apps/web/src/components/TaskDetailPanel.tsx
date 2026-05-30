@@ -157,7 +157,7 @@ export const TaskDetailPanel = ({
 
       {/* Panel */}
       <div
-        className={`fixed top-0 bottom-10 right-0 w-full max-w-xl bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col overflow-hidden !mt-0 ${isOpen ? "translate-x-0" : "translate-x-full"}`}
+        className={`fixed top-0 bottom-10 right-0 w-full max-w-xl bg-slate-50 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col overflow-hidden !mt-0 ${isOpen ? "translate-x-0" : "translate-x-full"}`}
       >
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
@@ -407,7 +407,7 @@ export const TaskDetailPanel = ({
                       {task.rebuttals?.map((r) => (
                         <div
                           key={r.id}
-                          className="bg-white border border-red-100 p-3 rounded-lg space-y-2"
+                          className="bg-slate-50 border border-red-100 p-3 rounded-lg space-y-2"
                         >
                           <div className="flex items-center justify-between text-[10px] font-bold uppercase text-red-400">
                             <span>{r.users?.full_name}</span>
@@ -440,7 +440,7 @@ export const TaskDetailPanel = ({
                         value={rebuttalText}
                         onChange={(e) => setRebuttalText(e.target.value)}
                         placeholder="Explain why this finding is incorrect..."
-                        className="w-full bg-white border border-red-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 resize-none min-h-[80px]"
+                        className="w-full bg-slate-50 border border-red-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 resize-none min-h-[80px]"
                       />
                       <div className="flex items-center space-x-2">
                         <div className="relative flex-1">
@@ -450,7 +450,7 @@ export const TaskDetailPanel = ({
                             value={rebuttalUrl}
                             onChange={(e) => setRebuttalUrl(e.target.value)}
                             placeholder="Screenshot URL (optional)"
-                            className="w-full bg-white border border-red-100 rounded-lg pl-10 pr-3 py-2 text-xs focus:outline-none"
+                            className="w-full bg-slate-50 border border-red-100 rounded-lg pl-10 pr-3 py-2 text-xs focus:outline-none"
                           />
                         </div>
                         <button

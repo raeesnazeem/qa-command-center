@@ -253,7 +253,7 @@
 //   if (canAction) {
 //     return (
 //       <div
-//         className={`group p-6 bg-white rounded-md border transition-all duration-300 shadow-sm hover:shadow-xl relative overflow-hidden flex flex-col gap-6 ${
+//         className={`group p-6 bg-slate-50 rounded-md border transition-all duration-300 shadow-sm hover:shadow-xl relative overflow-hidden flex flex-col gap-6 ${
 //           isConfirmed || isAssigned
 //             ? "border-emerald-500 ring-1 ring-emerald-500/20"
 //             : isFalsePositive
@@ -868,7 +868,7 @@
 //               if (e.target === e.currentTarget) setIsContextModalOpen(false)
 //             }}
 //           >
-//             <div className="bg-white w-full max-w-3xl rounded-md shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200">
+//             <div className="bg-slate-50 w-full max-w-3xl rounded-md shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200">
 //               <div className="p-6 border-b flex items-center justify-between bg-slate-50">
 //                 <div className="flex items-center gap-3">
 //                   <div>
@@ -905,7 +905,7 @@
 //         {/* Basecamp Message Board Details Modal */}
 //         {isBasecampModalOpen && (
 //           <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-//             <div className="bg-white max-w-2xl w-full p-8 rounded-md border border-slate-200 shadow-2xl relative text-left">
+//             <div className="bg-slate-50 max-w-2xl w-full p-8 rounded-md border border-slate-200 shadow-2xl relative text-left">
 //               <button
 //                 onClick={() => setIsBasecampModalOpen(false)}
 //                 className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
@@ -949,7 +949,7 @@
 //               if (e.target === e.currentTarget) setIsPrivacyModalOpen(false)
 //             }}
 //           >
-//             <div className="bg-white w-full max-w-6xl rounded-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+//             <div className="bg-slate-50 w-full max-w-6xl rounded-md shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
 //               <div className="p-6 border-b flex items-center justify-between bg-slate-50">
 //                 <div className="flex items-center gap-3">
 //                   <div>
@@ -970,7 +970,7 @@
 //                 </button>
 //               </div>
 //               <div className="p-6 flex gap-6 overflow-hidden min-h-[500px]">
-//                 <div className="flex-1 bg-white border border-slate-200 rounded-lg flex flex-col overflow-hidden">
+//                 <div className="flex-1 bg-slate-50 border border-slate-200 rounded-lg flex flex-col overflow-hidden">
 //                   <div className="bg-slate-100 px-4 py-2 border-b border-slate-200 font-bold text-xs uppercase tracking-wider text-slate-600">
 //                     Expected Template
 //                   </div>
@@ -1115,7 +1115,7 @@
 //                     })()}
 //                   </div>
 //                 </div>
-//                 <div className="flex-1 bg-white border border-slate-200 rounded-lg flex flex-col overflow-hidden">
+//                 <div className="flex-1 bg-slate-50 border border-slate-200 rounded-lg flex flex-col overflow-hidden">
 //                   <div className="bg-slate-100 px-4 py-2 border-b border-slate-200 font-bold text-xs uppercase tracking-wider text-slate-600">
 //                     Actual Website Content
 //                   </div>
@@ -1155,7 +1155,7 @@
 
 //   return (
 //     <div
-//       className={`group p-6 bg-white rounded-md border transition-all duration-300 shadow-sm hover:shadow-xl relative overflow-hidden ${
+//       className={`group p-6 bg-slate-50 rounded-md border transition-all duration-300 shadow-sm hover:shadow-xl relative overflow-hidden ${
 //         isConfirmed || isAssigned
 //           ? "border-emerald-500 ring-1 ring-emerald-500/20"
 //           : isFalsePositive
@@ -1299,7 +1299,7 @@
 //           {/* Basecamp Message Board Details Modal */}
 //           {isBasecampModalOpen && (
 //             <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-//               <div className="bg-white max-w-2xl w-full p-8 rounded-md border border-slate-200 shadow-2xl relative text-left">
+//               <div className="bg-slate-50 max-w-2xl w-full p-8 rounded-md border border-slate-200 shadow-2xl relative text-left">
 //                 <button
 //                   onClick={() => setIsBasecampModalOpen(false)}
 //                   className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
@@ -1371,7 +1371,7 @@
 //           {finding.tasks?.[0]?.rebuttals?.[0] &&
 //             !finding.tasks[0].rebuttals[0].ai_verdict && (
 //               <div className="mb-6 p-4 bg-slate-50 rounded-md border border-slate-100 flex items-center gap-3">
-//                 <div className="p-2 bg-white rounded-lg shadow-sm">
+//                 <div className="p-2 bg-slate-50 rounded-lg shadow-sm">
 //                   <Activity size={16} className="text-blue-500 animate-pulse" />
 //                 </div>
 //                 <div>

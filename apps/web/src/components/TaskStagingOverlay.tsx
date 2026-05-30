@@ -152,7 +152,7 @@ export const TaskStagingOverlay: React.FC<TaskStagingOverlayProps> = ({
   if (!isOpen || stagedFindings.length === 0) return null
 
   return (
-    <div className="fixed inset-y-0 right-0 w-96 bg-white shadow-2xl z-[100] border-l border-slate-200 flex flex-col animate-in slide-in-from-right duration-300">
+    <div className="fixed inset-y-0 right-0 w-96 bg-slate-50 shadow-2xl z-[100] border-l border-slate-200 flex flex-col animate-in slide-in-from-right duration-300">
       {/* Header */}
       <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
         <div className="flex items-center gap-3">
@@ -206,7 +206,7 @@ export const TaskStagingOverlay: React.FC<TaskStagingOverlayProps> = ({
                             title: e.target.value,
                           })
                         }
-                        className="w-full bg-white border border-slate-200 rounded-md px-2 py-1.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-accent/10 focus:border-accent outline-none transition-all"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-md px-2 py-1.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-accent/10 focus:border-accent outline-none transition-all"
                       />
                     </div>
 
@@ -222,7 +222,7 @@ export const TaskStagingOverlay: React.FC<TaskStagingOverlayProps> = ({
                           })
                         }
                         rows={2}
-                        className="w-full bg-white border border-slate-200 rounded-md px-2 py-1.5 text-[11px] font-medium text-slate-600 focus:ring-2 focus:ring-accent/10 focus:border-accent outline-none transition-all resize-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-md px-2 py-1.5 text-[11px] font-medium text-slate-600 focus:ring-2 focus:ring-accent/10 focus:border-accent outline-none transition-all resize-none"
                       />
                     </div>
 
@@ -294,7 +294,7 @@ export const TaskStagingOverlay: React.FC<TaskStagingOverlayProps> = ({
                   className={`w-full flex items-center justify-between p-2.5 rounded-md border transition-all ${
                     selectedUserIds.has(member.user_id)
                       ? "bg-accent/5 border-accent/30 shadow-sm"
-                      : "bg-white border-transparent hover:bg-slate-50"
+                      : "bg-slate-50 border-transparent hover:bg-slate-50"
                   }`}
                 >
                   <div className="flex items-center gap-3">

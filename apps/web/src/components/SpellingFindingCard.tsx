@@ -119,12 +119,12 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
 
   return (
     <div
-      className={`group p-6 bg-white rounded-md border transition-all duration-300 shadow-sm hover:shadow-xl relative overflow-hidden ${
+      className={`group p-6 bg-slate-200/10 dark:bg-[#1D2A31] rounded-md border transition-all duration-300 shadow-[0_10px_15px_-3px_rgba(0,0,0,0.05)] hover:shadow-md relative overflow-hidden flex flex-col gap-6 ${
         isConfirmed || isAssigned
           ? "border-emerald-500 ring-1 ring-emerald-500/20"
           : isFalsePositive
-            ? "opacity-60 border-slate-200"
-            : "border-slate-100 hover:border-accent/40"
+            ? "opacity-60 border-slate-200 dark:border-slate-700"
+            : "border-slate-200 dark:border-slate-700 hover:border-accent/40"
       }`}
     >
       {/* Status Indicators */}
@@ -273,7 +273,7 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
           {finding.tasks?.[0]?.rebuttals?.[0] &&
             !finding.tasks[0].rebuttals[0].ai_verdict && (
               <div className="mb-6 p-4 bg-slate-50 rounded-md border border-slate-100 flex items-center gap-3">
-                <div className="p-2 bg-white rounded-lg shadow-sm">
+                <div className="p-2 bg-slate-50 rounded-lg shadow-sm">
                   <Activity size={16} className="text-blue-500 animate-pulse" />
                 </div>
                 <div>
@@ -303,7 +303,7 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
                 {!(hasTask || isAssigned) && (
                   <button
                     onClick={() => onFalsePositive?.(finding.id)}
-                    className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 text-slate-500 text-[9px] font-bold uppercase tracking-widest rounded-[10px] hover:bg-slate-50 transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 border border-slate-200 text-slate-500 text-[9px] font-bold uppercase tracking-widest rounded-[10px] hover:bg-slate-50 transition-colors"
                   >
                     <XCircle size={12} />
                     False Positive
@@ -311,7 +311,7 @@ export const SpellingFindingCard: React.FC<FindingCardProps> = ({
                 )}
                 <button
                   onClick={() => onAssign?.(finding.id)}
-                  className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 text-slate-500 text-[9px] font-bold uppercase tracking-widest rounded-[10px] hover:bg-slate-50 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 border border-slate-200 text-slate-500 text-[9px] font-bold uppercase tracking-widest rounded-[10px] hover:bg-slate-50 transition-colors"
                 >
                   <UserPlus size={12} />
                   Assign

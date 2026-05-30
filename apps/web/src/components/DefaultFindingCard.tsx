@@ -138,12 +138,12 @@ export const DefaultFindingCard: React.FC<FindingCardProps> = ({
   if (!canAction) {
     return (
       <div
-        className={`group p-6 bg-white rounded-md border transition-all duration-300 shadow-sm hover:shadow-xl relative overflow-hidden ${
+        className={`group p-6 bg-slate-200/10 dark:bg-[#1D2A31] rounded-md border transition-all duration-300 shadow-sm hover:shadow-xl relative overflow-hidden flex flex-col gap-6 ${
           isConfirmed || isAssigned
             ? "border-emerald-500 ring-1 ring-emerald-500/20"
             : isFalsePositive
-              ? "opacity-60 border-slate-200"
-              : "border-slate-100 hover:border-accent/40"
+              ? "opacity-60 border-slate-200 dark:border-slate-700"
+              : "border-slate-200 dark:border-slate-700 hover:border-accent/40"
         }`}
       >
         <div className="flex items-start gap-4">
@@ -193,7 +193,7 @@ export const DefaultFindingCard: React.FC<FindingCardProps> = ({
             </div>
 
             <h4
-              className={`font-bold text-slate-900 text-base mb-2 group-hover:text-black transition-colors leading-tight ${
+              className={`font-bold text-slate-900 dark:text-slate-200 text-base mb-2 group-hover:text-black dark:group-hover:text-white transition-colors leading-tight ${
                 isFalsePositive ? "line-through text-slate-400" : ""
               }`}
             >
@@ -203,7 +203,7 @@ export const DefaultFindingCard: React.FC<FindingCardProps> = ({
             {finding.description && (
               <div className="mb-4">
                 <p
-                  className={`text-[11px] text-slate-500 font-medium leading-relaxed break-words ${
+                  className={`text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed break-words ${
                     isFalsePositive ? "text-slate-400" : ""
                   } ${!isExpanded ? "line-clamp-3" : ""}`}
                 >
@@ -268,18 +268,18 @@ export const DefaultFindingCard: React.FC<FindingCardProps> = ({
 
             {finding.tasks?.[0]?.rebuttals?.[0] &&
               !finding.tasks[0].rebuttals[0].ai_verdict && (
-                <div className="mb-6 p-4 bg-slate-50 rounded-md border border-slate-100 flex items-center gap-3">
-                  <div className="p-2 bg-white rounded-lg shadow-sm">
+                <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-md border border-slate-100 dark:border-slate-700 flex items-center gap-3">
+                  <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg shadow-sm">
                     <Activity
                       size={16}
                       className="text-blue-500 animate-pulse"
                     />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-slate-900 uppercase tracking-tight">
+                    <p className="text-[10px] font-bold text-slate-900 dark:text-slate-200 uppercase tracking-tight">
                       AI Analysis Pending
                     </p>
-                    <p className="text-[9px] text-slate-500 font-medium">
+                    <p className="text-[9px] text-slate-500 dark:text-slate-400 font-medium">
                       Gemini is reviewing the developer's rebuttal...
                     </p>
                   </div>
@@ -287,7 +287,7 @@ export const DefaultFindingCard: React.FC<FindingCardProps> = ({
               )}
 
             {isFalsePositive && (
-              <div className="pt-4 border-t border-slate-100 flex justify-end">
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-700 flex justify-end">
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] italic">
                   Marked as False Positive
                 </span>
@@ -301,12 +301,12 @@ export const DefaultFindingCard: React.FC<FindingCardProps> = ({
 
   return (
     <div
-      className={`group p-6 bg-white rounded-md border transition-all duration-300 shadow-sm hover:shadow-xl relative overflow-hidden flex flex-col gap-6 ${
+      className={`group p-6 bg-slate-200/10 dark:bg-[#1D2A31] rounded-md border transition-all duration-300 shadow-[0_10px_15px_-3px_rgba(0,0,0,0.05)] hover:shadow-md relative overflow-hidden flex flex-col gap-6 ${
         isConfirmed || isAssigned
           ? "border-emerald-500 ring-1 ring-emerald-500/20"
           : isFalsePositive
-            ? "opacity-60 border-slate-200"
-            : "border-slate-100 hover:border-accent/40"
+            ? "opacity-60 border-slate-200 dark:border-slate-700"
+            : "border-slate-200 dark:border-slate-700 hover:border-accent/40"
       }`}
     >
       <div className="flex items-center justify-between">
@@ -359,7 +359,7 @@ export const DefaultFindingCard: React.FC<FindingCardProps> = ({
         <input
           value={localTitle}
           onChange={(e) => setLocalTitle(e.target.value)}
-          className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-sm font-bold text-slate-900 focus:ring-2 focus:ring-accent/30 focus:border-accent/50 outline-none transition-all placeholder:text-slate-300"
+          className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-md font-bold text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-accent/30 focus:border-accent/50 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500"
           placeholder="Input for Heading to be entered by Admin / QA"
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover/input:opacity-100 transition-opacity">
@@ -373,7 +373,7 @@ export const DefaultFindingCard: React.FC<FindingCardProps> = ({
         <div className={`space-y-4 ${isFullWidth ? "col-span-full" : ""}`}>
           <div className="space-y-3">
             <p
-              className={`text-[11px] text-slate-500 font-medium leading-relaxed break-words ${
+              className={`text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed break-words ${
                 isExpanded ? "" : "line-clamp-3"
               }`}
             >
@@ -416,7 +416,7 @@ export const DefaultFindingCard: React.FC<FindingCardProps> = ({
         )}
       </div>
 
-      <div className="flex items-center justify-between pt-4 border-t border-slate-50 mt-auto">
+      <div className="flex items-center justify-between pt-4 border-t border-slate-50 dark:border-slate-700/50 mt-auto">
         <div className="flex items-center gap-2">
           {isPaidMedia ? (
             <button
@@ -512,7 +512,7 @@ export const DefaultFindingCard: React.FC<FindingCardProps> = ({
         </div>
 
         {assignedUsers.length > 0 && (
-          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-100 p-1.5 rounded-full pl-3 pr-2">
+          <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-1.5 rounded-full pl-3 pr-2">
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">
               Assigned
             </span>
@@ -520,7 +520,7 @@ export const DefaultFindingCard: React.FC<FindingCardProps> = ({
               {assignedUsers.map((u, idx) => (
                 <div
                   key={u.id || idx}
-                  className="w-6 h-6 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-[8px] font-bold text-slate-500 relative group/avatar"
+                  className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-white dark:border-[#1D2A31] flex items-center justify-center text-[8px] font-bold text-slate-500 dark:text-slate-300 relative group/avatar"
                 >
                   {u.avatar_url ? (
                     <img
@@ -548,11 +548,11 @@ export const DefaultFindingCard: React.FC<FindingCardProps> = ({
             if (e.target === e.currentTarget) setIsContextModalOpen(false)
           }}
         >
-          <div className="bg-white w-full max-w-3xl rounded-md shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b flex items-center justify-between bg-slate-50">
+          <div className="bg-slate-50 dark:bg-[#1D2A31] w-full max-w-3xl rounded-md shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b dark:border-slate-700 flex items-center justify-between bg-slate-50 dark:bg-[#1D2A31]">
               <div className="flex items-center gap-3">
                 <div>
-                  <h3 className="font-bold text-slate-900 text-sm uppercase tracking-widest">
+                  <h3 className="font-bold text-slate-900 dark:text-slate-200 text-sm uppercase tracking-widest">
                     Contextual Data
                   </h3>
                   <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">
@@ -562,7 +562,7 @@ export const DefaultFindingCard: React.FC<FindingCardProps> = ({
               </div>
               <button
                 onClick={() => setIsContextModalOpen(false)}
-                className="p-2 hover:bg-slate-200 rounded-xl transition-all active:scale-90"
+                className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-all active:scale-90"
               >
                 <XCircle size={24} className="text-slate-400" />
               </button>
@@ -571,7 +571,7 @@ export const DefaultFindingCard: React.FC<FindingCardProps> = ({
               {finding.context_text ||
                 "No contextual data available for this finding."}
             </div>
-            <div className="p-4 bg-slate-50 border-t flex justify-end">
+            <div className="p-4 bg-slate-50 dark:bg-[#1D2A31] border-t dark:border-slate-700 flex justify-end">
               <button
                 onClick={() => setIsContextModalOpen(false)}
                 className="btn-unified"

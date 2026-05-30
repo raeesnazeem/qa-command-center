@@ -88,7 +88,7 @@ export const TestPage = () => {
       </header>
 
       {/* Clerk Info */}
-      <section className="bg-white p-6 rounded-md border border-slate-200 shadow-sm">
+      <section className="bg-slate-50 p-6 rounded-md border border-slate-200 shadow-sm">
         <h2 className="text-xl font-semibold mb-4 text-slate-900">1. Clerk Auth State</h2>
         <div className="space-y-4">
           <div className="flex items-center justify-between p-3 bg-slate-50 rounded border border-slate-100">
@@ -137,7 +137,7 @@ export const TestPage = () => {
       </section>
 
       {/* API Health */}
-      <section className="bg-white p-6 rounded-md border border-slate-200 shadow-sm">
+      <section className="bg-slate-50 p-6 rounded-md border border-slate-200 shadow-sm">
         <h2 className="text-xl font-semibold mb-4 text-slate-900">
           2. API Connectivity (/health)
         </h2>
@@ -176,7 +176,7 @@ export const TestPage = () => {
       </section>
 
       {/* Database Sync */}
-      <section className="bg-white p-6 rounded-md border border-slate-200 shadow-sm">
+      <section className="bg-slate-50 p-6 rounded-md border border-slate-200 shadow-sm">
         <h2 className="text-xl font-semibold mb-4 text-slate-900">
           3. Database Sync (/api/me)
         </h2>

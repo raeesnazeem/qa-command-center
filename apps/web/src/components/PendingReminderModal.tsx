@@ -81,7 +81,7 @@ export const PendingReminderModal = ({
         onClick={() => !isPushing && onClose()}
       />
 
-      <div className="relative w-full max-w-xl bg-white border border-slate-200 rounded-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-xl bg-slate-50 border border-slate-200 rounded-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="px-8 py-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
           <div>

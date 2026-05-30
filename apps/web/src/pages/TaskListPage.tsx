@@ -94,7 +94,7 @@ export const TaskListPage = () => {
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-wrap items-center gap-4">
+      <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm flex flex-wrap items-center gap-4">
         <div className="relative flex-1 min-w-[240px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input 
@@ -111,7 +111,7 @@ export const TaskListPage = () => {
           <select 
             value={filters.status}
             onChange={(e) => setFilters({ ...filters, status: e.target.value as TaskStatus })}
-            className="bg-white border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+            className="bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
           >
             <option value="">All Statuses</option>
             <option value="open">Open</option>
@@ -123,7 +123,7 @@ export const TaskListPage = () => {
           <select 
             value={filters.severity}
             onChange={(e) => setFilters({ ...filters, severity: e.target.value as TaskSeverity })}
-            className="bg-white border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+            className="bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
           >
             <option value="">All Severities</option>
             <option value="critical">Critical</option>
@@ -136,7 +136,7 @@ export const TaskListPage = () => {
             value={filters.assignedTo}
             onChange={(e) => setFilters({ ...filters, assignedTo: e.target.value })}
             disabled={isDeveloper}
-            className={`bg-white border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all ${isDeveloper ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all ${isDeveloper ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <option value="">All Assignees</option>
             {/* Mocking unique assignees from tasks for now since no global user list is available */}
@@ -149,7 +149,7 @@ export const TaskListPage = () => {
       </div>
 
       {/* Task Table */}
-      <div className="bg-white border border-slate-100 rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-slate-50 border border-slate-100 rounded-xl shadow-sm overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50/50 border-b border-slate-100">

@@ -17,13 +17,13 @@ export const QuickPromptChips: React.FC<QuickPromptChipsProps> = ({
   disabled,
 }) => {
   return (
-    <div className="flex flex-wrap gap-2 p-3 bg-white dark:bg-slate-900">
+    <div className="flex flex-wrap gap-2 p-3 bg-slate-50 dark:bg-slate-900">
       {PROMPTS.map((prompt, index) => (
         <button
           key={index}
           onClick={() => onSelect(prompt)}
           disabled={disabled}
-          className="px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-[11px] text-slate-600 dark:text-slate-300 font-medium hover:border-accent hover:text-accent hover:bg-white dark:hover:bg-slate-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-left shadow-sm"
+          className="px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-[11px] text-slate-600 dark:text-slate-300 font-medium hover:border-accent hover:text-accent hover:bg-slate-50 dark:hover:bg-slate-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-left shadow-sm"
         >
           {prompt}
         </button>

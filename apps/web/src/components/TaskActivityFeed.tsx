@@ -41,7 +41,7 @@ export const TaskActivityFeed: React.FC<TaskActivityFeedProps> = ({
         {logs.map((log: any) => (
           <div
             key={log.id}
-            className="flex gap-3 p-3 bg-white border border-slate-100 rounded-xl shadow-sm hover:shadow-md transition-shadow"
+            className="flex gap-3 p-3 bg-slate-50 border border-slate-100 rounded-xl shadow-sm hover:shadow-md transition-shadow"
           >
             <div className="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center flex-shrink-0">
               <User className="w-4 h-4 text-slate-400" />
@@ -68,7 +68,7 @@ export const TaskActivityFeed: React.FC<TaskActivityFeedProps> = ({
 
         {logs.length === 0 && (
           <div className="text-center py-12 px-6 bg-slate-50/50 rounded-md border border-dashed border-slate-200">
-            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-slate-200 mx-auto mb-3 shadow-sm">
+            <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mx-auto mb-3 shadow-sm">
               <Activity className="w-5 h-5" />
             </div>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">

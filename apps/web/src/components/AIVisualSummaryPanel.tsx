@@ -57,7 +57,7 @@ export const AIVisualSummaryPanel: React.FC<AIVisualSummaryPanelProps> = ({
       : findings.filter((f) => f.status === "confirmed")
 
   return (
-    <div className="bg-white border-t border-slate-200 flex flex-col h-full">
+    <div className="bg-slate-50 border-t border-slate-200 flex flex-col h-full">
       <div className="p-4 border-b border-slate-100 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest flex items-center gap-2">
@@ -74,7 +74,7 @@ export const AIVisualSummaryPanel: React.FC<AIVisualSummaryPanelProps> = ({
               onClick={() => setFilter("all")}
               className={`px-3 py-1 text-[10px] font-bold uppercase tracking-tight rounded-md transition-all ${
                 filter === "all"
-                  ? "bg-white text-black shadow-sm"
+                  ? "bg-slate-50 text-black shadow-sm"
                   : "text-slate-400 hover:text-slate-600"
               }`}
             >
@@ -84,7 +84,7 @@ export const AIVisualSummaryPanel: React.FC<AIVisualSummaryPanelProps> = ({
               onClick={() => setFilter("confirmed")}
               className={`px-3 py-1 text-[10px] font-bold uppercase tracking-tight rounded-md transition-all ${
                 filter === "confirmed"
-                  ? "bg-white text-black shadow-sm"
+                  ? "bg-slate-50 text-black shadow-sm"
                   : "text-slate-400 hover:text-slate-600"
               }`}
             >
@@ -112,7 +112,7 @@ export const AIVisualSummaryPanel: React.FC<AIVisualSummaryPanelProps> = ({
             {filteredFindings.map((finding) => (
               <div
                 key={finding.id}
-                className={`p-4 bg-white border rounded-md shadow-sm hover:shadow-md transition-all group relative overflow-hidden ${
+                className={`p-4 bg-slate-50 border rounded-md shadow-sm hover:shadow-md transition-all group relative overflow-hidden ${
                   finding.status === "confirmed"
                     ? "border-emerald-200 bg-emerald-50/10"
                     : "border-slate-100"

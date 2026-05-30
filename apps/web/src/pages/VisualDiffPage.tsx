@@ -117,18 +117,30 @@ export const VisualDiffPage: React.FC = () => {
   const selectedPage = run?.pages?.find((p) => p.id === selectedPageId)
 
   if (runLoading) {
+    const isDark = typeof window !== "undefined" && (localStorage.getItem("theme") === "dark" || (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches));
     return (
-      <div className="h-screen flex flex-col items-center justify-center bg-slate-50 font-sans">
-        <div className="flex flex-col items-center space-y-4 animate-pulse">
-          <img
-            src="https://growth99.com/storage/2024/09/LOGO.svg"
-            alt="QACC Logo"
-            className="h-48 w-48"
-            style={{ objectFit: "contain" }}
-          />
-          <p className="text-slate-500 text-sm font-medium uppercase tracking-widest">
-            Loading Visual Diff...
-          </p>
+      <div className={isDark ? "dark w-full h-full" : "w-full h-full"}>
+        <div className="relative h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 font-sans overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-emerald-200/5 dark:bg-teal-500/5 rounded-full blur-3xl animate-gemini-glow"></div>
+          </div>
+          <div className="relative z-10 flex flex-col items-center space-y-4 animate-pulse">
+            <img
+              src="https://growth99.com/storage/2024/09/LOGO.svg"
+              alt="QACC Logo"
+              className="h-48 w-48 dark:hidden block"
+              style={{ objectFit: "contain" }}
+            />
+            <img
+              src="https://aspire-cc.com/storage/2026/03/G99-Logo.svg"
+              alt="QACC Logo"
+              className="h-48 w-48 hidden dark:block"
+              style={{ objectFit: "contain" }}
+            />
+            <p className="text-slate-500 text-sm font-medium uppercase tracking-widest">
+              Loading Visual Diff...
+            </p>
+          </div>
         </div>
       </div>
     )
@@ -137,7 +149,7 @@ export const VisualDiffPage: React.FC = () => {
   return (
     <div className="h-screen flex flex-col bg-slate-50 overflow-hidden">
       {/* Header */}
-      <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 z-20 shadow-sm">
+      <header className="h-16 bg-slate-50 border-b border-slate-200 flex items-center justify-between px-6 shrink-0 z-20 shadow-sm">
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(`/projects/${projectId}/runs/${runId}`)}
@@ -166,7 +178,7 @@ export const VisualDiffPage: React.FC = () => {
               onClick={() => setViewMode("side-by-side")}
               className={`flex items-center gap-2 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all ${
                 viewMode === "side-by-side"
-                  ? "bg-white text-black shadow-sm"
+                  ? "bg-slate-50 text-black shadow-sm"
                   : "text-slate-400 hover:text-slate-600"
               }`}
             >
@@ -177,7 +189,7 @@ export const VisualDiffPage: React.FC = () => {
               onClick={() => setViewMode("overlay")}
               className={`flex items-center gap-2 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all ${
                 viewMode === "overlay"
-                  ? "bg-white text-black shadow-sm"
+                  ? "bg-slate-50 text-black shadow-sm"
                   : "text-slate-400 hover:text-slate-600"
               }`}
             >
@@ -242,7 +254,7 @@ export const VisualDiffPage: React.FC = () => {
                     </p>
                     <button
                       onClick={() => handleRunDiff(runId!)}
-                      className="px-8 py-3 bg-white text-black text-xs font-bold uppercase tracking-[0.2em] rounded-md hover:bg-slate-100 transition-all active:scale-95 shadow-2xl"
+                      className="px-8 py-3 bg-slate-50 text-black text-xs font-bold uppercase tracking-[0.2em] rounded-md hover:bg-slate-100 transition-all active:scale-95 shadow-2xl"
                     >
                       Process Visual Diff
                     </button>
@@ -261,7 +273,7 @@ export const VisualDiffPage: React.FC = () => {
             </>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-12 bg-slate-50">
-              <div className="w-16 h-16 bg-white rounded-md shadow-xl flex items-center justify-center mb-6 border border-slate-100">
+              <div className="w-16 h-16 bg-slate-50 rounded-md shadow-xl flex items-center justify-center mb-6 border border-slate-100">
                 <Layout className="w-8 h-8 text-slate-200" />
               </div>
               <h3 className="text-xl font-bold text-slate-900 uppercase tracking-tight mb-2">

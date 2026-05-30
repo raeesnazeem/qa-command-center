@@ -142,12 +142,12 @@ export const ProjectPlanFindingCard: React.FC<FindingCardProps> = ({
   if (!canAction) {
     return (
       <div
-        className={`group p-6 bg-white rounded-md border transition-all duration-300 shadow-sm hover:shadow-xl relative overflow-hidden ${
+        className={`group p-6 bg-slate-200/10 dark:bg-[#1D2A31] rounded-md border transition-all duration-300 shadow-sm hover:shadow-xl relative overflow-hidden flex flex-col gap-6 ${
           isConfirmed || isAssigned
             ? "border-emerald-500 ring-1 ring-emerald-500/20"
             : isFalsePositive
-              ? "opacity-60 border-slate-200"
-              : "border-slate-100 hover:border-accent/40"
+              ? "opacity-60 border-slate-200 dark:border-slate-700"
+              : "border-slate-200 dark:border-slate-700 hover:border-accent/40"
         }`}
       >
         <div className="flex items-start gap-4">
@@ -197,7 +197,7 @@ export const ProjectPlanFindingCard: React.FC<FindingCardProps> = ({
             </div>
 
             <h4
-              className={`font-bold text-slate-900 text-base mb-2 group-hover:text-black transition-colors leading-tight ${
+              className={`font-bold text-slate-900 dark:text-slate-200 text-base mb-2 group-hover:text-black dark:group-hover:text-white transition-colors leading-tight ${
                 isFalsePositive ? "line-through text-slate-400" : ""
               }`}
             >
@@ -207,7 +207,7 @@ export const ProjectPlanFindingCard: React.FC<FindingCardProps> = ({
             {finding.description && (
               <div className="mb-4">
                 <p
-                  className={`text-[11px] text-slate-500 font-medium leading-relaxed break-words ${
+                  className={`text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed break-words ${
                     isFalsePositive ? "text-slate-400" : ""
                   } ${!isExpanded ? "line-clamp-3" : ""}`}
                 >
@@ -288,18 +288,18 @@ export const ProjectPlanFindingCard: React.FC<FindingCardProps> = ({
 
             {finding.tasks?.[0]?.rebuttals?.[0] &&
               !finding.tasks[0].rebuttals[0].ai_verdict && (
-                <div className="mb-6 p-4 bg-slate-50 rounded-md border border-slate-100 flex items-center gap-3">
-                  <div className="p-2 bg-white rounded-lg shadow-sm">
+                <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-md border border-slate-100 dark:border-slate-700 flex items-center gap-3">
+                  <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg shadow-sm">
                     <Activity
                       size={16}
                       className="text-blue-500 animate-pulse"
                     />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-slate-900 uppercase tracking-tight">
+                    <p className="text-[10px] font-bold text-slate-900 dark:text-slate-200 uppercase tracking-tight">
                       AI Analysis Pending
                     </p>
-                    <p className="text-[9px] text-slate-500 font-medium">
+                    <p className="text-[9px] text-slate-500 dark:text-slate-400 font-medium">
                       Gemini is reviewing the developer's rebuttal...
                     </p>
                   </div>
@@ -307,7 +307,7 @@ export const ProjectPlanFindingCard: React.FC<FindingCardProps> = ({
               )}
 
             {isFalsePositive && (
-              <div className="pt-4 border-t border-slate-100 flex justify-end">
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-700 flex justify-end">
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] italic">
                   Marked as False Positive
                 </span>
@@ -336,12 +336,12 @@ export const ProjectPlanFindingCard: React.FC<FindingCardProps> = ({
 
   return (
     <div
-      className={`group p-6 bg-white rounded-md border transition-all duration-300 shadow-sm hover:shadow-xl relative overflow-hidden flex flex-col gap-6 ${
+      className={`group p-6 bg-slate-200/10 dark:bg-[#1D2A31] rounded-md border transition-all duration-300 shadow-[0_10px_15px_-3px_rgba(0,0,0,0.05)] hover:shadow-md relative overflow-hidden flex flex-col gap-6 ${
         isConfirmed || isAssigned
           ? "border-emerald-500 ring-1 ring-emerald-500/20"
           : isFalsePositive
-            ? "opacity-60 border-slate-200"
-            : "border-slate-100 hover:border-accent/40"
+            ? "opacity-60 border-slate-200 dark:border-slate-700"
+            : "border-slate-200 dark:border-slate-700 hover:border-accent/40"
       }`}
     >
       <div className="flex items-center justify-between">
@@ -394,7 +394,7 @@ export const ProjectPlanFindingCard: React.FC<FindingCardProps> = ({
         <input
           value={localTitle}
           onChange={(e) => setLocalTitle(e.target.value)}
-          className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-sm font-bold text-slate-900 focus:ring-2 focus:ring-accent/30 focus:border-accent/50 outline-none transition-all placeholder:text-slate-300"
+          className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-md font-bold text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-accent/30 focus:border-accent/50 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500"
           placeholder="Input for Heading to be entered by Admin / QA"
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover/input:opacity-100 transition-opacity">
@@ -404,7 +404,7 @@ export const ProjectPlanFindingCard: React.FC<FindingCardProps> = ({
 
       <div className="space-y-4">
         <div>
-          <h5 className="font-bold text-slate-900 text-sm uppercase tracking-tight mb-2">
+          <h5 className="font-bold text-slate-900 dark:text-slate-200 text-sm uppercase tracking-tight mb-2">
             Project Plan found
           </h5>
         </div>
@@ -432,16 +432,16 @@ export const ProjectPlanFindingCard: React.FC<FindingCardProps> = ({
                 ))}
               </div>
 
-              <div className="flex flex-col gap-3 pl-4 border-l border-slate-100">
+              <div className="flex flex-col gap-3 pl-4 border-l border-slate-100 dark:border-slate-700/50">
                 <label className="flex items-center gap-2 group/cb">
                   <input
                     type="checkbox"
                     disabled={isPushed}
                     checked={isPlanVerified}
                     onChange={(e) => setIsPlanVerified(e.target.checked)}
-                    className="w-3 h-3 text-accent border-slate-300 rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 transition-all"
+                    className="w-3 h-3 text-accent border-slate-300 dark:border-slate-600 dark:bg-slate-800 rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 transition-all"
                   />
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest group-hover/cb:text-slate-900 transition-colors cursor-pointer">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest group-hover/cb:text-slate-900 dark:group-hover/cb:text-slate-200 transition-colors cursor-pointer">
                     {isPlanVerified ? "Plan Verified" : "Verify Plan"}
                   </span>
                 </label>
@@ -451,9 +451,9 @@ export const ProjectPlanFindingCard: React.FC<FindingCardProps> = ({
                     disabled={isPushed}
                     checked={isReviewsVerified}
                     onChange={(e) => setIsReviewsVerified(e.target.checked)}
-                    className="w-3 h-3 text-accent border-slate-300 rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 transition-all"
+                    className="w-3 h-3 text-accent border-slate-300 dark:border-slate-600 dark:bg-slate-800 rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 transition-all"
                   />
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest group-hover/cb:text-slate-900 transition-colors cursor-pointer">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest group-hover/cb:text-slate-900 dark:group-hover/cb:text-slate-200 transition-colors cursor-pointer">
                     {isReviewsVerified ? "Reviews Verified" : "Verify Reviews"}
                   </span>
                 </label>
@@ -595,21 +595,21 @@ export const ProjectPlanFindingCard: React.FC<FindingCardProps> = ({
 
       {isBasecampModalOpen && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white max-w-2xl w-full p-8 rounded-md border border-slate-200 shadow-2xl relative text-left">
+          <div className="bg-slate-50 dark:bg-[#1D2A31] max-w-2xl w-full p-8 rounded-md border border-slate-200 dark:border-slate-700 shadow-2xl relative text-left">
             <button
               onClick={() => setIsBasecampModalOpen(false)}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
             >
               <XCircle size={24} />
             </button>
-            <h3 className="font-bold text-slate-900 text-lg mb-4">
+            <h3 className="font-bold text-slate-900 dark:text-slate-200 text-lg mb-4">
               Basecamp Project Plan Details
             </h3>
-            <p className="text-slate-600 text-sm mb-6 leading-relaxed">
+            <p className="text-slate-600 dark:text-slate-400 text-sm mb-6 leading-relaxed">
               This project plan was fetched dynamically from your Basecamp
               Message Board topic: <strong>"Project Order Details"</strong>.
             </p>
-            <div className="bg-slate-50 border border-slate-100 p-6 rounded-xl text-slate-800 font-medium text-sm mb-6 shadow-inner max-h-[300px] overflow-y-auto">
+            <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 p-6 rounded-xl text-slate-800 dark:text-slate-300 font-medium text-sm mb-6 shadow-inner max-h-[300px] overflow-y-auto">
               {finding.description}
             </div>
             <div className="flex justify-end">

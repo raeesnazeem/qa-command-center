@@ -78,7 +78,7 @@ export const SideBySideViewer: React.FC<SideBySideViewerProps> = ({
         <div className="flex items-center gap-1 border-r border-white/10 pr-2">
           <button
             onClick={() => handleZoom(-0.1)}
-            className="p-1.5 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+            className="p-1.5 text-white/60 hover:text-white hover:bg-slate-50/10 rounded-lg transition-colors"
           >
             <ZoomOut size={16} />
           </button>
@@ -87,7 +87,7 @@ export const SideBySideViewer: React.FC<SideBySideViewerProps> = ({
           </span>
           <button
             onClick={() => handleZoom(0.1)}
-            className="p-1.5 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+            className="p-1.5 text-white/60 hover:text-white hover:bg-slate-50/10 rounded-lg transition-colors"
           >
             <ZoomIn size={16} />
           </button>
@@ -102,8 +102,8 @@ export const SideBySideViewer: React.FC<SideBySideViewerProps> = ({
             }
             className={`p-1.5 rounded-lg transition-colors flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest px-3 ${
               viewMode === "split"
-                ? "bg-white text-black"
-                : "text-white/60 hover:text-white hover:bg-white/10"
+                ? "bg-slate-50 text-black"
+                : "text-white/60 hover:text-white hover:bg-slate-50/10"
             }`}
           >
             {viewMode === "split" ? (
@@ -120,7 +120,7 @@ export const SideBySideViewer: React.FC<SideBySideViewerProps> = ({
             setZoom(1)
             setPan({ x: 0, y: 0 })
           }}
-          className="p-1.5 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors text-[10px] font-bold uppercase tracking-widest px-3 border-l border-white/10 ml-1"
+          className="p-1.5 text-white/60 hover:text-white hover:bg-slate-50/10 rounded-lg transition-colors text-[10px] font-bold uppercase tracking-widest px-3 border-l border-white/10 ml-1"
         >
           Reset
         </button>
@@ -240,7 +240,7 @@ export const SideBySideViewer: React.FC<SideBySideViewerProps> = ({
                 className="absolute inset-y-0 z-20 group/handle"
                 style={{ left: `${sliderPos}%` }}
               >
-                <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 bg-white rounded-full shadow-2xl flex items-center justify-center group-hover/handle:scale-110 transition-transform">
+                <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 bg-slate-50 rounded-full shadow-2xl flex items-center justify-center group-hover/handle:scale-110 transition-transform">
                   <Move size={16} className="text-black" />
                 </div>
               </div>

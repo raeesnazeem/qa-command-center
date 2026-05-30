@@ -191,7 +191,7 @@ export default function Week2TestPage() {
       </header>
 
       {/* Control Panel */}
-      <div className="bg-white p-8 rounded-md border-2 border-slate-100 shadow-xl space-y-6">
+      <div className="bg-slate-50 p-8 rounded-md border-2 border-slate-100 shadow-xl space-y-6">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <h2 className="text-lg font-bold text-slate-900">
@@ -318,7 +318,7 @@ export default function Week2TestPage() {
               {run?.status === "completed" && !falsePositiveWorked && (
                 <button
                   onClick={handleTestFalsePositive}
-                  className="text-[8px] font-bold bg-white text-black px-2 py-1 rounded uppercase hover:bg-accent transition-colors"
+                  className="text-[8px] font-bold bg-slate-50 text-black px-2 py-1 rounded uppercase hover:bg-accent transition-colors"
                 >
                   Test Now
                 </button>
@@ -343,7 +343,7 @@ export default function Week2TestPage() {
               {run?.status === "completed" && !taskCreationWorked && (
                 <button
                   onClick={handleTestTaskCreation}
-                  className="text-[8px] font-bold bg-white text-black px-2 py-1 rounded uppercase hover:bg-accent transition-colors"
+                  className="text-[8px] font-bold bg-slate-50 text-black px-2 py-1 rounded uppercase hover:bg-accent transition-colors"
                 >
                   Test Now
                 </button>
@@ -358,7 +358,7 @@ export default function Week2TestPage() {
         </div>
 
         {/* Findings Summary */}
-        <div className="bg-white rounded-md p-8 border-2 border-slate-100 shadow-sm space-y-6">
+        <div className="bg-slate-50 rounded-md p-8 border-2 border-slate-100 shadow-sm space-y-6">
           <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-400 border-b border-slate-50 pb-4">
             Findings Payload
           </h3>
@@ -376,7 +376,7 @@ export default function Week2TestPage() {
                 return (
                   <div
                     key={factor}
-                    className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between group hover:bg-white hover:border-accent/30 transition-all"
+                    className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between group hover:bg-slate-50 hover:border-accent/30 transition-all"
                   >
                     <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter truncate pr-2">
                       {factor.replace(/_/g, " ")}
@@ -398,7 +398,7 @@ export default function Week2TestPage() {
       {run?.status === "completed" && run.is_woocommerce && (
         <div className="bg-emerald-50 rounded-md p-8 border border-emerald-100 animate-in zoom-in-95 duration-500">
           <div className="flex items-center gap-4 mb-6">
-            <div className="p-3 bg-white rounded-md shadow-sm text-emerald-600">
+            <div className="p-3 bg-slate-50 rounded-md shadow-sm text-emerald-600">
               <ShoppingCart size={24} />
             </div>
             <div>

@@ -368,15 +368,31 @@ export const RunDetailPage = () => {
   const isLoading = isLoadingRun || isLoadingProject
 
   if (isLoading) {
+    const isDark =
+      typeof window !== "undefined" &&
+      (localStorage.getItem("theme") === "dark" ||
+        (!localStorage.getItem("theme") &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches))
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] font-sans mt-[100px]">
-        <div className="flex flex-col items-center space-y-4 animate-pulse">
-          <img
-            src="https://growth99.com/storage/2024/09/LOGO.svg"
-            alt="QACC Logo"
-            className="h-48 w-48"
-            style={{ objectFit: "contain" }}
-          />
+      <div className={isDark ? "dark w-full h-full" : "w-full h-full"}>
+        <div className="relative flex flex-col items-center justify-center min-h-[60vh] dark:bg-slate-900 font-sans mt-[100px] overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-emerald-200/5 dark:bg-teal-500/5 rounded-full blur-3xl animate-gemini-glow"></div>
+          </div>
+          <div className="relative z-10 flex flex-col items-center space-y-4 animate-pulse">
+            <img
+              src="https://growth99.com/storage/2024/09/LOGO.svg"
+              alt="QACC Logo"
+              className="h-48 w-48 dark:hidden block"
+              style={{ objectFit: "contain" }}
+            />
+            <img
+              src="https://aspire-cc.com/storage/2026/03/G99-Logo.svg"
+              alt="QACC Logo"
+              className="h-48 w-48 hidden dark:block"
+              style={{ objectFit: "contain" }}
+            />
+          </div>
         </div>
       </div>
     )
@@ -668,7 +684,7 @@ export const RunDetailPage = () => {
             </Link>
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-slate-900">
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-200">
                   {project.name}
                 </h1>
                 {isLive && (
@@ -679,22 +695,27 @@ export const RunDetailPage = () => {
                 )}
               </div>
               <div className="flex items-center space-x-3 mt-1">
-                <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">
+                <span className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   {run.run_type.replace("_", " ")}
                 </span>
-                <span className="text-slate-300">•</span>
+                <span className="text-slate-300 dark:text-slate-600">•</span>
                 <div className="flex items-center space-x-1.5">
                   {getStatusIcon(displayStatus as any)}
-                  <span className="text-sm font-bold text-slate-700 uppercase">
+                  <span className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase">
                     {displayStatus}
                   </span>
                 </div>
                 {run.created_by_name && (
                   <>
-                    <span className="text-slate-300">•</span>
-                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-50 border border-slate-100">
-                      <User size={12} className="text-slate-400" />
-                      <span className="text-[10px] font-bold text-slate-600 uppercase">
+                    <span className="text-slate-300 dark:text-slate-600">
+                      •
+                    </span>
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                      <User
+                        size={12}
+                        className="text-slate-400 dark:text-slate-500"
+                      />
+                      <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase">
                         {run.created_by_name}
                       </span>
                     </div>
@@ -708,7 +729,7 @@ export const RunDetailPage = () => {
             {(run.status === "running" ||
               run.status === "pending" ||
               run.status === "paused") && (
-              <div className="flex items-center gap-2 bg-white p-1 rounded-lg border border-slate-200 shadow-sm mr-4">
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-[#1D2A31] p-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm mr-4">
                 {run.status === "running" ? (
                   <button
                     onClick={handlePause}
@@ -752,7 +773,7 @@ export const RunDetailPage = () => {
 
             {run.status === "running" && !isDiscovering && (
               <div className="text-right">
-                <p className="text-2xl font-bold text-slate-900 leading-none">
+                <p className="text-2xl font-bold text-slate-900 dark:text-slate-200 leading-none">
                   {Math.round(displayProgress)}%
                 </p>
                 {eta && (
@@ -765,10 +786,10 @@ export const RunDetailPage = () => {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-md border border-slate-200 shadow-sm space-y-4">
+        <div className="bg-slate-50 dark:bg-[#1D2A31] p-6 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
           <div className="flex justify-between items-end">
             <div className="space-y-1">
-              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
                 {isDiscovering
                   ? "Phase 1: Sitemap Discovery"
                   : "Phase 2: Scanning Pages"}
@@ -794,7 +815,7 @@ export const RunDetailPage = () => {
                   Manual Scan
                 </button>
               )}
-              <p className="text-xl font-bold text-slate-900">
+              <p className="text-xl font-bold text-slate-900 dark:text-slate-200">
                 {isDiscovering
                   ? "..."
                   : displayStatus === "completed"
@@ -804,7 +825,7 @@ export const RunDetailPage = () => {
             </div>
           </div>
 
-          <div className="w-full h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200 p-1">
+          <div className="w-full h-4 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700 p-1">
             <div
               className={`h-full rounded-full transition-all duration-500 ease-out shadow-sm ${
                 run.status === "failed" ? "bg-red-500" : "bg-accent"
@@ -826,13 +847,13 @@ export const RunDetailPage = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 p-1 bg-slate-100/50 rounded-md border border-slate-200 w-full overflow-x-auto scrollbar-hide">
+      <div className="flex items-center gap-1 p-1 bg-slate-100/50 dark:bg-slate-800/50 rounded-md border border-slate-200 dark:border-slate-700 w-full overflow-x-auto scrollbar-hide">
         <button
           onClick={() => setActiveTab("overview")}
           className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
             activeTab === "overview"
-              ? "bg-white text-slate-900 shadow-sm border border-slate-200"
-              : "text-slate-500 hover:text-slate-700"
+              ? "bg-slate-50 dark:bg-[#1D2A31] text-slate-900 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-700"
+              : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
           }`}
         >
           <BarChart3 size={14} />
@@ -842,8 +863,8 @@ export const RunDetailPage = () => {
           onClick={() => setActiveTab("pages")}
           className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
             activeTab === "pages"
-              ? "bg-white text-slate-900 shadow-sm border border-slate-200"
-              : "text-slate-500 hover:text-slate-700"
+              ? "bg-slate-50 dark:bg-[#1D2A31] text-slate-900 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-700"
+              : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
           }`}
         >
           <FileSearch size={14} />
@@ -855,7 +876,7 @@ export const RunDetailPage = () => {
               onClick={() => setActiveTab("general")}
               className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
                 activeTab === "general"
-                  ? "bg-white text-slate-900 shadow-sm border border-slate-200"
+                  ? "bg-slate-50 text-slate-900 shadow-sm border border-slate-200"
                   : "text-slate-500 hover:text-slate-700"
               }`}
             >
@@ -866,7 +887,7 @@ export const RunDetailPage = () => {
               onClick={() => setActiveTab("findings")}
               className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
                 activeTab === "findings"
-                  ? "bg-white text-slate-900 shadow-sm border border-slate-200"
+                  ? "bg-slate-50 text-slate-900 shadow-sm border border-slate-200"
                   : "text-slate-500 hover:text-slate-700"
               }`}
             >
@@ -880,8 +901,8 @@ export const RunDetailPage = () => {
           onClick={() => setActiveTab("visual_diff")}
           className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
             activeTab === "visual_diff"
-              ? "bg-white text-slate-900 shadow-sm border border-slate-200"
-              : "text-slate-500 hover:text-slate-700"
+              ? "bg-slate-50 dark:bg-[#1D2A31] text-slate-900 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-700"
+              : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
           }`}
         >
           <Eye size={14} />
@@ -892,7 +913,7 @@ export const RunDetailPage = () => {
             onClick={() => setActiveTab("woocommerce")}
             className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
               activeTab === "woocommerce"
-                ? "bg-white text-slate-900 shadow-sm border border-slate-200"
+                ? "bg-slate-50 text-slate-900 shadow-sm border border-slate-200"
                 : "text-slate-500 hover:text-slate-700"
             }`}
           >
@@ -904,8 +925,8 @@ export const RunDetailPage = () => {
           onClick={() => setActiveTab("report")}
           className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
             activeTab === "report"
-              ? "bg-white text-slate-900 shadow-sm border border-slate-200"
-              : "text-slate-500 hover:text-slate-700"
+              ? "bg-slate-50 dark:bg-[#1D2A31] text-slate-900 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-700"
+              : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
           }`}
         >
           <ClipboardList size={14} />
@@ -915,10 +936,10 @@ export const RunDetailPage = () => {
 
       {activeTab === "overview" && (
         <div className="space-y-8 animate-in fade-in duration-200">
-          <div className="bg-white p-6 rounded-md border border-slate-200 shadow-sm space-y-6">
+          <div className="bg-slate-50 dark:bg-[#1D2A31] p-6 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm space-y-6">
             <div className="flex justify-between items-end">
               <div className="space-y-1">
-                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-200 uppercase tracking-widest flex items-center gap-2">
                   {isDiscovering
                     ? "Phase 1: Sitemap Discovery"
                     : "Phase 2: Scanning Pages"}
@@ -943,7 +964,7 @@ export const RunDetailPage = () => {
                     Manual Scan
                   </button>
                 )}
-                <p className="text-2xl font-bold text-slate-900">
+                <p className="text-2xl font-bold text-slate-900 dark:text-slate-200">
                   {isDiscovering
                     ? "..."
                     : run.status === "completed"
@@ -964,11 +985,11 @@ export const RunDetailPage = () => {
               <div className="space-y-8 mt-4">
                 {/* Current Run Overall Progress */}
                 <div className="space-y-3">
-                  <h3 className="text-sm font-mono text-slate-800">
+                  <h3 className="text-sm font-mono text-slate-800 dark:text-slate-200">
                     Current Run
                   </h3>
-                  <div className="border border-slate-400 rounded-xl p-3 bg-white">
-                    <div className="flex justify-between items-center mb-2 text-xs font-mono text-slate-800">
+                  <div className="border border-slate-400 dark:border-slate-700 rounded-xl p-3 bg-slate-50 dark:bg-[#1D2A31]">
+                    <div className="flex justify-between items-center mb-2 text-xs font-mono text-slate-800 dark:text-slate-200">
                       <span>
                         current task:{" "}
                         {(() => {
@@ -998,7 +1019,7 @@ export const RunDetailPage = () => {
                           : `${Math.max(1, Math.round(displayProgress))}%`}
                       </span>
                     </div>
-                    <div className="w-full h-3 bg-white border border-slate-400 rounded-md p-px">
+                    <div className="w-full h-3 bg-slate-50 dark:bg-[#1D2A31] border border-slate-400 dark:border-slate-700 rounded-md p-px">
                       <div
                         className="h-full bg-[#b5e4b5] rounded-sm transition-all duration-500"
                         style={{
@@ -1049,7 +1070,7 @@ export const RunDetailPage = () => {
 
                   return (
                     <details key={checkKey} className="group space-y-3">
-                      <summary className="text-sm font-mono text-slate-800 cursor-pointer list-none [&::-webkit-details-marker]:hidden flex justify-between items-center outline-none">
+                      <summary className="text-sm font-mono text-slate-800 dark:text-slate-200 cursor-pointer list-none [&::-webkit-details-marker]:hidden flex justify-between items-center outline-none">
                         <span>{checkName}</span>
                         <span className="text-sm text-accent transition-all duration-300 group-open:rotate-180 animate-bounce group-open:animate-none">
                           ▼
@@ -1069,9 +1090,9 @@ export const RunDetailPage = () => {
                           return (
                             <div
                               key={page.id}
-                              className="border border-slate-400 rounded-xl p-3 bg-white"
+                              className="border border-slate-400 dark:border-slate-700 rounded-xl p-3 bg-slate-50 dark:bg-[#1D2A31]"
                             >
-                              <div className="flex justify-between items-center mb-2 text-xs font-mono text-slate-800">
+                              <div className="flex justify-between items-center mb-2 text-xs font-mono text-slate-800 dark:text-slate-200">
                                 <span>
                                   scanning:{" "}
                                   {page.url.replace(/https?:\/\//, "")}
@@ -1082,7 +1103,7 @@ export const RunDetailPage = () => {
                                     : `${pageProgress}%`}
                                 </span>
                               </div>
-                              <div className="w-full h-3 bg-white border border-slate-400 rounded-md p-px mb-1">
+                              <div className="w-full h-3 bg-slate-50 dark:bg-[#1D2A31] border border-slate-400 dark:border-slate-700 rounded-md p-px mb-1">
                                 <div
                                   className="h-full bg-[#b5e4b5] rounded-sm transition-all duration-500"
                                   style={{ width: `${pageProgress}%` }}
@@ -1100,21 +1121,23 @@ export const RunDetailPage = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white p-6 rounded-md border border-slate-200 shadow-sm">
+            <div className="bg-slate-50 dark:bg-[#1D2A31] p-6 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
                 Total Pages
               </p>
-              <p className="text-2xl font-bold text-slate-900">{pagesTotal}</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-200">
+                {pagesTotal}
+              </p>
             </div>
-            <div className="bg-white p-6 rounded-md border border-slate-200 shadow-sm">
+            <div className="bg-slate-50 dark:bg-[#1D2A31] p-6 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
                 Processed
               </p>
-              <p className="text-2xl font-bold text-slate-900">
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-200">
                 {pagesProcessed}
               </p>
             </div>
-            <div className="bg-white p-6 rounded-md border border-slate-200 shadow-sm">
+            <div className="bg-slate-50 dark:bg-[#1D2A31] p-6 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
                 Total Issues
               </p>
@@ -1125,13 +1148,13 @@ export const RunDetailPage = () => {
                 )}
               </p>
             </div>
-            <div className="bg-white p-6 rounded-md border border-slate-200 shadow-sm">
+            <div className="bg-slate-50 dark:bg-[#1D2A31] p-6 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
                 Status
               </p>
               <div className="flex items-center gap-2">
                 {getStatusIcon(run.status)}
-                <p className="text-base font-bold text-slate-900 uppercase tracking-tighter">
+                <p className="text-base font-bold text-slate-900 dark:text-slate-200 uppercase tracking-tighter">
                   {run.status}
                 </p>
               </div>
@@ -1144,11 +1167,11 @@ export const RunDetailPage = () => {
         <div className="animate-in fade-in duration-200">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-slate-900">Scan Steps</h2>
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-slate-100 px-3 py-1.5 rounded-md border border-slate-200">
+            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase tracking-widest bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-100 dark:border-slate-700 shadow-sm">
               {pagesProcessed} / {pagesTotal} Completed
             </span>
           </div>
-          <div className="bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-slate-50 dark:bg-[#1D2A31] rounded-md border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
             <PagesTable
               pages={run.pages || []}
               onPageSelect={(page) => {
@@ -1170,15 +1193,15 @@ export const RunDetailPage = () => {
 
       {activeTab === "general" && (
         <div className="space-y-6 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-            <h2 className="text-xl font-bold text-slate-900">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-4">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-200">
               General Findings
             </h2>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-md overflow-hidden shadow-sm w-full">
-            <div className="bg-slate-50 border-b border-slate-100 p-6">
-              <h3 className="font-bold text-slate-900 text-lg">
+          <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md overflow-hidden shadow-sm w-full">
+            <div className="bg-slate-50 dark:bg-[#1D2A31] border-b border-slate-100 dark:border-slate-600 p-6">
+              <h3 className="font-bold text-slate-900 dark:text-slate-200 text-lg">
                 Run-level & Project Plan Findings
               </h3>
               <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest">
@@ -1231,10 +1254,10 @@ export const RunDetailPage = () => {
           </div>
 
           {selectedPage ? (
-            <div className="bg-white border border-slate-200 rounded-md overflow-hidden shadow-sm w-full">
-              <div className="bg-slate-50 border-b border-slate-100 p-6 flex items-center justify-between">
+            <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md overflow-hidden shadow-sm w-full">
+              <div className="bg-slate-50 dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 p-6 flex items-center justify-between">
                 <div>
-                  <h3 className="font-bold text-slate-900 truncate text-lg">
+                  <h3 className="font-bold text-slate-900 dark:text-slate-200 truncate text-lg">
                     {selectedPage.url}
                   </h3>
                   <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest">
@@ -1326,9 +1349,9 @@ export const RunDetailPage = () => {
               </div>
             </div>
           ) : (
-            <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-md p-24 text-center">
-              <Search className="w-10 h-10 text-slate-200 mx-auto mb-4" />
-              <p className="text-slate-900 font-bold uppercase tracking-tight">
+            <div className="bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-md p-24 text-center">
+              <Search className="w-10 h-10 text-slate-200 dark:text-slate-600 mx-auto mb-4" />
+              <p className="text-slate-900 dark:text-slate-200 font-bold uppercase tracking-tight">
                 Intelligence Ready
               </p>
               <button
@@ -1365,7 +1388,7 @@ export const RunDetailPage = () => {
             )}
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-md overflow-hidden shadow-sm">
+          <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md overflow-hidden shadow-sm">
             <div className="p-12 text-center max-w-2xl mx-auto">
               <div className="w-8 h-8 bg-[#93C0B1] rounded-full flex items-center justify-center mx-auto mb-6 border border-[#93C0B1]">
                 <Eye size={20} className="text-[#fff]" />
@@ -1388,8 +1411,8 @@ export const RunDetailPage = () => {
               </Link>
             </div>
 
-            <div className="bg-slate-50 p-6 border-t border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <div className="bg-slate-50 dark:bg-slate-800/50 p-6 border-t border-slate-100 dark:border-slate-700 grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-slate-50 dark:bg-[#1D2A31] p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">
                   Total Frames
                 </p>
@@ -1397,7 +1420,7 @@ export const RunDetailPage = () => {
                   {run.pages_total || 0}
                 </p>
               </div>
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+              <div className="bg-slate-50 dark:bg-[#1D2A31] p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">
                   Visual Issues
                 </p>
@@ -1406,7 +1429,7 @@ export const RunDetailPage = () => {
                     .length || 0}
                 </p>
               </div>
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+              <div className="bg-slate-50 dark:bg-[#1D2A31] p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">
                   Figma Baseline
                 </p>
@@ -1422,7 +1445,7 @@ export const RunDetailPage = () => {
       )}
 
       {activeTab === "woocommerce" && (
-        <div className="bg-white border border-slate-200 rounded-md p-8 shadow-sm animate-in fade-in duration-200">
+        <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md p-8 shadow-sm animate-in fade-in duration-200">
           {isLoadingRunFindings ? (
             <div className="py-20 text-center">
               <Loader2 className="w-8 h-8 animate-spin mx-auto text-accent" />
@@ -1463,8 +1486,8 @@ export const RunDetailPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column: Stats & Summary */}
             <div className="lg:col-span-2 space-y-8">
-              <div className="bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden">
-                <div className="p-8 border-b border-slate-50">
+              <div className="bg-slate-50 dark:bg-[#1D2A31] rounded-md border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                <div className="p-8 border-b border-slate-50 dark:border-slate-700">
                   <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-6">
                     Quality Score
                   </h3>
@@ -1528,7 +1551,7 @@ export const RunDetailPage = () => {
                 </div>
               </div>
 
-              <div className="bg-white rounded-md border border-slate-200 shadow-sm p-8">
+              <div className="bg-slate-50 dark:bg-[#1D2A31] rounded-md border border-slate-200 dark:border-slate-700 shadow-sm p-8">
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-6">
                   Finding Categories
                 </h3>
@@ -1625,7 +1648,7 @@ export const RunDetailPage = () => {
                   </div>
                   <div className="pt-4 border-t border-white/10">
                     <button
-                      className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all border border-white/5 flex items-center justify-center gap-2"
+                      className="w-full py-3 bg-slate-50/10 hover:bg-slate-50/20 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all border border-white/5 flex items-center justify-center gap-2"
                       onClick={() => toast.success("Report shared with team")}
                     >
                       <Send size={14} />

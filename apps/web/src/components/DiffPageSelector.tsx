@@ -18,7 +18,7 @@ export const DiffPageSelector: React.FC<DiffPageSelectorProps> = ({
   runId,
 }) => {
   return (
-    <div className="flex flex-col h-full bg-white border-r border-slate-200 w-80">
+    <div className="flex flex-col h-full bg-slate-50 border-r border-slate-200 w-80">
       <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
         <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
           Pages

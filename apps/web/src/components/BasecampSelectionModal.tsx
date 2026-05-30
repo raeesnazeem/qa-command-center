@@ -39,7 +39,7 @@ export const BasecampSelectionModal = ({
         className="absolute inset-0"
         onClick={() => !isPushing && onClose()}
       />
-      <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-[12px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-md bg-slate-50 border border-slate-200 rounded-[12px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
         <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
           <div>
             <h3 className="font-bold text-slate-900 text-lg tracking-tight">

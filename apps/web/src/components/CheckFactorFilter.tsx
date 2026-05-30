@@ -91,12 +91,14 @@ export const CheckFactorFilter: React.FC<CheckFactorFilterProps> = ({
             <button
               key={tab.label}
               onClick={() => onSelectFactor(tab.id)}
-              className={`flex items-center gap-2 ${isActive ? "btn-unified" : "btn-unified-secondary"}`}
+              className={`flex items-center gap-2 btn-unified ${
+                isActive 
+                  ? "" 
+                  : "before:hidden after:hidden opacity-60 hover:opacity-100"
+              }`}
             >
               <span
-                className={`text-[11px] font-bold uppercase tracking-wider ${
-                  isActive ? "text-white" : "text-black"
-                }`}
+                className="text-[11px] font-bold uppercase tracking-wider text-white"
               >
                 {tab.label}
               </span>
@@ -105,7 +107,7 @@ export const CheckFactorFilter: React.FC<CheckFactorFilterProps> = ({
                   className={`px-1.5 py-0.5 rounded-15px text-[9px] font-bold ${
                     isActive
                       ? "bg-accent text-black"
-                      : "bg-slate-100 text-slate-500"
+                      : "bg-white/20 text-white"
                   }`}
                 >
                   {count}

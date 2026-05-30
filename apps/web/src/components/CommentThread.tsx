@@ -148,7 +148,7 @@ export const CommentThread = ({ taskId, comments, rebuttals = [] }: CommentThrea
             }
           }}
           placeholder="Add a comment... (Enter to send)"
-          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-4 focus:ring-accent/5 min-h-[80px] pr-12 transition-all resize-none shadow-sm group-hover:border-slate-300"
+          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-4 focus:ring-accent/5 min-h-[80px] pr-12 transition-all resize-none shadow-sm group-hover:border-slate-300"
           disabled={isSubmitting}
         />
         <button 

@@ -84,7 +84,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
 
         {/* Viewport Tabs */}
         {!hideTabs && (
-          <div className="flex items-center gap-1.5 bg-white/5 p-1.5 rounded-md border border-white/10 backdrop-blur-xl">
+          <div className="flex items-center gap-1.5 bg-slate-50/5 p-1.5 rounded-md border border-white/10 backdrop-blur-xl">
             <button
               onClick={() => {
                 setActiveTab("desktop")
@@ -92,8 +92,8 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
               }}
               className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${
                 activeTab === "desktop"
-                  ? "bg-white text-black shadow-xl scale-105"
-                  : "text-slate-400 hover:text-white hover:bg-white/5"
+                  ? "bg-slate-50 text-black shadow-xl scale-105"
+                  : "text-slate-400 hover:text-white hover:bg-slate-50/5"
               }`}
             >
               <Monitor size={14} />
@@ -106,8 +106,8 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
               }}
               className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${
                 activeTab === "tablet"
-                  ? "bg-white text-black shadow-xl scale-105"
-                  : "text-slate-400 hover:text-white hover:bg-white/5"
+                  ? "bg-slate-50 text-black shadow-xl scale-105"
+                  : "text-slate-400 hover:text-white hover:bg-slate-50/5"
               }`}
             >
               <Tablet size={14} />
@@ -120,8 +120,8 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
               }}
               className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${
                 activeTab === "mobile"
-                  ? "bg-white text-black shadow-xl scale-105"
-                  : "text-slate-400 hover:text-white hover:bg-white/5"
+                  ? "bg-slate-50 text-black shadow-xl scale-105"
+                  : "text-slate-400 hover:text-white hover:bg-slate-50/5"
               }`}
             >
               <Smartphone size={14} />
@@ -131,10 +131,10 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
         )}
         {/* Controls */}
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5 bg-white/5 p-1.5 rounded-md border border-white/10 backdrop-blur-xl">
+          <div className="flex items-center gap-1.5 bg-slate-50/5 p-1.5 rounded-md border border-white/10 backdrop-blur-xl">
             <button
               onClick={handleZoomOut}
-              className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+              className="p-2 text-slate-400 hover:text-white hover:bg-slate-50/10 rounded-lg transition-all"
               title="Zoom Out"
             >
               <ZoomOut size={18} />
@@ -146,15 +146,15 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
             </div>
             <button
               onClick={handleZoomIn}
-              className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+              className="p-2 text-slate-400 hover:text-white hover:bg-slate-50/10 rounded-lg transition-all"
               title="Zoom In"
             >
               <ZoomIn size={18} />
             </button>
-            <div className="w-px h-4 bg-white/10 mx-1" />
+            <div className="w-px h-4 bg-slate-50/10 mx-1" />
             <button
               onClick={handleReset}
-              className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+              className="p-2 text-slate-400 hover:text-white hover:bg-slate-50/10 rounded-lg transition-all"
               title="Reset View"
             >
               <RotateCcw size={18} />
@@ -163,7 +163,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
 
           <button
             onClick={onClose}
-            className="p-3 bg-white/5 hover:bg-red-500 text-slate-400 hover:text-white rounded-md border border-white/10 backdrop-blur-xl transition-all group active:scale-95"
+            className="p-3 bg-slate-50/5 hover:bg-red-500 text-slate-400 hover:text-white rounded-md border border-white/10 backdrop-blur-xl transition-all group active:scale-95"
           >
             <X size={24} />
           </button>
@@ -196,7 +196,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
           </div>
         ) : (
           <div className="flex flex-col items-center gap-6 opacity-20">
-            <div className="w-32 h-32 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+            <div className="w-32 h-32 rounded-full bg-slate-50/5 border border-white/10 flex items-center justify-center">
               <Monitor size={64} className="text-white" />
             </div>
             <p className="text-white font-bold text-sm uppercase tracking-[0.3em]">
@@ -220,10 +220,10 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
                     : "375 × Auto"}
               </span>
             </div>
-            <div className="h-4 w-px bg-white/10" />
+            <div className="h-4 w-px bg-slate-50/10" />
           </>
         )}
-        <div className="h-4 w-px bg-white/10" />
+        <div className="h-4 w-px bg-slate-50/10" />
         <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em]">
           Hold & Drag to Pan <span className="mx-2 text-white/10">•</span> Use
           Controls to Zoom

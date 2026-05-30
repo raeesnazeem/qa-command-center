@@ -327,7 +327,7 @@ export const ScreenshotEditor: React.FC<ScreenshotEditorProps> = ({
   return (
     <div className="fixed inset-0 z-[70] bg-slate-900 flex flex-col animate-in fade-in zoom-in-95 duration-300">
       {/* Editor Header */}
-      <div className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0">
+      <div className="h-16 bg-slate-50 border-b border-slate-200 flex items-center justify-between px-6 shrink-0">
         <div className="flex items-center gap-6">
           <div className="flex flex-col">
             <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest leading-none">
@@ -449,7 +449,7 @@ export const ScreenshotEditor: React.FC<ScreenshotEditorProps> = ({
         className="flex-1 overflow-auto bg-slate-200 p-12 flex items-start justify-center"
       >
         <div
-          className="relative shadow-[0_32px_64px_rgba(0,0,0,0.2)] bg-white transition-transform duration-200"
+          className="relative shadow-[0_32px_64px_rgba(0,0,0,0.2)] bg-slate-50 transition-transform duration-200"
           style={{
             width: img?.width,
             height: img?.height,
@@ -467,7 +467,7 @@ export const ScreenshotEditor: React.FC<ScreenshotEditorProps> = ({
           {activeTextId && typingPos && (
             <textarea
               ref={textareaRef}
-              className="absolute bg-white border-2 border-slate-600 shadow-2xl p-2 m-0 resize-none font-bold overflow-hidden rounded-lg outline-none text-slate-900 ring-4 ring-slate-500/20"
+              className="absolute bg-slate-50 border-2 border-slate-600 shadow-2xl p-2 m-0 resize-none font-bold overflow-hidden rounded-lg outline-none text-slate-900 ring-4 ring-slate-500/20"
               value={textInput}
               onChange={(e) => setTextInput(e.target.value)}
               onMouseDown={(e) => e.stopPropagation()}
@@ -497,7 +497,7 @@ export const ScreenshotEditor: React.FC<ScreenshotEditorProps> = ({
       </div>
 
       {/* Zoom Controls */}
-      <div className="absolute bottom-8 right-8 flex items-center bg-white/80 backdrop-blur-md border border-white shadow-xl rounded-md p-2 gap-2">
+      <div className="absolute bottom-8 right-8 flex items-center bg-slate-50/80 backdrop-blur-md border border-white shadow-xl rounded-md p-2 gap-2">
         <button
           onClick={() => setZoom(Math.max(0.1, zoom - 0.1))}
           className="w-10 h-10 flex items-center justify-center hover:bg-slate-100 rounded-xl transition-all"
@@ -528,7 +528,7 @@ const ToolButton: React.FC<{
     onClick={onClick}
     className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
       active
-        ? "bg-white shadow-sm text-blue-600"
+        ? "bg-slate-50 shadow-sm text-blue-600"
         : "text-slate-400 hover:text-slate-600"
     }`}
   >

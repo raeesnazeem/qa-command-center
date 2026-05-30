@@ -20,10 +20,10 @@ const StatsPage: React.FC = () => {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-200 tracking-tight flex items-center gap-2">
             Performance Leaderboard
           </h1>
-          <p className="text-slate-500 text-sm">
+          <p className="text-slate-500 dark:text-slate-400 text-sm">
             Track and compare performance metrics.
           </p>
         </div>
@@ -39,27 +39,27 @@ const StatsPage: React.FC = () => {
         <div className="space-y-8 animate-pulse font-sans">
           {/* Spotlight Section Skeleton */}
           <div className="space-y-4">
-            <div className="h-3 w-40 bg-slate-200 rounded-sm" />
+            <div className="h-3 w-40 bg-slate-200 dark:bg-slate-700 rounded-sm" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="h-36 bg-slate-100 border border-slate-200/60 rounded-md p-6 flex flex-col justify-between">
+              <div className="h-36 bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700 rounded-md p-6 flex flex-col justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-slate-200 rounded-full" />
+                  <div className="w-12 h-12 bg-slate-200 dark:bg-slate-700 rounded-full" />
                   <div className="space-y-2 flex-1">
-                    <div className="h-4 bg-slate-200 rounded w-1/3" />
-                    <div className="h-3 bg-slate-200 rounded w-1/4" />
+                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/3" />
+                    <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/4" />
                   </div>
                 </div>
-                <div className="h-8 bg-slate-200 rounded w-full mt-4" />
+                <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-full mt-4" />
               </div>
-              <div className="h-36 bg-slate-100 border border-slate-200/60 rounded-md p-6 flex flex-col justify-between">
+              <div className="h-36 bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700 rounded-md p-6 flex flex-col justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-slate-200 rounded-full" />
+                  <div className="w-12 h-12 bg-slate-200 dark:bg-slate-700 rounded-full" />
                   <div className="space-y-2 flex-1">
-                    <div className="h-4 bg-slate-200 rounded w-1/3" />
-                    <div className="h-3 bg-slate-200 rounded w-1/4" />
+                    <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/3" />
+                    <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/4" />
                   </div>
                 </div>
-                <div className="h-8 bg-slate-200 rounded w-full mt-4" />
+                <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-full mt-4" />
               </div>
             </div>
           </div>
@@ -68,12 +68,12 @@ const StatsPage: React.FC = () => {
           <div className="space-y-8 pt-4">
             {/* Developer Rankings Table Skeleton */}
             <div className="space-y-3">
-              <div className="h-3 w-32 bg-slate-200 rounded-sm" />
-              <div className="bg-white border border-slate-200 rounded-md overflow-hidden p-4 space-y-4">
-                <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                  <div className="h-4 bg-slate-200 rounded w-12" />
-                  <div className="h-4 bg-slate-200 rounded w-24" />
-                  <div className="h-4 bg-slate-200 rounded w-16" />
+              <div className="h-3 w-32 bg-slate-200 dark:bg-slate-700 rounded-sm" />
+              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md overflow-hidden p-4 space-y-4">
+                <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-12" />
+                  <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-24" />
+                  <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-16" />
                 </div>
                 <div className="space-y-3">
                   {Array.from({ length: 3 }).map((_, i) => (
@@ -81,9 +81,9 @@ const StatsPage: React.FC = () => {
                       key={i}
                       className="flex justify-between items-center py-1"
                     >
-                      <div className="h-4 bg-slate-100 rounded w-8" />
-                      <div className="h-4 bg-slate-100 rounded w-32" />
-                      <div className="h-4 bg-slate-100 rounded w-12" />
+                      <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-8" />
+                      <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-32" />
+                      <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-12" />
                     </div>
                   ))}
                 </div>
@@ -92,12 +92,12 @@ const StatsPage: React.FC = () => {
 
             {/* QA Rankings Table Skeleton */}
             <div className="space-y-3">
-              <div className="h-3 w-24 bg-slate-200 rounded-sm" />
-              <div className="bg-white border border-slate-200 rounded-md overflow-hidden p-4 space-y-4">
-                <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                  <div className="h-4 bg-slate-200 rounded w-12" />
-                  <div className="h-4 bg-slate-200 rounded w-24" />
-                  <div className="h-4 bg-slate-200 rounded w-16" />
+              <div className="h-3 w-24 bg-slate-200 dark:bg-slate-700 rounded-sm" />
+              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md overflow-hidden p-4 space-y-4">
+                <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-12" />
+                  <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-24" />
+                  <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-16" />
                 </div>
                 <div className="space-y-3">
                   {Array.from({ length: 2 }).map((_, i) => (
@@ -105,9 +105,9 @@ const StatsPage: React.FC = () => {
                       key={i}
                       className="flex justify-between items-center py-1"
                     >
-                      <div className="h-4 bg-slate-100 rounded w-8" />
-                      <div className="h-4 bg-slate-100 rounded w-32" />
-                      <div className="h-4 bg-slate-100 rounded w-12" />
+                      <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-8" />
+                      <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-32" />
+                      <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-12" />
                     </div>
                   ))}
                 </div>
@@ -116,7 +116,7 @@ const StatsPage: React.FC = () => {
           </div>
         </div>
       ) : isError ? (
-        <div className="h-64 flex items-center justify-center text-red-500 font-bold uppercase text-xs tracking-widest border border-slate-200 rounded-md bg-white shadow-sm">
+        <div className="h-64 flex items-center justify-center text-red-500 dark:text-red-400 font-bold uppercase text-xs tracking-widest border border-slate-200 dark:border-slate-800 rounded-md bg-slate-50 dark:bg-slate-900 shadow-sm">
           Failed to load statistics. Please try again.
         </div>
       ) : (
@@ -134,7 +134,7 @@ const StatsPage: React.FC = () => {
                   genuineCount={data.topPerformers.developer.count}
                 />
               ) : (
-                <div className="bg-slate-50 border border-dashed border-slate-200 rounded-md p-10 flex items-center justify-center text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                <div className="bg-slate-50 dark:bg-slate-800 border border-dashed border-slate-200 dark:border-slate-700 rounded-md p-10 flex items-center justify-center text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                   No Top Developer Found
                 </div>
               )}
@@ -145,7 +145,7 @@ const StatsPage: React.FC = () => {
                   genuineCount={data.topPerformers.qa.count}
                 />
               ) : (
-                <div className="bg-slate-50 border border-dashed border-slate-200 rounded-md p-10 flex items-center justify-center text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                <div className="bg-slate-50 dark:bg-slate-800 border border-dashed border-slate-200 dark:border-slate-700 rounded-md p-10 flex items-center justify-center text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                   No Top QA Found
                 </div>
               )}

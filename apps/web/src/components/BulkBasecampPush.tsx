@@ -160,7 +160,7 @@ export const BulkBasecampPush = ({
             className="absolute inset-0"
             onClick={() => !isPushing && setIsModalOpen(false)}
           />
-          <div className="relative w-full max-w-sm bg-white border border-slate-200 rounded-[12px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="relative w-full max-w-sm bg-slate-50 border border-slate-200 rounded-[12px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
               <div>
                 <h3 className="font-bold text-slate-900 text-lg tracking-tight">
@@ -187,7 +187,7 @@ export const BulkBasecampPush = ({
                   className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all group ${
                     selectedStatus === "pending"
                       ? "bg-amber-50 border-amber-200 shadow-md scale-105"
-                      : "bg-white border-slate-100 hover:border-slate-200 grayscale opacity-60"
+                      : "bg-slate-50 border-slate-100 hover:border-slate-200 grayscale opacity-60"
                   }`}
                 >
                   <div
@@ -210,7 +210,7 @@ export const BulkBasecampPush = ({
                   className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all group ${
                     selectedStatus === "completed"
                       ? "bg-emerald-50 border-emerald-200 shadow-md scale-105"
-                      : "bg-white border-slate-100 hover:border-slate-200 grayscale opacity-60"
+                      : "bg-slate-50 border-slate-100 hover:border-slate-200 grayscale opacity-60"
                   }`}
                 >
                   <div

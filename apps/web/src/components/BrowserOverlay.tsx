@@ -140,7 +140,7 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 z-[60] bg-white flex flex-col animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[60] bg-slate-50 flex flex-col animate-in fade-in duration-300">
       {/* Browser Toolbar */}
       <div className="h-14 border-b border-slate-200 bg-slate-50 flex items-center justify-between px-4 shrink-0">
         <div className="flex items-center gap-4 flex-1">
@@ -167,13 +167,13 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
               type="text"
               value={currentProxiedUrl}
               readOnly
-              className="w-full bg-white border border-slate-200 rounded-lg py-1.5 pl-9 pr-4 text-xs text-slate-600 focus:outline-none focus:ring-1 focus:ring-accent/20"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg py-1.5 pl-9 pr-4 text-xs text-slate-600 focus:outline-none focus:ring-1 focus:ring-accent/20"
             />
           </div>
 
           <div className="h-8 w-px bg-slate-200 mx-2" />
 
-          <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 gap-1">
+          <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl p-1 gap-1">
             {(Object.keys(RESOLUTIONS) as DeviceMode[]).map((mode) => {
               const Icon = {
                 desktop: Monitor,
@@ -214,7 +214,7 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
       {/* Browser Content */}
       <div className="flex-1 bg-slate-100 relative overflow-hidden">
         {loading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/50 backdrop-blur-sm z-10">
+          <div className="absolute inset-0 flex items-center justify-center bg-slate-50/50 backdrop-blur-sm z-10">
             <div className="flex flex-col items-center gap-3">
               <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
@@ -225,7 +225,7 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
         )}
 
         {error ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-white z-20">
+          <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-20">
             <div className="max-w-md w-full p-8 text-center flex flex-col items-center gap-4">
               <div className="p-4 bg-red-50 rounded-full text-red-500">
                 <AlertCircle size={40} />
@@ -253,7 +253,7 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
         ) : (
           <div className="w-full h-full flex items-center justify-center p-8 overflow-auto">
             <div
-              className="bg-white shadow-2xl rounded-sm overflow-hidden transition-all duration-500 relative"
+              className="bg-slate-50 shadow-2xl rounded-sm overflow-hidden transition-all duration-500 relative"
               style={{
                 width: RESOLUTIONS[deviceMode].width,
                 height: RESOLUTIONS[deviceMode].height,
@@ -280,7 +280,7 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
                     </p>
 
                     <div className="space-y-3">
-                      <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                      <div className="w-full h-1.5 bg-slate-50/10 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-accent transition-all duration-300 ease-out"
                           style={{ width: `${captureProgress}%` }}
@@ -328,7 +328,7 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
       )}
 
       {/* Sticky Bottom Toolbar */}
-      <div className="h-16 border-t border-slate-200 bg-white/80 backdrop-blur-md flex items-center justify-between px-6 shrink-0 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+      <div className="h-16 border-t border-slate-200 bg-slate-50/80 backdrop-blur-md flex items-center justify-between px-6 shrink-0 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center border border-slate-200">

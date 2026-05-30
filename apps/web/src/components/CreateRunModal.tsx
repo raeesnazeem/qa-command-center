@@ -90,7 +90,7 @@ export const CreateRunModal = ({ project, isOpen, onClose }: CreateRunModalProps
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
       <div className="absolute inset-0" onClick={onClose} />
       
-      <div className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-md shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="relative w-full max-w-2xl bg-slate-50 border border-slate-200 rounded-md shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
           <div className="flex items-center space-x-2">
             <div className="p-1.5 bg-accent/10 rounded-md text-accent">
@@ -111,13 +111,13 @@ export const CreateRunModal = ({ project, isOpen, onClose }: CreateRunModalProps
               <div className="flex bg-slate-100 p-1 rounded-md">
                 <label className="flex-1 cursor-pointer">
                   <input type="radio" {...register('run_type')} value="pre_release" className="sr-only peer" />
-                  <div className="py-2 text-center text-sm font-bold rounded-md transition-all peer-checked:bg-white peer-checked:shadow-sm text-slate-500 peer-checked:text-accent">
+                  <div className="py-2 text-center text-sm font-bold rounded-md transition-all peer-checked:bg-slate-50 peer-checked:shadow-sm text-slate-500 peer-checked:text-accent">
                     Pre-Release
                   </div>
                 </label>
                 <label className="flex-1 cursor-pointer">
                   <input type="radio" {...register('run_type')} value="post_release" className="sr-only peer" />
-                  <div className="py-2 text-center text-sm font-bold rounded-md transition-all peer-checked:bg-white peer-checked:shadow-sm text-slate-500 peer-checked:text-accent">
+                  <div className="py-2 text-center text-sm font-bold rounded-md transition-all peer-checked:bg-slate-50 peer-checked:shadow-sm text-slate-500 peer-checked:text-accent">
                     Post-Release
                   </div>
                 </label>
@@ -172,7 +172,7 @@ export const CreateRunModal = ({ project, isOpen, onClose }: CreateRunModalProps
                     }}
                     className="sr-only"
                   />
-                  <div className={`p-4 border rounded-md text-center transition-all group-hover:border-slate-300 ${deviceMatrix.includes(device.id as any) ? 'border-accent bg-accent/5 ring-1 ring-accent' : 'border-slate-200 bg-white'}`}>
+                  <div className={`p-4 border rounded-md text-center transition-all group-hover:border-slate-300 ${deviceMatrix.includes(device.id as any) ? 'border-accent bg-accent/5 ring-1 ring-accent' : 'border-slate-200 bg-slate-50'}`}>
                     <device.icon className={`w-6 h-6 mx-auto mb-2 ${deviceMatrix.includes(device.id as any) ? 'text-accent' : 'text-slate-400'}`} />
                     <div className={`text-xs font-bold uppercase ${deviceMatrix.includes(device.id as any) ? 'text-accent' : 'text-slate-600'}`}>{device.label}</div>
                     <div className="text-[10px] text-slate-400 font-medium">{device.sub}</div>
@@ -194,7 +194,7 @@ export const CreateRunModal = ({ project, isOpen, onClose }: CreateRunModalProps
                     onClick={() => setValue('is_woocommerce', !watch('is_woocommerce'))}
                     className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${watch('is_woocommerce') ? 'bg-accent' : 'bg-slate-200'}`}
                   >
-                    <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${watch('is_woocommerce') ? 'translate-x-5' : 'translate-x-1'}`} />
+                    <span className={`inline-block h-3 w-3 transform rounded-full bg-slate-50 transition-transform ${watch('is_woocommerce') ? 'translate-x-5' : 'translate-x-1'}`} />
                   </button>
                 </div>
               )}
@@ -232,7 +232,7 @@ export const CreateRunModal = ({ project, isOpen, onClose }: CreateRunModalProps
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-6 py-2.5 rounded-md text-sm font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 transition-all shadow-sm"
+            className="flex-1 px-6 py-2.5 rounded-md text-sm font-bold text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 transition-all shadow-sm"
           >
             Cancel
           </button>

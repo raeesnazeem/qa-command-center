@@ -12,6 +12,10 @@ import {
   ChevronRight,
   Sun,
   Moon,
+  ListTodo,
+  Kanban,
+  ListChecks,
+  Monitor,
 } from "lucide-react"
 import { useRole } from "../hooks/useRole"
 import { useEffect, useState } from "react"
@@ -20,6 +24,7 @@ import { AdminRedisWidget } from "../components/AdminRedisWidget"
 import { useRealtimeTasks } from "../hooks/useRealtimeTasks"
 import { NotificationBell } from "../components/NotificationBell"
 import { useRealtimeNotifications } from "../hooks/useRealtimeNotifications"
+import { todo } from "node:test"
 
 export const AppLayout = () => {
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -29,11 +34,18 @@ export const AppLayout = () => {
   const location = useLocation()
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
-    return (
+    const isDark =
       localStorage.getItem("theme") === "dark" ||
       (!("theme" in localStorage) &&
         window.matchMedia("(prefers-color-scheme: dark)").matches)
-    )
+    if (typeof document !== "undefined") {
+      if (isDark) {
+        document.documentElement.classList.add("dark")
+      } else {
+        document.documentElement.classList.remove("dark")
+      }
+    }
+    return isDark
   })
 
   useEffect(() => {
@@ -73,10 +85,11 @@ export const AppLayout = () => {
   const navItems = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/projects", label: "Projects", icon: FolderKanban },
-    { to: "/tasks", label: "Tasks", icon: CheckSquare },
     ...(isAdmin
-      ? [{ to: "/all-tasks", label: "All tasks", icon: CheckSquare }]
+      ? [{ to: "/all-tasks", label: "All tasks", icon: ListChecks }]
       : []),
+    { to: "/tasks", label: "Monitor", icon: Monitor },
+
     { to: "/stats", label: "Stats", icon: BarChart2 },
     ...(!isDeveloper ? [{ to: "/team", label: "Team", icon: Users }] : []),
     ...(!isDeveloper
@@ -91,14 +104,14 @@ export const AppLayout = () => {
   ]
 
   return (
-    <div className="flex h-screen bg-bg-main dark:bg-slate-950 font-sans">
+    <div className="flex h-screen bg-bg-main dark:bg-[#131D22] font-sans">
       {/* Sidebar */}
       <aside
-        className={`${isCollapsed ? "w-20" : "w-64"} bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col border-r border-slate-200 dark:border-slate-800 transition-all duration-300 relative`}
+        className={`${isCollapsed ? "w-20" : "w-64"} bg-slate-50 dark:bg-[#0B151B] text-slate-900 dark:text-slate-100 flex flex-col border-r border-slate-200 dark:border-slate-800 transition-all duration-300 relative`}
       >
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute -right-3 top-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full p-1 z-20 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
+          className="absolute -right-3 top-6 bg-[#e2e8f0] dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full p-1 z-20 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
         >
           {isCollapsed ? (
             <ChevronRight className="w-4 h-4 text-slate-500" />
@@ -136,9 +149,9 @@ export const AppLayout = () => {
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `relative group border bg-white/20 dark:bg-transparent border-transparent flex items-center ${isCollapsed ? "justify-center px-0 gap-0" : "gap-3 px-4"} py-2 rounded-md text-[13px] font-medium capitalize transition-all ${
+                `relative group border bg-slate-50/20 dark:bg-transparent border-transparent flex items-center ${isCollapsed ? "justify-center px-0 gap-0" : "gap-3 px-4"} py-2 rounded-md text-[13px] font-medium capitalize transition-all ${
                   isActive
-                    ? "text-accent shadow-sm bg-white dark:bg-slate-800"
+                    ? "text-accent shadow-sm bg-slate-50 dark:bg-slate-800"
                     : "text-[#6b7280] dark:text-slate-400 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
                 }`
               }
@@ -182,10 +195,9 @@ export const AppLayout = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
-        {/* Topbar */}
-        <header className="h-16 bg-white dark:bg-transparent border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 shadow-sm z-10">
+        <header className="h-16 bg-slate-50 dark:bg-[#0B151B] border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 shadow-sm z-10">
           <div className="flex items-center space-x-2">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2.5 py-1 rounded-md">
+            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-1.5 py-1 rounded-md dark:px-3 dark:bg-black dark:text-emerald dark:rounded-md dark:border dark:border-emerald">
               {role?.replace("_", " ")}
             </span>
           </div>
@@ -222,7 +234,7 @@ export const AppLayout = () => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-8 bg-bg-main dark:bg-slate-900">
+        <main className="flex-1 overflow-auto p-8 bg-bg-main dark:bg-[#131D22]">
           <Outlet />
         </main>
         {isAdmin && <ChatSidebar />}

@@ -22,7 +22,7 @@ export const DiffOverlay: React.FC<DiffOverlayProps> = ({
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-4 px-4 py-2 bg-black/80 backdrop-blur-md rounded-md border border-white/10 shadow-2xl transition-all duration-300">
         <button
           onClick={onToggleMode}
-          className="flex items-center gap-2 px-3 py-1.5 bg-white text-black text-[10px] font-bold uppercase tracking-widest rounded-md transition-all active:scale-95"
+          className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 text-black text-[10px] font-bold uppercase tracking-widest rounded-md transition-all active:scale-95"
         >
           {viewMode === "overlay" ? <Box size={14} /> : <Layers size={14} />}
           {viewMode === "overlay" ? "Side by Side" : "Overlay Mode"}
@@ -40,7 +40,7 @@ export const DiffOverlay: React.FC<DiffOverlayProps> = ({
               step="0.01"
               value={opacity}
               onChange={(e) => setOpacity(parseFloat(e.target.value))}
-              className="w-32 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-white"
+              className="w-32 h-1 bg-slate-50/20 rounded-lg appearance-none cursor-pointer accent-white"
             />
             <span className="text-[10px] font-bold text-white min-w-[2rem]">
               {Math.round(opacity * 100)}%
@@ -75,7 +75,7 @@ export const DiffOverlay: React.FC<DiffOverlayProps> = ({
       {viewMode === "overlay" && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 px-4 py-2 bg-black/60 backdrop-blur-md rounded-full border border-white/10 flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-white" />
+            <div className="w-2 h-2 rounded-full bg-slate-50" />
             <span className="text-[10px] font-bold text-white uppercase tracking-wider">
               Perfect Match = Black
             </span>

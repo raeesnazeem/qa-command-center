@@ -81,13 +81,13 @@ export const AdminRedisWidget: React.FC = () => {
 
       {/* Modal Overlay */}
       {isOpen && (
-        <div className="fixed inset-0 bg-slate-900/10 backdrop-blur-sm flex items-center justify-center z-[10000] p-4">
-          <div className="bg-white rounded-md shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] w-full max-w-lg overflow-hidden border border-slate-100">
+        <div className="fixed inset-0 bg-slate-900/10 dark:bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[10000] p-4">
+          <div className="bg-slate-50 dark:bg-slate-900 rounded-md shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] w-full max-w-lg overflow-hidden border border-slate-100 dark:border-slate-800">
             {/* Header - Simple Style */}
             <div className="p-8 pb-4 flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div>
-                  <h3 className="text-2xl font-bold text-slate-900 tracking-tight">
+                  <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-200 tracking-tight">
                     Redis Monitor
                   </h3>
                   <div className="flex items-center space-x-2 mt-0.5">
@@ -100,7 +100,7 @@ export const AdminRedisWidget: React.FC = () => {
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="bg-slate-50 hover:bg-slate-100 p-2 rounded-full transition-colors text-slate-400"
+                className="bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 p-2 rounded-full transition-colors text-slate-400 dark:text-slate-500"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -116,7 +116,7 @@ export const AdminRedisWidget: React.FC = () => {
                   </p>
                 </div>
               ) : error ? (
-                <div className="p-6 bg-red-50 text-red-600 rounded-md text-sm font-bold border border-red-100 text-center">
+                <div className="p-6 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-md text-sm font-bold border border-red-100 dark:border-red-900/50 text-center">
                   {error}
                 </div>
               ) : (
@@ -124,11 +124,11 @@ export const AdminRedisWidget: React.FC = () => {
                   {/* Primary Financial Overview */}
                   <div className="grid grid-cols-2 gap-4">
                     {/* Month to Date Card */}
-                    <div className="bg-white p-6 rounded-md border border-slate-100 shadow-sm group hover:border-[#93C0B1]/30 transition-all">
+                    <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-md border border-slate-100 dark:border-slate-800 shadow-sm group hover:border-[#93C0B1]/30 transition-all">
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 block">
                         Monthly Spend
                       </span>
-                      <div className="text-3xl font-bold text-slate-900 tracking-tighter">
+                      <div className="text-3xl font-bold text-slate-900 dark:text-slate-200 tracking-tighter">
                         ${stats?.month_cost.toFixed(2)}
                       </div>
                       <div className="text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-tight">
@@ -137,7 +137,7 @@ export const AdminRedisWidget: React.FC = () => {
                     </div>
 
                     {/* 24h Spend Card */}
-                    <div className="bg-white p-6 rounded-md border border-slate-100 shadow-sm group hover:border-[#93C0B1]/30 transition-all">
+                    <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-md border border-slate-100 dark:border-slate-800 shadow-sm group hover:border-[#93C0B1]/30 transition-all">
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
                           24h Spend
@@ -155,22 +155,22 @@ export const AdminRedisWidget: React.FC = () => {
                   {/* Primary Stats Grid */}
                   <div className="grid grid-cols-1 gap-4">
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-white p-5 rounded-md border border-slate-100 shadow-sm">
+                      <div className="bg-slate-50 dark:bg-slate-900 p-5 rounded-md border border-slate-100 dark:border-slate-800 shadow-sm">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 block">
                           Throughput
                         </span>
-                        <div className="text-2xl font-bold text-slate-900 tracking-tighter flex items-baseline">
+                        <div className="text-2xl font-bold text-slate-900 dark:text-slate-200 tracking-tighter flex items-baseline">
                           {stats?.ops_per_sec}{" "}
                           <span className="ml-1 text-xs font-bold text-slate-400">
                             ops/s
                           </span>
                         </div>
                       </div>
-                      <div className="bg-white p-5 rounded-md border border-slate-100 shadow-sm">
+                      <div className="bg-slate-50 dark:bg-slate-900 p-5 rounded-md border border-slate-100 dark:border-slate-800 shadow-sm">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 block">
                           Active Clients
                         </span>
-                        <div className="text-2xl font-bold text-slate-900 tracking-tighter">
+                        <div className="text-2xl font-bold text-slate-900 dark:text-slate-200 tracking-tighter">
                           {stats?.connected_clients}
                         </div>
                       </div>
@@ -186,19 +186,19 @@ export const AdminRedisWidget: React.FC = () => {
                       </h4>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-slate-50/50 p-5 rounded-md border border-slate-100">
+                      <div className="bg-slate-50/50 dark:bg-slate-800/50 p-5 rounded-md border border-slate-100 dark:border-slate-800">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 block">
                           24h Idle Tax
                         </span>
-                        <div className="text-xl font-bold text-slate-900 tracking-tight">
+                        <div className="text-xl font-bold text-slate-900 dark:text-slate-200 tracking-tight">
                           ${stats?.idle_24h.toFixed(4)}
                         </div>
                       </div>
-                      <div className="bg-slate-50/50 p-5 rounded-md border border-slate-100">
+                      <div className="bg-slate-50/50 dark:bg-slate-800/50 p-5 rounded-md border border-slate-100 dark:border-slate-800">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 block">
                           Monthly Idle Tax
                         </span>
-                        <div className="text-xl font-bold text-slate-900 tracking-tight">
+                        <div className="text-xl font-bold text-slate-900 dark:text-slate-200 tracking-tight">
                           ${stats?.idle_month.toFixed(2)}
                         </div>
                       </div>
@@ -210,13 +210,13 @@ export const AdminRedisWidget: React.FC = () => {
                   </div>
 
                   {/* Detailed Analysis Section (Cumulative Stats) */}
-                  <div className="space-y-3 pt-4 border-t border-slate-100">
+                  <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                           Lifetime Usage
                         </span>
-                        <p className="text-lg font-bold text-slate-900">
+                        <p className="text-lg font-bold text-slate-900 dark:text-slate-200">
                           {stats?.total_commands.toLocaleString()}
                         </p>
                       </div>
@@ -224,7 +224,7 @@ export const AdminRedisWidget: React.FC = () => {
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                           24h Volume
                         </span>
-                        <p className="text-lg font-bold text-slate-900">
+                        <p className="text-lg font-bold text-slate-900 dark:text-slate-200">
                           {stats?.commands_24h.toLocaleString()}
                         </p>
                       </div>
@@ -238,10 +238,10 @@ export const AdminRedisWidget: React.FC = () => {
                         Recent Run Efficiency
                       </h4>
                     </div>
-                    <div className="bg-white rounded-md border border-slate-100 overflow-hidden shadow-sm">
+                    <div className="bg-slate-50 dark:bg-slate-900 rounded-md border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm">
                       <table className="w-full text-left text-[11px]">
                         <thead>
-                          <tr className="bg-slate-50/50 text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                          <tr className="bg-slate-50/50 dark:bg-slate-800/50 text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800">
                             <th className="px-5 py-3 font-bold">Project</th>
                             <th className="px-3 py-3 text-center font-bold">
                               Pages
@@ -251,16 +251,16 @@ export const AdminRedisWidget: React.FC = () => {
                             </th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-50">
+                        <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
                           {stats?.recent_runs.map((run) => (
                             <tr
                               key={run.id}
-                              className="hover:bg-slate-50/30 transition-colors"
+                              className="hover:bg-slate-50/30 dark:hover:bg-slate-800/30 transition-colors"
                             >
-                              <td className="px-5 py-3.5 font-bold text-slate-900 truncate max-w-[150px]">
+                              <td className="px-5 py-3.5 font-bold text-slate-900 dark:text-slate-200 truncate max-w-[150px]">
                                 {run.site_url.replace(/^https?:\/\//, "")}
                               </td>
-                              <td className="px-3 py-3.5 text-center text-slate-600 font-bold">
+                              <td className="px-3 py-3.5 text-center text-slate-600 dark:text-slate-400 font-bold">
                                 {run.pages}
                               </td>
                               <td className="px-5 py-3.5 text-right font-bold text-[#93C0B1]">
@@ -277,7 +277,7 @@ export const AdminRedisWidget: React.FC = () => {
             </div>
 
             {/* Footer */}
-            <div className="bg-slate-50/50 p-6 border-t border-slate-100 text-center">
+            <div className="bg-slate-50/50 dark:bg-slate-800/50 p-6 border-t border-slate-100 dark:border-slate-800 text-center">
               <button
                 onClick={() => setIsOpen(false)}
                 className="text-[11px] font-bold text-[#93C0B1] uppercase tracking-widest hover:tracking-[0.2em] transition-all"

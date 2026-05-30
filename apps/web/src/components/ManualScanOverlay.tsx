@@ -218,11 +218,11 @@ export const ManualScanOverlay: React.FC<ManualScanOverlayProps> = ({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 bg-white animate-in fade-in duration-300 overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-slate-50 animate-in fade-in duration-300 overflow-hidden">
       {/* Floating Close Button */}
       <button
         onClick={onClose}
-        className="fixed top-6 right-6 z-[70] p-2 bg-white border border-slate-200 shadow-sm hover:bg-slate-50 text-slate-400 hover:text-slate-900 rounded-sm transition-all"
+        className="fixed top-6 right-6 z-[70] p-2 bg-slate-50 border border-slate-200 shadow-sm hover:bg-slate-50 text-slate-400 hover:text-slate-900 rounded-sm transition-all"
       >
         <X size={20} />
       </button>
@@ -231,7 +231,7 @@ export const ManualScanOverlay: React.FC<ManualScanOverlayProps> = ({
         {/* Main Viewport Area */}
         <div className="flex-1 flex flex-col min-w-0 bg-slate-50 relative">
           {/* Viewport Toggles & Page Selector */}
-          <div className="absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-1 p-1 bg-white border border-slate-200 rounded-sm z-10 shadow-sm">
+          <div className="absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-1 p-1 bg-slate-50 border border-slate-200 rounded-sm z-10 shadow-sm">
             {[
               { id: "desktop", icon: Monitor, label: "Desktop" },
               { id: "laptop", icon: Laptop, label: "Laptop" },
@@ -260,7 +260,7 @@ export const ManualScanOverlay: React.FC<ManualScanOverlayProps> = ({
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsPageDropdownOpen(!isPageDropdownOpen)}
-                className="flex items-center gap-3 px-4 py-2 bg-white hover:bg-slate-50 text-black border-none rounded-sm transition-all group h-[30px]"
+                className="flex items-center gap-3 px-4 py-2 bg-slate-50 hover:bg-slate-50 text-black border-none rounded-sm transition-all group h-[30px]"
               >
                 <div className="max-w-[200px] truncate text-left flex items-center gap-2">
                   <span className="text-[10px] font-bold uppercase tracking-widest truncate">
@@ -274,7 +274,7 @@ export const ManualScanOverlay: React.FC<ManualScanOverlayProps> = ({
               </button>
 
               {isPageDropdownOpen && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[400px] bg-white border border-slate-200 rounded-sm shadow-2xl overflow-hidden z-50 animate-in slide-in-from-top-2 duration-200">
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[400px] bg-slate-50 border border-slate-200 rounded-sm shadow-2xl overflow-hidden z-50 animate-in slide-in-from-top-2 duration-200">
                   <div className="p-3 border-b border-slate-100 bg-slate-50">
                     <div className="relative">
                       <Search
@@ -286,7 +286,7 @@ export const ManualScanOverlay: React.FC<ManualScanOverlayProps> = ({
                         placeholder="Search pages..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-sm py-2 pl-9 pr-4 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-400"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-sm py-2 pl-9 pr-4 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-400"
                       />
                     </div>
                   </div>
@@ -354,7 +354,7 @@ export const ManualScanOverlay: React.FC<ManualScanOverlayProps> = ({
 
       {/* Floating Sidebar - Form & Staged Issues */}
       {capturedImages.length > 0 && (
-        <div className="fixed right-6 top-20 bottom-6 w-[400px] bg-white border border-slate-200 rounded-sm shadow-2xl flex flex-col overflow-hidden z-[60] animate-in slide-in-from-right duration-300">
+        <div className="fixed right-6 top-20 bottom-6 w-[400px] bg-slate-50 border border-slate-200 rounded-sm shadow-2xl flex flex-col overflow-hidden z-[60] animate-in slide-in-from-right duration-300">
             <div className="flex-1 overflow-y-auto p-6 space-y-8">
               {/* New Issue Form */}
               <div className="space-y-6">
@@ -375,7 +375,7 @@ export const ManualScanOverlay: React.FC<ManualScanOverlayProps> = ({
                       placeholder="e.g. Broken image on header"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-sm px-4 py-3 text-xs text-slate-900 placeholder:text-slate-300 focus:outline-none focus:border-slate-400 transition-all"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-sm px-4 py-3 text-xs text-slate-900 placeholder:text-slate-300 focus:outline-none focus:border-slate-400 transition-all"
                     />
                   </div>
 
@@ -388,7 +388,7 @@ export const ManualScanOverlay: React.FC<ManualScanOverlayProps> = ({
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       rows={3}
-                      className="w-full bg-white border border-slate-200 rounded-sm px-4 py-3 text-xs text-slate-900 placeholder:text-slate-300 focus:outline-none focus:border-slate-400 transition-all resize-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-sm px-4 py-3 text-xs text-slate-900 placeholder:text-slate-300 focus:outline-none focus:border-slate-400 transition-all resize-none"
                     />
                   </div>
 
@@ -400,7 +400,7 @@ export const ManualScanOverlay: React.FC<ManualScanOverlayProps> = ({
                       <select
                         value={severity}
                         onChange={(e) => setSeverity(e.target.value as any)}
-                        className="w-full bg-white border border-slate-200 rounded-sm px-3 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-slate-400 transition-all appearance-none cursor-pointer"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-sm px-3 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-slate-400 transition-all appearance-none cursor-pointer"
                       >
                         <option value="low">Low</option>
                         <option value="medium">Medium</option>
@@ -415,7 +415,7 @@ export const ManualScanOverlay: React.FC<ManualScanOverlayProps> = ({
                       <select
                         value={checkFactor}
                         onChange={(e) => setCheckFactor(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-sm px-3 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-slate-400 transition-all appearance-none cursor-pointer"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-sm px-3 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-slate-400 transition-all appearance-none cursor-pointer"
                       >
                         {ISSUE_TYPES.map((type) => (
                           <option key={type.id} value={type.id}>
@@ -432,7 +432,7 @@ export const ManualScanOverlay: React.FC<ManualScanOverlayProps> = ({
                       <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
                         Assign Developer(s)
                       </label>
-                      <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest bg-white border border-slate-100 px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-full">
                         {selectedUserIds.size} selected
                       </span>
                     </div>
@@ -443,10 +443,10 @@ export const ManualScanOverlay: React.FC<ManualScanOverlayProps> = ({
                         placeholder="Search team members..."
                         value={userSearchQuery}
                         onChange={(e) => setUserSearchQuery(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-sm py-2.5 pl-9 pr-4 text-xs text-slate-900 focus:outline-none focus:border-slate-400 transition-all"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-sm py-2.5 pl-9 pr-4 text-xs text-slate-900 focus:outline-none focus:border-slate-400 transition-all"
                       />
                     </div>
-                    <div className="max-h-48 overflow-y-auto border border-slate-100 rounded-sm bg-white divide-y divide-slate-50">
+                    <div className="max-h-48 overflow-y-auto border border-slate-100 rounded-sm bg-slate-50 divide-y divide-slate-50">
                       {filteredMembers.length > 0 ? (
                         filteredMembers.map((member) => (
                           <button

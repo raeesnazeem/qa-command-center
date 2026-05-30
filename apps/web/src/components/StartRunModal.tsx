@@ -264,19 +264,19 @@ export const StartRunModal = ({
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-200">
       <div className="absolute inset-0 bg-transparent" onClick={onClose} />
 
-      <div className="relative w-full max-w-lg bg-white border border-slate-200 rounded-md shadow-sm overflow-hidden transition-all duration-200">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+      <div className="relative w-full max-w-lg bg-slate-50 dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md shadow-sm overflow-hidden transition-all duration-200">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
           <div className="flex items-center space-x-2">
             <div className="p-1.5 bg-accent/10 rounded-md text-accent">
               <PlayCircle className="w-5 h-5" />
             </div>
-            <h2 className="text-xl font-bold text-slate-900">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-200">
               Start New QA Run
             </h2>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
+            className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
           >
             <X className="w-6 h-6" />
           </button>
@@ -286,7 +286,7 @@ export const StartRunModal = ({
           <div className="space-y-4">
             {/* Run Type */}
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                 Run Type
               </label>
               <div className="grid grid-cols-2 gap-3">
@@ -297,8 +297,8 @@ export const StartRunModal = ({
                     value="pre_release"
                     className="sr-only peer"
                   />
-                  <div className="p-3 border border-slate-200 rounded-md text-center peer-checked:border-accent peer-checked:bg-accent/5 transition-all">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-600 peer-checked:text-accent">
+                  <div className="p-3 border border-slate-200 dark:border-slate-700 rounded-md text-center peer-checked:border-accent peer-checked:bg-accent/5 dark:peer-checked:bg-accent/10 transition-all">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 peer-checked:text-accent">
                       Pre-Release
                     </span>
                   </div>
@@ -310,8 +310,8 @@ export const StartRunModal = ({
                     value="post_release"
                     className="sr-only peer"
                   />
-                  <div className="p-3 border border-slate-200 rounded-md text-center peer-checked:border-accent peer-checked:bg-accent/5 transition-all">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-600 peer-checked:text-accent">
+                  <div className="p-3 border border-slate-200 dark:border-slate-700 rounded-md text-center peer-checked:border-accent peer-checked:bg-accent/5 dark:peer-checked:bg-accent/10 transition-all">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 peer-checked:text-accent">
                       Post-Release
                     </span>
                   </div>
@@ -321,14 +321,14 @@ export const StartRunModal = ({
 
             {/* Site URL */}
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                 Target URL
               </label>
               <div className="relative">
                 <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   {...register("site_url")}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-md pl-10 pr-4 py-2.5 text-slate-900 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
+                  className="w-full bg-slate-50 dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md pl-10 pr-4 py-2.5 text-slate-900 dark:text-slate-200 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
                 />
               </div>
               {errors.site_url && (
@@ -340,7 +340,7 @@ export const StartRunModal = ({
 
             {/* Figma URL */}
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                 Figma Design URL{" "}
                 <span className="text-slate-400 text-[10px] uppercase ml-1">
                   (Optional)
@@ -351,7 +351,7 @@ export const StartRunModal = ({
                 <input
                   {...register("figma_url")}
                   placeholder="https://figma.com/file/..."
-                  className="w-full bg-white border border-slate-200 rounded-md pl-10 pr-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
+                  className="w-full bg-slate-50 dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md pl-10 pr-4 py-2.5 text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
                 />
               </div>
               {errors.figma_url && (
@@ -362,15 +362,15 @@ export const StartRunModal = ({
             </div>
 
             {/* URL Selection Accordion */}
-            <div className="border border-slate-200 rounded-md overflow-hidden">
+            <div className="border border-slate-200 dark:border-slate-700 rounded-md overflow-hidden">
               <button
                 type="button"
                 onClick={() => setIsUrlsExpanded(!isUrlsExpanded)}
-                className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors"
+                className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 <div className="flex items-center space-x-2">
                   <Globe className="w-4 h-4 text-slate-500" />
-                  <span className="text-sm font-semibold text-slate-700">
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                     Select Pages to Test ({selectedUrls.length}/
                     {fetchedUrls?.length || 0})
                   </span>
@@ -386,8 +386,8 @@ export const StartRunModal = ({
               </button>
 
               {isUrlsExpanded && (
-                <div className="p-4 bg-white border-t border-slate-200 space-y-3">
-                  <div className="flex items-center space-x-4 pb-2 border-b border-slate-100">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/30 border-t border-slate-200 dark:border-slate-700 space-y-3">
+                  <div className="flex items-center space-x-4 pb-2 border-b border-slate-100 dark:border-slate-700/50">
                     <button
                       type="button"
                       onClick={selectAll}
@@ -422,14 +422,14 @@ export const StartRunModal = ({
                       <div
                         key={url}
                         onClick={() => toggleUrl(url)}
-                        className="flex items-center space-x-2 px-2 py-1.5 rounded hover:bg-slate-50 cursor-pointer transition-colors group"
+                        className="flex items-center space-x-2 px-2 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors group"
                       >
                         {selectedUrls.includes(url) ? (
                           <CheckSquare className="w-4 h-4 text-accent" />
                         ) : (
                           <Square className="w-4 h-4 text-slate-300 group-hover:text-slate-400" />
                         )}
-                        <span className="text-xs text-slate-600 truncate">
+                        <span className="text-xs text-slate-600 dark:text-slate-400 truncate">
                           {url}
                         </span>
                       </div>
@@ -449,14 +449,14 @@ export const StartRunModal = ({
 
             {/* Enabled Checks */}
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                 Checks to Run
               </label>
               <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
                 {checkOptions.map((check) => (
                   <label
                     key={check.id}
-                    className="flex items-start p-3 border border-slate-100 rounded-md bg-slate-50/50 hover:bg-slate-50 cursor-pointer transition-colors group"
+                    className="flex items-start p-3 border border-slate-100 dark:border-slate-700 rounded-md bg-slate-50/50 dark:bg-slate-800/30 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors group"
                   >
                     <div className="flex items-center h-5 mr-3">
                       <input
@@ -467,10 +467,10 @@ export const StartRunModal = ({
                       />
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                      <div className="text-xs font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider">
                         {check.label}
                       </div>
-                      <p className="text-[10px] text-slate-500 font-medium">
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
                         {check.description}
                       </p>
                     </div>

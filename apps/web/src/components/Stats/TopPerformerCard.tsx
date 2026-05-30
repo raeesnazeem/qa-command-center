@@ -25,7 +25,7 @@ const TopPerformerCard: React.FC<TopPerformerCardProps> = ({
 
       <div className="flex items-center gap-5 z-10">
         {/* Avatar Placeholder / Image */}
-        <div className="h-16 w-16 rounded-md bg-white flex items-center justify-center text-black font-black text-2xl border-2 border-white overflow-hidden shadow-inner">
+        <div className="h-16 w-16 rounded-md bg-slate-50 flex items-center justify-center text-black font-black text-2xl border-2 border-white overflow-hidden shadow-inner">
           {avatarUrl ? (
             <img
               src={avatarUrl}

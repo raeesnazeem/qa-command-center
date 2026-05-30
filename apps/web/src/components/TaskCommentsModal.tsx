@@ -30,7 +30,7 @@ export const TaskCommentsModal = ({
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-md rounded-md shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[80vh]">
+      <div className="bg-slate-50 w-full max-w-md rounded-md shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[80vh]">
         {/* Header */}
         <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
           <div className="flex items-center gap-2">

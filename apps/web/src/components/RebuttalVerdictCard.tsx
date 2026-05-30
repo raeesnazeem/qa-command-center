@@ -75,7 +75,7 @@ export const RebuttalVerdictCard: React.FC<RebuttalVerdictCardProps> = ({
         ) : (
           <button
             onClick={onViewFinding}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-orange-200 text-orange-600 text-xs font-bold uppercase tracking-widest rounded-lg hover:bg-orange-50 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-orange-200 text-orange-600 text-xs font-bold uppercase tracking-widest rounded-lg hover:bg-orange-50 transition-colors"
           >
             Issue remains. View original finding
             <ArrowRight size={14} />

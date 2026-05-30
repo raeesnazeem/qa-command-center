@@ -46,7 +46,7 @@ export const SignOffButton: React.FC<SignOffButtonProps> = ({ runId, onSuccess }
             onClick={() => !isPending && setIsOpen(false)} 
           />
           
-          <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="relative w-full max-w-md bg-slate-50 border border-slate-200 rounded-lg shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
               <div className="flex items-center space-x-2 text-emerald-600">
                 <CheckCircle2 className="w-5 h-5" />
@@ -77,7 +77,7 @@ export const SignOffButton: React.FC<SignOffButtonProps> = ({ runId, onSuccess }
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Add any final comments or context..."
-                  className="w-full h-32 bg-white border border-slate-200 rounded-md p-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all resize-none"
+                  className="w-full h-32 bg-slate-50 border border-slate-200 rounded-md p-3 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all resize-none"
                   disabled={isPending}
                 />
               </div>

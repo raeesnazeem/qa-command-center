@@ -19,7 +19,7 @@ export const StatCard: React.FC<StatCardProps> = ({
   bg = "bg-slate-50",
 }) => {
   return (
-    <div className="bg-white border border-slate-100 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+    <div className="bg-slate-50 border border-slate-100 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between mb-4">
         <div className={`p-2 ${bg} rounded-lg`}>
           <Icon className={`w-5 h-5 ${color}`} />

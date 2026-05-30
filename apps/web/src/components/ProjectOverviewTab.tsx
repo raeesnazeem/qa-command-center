@@ -98,7 +98,7 @@ export const ProjectOverviewTab = ({
         : "Never",
       icon: Calendar,
       color: "text-slate-600",
-      bg: "bg-slate-50",
+      bg: "bg-slate-50 dark:bg-slate-800",
       hidden: isDeveloper,
     },
   ].filter((s) => !s.hidden)
@@ -123,7 +123,7 @@ export const ProjectOverviewTab = ({
         <div className="flex flex-col space-y-2">
           <Link
             to={`/projects/${project.id}/runs/${ongoingRun.id}`}
-            className="flex items-center justify-between p-4 bg-blue-50 border border-blue-100 rounded-xl shadow-sm hover:bg-blue-100 transition-all group"
+            className="flex items-center justify-between p-4 bg-blue-50 border border-blue-100 rounded-md shadow-sm hover:bg-blue-100 transition-all group"
           >
             <div className="flex items-center space-x-3">
               <div className="relative flex h-3 w-3">
@@ -164,7 +164,7 @@ export const ProjectOverviewTab = ({
 
             <div className="flex items-center space-x-4">
               <div
-                className="flex items-center gap-2 bg-white/50 p-1 rounded-md border border-blue-200 shadow-sm"
+                className="flex items-center gap-2 bg-slate-50/50 p-1 rounded-md border border-blue-200 shadow-sm"
                 onClick={(e) => e.stopPropagation()}
               >
                 {ongoingRun.status === "running" ? (
@@ -215,12 +215,12 @@ export const ProjectOverviewTab = ({
 
       {!isDeveloper && (
         <CanDo role="qa_engineer">
-          <div className="flex items-center justify-between p-6 bg-white border border-slate-100 rounded-xl shadow-sm">
+          <div className="flex items-center justify-between p-6 bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-700 rounded-md shadow-sm">
             <div>
-              <h3 className="text-lg font-bold text-slate-900">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-200">
                 Ready to test?
               </h3>
-              <p className="text-slate-500 text-sm">
+              <p className="text-slate-500 dark:text-slate-400 text-sm">
                 Launch a new QA run to check for regressions.
               </p>
             </div>
@@ -240,17 +240,17 @@ export const ProjectOverviewTab = ({
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="bg-white border border-slate-100 rounded-xl p-6 shadow-sm"
+            className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-700 rounded-md p-6 shadow-sm"
           >
             <div className="flex items-center justify-between mb-4">
               <div className={`p-2 ${stat.bg} rounded-md`}>
                 <stat.icon className={`w-5 h-5 ${stat.color}`} />
               </div>
             </div>
-            <div className="text-2xl font-bold text-slate-900">
+            <div className="text-2xl font-bold text-slate-900 dark:text-slate-200">
               {stat.value}
             </div>
-            <div className="text-sm text-slate-500 font-medium">
+            <div className="text-sm text-slate-500 dark:text-slate-400 font-medium">
               {stat.label}
             </div>
           </div>
@@ -259,9 +259,9 @@ export const ProjectOverviewTab = ({
 
       {/* Conditional Content: Recent QA Runs (Admins/QA) vs My Tasks (Developers) */}
       {!isDeveloper ? (
-        <div className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-sm">
-          <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between">
-            <h3 className="font-bold text-slate-900 flex items-center">
+        <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-700 rounded-md overflow-hidden shadow-sm">
+          <div className="px-6 py-4 border-b border-slate-50 dark:border-slate-700 flex items-center justify-between">
+            <h3 className="font-bold text-slate-900 dark:text-slate-200 flex items-center">
               <Clock className="w-5 h-5 mr-2 text-slate-400" />
               Recent QA Runs
             </h3>
@@ -278,25 +278,25 @@ export const ProjectOverviewTab = ({
               <Loader2 className="w-8 h-8 text-accent animate-spin" />
             </div>
           ) : runsData?.data && runsData.data.length > 0 ? (
-            <div className="divide-y divide-slate-50">
+            <div className="divide-y divide-slate-50 dark:divide-slate-800">
               {runsData.data.map((run) => (
                 <Link
                   key={run.id}
                   to={`/projects/${project.id}/runs/${run.id}`}
-                  className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors group"
+                  className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group"
                 >
                   <div className="flex items-center space-x-4">
                     <div
-                      className={`p-2 rounded-md bg-slate-50 text-slate-400 group-hover:bg-white group-hover:text-accent transition-colors shadow-sm border border-slate-100`}
+                      className={`p-2 rounded-md bg-slate-50 dark:bg-slate-800 text-slate-400 group-hover:bg-slate-50 dark:group-hover:bg-slate-700 group-hover:text-accent transition-colors shadow-sm border border-slate-100 dark:border-slate-700`}
                     >
                       {getStatusIcon(run.status)}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-slate-900 uppercase tracking-tight">
+                        <span className="text-sm font-bold text-slate-900 dark:text-slate-200 uppercase tracking-tight">
                           {run.run_type.replace("_", " ")}
                         </span>
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 uppercase">
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 uppercase">
                           {run.status}
                         </span>
                       </div>
@@ -311,7 +311,7 @@ export const ProjectOverviewTab = ({
 
                   <div className="flex items-center space-x-8">
                     <div className="text-right hidden sm:block">
-                      <div className="text-sm font-bold text-slate-900">
+                      <div className="text-sm font-bold text-slate-900 dark:text-slate-200">
                         {run.pages_processed}/{run.pages_total}
                       </div>
                       <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter text-right">
@@ -325,10 +325,10 @@ export const ProjectOverviewTab = ({
             </div>
           ) : (
             <div className="p-12 text-center">
-              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
-                <BarChart3 className="w-8 h-8 text-slate-300" />
+              <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100 dark:border-slate-700">
+                <BarChart3 className="w-8 h-8 text-slate-300 dark:text-slate-600" />
               </div>
-              <h4 className="text-lg font-bold text-slate-900 mb-1">
+              <h4 className="text-lg font-bold text-slate-900 dark:text-slate-200 mb-1">
                 No runs yet
               </h4>
               <p className="text-slate-500 text-sm max-w-xs mx-auto">
@@ -338,13 +338,15 @@ export const ProjectOverviewTab = ({
           )}
         </div>
       ) : (
-        <div className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-sm">
-          <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
+        <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-700 rounded-md overflow-hidden shadow-sm">
+          <div className="px-6 py-4 border-b border-slate-50 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-md bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+              <div className="w-8 h-8 rounded-md bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-sm">
                 <ListTodo className="w-4 h-4 text-accent" />
               </div>
-              <h3 className="font-bold text-slate-900">My Assigned Tasks</h3>
+              <h3 className="font-bold text-slate-900 dark:text-slate-200">
+                My Assigned Tasks
+              </h3>
             </div>
             <Link
               to={`/projects/${project.id}?tab=tasks`}
@@ -362,24 +364,24 @@ export const ProjectOverviewTab = ({
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-slate-50/50">
-                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-50">
+                  <tr className="bg-slate-50/50 dark:bg-slate-800/50">
+                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-50 dark:border-slate-700">
                       Issue Assigned
                     </th>
-                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-50">
+                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-50 dark:border-slate-700">
                       Assigned By
                     </th>
-                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-50">
+                    <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-50 dark:border-slate-700">
                       Assigned On
                     </th>
-                    <th className="px-6 py-3 border-b border-slate-50"></th>
+                    <th className="px-6 py-3 border-b border-slate-50 dark:border-slate-700"></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
+                <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
                   {tasksData.data.map((task: any) => (
                     <tr
                       key={task.id}
-                      className="hover:bg-slate-50/50 transition-colors group cursor-pointer"
+                      className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group cursor-pointer"
                       onClick={() =>
                         (window.location.href = `/projects/${project.id}?tab=tasks&taskId=${task.id}`)
                       }
@@ -397,19 +399,19 @@ export const ProjectOverviewTab = ({
                                     : "bg-blue-500"
                             }`}
                           />
-                          <span className="text-sm font-bold text-slate-900 group-hover:text-accent transition-colors line-clamp-1">
+                          <span className="text-sm font-bold text-slate-900 dark:text-slate-200 group-hover:text-accent transition-colors line-clamp-1">
                             {task.title}
                           </span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-2">
-                          <div className="w-6 h-6 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-500 uppercase">
+                          <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-500 uppercase">
                             {task.creator?.full_name?.charAt(0) || (
                               <User size={10} />
                             )}
                           </div>
-                          <span className="text-xs font-semibold text-slate-700">
+                          <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                             {task.creator?.full_name || "System"}
                           </span>
                         </div>
@@ -436,10 +438,10 @@ export const ProjectOverviewTab = ({
             </div>
           ) : (
             <div className="p-12 text-center">
-              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
-                <CheckCircle2 className="w-8 h-8 text-slate-200" />
+              <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100 dark:border-slate-700">
+                <CheckCircle2 className="w-8 h-8 text-slate-200 dark:text-slate-600" />
               </div>
-              <h4 className="text-lg font-bold text-slate-900 mb-1">
+              <h4 className="text-lg font-bold text-slate-900 dark:text-slate-200 mb-1">
                 All clear!
               </h4>
               <p className="text-slate-500 text-sm max-w-xs mx-auto">

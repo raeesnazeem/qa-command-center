@@ -55,7 +55,7 @@ export const RebuttalSection: React.FC<RebuttalSectionProps> = ({ task }) => {
               {task.rebuttals.map((r) => (
                 <div
                   key={r.id}
-                  className="bg-white border border-red-100 p-4 rounded-xl shadow-sm space-y-3 group hover:shadow-md transition-shadow"
+                  className="bg-slate-50 border border-red-100 p-4 rounded-xl shadow-sm space-y-3 group hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-red-400">
                     <span className="flex items-center gap-1.5">
@@ -150,7 +150,7 @@ const RebuttalForm: React.FC<RebuttalFormProps> = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white border border-red-200 rounded-md p-4 shadow-xl space-y-4 ring-4 ring-red-500/5"
+      className="bg-slate-50 border border-red-200 rounded-md p-4 shadow-xl space-y-4 ring-4 ring-red-500/5"
     >
       <div className="flex items-center justify-between mb-2">
         <h4 className="text-[10px] font-bold uppercase tracking-widest text-red-600">
@@ -171,7 +171,7 @@ const RebuttalForm: React.FC<RebuttalFormProps> = ({
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Detailed explanation of why this finding is incorrect..."
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/40 focus:bg-white transition-all resize-none min-h-[120px]"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/40 focus:bg-slate-50 transition-all resize-none min-h-[120px]"
             required
           />
         </div>
@@ -183,7 +183,7 @@ const RebuttalForm: React.FC<RebuttalFormProps> = ({
             value={screenshotUrl}
             onChange={(e) => setScreenshotUrl(e.target.value)}
             placeholder="Evidence Screenshot URL (optional)"
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-4 py-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/40 focus:bg-white transition-all"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-4 py-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/40 focus:bg-slate-50 transition-all"
           />
         </div>
       </div>

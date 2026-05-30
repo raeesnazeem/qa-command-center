@@ -113,13 +113,13 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
   return (
     <div className="max-w-4xl space-y-8 animate-in fade-in duration-500 pb-20">
       {/* Sub-navigation for Settings */}
-      <div className="flex items-center space-x-1 p-1 bg-slate-100/50 rounded-lg w-fit border border-slate-200 shadow-sm">
+      <div className="flex items-center space-x-1 p-1 bg-slate-100/50 dark:bg-slate-800/50 rounded-lg w-fit border border-slate-200 dark:border-slate-700 shadow-sm">
         <button
           onClick={() => setActiveSection("project")}
           className={`px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all ${
             activeSection === "project"
-              ? "bg-white text-slate-900 shadow-sm border border-slate-200"
-              : "text-slate-500 hover:text-slate-700"
+              ? "bg-slate-50 dark:bg-[#1D2A31] text-slate-900 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-700"
+              : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
           }`}
         >
           Project Settings
@@ -128,8 +128,8 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
           onClick={() => setActiveSection("notifications")}
           className={`px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all ${
             activeSection === "notifications"
-              ? "bg-white text-slate-900 shadow-sm border border-slate-200"
-              : "text-slate-500 hover:text-slate-700"
+              ? "bg-slate-50 dark:bg-[#1D2A31] text-slate-900 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-700"
+              : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
           }`}
         >
           Notification Hub
@@ -139,15 +139,17 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
       {activeSection === "project" ? (
         <>
           {/* Basic Settings */}
-          <section className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-sm">
-            <div className="px-6 py-4 border-b border-slate-50 flex items-center space-x-2">
+          <section className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm">
+            <div className="px-6 py-4 border-b border-slate-50 dark:border-slate-700 flex items-center space-x-2">
               <Settings className="w-5 h-5 text-slate-400" />
-              <h3 className="font-bold text-slate-900">General Settings</h3>
+              <h3 className="font-bold text-slate-900 dark:text-slate-200">
+                General Settings
+              </h3>
             </div>
             <form onSubmit={handleUpdateBasic} className="p-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1.5">
                     Project Name
                   </label>
                   <input
@@ -156,11 +158,11 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
                     }
-                    className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+                    className="w-full bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1.5">
                     Client Name
                   </label>
                   <input
@@ -169,7 +171,7 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
                     onChange={(e) =>
                       setFormData({ ...formData, client_name: e.target.value })
                     }
-                    className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+                    className="w-full bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
                   />
                 </div>
               </div>
@@ -185,7 +187,7 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
                     onChange={(e) =>
                       setFormData({ ...formData, site_url: e.target.value })
                     }
-                    className="w-full bg-slate-50 border border-slate-200 rounded-md pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+                    className="w-full bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-md pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
                   />
                 </div>
               </div>
@@ -205,19 +207,21 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
           </section>
 
           {/* Figma Integration */}
-          <section className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-sm">
-            <div className="px-6 py-4 border-b border-slate-50 flex items-center space-x-2">
+          <section className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm">
+            <div className="px-6 py-4 border-b border-slate-50 dark:border-slate-700 flex items-center space-x-2">
               <Layout className="w-5 h-5 text-slate-400" />
-              <h3 className="font-bold text-slate-900">Figma Integration</h3>
+              <h3 className="font-bold text-slate-900 dark:text-slate-200">
+                Figma Integration
+              </h3>
             </div>
             <form onSubmit={handleUpdateFigma} className="p-6 space-y-6">
-              <p className="text-sm text-slate-500 leading-relaxed">
+              <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
                 Connect Figma to automatically pull design specs and compare
                 them during QA runs.
               </p>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1.5">
                     Personal Access Token
                   </label>
                   <div className="relative">
@@ -227,10 +231,10 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
                       value={figmaToken}
                       onChange={(e) => setFigmaToken(e.target.value)}
                       placeholder="Enter Figma PAT"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-md pl-10 pr-12 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+                      className="w-full bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-md pl-10 pr-12 py-2 text-sm focus:outline-none focus:border-accent transition-all"
                     />
                     {!showFigma && figmaToken && (
-                      <div className="absolute left-10 top-1/2 -translate-y-1/2 text-sm text-slate-900 pointer-events-none bg-slate-50 pr-2">
+                      <div className="absolute left-10 top-1/2 -translate-y-1/2 text-sm text-slate-900 dark:text-slate-200 pointer-events-none bg-slate-50 dark:bg-slate-800 pr-2">
                         {maskValue(figmaToken, 4)}
                       </div>
                     )}
@@ -264,20 +268,22 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
           </section>
 
           {/* Basecamp Integration */}
-          <section className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-sm">
-            <div className="px-6 py-4 border-b border-slate-50 flex items-center space-x-2">
+          <section className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm">
+            <div className="px-6 py-4 border-b border-slate-50 dark:border-slate-700 flex items-center space-x-2">
               <Database className="w-5 h-5 text-slate-400" />
-              <h3 className="font-bold text-slate-900">Basecamp Integration</h3>
+              <h3 className="font-bold text-slate-900 dark:text-slate-200">
+                Basecamp Integration
+              </h3>
             </div>
             <form onSubmit={handleUpdateBasecamp} className="p-6 space-y-6">
-              <p className="text-sm text-slate-500 leading-relaxed">
+              <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
                 Automatically sync QA issues to your Basecamp project's to-do
                 list.
               </p>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1.5">
                       Pre-release to-do task link
                     </label>
                     <input
@@ -285,11 +291,11 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
                       value={preReleaseLink}
                       onChange={(e) => handleLinkChange("pre", e.target.value)}
                       placeholder="Paste Basecamp to-do list URL"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+                      className="w-full bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1.5">
                       Post-release to-do task link
                     </label>
                     <input
@@ -297,14 +303,14 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
                       value={postReleaseLink}
                       onChange={(e) => handleLinkChange("post", e.target.value)}
                       placeholder="Paste Basecamp to-do list URL"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+                      className="w-full bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
                     />
                   </div>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1.5">
                     Account ID
                   </label>
                   <input
@@ -314,11 +320,11 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
                       setBasecamp({ ...basecamp, accountId: e.target.value })
                     }
                     placeholder="Enter Account ID"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+                    className="w-full bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1.5">
                     Project ID
                   </label>
                   <input
@@ -328,11 +334,11 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
                       setBasecamp({ ...basecamp, projectId: e.target.value })
                     }
                     placeholder="Enter Project ID"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+                    className="w-full bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1.5">
                     Pre-release To-Do List ID
                   </label>
                   <input
@@ -342,11 +348,11 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
                       setBasecamp({ ...basecamp, todoListId: e.target.value })
                     }
                     placeholder="Enter To-Do List ID"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+                    className="w-full bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1.5">
                     Post-release To-Do List ID
                   </label>
                   <input
@@ -359,11 +365,11 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
                       })
                     }
                     placeholder="Enter Post-release To-Do List ID"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+                    className="w-full bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1.5">
                     API Token
                   </label>
                   <div className="relative">
@@ -374,7 +380,7 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
                         setBasecamp({ ...basecamp, apiToken: e.target.value })
                       }
                       placeholder="Enter API Token"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-md pr-12 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+                      className="w-full bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-md pr-12 py-2 text-sm focus:outline-none focus:border-accent transition-all"
                     />
                     <button
                       type="button"
@@ -391,12 +397,12 @@ export const SettingsTab = ({ project }: SettingsTabProps) => {
                 </div>
               </div>
               <CanDo role="admin">
-                <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+                <div className="flex items-center justify-between pt-4 border-t border-slate-50 dark:border-slate-700">
                   <button
                     type="button"
                     onClick={handleTestBasecamp}
                     disabled={isTestingBasecamp}
-                    className="btn-unified-secondary flex items-center space-x-2 text-accent"
+                    className="btn-unified flex items-center space-x-2 text-white"
                   >
                     {isTestingBasecamp ? (
                       <Settings className="w-4 h-4 animate-spin" />

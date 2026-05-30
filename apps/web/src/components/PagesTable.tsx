@@ -62,9 +62,9 @@ export const PagesTable: React.FC<PagesTableProps> = ({
   }
 
   return (
-    <div className="bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full min-h-[400px]">
+    <div className="bg-slate-50 dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col h-full min-h-[400px]">
       {/* Table Header */}
-      <div className="bg-slate-50 border-b border-slate-200 px-6 py-3 flex items-center text-[10px] font-bold uppercase tracking-widest text-slate-500">
+      <div className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 px-6 py-3 flex items-center text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
         <div className="w-16">Step</div>
         <div className="flex-1">Page URL</div>
         <div className="w-24 text-center">Status</div>
@@ -76,7 +76,7 @@ export const PagesTable: React.FC<PagesTableProps> = ({
       {/* Virtualized Body */}
       <div
         ref={parentRef}
-        className="flex-1 overflow-auto bg-white"
+        className="flex-1 overflow-auto bg-slate-50 dark:bg-slate-900"
         style={{ height: "500px" }} // Fixed height for virtualization container
       >
         <div
@@ -98,20 +98,20 @@ export const PagesTable: React.FC<PagesTableProps> = ({
                 data-index={virtualRow.index}
                 ref={rowVirtualizer.measureElement}
                 onClick={() => onPageSelect(page)}
-                className="absolute top-0 left-0 w-full border-b border-slate-100 transition-colors group flex items-start px-6 py-4 hover:bg-slate-50 cursor-pointer"
+                className="absolute top-0 left-0 w-full border-b border-slate-100 dark:border-slate-800/50 transition-colors group flex items-start px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer"
                 style={{
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
               >
                 <div className="w-16 pt-1">
-                  <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
                     {(virtualRow.index + 1).toString().padStart(2, "0")}
                   </span>
                 </div>
 
                 <div className="flex-1 min-w-0 pr-4">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-bold text-slate-900 truncate">
+                    <p className="text-sm font-bold text-slate-900 dark:text-slate-200 truncate">
                       {page.url.replace(/https?:\/\/[^\/]+/, "") || "/"}
                     </p>
                     <a
@@ -124,20 +124,20 @@ export const PagesTable: React.FC<PagesTableProps> = ({
                       <ExternalLink size={12} />
                     </a>
                   </div>
-                  <p className="text-[10px] text-slate-400 truncate font-mono">
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate font-mono">
                     {page.url}
                   </p>
 
                   {/* Progress Section - Only shown for active processing pages */}
                   {page.status === "processing" && (
-                    <div className="mt-4 space-y-3 max-w-[320px] bg-slate-50/50 p-2.5 rounded-lg border border-slate-100 shadow-sm">
+                    <div className="mt-4 space-y-3 max-w-[320px] bg-slate-50/50 dark:bg-slate-800/50 p-2.5 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm">
                       {/* 1. Progress Bar - High visibility track */}
-                      <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden relative shadow-inner">
+                      <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden relative shadow-inner">
                         <div
                           className={`h-full transition-all duration-1000 ease-in-out ${
                             page.status === "processing"
                               ? "bg-accent shadow-[0_0_8px_rgba(147,192,177,0.4)]"
-                              : "bg-slate-300"
+                              : "bg-slate-300 dark:bg-slate-600"
                           }`}
                           style={{
                             width: `${page.status === "processing" ? Math.max(5, page.progress || 0) : 2}%`,
@@ -168,7 +168,7 @@ export const PagesTable: React.FC<PagesTableProps> = ({
                               className={`text-[10px] font-bold uppercase tracking-tight truncate ${
                                 page.status === "processing"
                                   ? "text-blue-700 animate-pulse"
-                                  : "text-slate-500"
+                                  : "text-slate-500 dark:text-slate-400"
                               }`}
                             >
                               {page.status === "processing"
@@ -200,14 +200,14 @@ export const PagesTable: React.FC<PagesTableProps> = ({
 
                 <div className="w-32 flex justify-center pt-1">
                   {totalIssues > 0 ? (
-                    <div className="flex items-center gap-1.5 px-2 py-1 bg-red-50 text-red-700 rounded-sm border border-red-100">
+                    <div className="flex items-center gap-1.5 px-2 py-1 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 rounded-sm border border-red-100 dark:border-red-500/20">
                       <span className="text-xs font-bold">{totalIssues}</span>
                       <span className="text-[10px] font-bold uppercase tracking-tight">
                         Issues
                       </span>
                     </div>
                   ) : (
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                       Clean
                     </span>
                   )}
@@ -215,7 +215,7 @@ export const PagesTable: React.FC<PagesTableProps> = ({
                 {showVisuals && (
                   <div className="w-20 flex justify-center pt-1">
                     {page.screenshot_url_desktop ? (
-                      <div className="w-10 h-6 bg-slate-100 rounded border border-slate-200 overflow-hidden relative group/img">
+                      <div className="w-10 h-6 bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 overflow-hidden relative group/img">
                         <img
                           src={page.screenshot_url_desktop}
                           alt="Preview"
@@ -223,8 +223,8 @@ export const PagesTable: React.FC<PagesTableProps> = ({
                         />
                       </div>
                     ) : (
-                      <div className="w-10 h-6 bg-slate-50 rounded border border-slate-200 flex items-center justify-center">
-                        <ImageIcon size={12} className="text-slate-300" />
+                      <div className="w-10 h-6 bg-slate-50 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 flex items-center justify-center">
+                        <ImageIcon size={12} className="text-slate-300 dark:text-slate-600" />
                       </div>
                     )}
                   </div>
@@ -250,8 +250,8 @@ export const PagesTable: React.FC<PagesTableProps> = ({
 
         {displayPages.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <Loader2 className="w-8 h-8 text-slate-200 animate-spin mb-4" />
-            <p className="text-sm text-slate-400 font-medium italic">
+            <Loader2 className="w-8 h-8 text-slate-200 dark:text-slate-700 animate-spin mb-4" />
+            <p className="text-sm text-slate-400 dark:text-slate-500 font-medium italic">
               Discovering pages via sitemap...
             </p>
           </div>

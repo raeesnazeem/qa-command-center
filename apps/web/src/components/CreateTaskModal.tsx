@@ -73,7 +73,7 @@ export const CreateTaskModal = ({ projectId, isOpen, onClose, prefillData }: Cre
         onClick={onClose} 
       />
       
-      <div className="relative w-full max-w-lg bg-white border border-slate-200 rounded-[10px] shadow-sm overflow-hidden transition-all duration-200">
+      <div className="relative w-full max-w-lg bg-slate-50 border border-slate-200 rounded-[10px] shadow-sm overflow-hidden transition-all duration-200">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
           <div className="flex items-center space-x-2">
             <div className="p-1.5 bg-accent/10 rounded-md text-accent">
@@ -99,7 +99,7 @@ export const CreateTaskModal = ({ projectId, isOpen, onClose, prefillData }: Cre
                 </label>
                 <select
                   {...register('project_id')}
-                  className={`w-full bg-white border ${
+                  className={`w-full bg-slate-50 border ${
                     errors.project_id ? 'border-red-500/50' : 'border-slate-200'
                   } rounded-md px-4 py-2.5 text-slate-900 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all`}
                 >
@@ -122,7 +122,7 @@ export const CreateTaskModal = ({ projectId, isOpen, onClose, prefillData }: Cre
               <input
                 {...register('title')}
                 placeholder="e.g. Fix mobile menu overlap"
-                className={`w-full bg-white border ${
+                className={`w-full bg-slate-50 border ${
                   errors.title ? 'border-red-500/50' : 'border-slate-200'
                 } rounded-md px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all`}
               />
@@ -140,7 +140,7 @@ export const CreateTaskModal = ({ projectId, isOpen, onClose, prefillData }: Cre
                 {...register('description')}
                 placeholder="Provide more context about the issue..."
                 rows={3}
-                className="w-full bg-white border border-slate-200 rounded-md px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all resize-none"
+                className="w-full bg-slate-50 border border-slate-200 rounded-md px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all resize-none"
               />
             </div>
 
@@ -154,7 +154,7 @@ export const CreateTaskModal = ({ projectId, isOpen, onClose, prefillData }: Cre
                   <ShieldAlert className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                   <select
                     {...register('severity')}
-                    className="w-full bg-white border border-slate-200 rounded-md pl-10 pr-4 py-2.5 text-slate-900 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all appearance-none"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-md pl-10 pr-4 py-2.5 text-slate-900 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all appearance-none"
                   >
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
@@ -175,7 +175,7 @@ export const CreateTaskModal = ({ projectId, isOpen, onClose, prefillData }: Cre
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                   <select
                     {...register('assigned_to')}
-                    className="w-full bg-white border border-slate-200 rounded-md pl-10 pr-4 py-2.5 text-slate-900 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all appearance-none"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-md pl-10 pr-4 py-2.5 text-slate-900 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all appearance-none"
                   >
                     <option value="">Unassigned</option>
                     {members.map((member) => (

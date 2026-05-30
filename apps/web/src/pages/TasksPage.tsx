@@ -28,7 +28,7 @@ import { useAuthAxios } from "../lib/useAuthAxios"
 const ProjectCard = ({ project }: { project: any }) => (
   <Link
     to={`/projects/${project.id}`}
-    className="flex-shrink-0 w-80 bg-white border border-slate-100 rounded-md p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group flex flex-col h-full"
+    className="flex-shrink-0 w-80 bg-slate-50 border border-slate-100 rounded-md p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group flex flex-col h-full"
   >
     <div className="flex justify-between items-start mb-4">
       <span
@@ -159,9 +159,13 @@ const KanbanCard = ({
   return (
     <div
       onClick={() => onClick(task)}
-      className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer group relative hover:border-accent/20"
+      className="bg-[#fbfbfd] dark:bg-[#1B2A30] dark:hover:bg-transparent p-4 rounded-xl border border-transparent dark:border-slate-700 shadow-sm hover:shadow-md transition-all cursor-pointer group relative dark:hover:border-accent/50"
     >
-      <div className="flex items-center justify-between mb-2">
+      <div className="absolute inset-0 rounded-xl pointer-events-none p-[1px] drop-shadow-sm opacity-100 dark:opacity-0 transition-opacity duration-500 overflow-hidden" style={{ mask: "linear-gradient(#fff 0 0) content-box exclude, linear-gradient(#fff 0 0)", WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)", WebkitMaskComposite: "xor" }}>
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-200 via-accent/30 to-slate-200/30 group-hover:opacity-50 transition-opacity duration-700"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300%] aspect-square bg-[conic-gradient(from_0deg,transparent_0_45deg,theme(colors.accent)_135deg,transparent_180deg_225deg,#a3d4c7_315deg,transparent_360deg)] opacity-100 dark:opacity-0 group-hover:opacity-100 group-hover:animate-[spin_4s_linear_infinite]"></div>
+      </div>
+      <div className="flex items-center justify-between mb-2 relative z-10">
         <span
           className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg border ${getSeverityColor(task.severity)}`}
         >
@@ -185,10 +189,10 @@ const KanbanCard = ({
           </button>
         )}
       </div>
-      <h4 className="text-sm font-bold text-slate-900 group-hover:text-accent transition-colors leading-tight mb-4">
+      <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200 group-hover:text-accent transition-colors leading-tight mb-4 relative z-10">
         {task.title}
       </h4>
-      <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-50">
+      <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-50 dark:border-slate-700 relative z-10">
         <div className="flex items-center space-x-3 text-slate-400">
           <div className="flex items-center space-x-1">
             <MessageSquare className="w-3 h-3" />
@@ -203,7 +207,7 @@ const KanbanCard = ({
         <div className="flex items-center -space-x-2">
           {(isAdmin || isDev) && task.creator && (
             <div
-              className="w-6 h-6 rounded-full bg-[#93c0b1] flex items-center justify-center text-[10px] font-bold text-white border-2 border-white uppercase"
+              className="w-6 h-6 rounded-full bg-[#93c0b1] flex items-center justify-center text-[10px] font-bold text-white border-2 border-white dark:border-[#1B2A30] uppercase"
               title={`Assigner: ${task.creator.full_name}`}
             >
               {task.creator.full_name.charAt(0)}
@@ -215,14 +219,14 @@ const KanbanCard = ({
             task.assignees.map((user: any) => (
               <div
                 key={user.id}
-                className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border-2 border-white uppercase"
+                className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500 dark:text-slate-400 border-2 border-white dark:border-[#1B2A30] uppercase"
                 title={`Assigned to: ${user.full_name}`}
               >
                 {user.full_name.charAt(0)}
               </div>
             ))}
           {!task.assignees?.length && !task.users && !task.creator && (
-            <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border-2 border-white uppercase">
+            <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500 dark:text-slate-400 border-2 border-white dark:border-[#1B2A30] uppercase">
               ?
             </div>
           )}
@@ -247,16 +251,16 @@ const KanbanColumn = ({
 }) => (
   <div className="space-y-4">
     <div className="flex items-center justify-between px-2">
-      <h3 className="font-bold text-slate-900 uppercase tracking-widest text-[11px] flex items-center gap-2">
-        <div className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+      <h3 className="font-bold text-slate-900 dark:text-slate-100 uppercase tracking-widest text-[11px] flex items-center gap-2">
+        <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600" />
         {title}
       </h3>
-      <span className="bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-0.5 rounded-full">
+      <span className="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10px] font-bold px-2 py-0.5 rounded-full">
         {tasks.length}
       </span>
     </div>
 
-    <div className="space-y-4 min-h-[200px] bg-slate-50/50 rounded-md p-2 border border-dashed border-slate-200/60">
+    <div className="space-y-4 min-h-[200px] bg-transparent dark:bg-transparent rounded-md p-2 border border-dashed border-slate-200/60">
       {tasks.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-32 text-center space-y-2 opacity-30 grayscale">
           <CheckSquare className="w-6 h-6 text-slate-400" />
@@ -306,7 +310,7 @@ const ProjectKanban = ({
         <div className="flex items-center gap-4">
           <div className="w-1.5 h-8 bg-accent rounded-full shadow-sm shadow-accent/20" />
           <div>
-            <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-200 tracking-tight">
               {project.name}
             </h2>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-0.5">
@@ -315,12 +319,12 @@ const ProjectKanban = ({
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-white px-3 py-1.5 rounded-xl border border-slate-100 shadow-sm">
+          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase tracking-widest bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm">
             {tasks.length} Total Assigned
           </span>
           <Link
             to={`/projects/${project.id}`}
-            className="p-2 bg-white border border-slate-100 rounded-xl text-slate-400 hover:text-accent hover:border-accent/20 transition-all shadow-sm"
+            className="p-2 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-slate-400 dark:text-slate-300 hover:text-accent dark:hover:text-accent hover:border-accent/20 transition-all shadow-sm"
           >
             <ArrowUpRight size={16} />
           </Link>
@@ -401,7 +405,7 @@ export const TasksPage = () => {
           {[1, 2].map((i) => (
             <div key={i} className="space-y-4">
               <Skeleton className="h-6 w-48" />
-              <div className="bg-white border border-slate-100 rounded-md h-64 overflow-hidden relative">
+              <div className="bg-slate-50 border border-slate-100 rounded-md h-64 overflow-hidden relative">
                 <Skeleton className="absolute inset-0" />
               </div>
             </div>
@@ -427,7 +431,22 @@ export const TasksPage = () => {
     const qaMember = project.project_members?.find(
       (m: any) => m.role === "qa_engineer",
     )
-    return qaMember?.users?.full_name || "Unassigned"
+
+    return qaMember?.users?.full_name ? (
+      <span className="text-xs font-semibold text-slate-600 flex items-center gap-2">
+        <div className="w-2 h-2 rounded-full bg-emerald-400" />
+        <span className="text-[10px] font-bold text-[#93c0b1] bg-[#93c0b1]/10 px-2.5 py-1 rounded-lg border border-[#93c0b1]/10 uppercase tracking-wider">
+          {qaMember.users.full_name}
+        </span>
+      </span>
+    ) : (
+      <span className="text-xs font-semibold text-slate-600 flex items-center gap-2">
+        <div className="w-2 h-2 rounded-full bg-slate-400/15" />
+        <span className="text-[10px] font-bold text-[#718096] bg-[#718096]/10 border border-[#718096]/10 dark:text-[#c26e2d] dark:bg-[#c26e2d]/10 dark:border-[#c26e2d]/10 px-2.5 py-1 rounded-lg uppercase tracking-wider">
+          Unassigned
+        </span>
+      </span>
+    )
   }
 
   const getDevNames = (project: any) => {
@@ -453,24 +472,22 @@ export const TasksPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-500 pb-20">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-8">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-slate-50/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-sm">
         <div>
-          <h1 className="text-4xl font-bold text-slate-900 tracking-tight">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-200 tracking-tight">
             {isDev ? "Developer Task Flow" : "Real-time Tasks Monitor"}
           </h1>
-          <p className="text-slate-500 mt-2 font-medium">
+          <p className="text-slate-500 dark:text-slate-400 text-sm">
             {isDev
               ? "Consolidated view of all my current tasks"
               : "Check currently active workflows across all projects"}
           </p>
         </div>
-        <button
-          onClick={() => setIsTaskModalOpen(true)}
-          className="btn-unified flex items-center justify-center space-x-2"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Create Task</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-bold text-accent dark:text-slate-300 uppercase tracking-widest bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm">
+            Real-time Tracking
+          </span>
+        </div>
       </div>
 
       <CreateTaskModal
@@ -481,48 +498,31 @@ export const TasksPage = () => {
       <div className="space-y-16">
         {/* ADMIN & SUB-ADMIN VIEW */}
         {(isAdmin || isSubAdmin) && (
-          <div className="bg-white border border-slate-200 rounded-[8px] overflow-hidden shadow-xl shadow-slate-200/50 flex flex-col animate-in slide-in-from-bottom-4 duration-700">
-            {/* Unified Table Header */}
-            <div className="p-8 border-b border-slate-100 bg-slate-50/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <h3 className="font-bold text-slate-900 text-xl tracking-tight">
-                  Active Workflows
-                </h3>
-                <p className="text-slate-500 text-sm font-medium mt-1">
-                  Consolidated view of all project stages and assignments.
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-emerald-100">
-                  Real-time Tracking
-                </span>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+          <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[8px] overflow-hidden shadow-sm shadow-slate-200/50 flex flex-col animate-in slide-in-from-bottom-4 duration-700">
+            <div className="relative overflow-x-auto bg-slate-50/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
+              <table className="w-full text-sm text-left rtl:text-right text-slate-500 dark:text-slate-400">
                 {/* QA Section */}
                 <tbody className="border-b border-slate-100">
                   <tr
-                    className="bg-slate-50/50 cursor-pointer hover:bg-slate-100/80 transition-all group select-none"
+                    className="bg-slate-50/50 dark:bg-slate-800 cursor-pointer hover:bg-slate-100/80 transition-all group select-none"
                     onClick={() => setQaExpanded(!qaExpanded)}
                   >
                     <td colSpan={4} className="px-8 py-4">
                       <div className="flex items-center gap-4">
                         <div
-                          className={`p-1 rounded-md transition-all duration-300 ${qaExpanded ? "bg-[#93c0b1] text-white rotate-0" : "bg-slate-200 text-slate-500 -rotate-90"}`}
+                          className={`transition-all duration-300 flex items-center justify-center ${qaExpanded ? "p-1 bg-emerald-50 text-emerald-600 rounded-sm text-[10px] font-bold uppercase tracking-widest border border-emerald-100 rotate-0" : "p-1 rounded-sm bg-slate-200 text-slate-500 -rotate-90"}`}
                         >
                           <ChevronDown className="w-3 h-3" />
                         </div>
                         <div className="flex items-center gap-2.5">
                           <span
-                            className={`${qaExpanded ? "text-[#93c0b1]" : "text-slate-400"} font-semibold uppercase text-[13px]`}
+                            className={`${qaExpanded ? "text-slate dark:text-slate-200" : "text-slate-400"} py-3 bg-transparent font-semibold text-[18px] dark:bg-transparent`}
                           >
                             Current QA Tasks
                           </span>
                         </div>
                         <div className="ml-auto">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase bg-white/80 px-3 py-1 rounded-full border border-slate-100 shadow-sm">
+                          <span className="text-[10px] font-bold text-accent dark:text-slate-300 uppercase tracking-widest bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm">
                             {data?.qa_projects?.length || 0} Total
                           </span>
                         </div>
@@ -532,58 +532,59 @@ export const TasksPage = () => {
 
                   {qaExpanded && (
                     <>
-                      <tr className="bg-white">
-                        <th className="px-8 py-4 text-[10px] text-black-200 uppercase border-b border-slate-50">
+                      <tr className="dark:bg-emerald-900 text-sm text-slate-500 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800">
+                        <th
+                          scope="col"
+                          className="px-6 py-3 bg-slate-50 dark:bg-slate-800/50 font-medium"
+                        >
                           Project Name
                         </th>
-                        <th className="px-8 py-4 text-[10px] text-black-200 uppercase border-b border-slate-50 text-center">
+                        <th
+                          scope="col"
+                          className="px-6 py-3 font-medium text-center"
+                        >
                           Status
                         </th>
-                        <th className="px-8 py-4 text-[10px]  text-black-200 uppercase border-b border-slate-50 text-center">
+                        <th
+                          scope="col"
+                          className="px-6 py-3 bg-slate-50 dark:bg-slate-800/50 font-medium text-center"
+                        >
                           Issues
                         </th>
-                        <th className="px-8 py-4 text-[10px]  text-black-200 uppercase border-b border-slate-50">
+                        <th scope="col" className="px-6 py-3 font-medium">
                           Assigned QA
                         </th>
                       </tr>
                       {data?.qa_projects?.map((project: any) => (
                         <tr
                           key={project.id}
-                          className="hover:bg-slate-50/30 transition-colors group"
+                          className="border-b border-slate-200 dark:border-slate-800 group"
                         >
-                          <td className="px-8 py-5">
+                          <th
+                            scope="row"
+                            className="px-6 py-4 font-medium text-slate-900 dark:text-slate-200 whitespace-nowrap bg-slate-50 dark:bg-slate-800/50"
+                          >
                             <Link
                               to={`/projects/${project.id}`}
-                              className="text-sm font-medium text-slate-500 hover:text-[#93c0b1] transition-colors flex items-center gap-1 group-hover:translate-x-0.25 transition-transform"
+                              className="hover:text-[#93c0b1] transition-colors flex items-center gap-1 group-hover:translate-x-0.25"
                             >
                               {project.name}
                               <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-all text-emerald-500" />
                             </Link>
-                          </td>
-                          <td className="px-8 py-5 text-center">
-                            <span
-                              className={`text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg border ${
-                                project.is_pre_release
-                                  ? "bg-amber-50 text-amber-600 border-amber-100"
-                                  : "bg-emerald-50 text-emerald-600 border-emerald-100"
-                              }`}
-                            >
+                          </th>
+                          <td className="px-6 py-4 dark:bg-slate-850 text-center">
+                            <span className="text-[10px] font-bold text-[#93c0b1] bg-[#93c0b1]/10 px-2.5 py-1 rounded-lg border border-[#93c0b1]/10 uppercase tracking-wider">
                               {project.is_pre_release
                                 ? "Pre-Release"
                                 : "Post-Release"}
                             </span>
                           </td>
-                          <td className="px-8 py-5 text-center">
-                            <span className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-full border border-slate-200/50">
+                          <td className="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 text-center">
+                            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-700 px-3 py-1 rounded-full border border-slate-200/50 dark:border-slate-600">
                               {project.open_issues_count || 0}
                             </span>
                           </td>
-                          <td className="px-8 py-5">
-                            <span className="text-xs font-semibold text-slate-600 flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                              {getQAName(project)}
-                            </span>
-                          </td>
+                          <td className="px-6 py-4">{getQAName(project)}</td>
                         </tr>
                       ))}
                       {(!data?.qa_projects ||
@@ -604,25 +605,25 @@ export const TasksPage = () => {
                 {/* Developer Section */}
                 <tbody>
                   <tr
-                    className="bg-slate-50/50 cursor-pointer hover:bg-slate-100/80 transition-all group select-none"
+                    className="dark:bg-slate-800 bg-slate-50/50 cursor-pointer hover:bg-slate-100/80 transition-all group select-none"
                     onClick={() => setDevExpanded(!devExpanded)}
                   >
                     <td colSpan={4} className="px-8 py-4">
                       <div className="flex items-center gap-4">
                         <div
-                          className={`p-1 rounded-md transition-all duration-300 ${devExpanded ? "bg-[#93c0b1] text-white rotate-0" : "bg-slate-200 text-slate-500 -rotate-90"}`}
+                          className={`transition-all duration-300 flex items-center justify-center ${devExpanded ? "p-1 bg-emerald-50 text-emerald-600 rounded-sm text-[10px] font-bold uppercase tracking-widest border border-emerald-100 rotate-0" : "p-1 rounded-sm bg-slate-200 text-slate-500 -rotate-90"}`}
                         >
                           <ChevronDown className="w-3 h-3" />
                         </div>
                         <div className="flex items-center gap-2.5">
                           <span
-                            className={`${devExpanded ? "text-[#93c0b1]" : "text-slate-400"} font-semibold uppercase text-[13px]`}
+                            className={`${qaExpanded ? "text-slate dark:text-slate-200" : "text-slate-400"} py-3 font-semibold text-[18px] dark:bg-transparent`}
                           >
                             Current Developer Tasks
                           </span>
                         </div>
                         <div className="ml-auto">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-white/80 px-3 py-1 rounded-full border border-slate-100 shadow-sm">
+                          <span className="text-[10px] font-bold text-accent dark:text-slate-300 uppercase tracking-widest bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm">
                             {data?.dev_projects?.length || 0} Total
                           </span>
                         </div>
@@ -632,13 +633,17 @@ export const TasksPage = () => {
 
                   {devExpanded && (
                     <>
-                      <tr className="bg-white">
-                        <th className="px-8 py-4 text-[10px] text-black-200 uppercase border-b border-slate-50">
+                      <tr className="dark:bg-emerald-900 text-sm text-slate-500 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800">
+                        <th
+                          scope="col"
+                          className="px-6 py-3 bg-slate-50 dark:bg-slate-800/50 font-medium"
+                        >
                           Project Name
                         </th>
                         <th
+                          scope="col"
                           colSpan={3}
-                          className="px-8 py-4 text-[10px] text-black-200 uppercase border-b border-slate-50"
+                          className="px-6 py-3 font-medium"
                         >
                           Assigned Developers (Active on Tasks)
                         </th>
@@ -646,18 +651,21 @@ export const TasksPage = () => {
                       {data?.dev_projects?.map((project: any) => (
                         <tr
                           key={project.id}
-                          className="hover:bg-slate-50/30 transition-colors group"
+                          className="border-b border-slate-200 dark:border-slate-800 group"
                         >
-                          <td className="px-8 py-5">
+                          <th
+                            scope="row"
+                            className="px-6 py-4 font-medium text-slate-900 dark:text-slate-200 whitespace-nowrap bg-slate-50 dark:bg-slate-800/50"
+                          >
                             <Link
                               to={`/projects/${project.id}`}
-                              className="text-sm font-medium text-slate-500 hover:text-[#93c0b1] transition-colors flex items-center gap-1 group-hover:translate-x-0.25 transition-transform"
+                              className="hover:text-[#93c0b1] transition-colors flex items-center gap-1 group-hover:translate-x-0.25"
                             >
                               {project.name}
                               <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-all text-[#93c0b1]" />
                             </Link>
-                          </td>
-                          <td colSpan={3} className="px-8 py-5">
+                          </th>
+                          <td colSpan={3} className="px-6 py-4">
                             <div className="flex flex-wrap gap-2">
                               {getDevNames(project)
                                 .split(", ")
@@ -666,7 +674,7 @@ export const TasksPage = () => {
                                     key={i}
                                     className={
                                       name === "none"
-                                        ? "text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg border bg-amber-50 text-amber-600 border-amber-100"
+                                        ? "text-[10px] font-bold text-[#718096] bg-[#718096]/10 border border-[#718096]/10 dark:text-[#c26e2d] dark:bg-[#c26e2d]/10 dark:border-[#c26e2d]/10 px-2.5 py-1 rounded-lg uppercase tracking-wider"
                                         : "text-[10px] font-bold text-[#93c0b1] bg-[#93c0b1]/10 px-2.5 py-1 rounded-lg border border-[#93c0b1]/10 uppercase tracking-wider"
                                     }
                                   >
@@ -704,7 +712,7 @@ export const TasksPage = () => {
 
               if (myTasks.length === 0) {
                 return (
-                  <div className="bg-white border border-slate-100 rounded-md p-12 text-center text-slate-400 text-sm font-medium italic">
+                  <div className="bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-md p-12 text-center text-slate-400 text-sm font-medium italic">
                     No active QA projects at the moment.
                   </div>
                 )
@@ -749,15 +757,15 @@ export const TasksPage = () => {
 
               if (myTasks.length === 0) {
                 return (
-                  <div className="bg-white border border-slate-200 rounded-[40px] p-24 text-center space-y-6 shadow-xl shadow-slate-100/50 animate-in zoom-in-95 duration-700">
-                    <div className="w-20 h-20 bg-emerald-50 rounded-[28px] flex items-center justify-center mx-auto border border-emerald-100">
+                  <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-[40px] p-24 text-center space-y-6 shadow-xl shadow-slate-100/50 animate-in zoom-in-95 duration-700">
+                    <div className="w-20 h-20 bg-emerald-50 dark:bg-emerald-900/30 rounded-[28px] flex items-center justify-center mx-auto border border-emerald-100 dark:border-emerald-800">
                       <CheckSquare className="w-10 h-10 text-emerald-500" />
                     </div>
                     <div className="space-y-2">
-                      <h3 className="text-2xl font-bold text-slate-900 tracking-tight">
+                      <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-200 tracking-tight">
                         All Caught Up!
                       </h3>
-                      <p className="text-slate-500 font-medium max-w-sm mx-auto">
+                      <p className="text-slate-500 dark:text-slate-400 font-medium max-w-sm mx-auto">
                         You don't have any active tasks assigned to you right
                         now. Take a moment to breathe or check other projects.
                       </p>

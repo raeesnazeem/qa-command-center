@@ -88,9 +88,13 @@ const KanbanCard = ({
   return (
     <div
       onClick={() => onClick(task)}
-      className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer group relative hover:border-accent/20"
+      className="bg-[#fbfbfd] dark:bg-[#1B2A30] dark:hover:bg-transparent p-4 rounded-xl border border-transparent dark:border-slate-700 shadow-sm hover:shadow-md transition-all cursor-pointer group relative dark:hover:border-accent/50"
     >
-      <div className="flex items-center justify-between mb-2">
+      <div className="absolute inset-0 rounded-xl pointer-events-none p-[1px] drop-shadow-sm opacity-100 dark:opacity-0 transition-opacity duration-500 overflow-hidden" style={{ mask: "linear-gradient(#fff 0 0) content-box exclude, linear-gradient(#fff 0 0)", WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)", WebkitMaskComposite: "xor" }}>
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-200 via-accent/30 to-slate-200/30 group-hover:opacity-50 transition-opacity duration-700"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300%] aspect-square bg-[conic-gradient(from_0deg,transparent_0_45deg,theme(colors.accent)_135deg,transparent_180deg_225deg,#a3d4c7_315deg,transparent_360deg)] opacity-100 dark:opacity-0 group-hover:opacity-100 group-hover:animate-[spin_4s_linear_infinite]"></div>
+      </div>
+      <div className="flex items-center justify-between mb-2 relative z-10">
         <span
           className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg border ${getSeverityColor(task.severity)}`}
         >
@@ -114,10 +118,10 @@ const KanbanCard = ({
           </button>
         )}
       </div>
-      <h4 className="text-sm font-bold text-slate-900 group-hover:text-accent transition-colors leading-tight mb-4">
+      <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200 group-hover:text-accent transition-colors leading-tight mb-4 relative z-10">
         {task.title}
       </h4>
-      <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-50">
+      <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-50 dark:border-slate-700 relative z-10">
         <div className="flex items-center space-x-3 text-slate-400">
           <div className="flex items-center space-x-1">
             <MessageSquare className="w-3 h-3" />
@@ -132,7 +136,7 @@ const KanbanCard = ({
         <div className="flex items-center -space-x-2">
           {(isAdmin || isDev) && task.creator && (
             <div
-              className="w-6 h-6 rounded-full bg-[#93c0b1] flex items-center justify-center text-[10px] font-bold text-white border-2 border-white uppercase"
+              className="w-6 h-6 rounded-full bg-[#93c0b1] flex items-center justify-center text-[10px] font-bold text-white border-2 border-white dark:border-[#1B2A30] uppercase"
               title={`Assigner: ${task.creator.full_name}`}
             >
               {task.creator.full_name.charAt(0)}
@@ -144,14 +148,14 @@ const KanbanCard = ({
             task.assignees.map((user: any) => (
               <div
                 key={user.id}
-                className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border-2 border-white uppercase"
+                className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500 dark:text-slate-400 border-2 border-white dark:border-[#1B2A30] uppercase"
                 title={`Assigned to: ${user.full_name}`}
               >
                 {user.full_name.charAt(0)}
               </div>
             ))}
           {!task.assignees?.length && !task.users && !task.creator && (
-            <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 border-2 border-white uppercase">
+            <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500 dark:text-slate-400 border-2 border-white dark:border-[#1B2A30] uppercase">
               ?
             </div>
           )}
@@ -176,16 +180,16 @@ const KanbanColumn = ({
 }) => (
   <div className="space-y-4">
     <div className="flex items-center justify-between px-2">
-      <h3 className="font-bold text-slate-900 uppercase tracking-widest text-[11px] flex items-center gap-2">
-        <div className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+      <h3 className="font-bold text-slate-900 dark:text-slate-100 uppercase tracking-widest text-[11px] flex items-center gap-2">
+        <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600" />
         {title}
       </h3>
-      <span className="bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-0.5 rounded-full">
+      <span className="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10px] font-bold px-2 py-0.5 rounded-full">
         {tasks.length}
       </span>
     </div>
 
-    <div className="space-y-4 min-h-[200px] bg-slate-50/50 rounded-md p-2 border border-dashed border-slate-200/60">
+    <div className="space-y-4 min-h-[200px] bg-transparent dark:bg-transparent rounded-md p-2 border border-dashed border-slate-200/60">
       {tasks.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-32 text-center space-y-2 opacity-30 grayscale">
           <CheckSquare className="w-6 h-6 text-slate-400" />
@@ -235,7 +239,7 @@ const ProjectKanban = ({
         <div className="flex items-center gap-4">
           <div className="w-1.5 h-8 bg-accent rounded-full shadow-sm shadow-accent/20" />
           <div>
-            <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-200 tracking-tight">
               {project.name}
             </h2>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-0.5">
@@ -244,12 +248,12 @@ const ProjectKanban = ({
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-white px-3 py-1.5 rounded-xl border border-slate-100 shadow-sm">
+          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase tracking-widest bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm">
             {tasks.length} Total Assigned
           </span>
           <Link
             to={`/projects/${project.id}`}
-            className="p-2 bg-white border border-slate-100 rounded-xl text-slate-400 hover:text-accent hover:border-accent/20 transition-all shadow-sm"
+            className="p-2 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-slate-400 dark:text-slate-300 hover:text-accent dark:hover:text-accent hover:border-accent/20 transition-all shadow-sm"
           >
             <ArrowUpRight size={16} />
           </Link>
@@ -314,7 +318,7 @@ export const AllTasksPage = () => {
           {[1, 2].map((i) => (
             <div key={i} className="space-y-4">
               <Skeleton className="h-6 w-48" />
-              <div className="bg-white border border-slate-100 rounded-md h-64 overflow-hidden relative">
+              <div className="bg-slate-50 border border-slate-100 rounded-md h-64 overflow-hidden relative">
                 <Skeleton className="absolute inset-0" />
               </div>
             </div>
@@ -328,12 +332,12 @@ export const AllTasksPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-500 pb-20">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-8">
         <div>
-          <h1 className="text-4xl font-bold text-slate-900 tracking-tight">
+          <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-200 tracking-tight">
             All Workspace Tasks
           </h1>
-          <p className="text-slate-500 mt-2 font-medium">
+          <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
             Consolidated Task assignment flow across all projects.
           </p>
         </div>
@@ -353,7 +357,7 @@ export const AllTasksPage = () => {
 
       <div className="space-y-20">
         {myTasks.length === 0 ? (
-          <div className="bg-white border border-slate-100 rounded-md p-12 text-center text-slate-400 text-sm font-medium italic">
+          <div className="bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-md p-12 text-center text-slate-400 text-sm font-medium italic">
             No tasks found in the workspace.
           </div>
         ) : (

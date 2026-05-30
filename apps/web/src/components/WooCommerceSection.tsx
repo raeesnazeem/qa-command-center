@@ -29,7 +29,7 @@ const TestResult: React.FC<TestResultProps> = ({
   pageUrl,
   error,
 }) => (
-  <div className="flex items-start justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:bg-white hover:shadow-sm transition-all duration-300">
+  <div className="flex items-start justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:bg-slate-50 hover:shadow-sm transition-all duration-300">
     <div className="flex flex-col gap-1 min-w-0">
       <div className="flex items-center gap-2">
         {isPassed ? (

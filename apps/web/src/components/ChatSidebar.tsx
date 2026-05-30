@@ -38,14 +38,14 @@ export const ChatSidebar: React.FC = () => {
     <div className="absolute bottom-0 right-0 left-0 z-50 flex flex-col pointer-events-none">
       {/* Expanded Panel */}
       <div
-        className={`bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col transition-all duration-300 ease-in-out pointer-events-auto ${isOpen ? "h-[500px]" : "h-0"}`}
+        className={`bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col transition-all duration-300 ease-in-out pointer-events-auto ${isOpen ? "h-[500px]" : "h-0"}`}
       >
         {/* Header */}
-        <div className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 p-3 flex items-center justify-between shrink-0">
+        <div className="bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 p-3 flex items-center justify-between shrink-0">
           <div className="flex flex-col">
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 rounded-full bg-accent" />
-              <h3 className="text-[10px] font-bold text-slate-900 dark:text-white uppercase tracking-widest">
+              <h3 className="text-[10px] font-bold text-slate-900 dark:text-slate-200 uppercase tracking-widest">
                 QA Assistant Console
               </h3>
             </div>
@@ -72,7 +72,7 @@ export const ChatSidebar: React.FC = () => {
               <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center mb-3">
                 <MessageCircle className="w-5 h-5 text-accent" />
               </div>
-              <h4 className="text-xs font-bold text-slate-900 dark:text-white mb-1">
+              <h4 className="text-xs font-bold text-slate-900 dark:text-slate-200 mb-1">
                 Ready for input
               </h4>
               <p className="text-[10px] text-slate-500 dark:text-slate-400">
@@ -93,7 +93,7 @@ export const ChatSidebar: React.FC = () => {
               ))}
               {isLoading && !isStreaming && (
                 <div className="flex justify-start">
-                  <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 px-3 py-1.5 rounded-xl rounded-bl-none shadow-sm flex items-center space-x-1">
+                  <div className="bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 px-3 py-1.5 rounded-xl rounded-bl-none shadow-sm flex items-center space-x-1">
                     <div className="w-1 h-1 bg-slate-300 dark:bg-slate-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
                     <div className="w-1 h-1 bg-slate-300 dark:bg-slate-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
                     <div className="w-1 h-1 bg-slate-300 dark:bg-slate-500 rounded-full animate-bounce" />
@@ -120,7 +120,7 @@ export const ChatSidebar: React.FC = () => {
         <div className="shrink-0">
           {providerMetadata && (
             <div className="px-4 pb-1.5 flex justify-end">
-              <div className="flex items-center bg-white/40 dark:bg-slate-800/40 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 rounded-full px-2.5 py-0.5 shadow-sm space-x-2 overflow-hidden transition-all duration-500 animate-in fade-in slide-in-from-bottom-1">
+              <div className="flex items-center bg-slate-50/40 dark:bg-slate-800/40 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 rounded-full px-2.5 py-0.5 shadow-sm space-x-2 overflow-hidden transition-all duration-500 animate-in fade-in slide-in-from-bottom-1">
                 {/* Active Model */}
                 <div className="flex items-center space-x-1.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
@@ -219,7 +219,7 @@ export const ChatSidebar: React.FC = () => {
       {/* Terminal Bar (Always visible at the bottom) */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className="h-10 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors pointer-events-auto shadow-sm"
+        className="h-10 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors pointer-events-auto shadow-sm"
       >
         <div className="flex items-center space-x-3">
           <div

@@ -55,7 +55,7 @@ export const EditProjectModal = ({ project, isOpen, onClose }: EditProjectModalP
         onClick={onClose} 
       />
       
-      <div className="relative w-full max-w-lg bg-white border border-slate-200 rounded-md shadow-sm overflow-hidden transition-all duration-200">
+      <div className="relative w-full max-w-lg bg-slate-50 border border-slate-200 rounded-md shadow-sm overflow-hidden transition-all duration-200">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
           <div className="flex items-center gap-2">
             <Settings2 className="w-5 h-5 text-slate-400" />
@@ -79,7 +79,7 @@ export const EditProjectModal = ({ project, isOpen, onClose }: EditProjectModalP
               <input
                 {...register('name')}
                 placeholder="e.g. My Awesome Shop"
-                className={`w-full bg-white border ${
+                className={`w-full bg-slate-50 border ${
                   errors.name ? 'border-red-500/50' : 'border-slate-200'
                 } rounded-md px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all`}
               />
@@ -98,7 +98,7 @@ export const EditProjectModal = ({ project, isOpen, onClose }: EditProjectModalP
                 <input
                   {...register('site_url')}
                   placeholder="https://example.com"
-                  className={`w-full bg-white border ${
+                  className={`w-full bg-slate-50 border ${
                     errors.site_url ? 'border-red-500/50' : 'border-slate-200'
                   } rounded-md pl-10 pr-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all`}
                 />
@@ -118,7 +118,7 @@ export const EditProjectModal = ({ project, isOpen, onClose }: EditProjectModalP
                 <input
                   {...register('client_name')}
                   placeholder="ACME Corp"
-                  className="w-full bg-white border border-slate-200 rounded-md pl-10 pr-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-md pl-10 pr-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
                 />
               </div>
             </div>
@@ -128,7 +128,7 @@ export const EditProjectModal = ({ project, isOpen, onClose }: EditProjectModalP
               <label className="block text-sm font-semibold text-slate-700 mb-1.5">Project Status</label>
               <select
                 {...register('status')}
-                className="w-full bg-white border border-slate-200 rounded-md px-4 py-2.5 text-slate-900 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
+                className="w-full bg-slate-50 border border-slate-200 rounded-md px-4 py-2.5 text-slate-900 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
               >
                 <option value="active">Active</option>
                 <option value="archived">Archived</option>
@@ -149,7 +149,7 @@ export const EditProjectModal = ({ project, isOpen, onClose }: EditProjectModalP
                     {...register('is_woocommerce')}
                     className="sr-only peer"
                   />
-                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-accent"></div>
+                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-50 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-accent"></div>
                 </label>
               </div>
 
@@ -165,7 +165,7 @@ export const EditProjectModal = ({ project, isOpen, onClose }: EditProjectModalP
                     {...register('is_pre_release')}
                     className="sr-only peer"
                   />
-                  <div className="w-9 h-5 bg-amber-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-amber-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
+                  <div className="w-9 h-5 bg-amber-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-50 after:border-amber-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
                 </label>
               </div>
             </div>

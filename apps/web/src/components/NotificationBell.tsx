@@ -105,7 +105,7 @@ export const NotificationBell: React.FC = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-3 w-80 bg-white border border-slate-200 rounded-md shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute right-0 mt-3 w-80 bg-slate-50 border border-slate-200 rounded-md shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
             <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest">
               Notifications
@@ -161,7 +161,7 @@ export const NotificationBell: React.FC = () => {
                         e.stopPropagation()
                         markRead.mutate(notif.id)
                       }}
-                      className="opacity-0 group-hover:opacity-100 p-1.5 bg-white border border-slate-200 text-slate-400 hover:text-accent hover:border-accent rounded-lg transition-all shadow-sm self-start"
+                      className="opacity-0 group-hover:opacity-100 p-1.5 bg-slate-50 border border-slate-200 text-slate-400 hover:text-accent hover:border-accent rounded-lg transition-all shadow-sm self-start"
                       title="Mark as read"
                     >
                       <Check className="w-3.5 h-3.5" />
