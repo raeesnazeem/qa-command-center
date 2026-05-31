@@ -232,6 +232,10 @@ export const RunDetailPage = () => {
     "hero_media",
     "paid_media",
     "privacy_policy",
+    "footer_logo",
+    "single_script",
+    "top_bar_sticky",
+    "callnow_links",
   ]
 
   // 1. Extract any general run-level findings (null page_id OR project plan factor OR hero_media matching selected page)
@@ -1053,14 +1057,22 @@ export const RunDetailPage = () => {
                   if (
                     checkKey === "privacy_policy" ||
                     checkKey === "project_plan" ||
-                    checkKey === "hero_media"
+                    checkKey === "hero_media" ||
+                    checkKey === "single_script" ||
+                    checkKey === "top_bar_sticky" ||
+                    checkKey === "callnow_links" ||
+                    checkKey === "footer_logo"
                   ) {
-                    relevantPages = relevantPages.filter(
-                      (p) =>
-                        p.url === run.site_url ||
-                        p.url.replace(/\/$/, "") ===
-                          run.site_url.replace(/\/$/, ""),
-                    )
+                    relevantPages = relevantPages.filter((p) => {
+                      const normalize = (u: string) =>
+                        u
+                          .replace(/^https?:\/\//, "")
+                          .replace(/^www\./, "")
+                          .replace(/\/$/, "")
+                          .toLowerCase()
+                      return normalize(p.url) === normalize(run.site_url)
+                    })
+
                     if (
                       relevantPages.length === 0 &&
                       (run.pages || []).length > 0

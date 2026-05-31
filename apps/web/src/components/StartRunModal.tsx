@@ -9,6 +9,7 @@ import {
 } from "../hooks/useRuns"
 import { Project } from "../api/projects.api"
 import {
+  AlertCircle,
   X,
   Loader2,
   Globe,
@@ -67,6 +68,11 @@ export const StartRunModal = ({
   })
 
   const enabledChecks = useWatch({ control, name: "enabled_checks" }) || []
+  const PASSWORD_REQUIRED_CHECKS = ["callnow_links"]
+  const requiresPassword = enabledChecks.some((c) =>
+    PASSWORD_REQUIRED_CHECKS.includes(c),
+  )
+
   const isGeneralOnly = enabledChecks.every(
     (c) => c === "project_plan" || c === "dead_links",
   )
@@ -145,14 +151,20 @@ export const StartRunModal = ({
 
     createRun(payload, {
       onSuccess: (newRun) => {
-        // Correctly enqueue the job using startRun mutation
-        startRun(newRun.id, {
-          onSuccess: () => {
-            onClose()
-            // Redirect to detail page to see live progress
-            navigate(`/projects/${project.id}/runs/${newRun.id}`)
+        // Correctly enqueue the job using startRun mutation with the password
+        startRun(
+          {
+            runId: newRun.id,
+            wp_password: requiresPassword ? data.wp_password : undefined,
           },
-        })
+          {
+            onSuccess: () => {
+              onClose()
+              // Redirect to detail page to see live progress
+              navigate(`/projects/${project.id}/runs/${newRun.id}`)
+            },
+          },
+        )
       },
     })
   }
@@ -257,6 +269,11 @@ export const StartRunModal = ({
       label: "Text Share Metadata Check",
       description:
         "Verify that social preview tags (og:title, og:site_name) match the business name",
+    },
+    {
+      id: "callnow_links",
+      label: "Callnow & Links Check",
+      description: "Verify Call Now plugin installation and homepage links",
     },
   ]
 
@@ -478,6 +495,24 @@ export const StartRunModal = ({
                 ))}
               </div>
             </div>
+
+            {requiresPassword && (
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-md mt-4">
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  WordPress Admin Password Required
+                </label>
+                <p className="text-[10px] text-slate-500 mb-3 font-medium">
+                  One or more selected checks require access to the WordPress
+                  backend. Username will be set to onboarding.india@growth99.com
+                </p>
+                <input
+                  type="password"
+                  {...register("wp_password")}
+                  placeholder="Enter today's WP password..."
+                  className="w-full bg-white dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md px-4 py-2.5 text-slate-900 dark:text-slate-200 focus:outline-none focus:border-accent transition-all"
+                />
+              </div>
+            )}
           </div>
 
           <div className="flex space-x-3 pt-2">

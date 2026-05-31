@@ -61,6 +61,7 @@ const CHECK_FACTOR_ICONS: Record<string, React.ReactNode> = {
   project_plan: <ClipboardList size={14} className="text-accent" />,
   hero_media: <Monitor size={14} className="text-accent" />,
   dead_links: <Globe size={14} className="text-accent" />,
+  callnow_links: <MonitorSmartphone size={14} className="text-accent" />,
 }
 
 export const DefaultFindingCard: React.FC<FindingCardProps> = ({
@@ -88,7 +89,12 @@ export const DefaultFindingCard: React.FC<FindingCardProps> = ({
   const galleryImages = allGalleryImages[finding.id] || []
 
   // Ensure factors that require full width get it here
-  const FULL_WIDTH_FACTORS = ["dead_links", "paid_media", "hero_media"]
+  const FULL_WIDTH_FACTORS = [
+    "dead_links",
+    "paid_media",
+    "hero_media",
+    "callnow_links",
+  ]
   const isPaidMedia = finding.check_factor === "paid_media"
   const isFullWidth = FULL_WIDTH_FACTORS.includes(finding.check_factor)
 

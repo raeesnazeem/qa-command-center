@@ -25,6 +25,7 @@ import {
   checkGrowth99ContactForm,
   checkChatbotAndConsultation,
   checkTextShareMetadata,
+  checkCallnowLinks,
 } from "../checks/preReleaseSuite"
 import pino from "pino"
 
@@ -50,7 +51,9 @@ export async function processCrawlPageJob(job: Job) {
   // Fetch run settings for conditional checks
   const { data: run, error: runError } = await supabase
     .from("qa_runs")
-    .select("status, is_woocommerce, site_url, enabled_checks, project_id")
+    .select(
+      "status, is_woocommerce, site_url, enabled_checks, project_id, wp_password",
+    )
     .eq("id", runId)
     .single()
 
@@ -269,9 +272,13 @@ export async function processCrawlPageJob(job: Job) {
       }
 
       if (enabledChecks.includes("hero_media")) {
-        const isHomepage =
-          pageUrl.replace(/\/$/, "").toLowerCase() ===
-          run.site_url.replace(/\/$/, "").toLowerCase()
+        const normalize = (u: string) =>
+          u
+            .replace(/^https?:\/\//, "")
+            .replace(/^www\./, "")
+            .replace(/\/$/, "")
+            .toLowerCase()
+        const isHomepage = normalize(pageUrl) === normalize(run.site_url)
 
         if (isHomepage) {
           checkPromises.push(
@@ -387,9 +394,13 @@ export async function processCrawlPageJob(job: Job) {
       }
 
       // 2. Footer Logo Check
-      if (enabledChecks.includes("footer_logo")) {
+      if (
+        enabledChecks.includes("footer_logo") &&
+        pageUrl.replace(/\/$/, "").toLowerCase() ===
+          run.site_url.replace(/\/$/, "").toLowerCase()
+      ) {
         checkPromises.push(
-          checkFooterLogo(page).catch((e) => {
+          checkFooterLogo(pageUrl, runId, pageId).catch((e) => {
             logger.error("Footer logo check failed:", e)
             return []
           }),
@@ -398,22 +409,42 @@ export async function processCrawlPageJob(job: Job) {
 
       // 4. Single Script Features Check
       if (enabledChecks.includes("single_script")) {
-        checkPromises.push(
-          checkSingleScript(page).catch((e) => {
-            logger.error("Single script check failed:", e)
-            return []
-          }),
-        )
+        const normalize = (u: string) =>
+          u
+            .replace(/^https?:\/\//, "")
+            .replace(/^www\./, "")
+            .replace(/\/$/, "")
+            .toLowerCase()
+        const isHomepage = normalize(pageUrl) === normalize(run.site_url)
+
+        if (isHomepage) {
+          checkPromises.push(
+            checkSingleScript(pageUrl, runId, pageId).catch((e) => {
+              logger.error("Single script check failed:", e)
+              return []
+            }),
+          )
+        }
       }
 
       // 5. Top Bar & Sticky Header Check
       if (enabledChecks.includes("top_bar_sticky")) {
-        checkPromises.push(
-          checkTopBarAndStickyHeader(page).catch((e) => {
-            logger.error("Top bar & sticky header check failed:", e)
-            return []
-          }),
-        )
+        const normalize = (u: string) =>
+          u
+            .replace(/^https?:\/\//, "")
+            .replace(/^www\./, "")
+            .replace(/\/$/, "")
+            .toLowerCase()
+        const isHomepage = normalize(pageUrl) === normalize(run.site_url)
+
+        if (isHomepage) {
+          checkPromises.push(
+            checkTopBarAndStickyHeader(pageUrl, runId, pageId).catch((e) => {
+              logger.error("Top bar & sticky header check failed:", e)
+              return []
+            }),
+          )
+        }
       }
 
       // 6. Add Favicon Check
@@ -466,7 +497,30 @@ export async function processCrawlPageJob(job: Job) {
         )
       }
 
+      // 11. Callnow & Links Check
+      if (enabledChecks.includes("callnow_links")) {
+        const normalize = (u: string) =>
+          u
+            .replace(/^https?:\/\//, "")
+            .replace(/^www\./, "")
+            .replace(/\/$/, "")
+            .toLowerCase()
+        const isHomepage = normalize(pageUrl) === normalize(run.site_url)
+
+        if (isHomepage) {
+          checkPromises.push(
+            checkCallnowLinks(pageUrl, runId, pageId, run.wp_password).catch(
+              (e) => {
+                logger.error("Callnow & Links check failed:", e)
+                return []
+              },
+            ),
+          )
+        }
+      }
+
       // Attach a .then to stream findings into DB the instant each individual check finishes
+
       const streamingPromises = checkPromises.map((p) =>
         p.then(async (results) => {
           if (results && results.length > 0) {

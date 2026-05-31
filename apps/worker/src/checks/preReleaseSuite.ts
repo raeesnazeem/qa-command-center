@@ -262,148 +262,183 @@ export async function checkPrivacyPolicy(
  * - Analyze the image attributes (alt, src) to detect tagline keywords.
  */
 export async function checkFooterLogo(
-  page: PlaywrightPage,
-  pageRecord?: any,
+  url: string,
+  runId: string,
+  pageId: string,
 ): Promise<Finding[]> {
-  const findings: Finding[] = []
+  const { chromium } = require("playwright")
+  const { uploadScreenshot } = require("../lib/supabaseStorage")
 
-  const footerLogo = page
-    .locator('footer img[src*="logo"], footer img[alt*="logo"]')
-    .first()
+  let desktopUrl = ""
+  let tabletUrl = ""
+  let mobileUrl = ""
 
-  if ((await footerLogo.count()) > 0) {
-    try {
-      const altText = (
-        (await footerLogo.getAttribute("alt")) || ""
-      ).toLowerCase()
-      const srcUrl = (
-        (await footerLogo.getAttribute("src")) || ""
-      ).toLowerCase()
+  try {
+    const browser = await chromium.launch({ headless: true })
+    const viewports = [
+      { name: "desktop", width: 1440, height: 900 },
+      { name: "tablet", width: 768, height: 1024 },
+      { name: "mobile", width: 375, height: 812 },
+    ]
 
-      let taglineDetected = false
-      if (
-        altText.includes("tagline") ||
-        srcUrl.includes("tagline") ||
-        altText.split(" ").length > 3
-      ) {
-        taglineDetected = true
+    for (const vp of viewports) {
+      const context = await browser.newContext({
+        viewport: { width: vp.width, height: vp.height },
+      })
+      const newPage = await context.newPage()
+      await newPage
+        .goto(url, { waitUntil: "load", timeout: 30000 })
+        .catch(() => {})
+
+      const footer = newPage
+        .locator('footer, div[class*="footer"], section[class*="footer"]')
+        .first()
+
+      if ((await footer.count()) > 0) {
+        // Scroll the footer into view to trigger lazy loading of images
+        await footer.scrollIntoViewIfNeeded().catch(() => {})
+
+        // 5s delay AFTER scrolling to let the logo and dynamic content load
+        await newPage.waitForTimeout(5000)
+
+        // Capture only the footer element
+        const buffer = await footer.screenshot()
+
+        const storagePath = `${runId}/${pageId}/footer_${vp.name}.png`
+
+        // Upload to supabase
+        const publicUrl = await uploadScreenshot(buffer, storagePath)
+
+        if (vp.name === "desktop") desktopUrl = publicUrl
+        if (vp.name === "tablet") tabletUrl = publicUrl
+        if (vp.name === "mobile") mobileUrl = publicUrl
       }
-
-      if (taglineDetected) {
-        findings.push({
-          check_factor: "footer_logo",
-          severity: "low",
-          title: "Footer logo contains tagline",
-          description:
-            "Our AI scan detected that the footer logo has tagline text or generic long description. Please use the brand new logo with NO tagline as per pre-release guidelines.",
-          status: "open",
-          ai_generated: true,
-        } as Finding)
-      }
-    } catch (e: any) {
-      logger.warn(
-        { error: e.message },
-        "Could not analyze footer logo screenshot.",
-      )
+      await context.close()
     }
-  } else {
-    findings.push({
-      check_factor: "footer_logo",
-      severity: "low",
-      title: "Footer Logo Not Found",
-      description:
-        "Could not find a clear logo image inside the footer element to verify tagline guidelines.",
-      status: "open",
-      ai_generated: false,
-    } as Finding)
+    await browser.close()
+  } catch (e: any) {
+    console.error("Footer screenshot failed", e)
   }
 
-  return findings
+  const screenshotUrls = [desktopUrl, tabletUrl, mobileUrl]
+    .filter(Boolean)
+    .join(",")
+
+  return [
+    {
+      check_factor: "footer_logo",
+      severity: "low",
+      title: "Verify Footer Logo",
+      description:
+        "Please verify the footer logo across all 3 views (Desktop, Tablet, Mobile) using the evidence screenshots. The logo should not contain a tagline.",
+      screenshot_url: screenshotUrls,
+      status: "open",
+      ai_generated: false,
+    } as Finding,
+  ]
 }
 
 /**
  * =========================================================================
- * 4️⃣ CHECK 4: Single Script Features Check
+ * CHECK 4: Single Script Features Check
  * =========================================================================
  * The Logic:
- * - Inspect loaded script tags and verify presence of "growth99" or "g99".
  * - Check if chatbot, review widgets are injected, and verify they are correctly right-aligned.
  */
 export async function checkSingleScript(
-  page: PlaywrightPage,
-  pageRecord?: any,
+  url: string,
+  runId: string,
+  pageId: string,
 ): Promise<Finding[]> {
-  const findings: Finding[] = []
+  const { chromium } = require("playwright")
+  const { uploadScreenshot } = require("../lib/supabaseStorage")
 
-  const scripts = await page.evaluate(() => {
-    return Array.from(document.querySelectorAll("script"))
-      .map((s) => s.src)
-      .filter(Boolean)
-  })
+  let desktopUrl = ""
+  let tabletUrl = ""
+  let mobileUrl = ""
+  let codeUrl = ""
 
-  const hasGrowth99Script = scripts.some(
-    (src) => src.includes("growth99") || src.includes("g99"),
-  )
+  try {
+    const browser = await chromium.launch({ headless: true })
+    const viewports = [
+      { name: "desktop", width: 1440, height: 900 },
+      { name: "tablet", width: 768, height: 1024 },
+      { name: "mobile", width: 375, height: 812 },
+    ]
 
-  if (!hasGrowth99Script) {
-    findings.push({
-      check_factor: "single_script",
-      severity: "medium",
-      title: "Single Script Integration Issue - Tag Missing",
-      description:
-        "Single script tag was not found in the HTML source code. Please inject the Growth99 integration script tag.",
-      status: "open",
-      ai_generated: false,
-    } as Finding)
-    return findings
-  }
+    for (const vp of viewports) {
+      const context = await browser.newContext({
+        viewport: { width: vp.width, height: vp.height },
+      })
+      const newPage = await context.newPage()
+      await newPage
+        // networkidle waits until there are no network connections for at least 500 ms (ensures JS fully loads)
+        .goto(url, { waitUntil: "networkidle", timeout: 30000 })
+        .catch(() => {})
 
-  const widgetsData = await page.evaluate(() => {
-    const chatbot = document.querySelector(
-      "#g99-chatbot-widget, .g99-chatbot-widget, #g99-chatbot-launcher",
-    )
-    const reviews = document.querySelector(
-      ".g99-reviews-widget, #g99-reviews-widget",
-    )
-    const bookNow = document.querySelector(".g99-book-now, #g99-book-now")
+      // Wait an extra 5 seconds just in case there are slow CSS animations triggered by the JS
+      await newPage.waitForTimeout(5000)
 
-    const getAlignment = (el: Element | null) => {
-      if (!el) return null
-      const rect = el.getBoundingClientRect()
-      return rect.left > window.innerWidth / 2 ? "right" : "left"
+      // Capture visible viewport only
+      const buffer = await newPage.screenshot({ fullPage: false })
+      const storagePath = `${runId}/${pageId}/single_script_${vp.name}.png`
+      const publicUrl = await uploadScreenshot(buffer, storagePath)
+
+      if (vp.name === "desktop") desktopUrl = publicUrl
+      if (vp.name === "tablet") tabletUrl = publicUrl
+      if (vp.name === "mobile") mobileUrl = publicUrl
+
+      await context.close()
     }
 
-    return {
-      hasChatbot: !!chatbot,
-      chatbotAlignment: getAlignment(chatbot),
-      hasReviews: !!reviews,
-      hasBookNow: !!bookNow,
-    }
-  })
+    // 4th screenshot: Page source of #feature-buttons code
+    const codeContext = await browser.newContext()
+    const codePage = await codeContext.newPage()
+    await codePage
+      .goto(url, { waitUntil: "networkidle", timeout: 30000 })
+      .catch(() => {})
+    // Wait an extra 5 seconds for the JS injection to occur before evaluating
+    await codePage.waitForTimeout(5000)
 
-  if (!widgetsData.hasChatbot) {
-    findings.push({
-      check_factor: "single_script",
-      severity: "medium",
-      title: "Single Script Integration - Chatbot Widget Missing",
-      description:
-        "The Growth99 single script is loaded, but the chatbot widget element was not detected in the DOM.",
-      status: "open",
-      ai_generated: false,
-    } as Finding)
-  } else if (widgetsData.chatbotAlignment !== "right") {
-    findings.push({
-      check_factor: "single_script",
-      severity: "medium",
-      title: "Single Script Integration - Incorrect Chatbot Alignment",
-      description:
-        "The floating chatbot widget is not positioned on the right side of the screen. Standard layout requires it to be on the right side.",
-      status: "open",
-      ai_generated: false,
-    } as Finding)
+    const codeSnippet = await codePage.evaluate(() => {
+      const el = document.querySelector("#feature-buttons")
+      return el
+        ? el.outerHTML
+        : "Element #feature-buttons not found in page source"
+    })
+
+    const renderPage = await codeContext.newPage()
+    await renderPage.setContent(
+      `<pre style="font-size: 14px; white-space: pre-wrap; word-wrap: break-word; padding: 20px; background: #f4f4f4;">${codeSnippet.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>`,
+    )
+    const codeBuffer = await renderPage.screenshot({ fullPage: false })
+    codeUrl = await uploadScreenshot(
+      codeBuffer,
+      `${runId}/${pageId}/single_script_code.png`,
+    )
+
+    await codeContext.close()
+    await browser.close()
+  } catch (e: any) {
+    console.error("Single script screenshot failed", e)
   }
 
-  return findings
+  const screenshotUrls = [desktopUrl, tabletUrl, mobileUrl, codeUrl]
+    .filter(Boolean)
+    .join(",")
+
+  return [
+    {
+      check_factor: "single_script",
+      severity: "medium",
+      title: "Verify Single Script Features",
+      description:
+        "Please verify the single script features across Desktop, Tablet, Mobile and verify the script code addition.",
+      screenshot_url: screenshotUrls,
+      status: "open",
+      ai_generated: false,
+    } as Finding,
+  ]
 }
 
 /**
@@ -415,135 +450,85 @@ export async function checkSingleScript(
  * - Sticky Header Check: Bounding box comparison before and after scrolling down 500px to ensure the header stays visible.
  */
 export async function checkTopBarAndStickyHeader(
-  page: PlaywrightPage,
-  pageRecord?: any,
+  url: string,
+  runId: string,
+  pageId: string,
 ): Promise<Finding[]> {
-  const findings: Finding[] = []
+  const { chromium } = require("playwright")
+  const { uploadScreenshot } = require("../lib/supabaseStorage")
 
-  const topBar = page.locator(
-    ".topbar, .top-bar, #topbar, #top-bar, header .meta-bar, .header-top",
-  )
-  let topBarText = ""
-  let hasPhone = false
-  let hasEmail = false
-  let hasSocial = false
+  let codeUrl = ""
+  let headerUrl = ""
 
-  if ((await topBar.count()) > 0) {
-    topBarText = await topBar.innerText()
-    const phoneRegex = /(\+?\d{1,2}\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/
-    hasPhone =
-      phoneRegex.test(topBarText) ||
-      (await topBar.locator('a[href^="tel:"]').count()) > 0
+  try {
+    const browser = await chromium.launch({ headless: true })
+    const context = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+    })
+    const newPage = await context.newPage()
+    await newPage
+      .goto(url, { waitUntil: "networkidle", timeout: 30000 })
+      .catch(() => {})
 
-    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/
-    hasEmail =
-      emailRegex.test(topBarText) ||
-      (await topBar.locator('a[href^="mailto:"]').count()) > 0
+    await newPage.waitForTimeout(5000)
 
-    const socialLinks = topBar.locator(
-      'a[href*="facebook.com"], a[href*="instagram.com"], a[href*="twitter.com"], a[href*="linkedin.com"]',
+    const headerElement = newPage
+      .locator(
+        "header, .site-header, #masthead, [data-elementor-type='header']",
+      )
+      .first()
+    if ((await headerElement.count()) > 0) {
+      const buffer = await headerElement.screenshot()
+      headerUrl = await uploadScreenshot(
+        buffer,
+        `${runId}/${pageId}/header_nav.png`,
+      )
+    }
+
+    const codeSnippet = await newPage.evaluate(() => {
+      const el = document.querySelector(
+        "header, .site-header, #masthead, [data-elementor-type='header']",
+      )
+      return el ? el.outerHTML : "Header element not found"
+    })
+
+    const codeContext = await browser.newContext()
+    const renderPage = await codeContext.newPage()
+    await renderPage.setContent(
+      `<pre style="font-size: 14px; white-space: pre-wrap; word-wrap: break-word; padding: 20px; background: #f4f4f4;">${codeSnippet.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>`,
     )
-    hasSocial = (await socialLinks.count()) > 0
+    const codeBuffer = await renderPage.screenshot({ fullPage: false })
+    codeUrl = await uploadScreenshot(
+      codeBuffer,
+      `${runId}/${pageId}/header_code.png`,
+    )
+
+    await codeContext.close()
+    await context.close()
+    await browser.close()
+  } catch (e: any) {
+    console.error("Header screenshot failed", e)
   }
 
-  if (!topBarText) {
-    findings.push({
+  const screenshotUrls = [codeUrl, headerUrl].filter(Boolean).join(",")
+
+  return [
+    {
       check_factor: "top_bar_sticky",
       severity: "medium",
-      title: "Top Bar Section Missing",
+      title: "Verify Top Bar & Sticky Header",
       description:
-        "We could not locate the top bar section on the page header. Please ensure it contains critical contact information.",
+        "Please verify the top bar and sticky header using the provided screenshots.",
+      screenshot_url: screenshotUrls,
       status: "open",
       ai_generated: false,
-    } as Finding)
-  } else {
-    if (!hasPhone) {
-      findings.push({
-        check_factor: "top_bar_sticky",
-        severity: "medium",
-        title: "Top Bar - Missing Phone Number",
-        description:
-          "The top bar is present, but no valid business mobile or phone number was found.",
-        status: "open",
-        ai_generated: false,
-      } as Finding)
-    }
-    if (!hasEmail) {
-      findings.push({
-        check_factor: "top_bar_sticky",
-        severity: "medium",
-        title: "Top Bar - Missing Email Address",
-        description:
-          "The top bar is present, but no valid business email address was found.",
-        status: "open",
-        ai_generated: false,
-      } as Finding)
-    }
-    if (!hasSocial) {
-      findings.push({
-        check_factor: "top_bar_sticky",
-        severity: "low",
-        title: "Top Bar - Missing Social Media Links",
-        description:
-          "We found no links to social media accounts (Facebook, Instagram, etc.) inside the top bar.",
-        status: "open",
-        ai_generated: false,
-      } as Finding)
-    }
-  }
-
-  // Sticky Header Check
-  const header = page.locator("header, #masthead, .site-header").first()
-  if ((await header.count()) > 0) {
-    try {
-      const boxBefore = await header.boundingBox()
-      if (boxBefore) {
-        const initialY = boxBefore.y
-
-        await page.evaluate(() => window.scrollTo(0, 500))
-        await page.waitForTimeout(500)
-
-        const boxAfter = await header.boundingBox()
-        const scrolledY = boxAfter ? boxAfter.y : -1
-
-        const headerPosition = await header.evaluate((el) => {
-          const style = window.getComputedStyle(el)
-          return style.position
-        })
-
-        const isSticky =
-          headerPosition === "fixed" ||
-          headerPosition === "sticky" ||
-          scrolledY >= initialY
-
-        if (!isSticky) {
-          findings.push({
-            check_factor: "top_bar_sticky",
-            severity: "medium",
-            title: "Header is NOT Sticky on Scroll",
-            description:
-              "When the page scrolls down by 500px, the main header scrolls out of view. Pre-release guidelines require a sticky/fixed header.",
-            status: "open",
-            ai_generated: false,
-          } as Finding)
-        }
-      }
-    } catch (e: any) {
-      logger.warn(
-        { error: e.message },
-        "Error checking header sticky property.",
-      )
-    } finally {
-      await page.evaluate(() => window.scrollTo(0, 0))
-    }
-  }
-
-  return findings
+    } as Finding,
+  ]
 }
 
 /**
  * =========================================================================
- * 6️⃣ CHECK 6: Add Favicon Check
+ * CHECK 6: Add Favicon Check
  * =========================================================================
  * The Logic:
  * - Search for favicon link relation inside head tags.
@@ -827,7 +812,7 @@ export async function checkChatbotAndConsultation(
 
 /**
  * =========================================================================
- * 🔟 CHECK 🔟: Text Share Metadata Check
+ *  CHECK 11: Text Share Metadata Check
  * =========================================================================
  * The Logic:
  * - Grab 'og:title', 'og:site_name', and 'twitter:title' meta tags.
@@ -910,4 +895,149 @@ export async function checkTextShareMetadata(
   }
 
   return findings
+}
+
+/**
+ * =========================================================================
+ * CHECK: Callnow & Links Check
+ * =========================================================================
+ */
+export async function checkCallnowLinks(
+  url: string,
+  runId: string,
+  pageId: string,
+  wpPassword?: string,
+): Promise<Finding[]> {
+  const { chromium } = require("playwright")
+  const { uploadScreenshot } = require("../lib/supabaseStorage")
+
+  if (!wpPassword) {
+    return [
+      {
+        check_factor: "callnow_links",
+        severity: "high",
+        title: "Callnow Check Skipped - No Password",
+        description:
+          "The WordPress admin password was not provided. Skipping Callnow backend checks.",
+        status: "open",
+        ai_generated: false,
+      } as Finding,
+    ]
+  }
+
+  let pluginScreenshotUrl = ""
+  let settingsScreenshotUrl = ""
+  let mobileScreenshotUrl = ""
+
+  let browser
+  try {
+    browser = await chromium.launch({ headless: true })
+
+    const adminContext = await browser.newContext()
+    const adminPage = await adminContext.newPage()
+
+    const baseUrl = new URL(url).origin
+    await adminPage
+      .goto(`${baseUrl}/wp-login.php`, {
+        waitUntil: "networkidle",
+        timeout: 30000,
+      })
+      .catch(() => {})
+
+    const userField = adminPage.locator('#user_login, input[name="log"]')
+    const passField = adminPage.locator('#user_pass, input[name="pwd"]')
+    const submitBtn = adminPage.locator('#wp-submit, input[type="submit"]')
+
+    if ((await userField.count()) > 0 && (await passField.count()) > 0) {
+      await userField.fill("onboarding.india@growth99.com")
+      await passField.fill(wpPassword)
+      await submitBtn.click()
+      await adminPage.waitForLoadState("networkidle")
+    }
+
+    await adminPage
+      .goto(`${baseUrl}/wp-admin/plugins.php`, {
+        waitUntil: "networkidle",
+        timeout: 30000,
+      })
+      .catch(() => {})
+    const pluginRow = adminPage
+      .locator(
+        'tr[data-slug="call-now-button"], tr:has-text("Call Now Button")',
+      )
+      .first()
+    if ((await pluginRow.count()) > 0) {
+      const buffer = await pluginRow.screenshot()
+      pluginScreenshotUrl = await uploadScreenshot(
+        buffer,
+        `${runId}/${pageId}/callnow_plugin.png`,
+      )
+    } else {
+      const buffer = await adminPage.screenshot({ fullPage: true })
+      pluginScreenshotUrl = await uploadScreenshot(
+        buffer,
+        `${runId}/${pageId}/callnow_plugin.png`,
+      )
+    }
+
+    await adminPage
+      .goto(`${baseUrl}/wp-admin/options-general.php?page=call-now-button`, {
+        waitUntil: "networkidle",
+        timeout: 30000,
+      })
+      .catch(() => {})
+    const settingsBuffer = await adminPage.screenshot({ fullPage: true })
+    settingsScreenshotUrl = await uploadScreenshot(
+      settingsBuffer,
+      `${runId}/${pageId}/callnow_settings.png`,
+    )
+
+    await adminPage.close()
+    await adminContext.close()
+
+    const mobileContext = await browser.newContext({
+      viewport: { width: 375, height: 812 },
+      userAgent:
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1",
+    })
+    const mobilePage = await mobileContext.newPage()
+    await mobilePage
+      .goto(url, { waitUntil: "networkidle", timeout: 30000 })
+      .catch(() => {})
+    await mobilePage.waitForTimeout(5000)
+    const mobileBuffer = await mobilePage.screenshot({ fullPage: false })
+    mobileScreenshotUrl = await uploadScreenshot(
+      mobileBuffer,
+      `${runId}/${pageId}/callnow_mobile.png`,
+    )
+
+    await mobilePage.close()
+    await mobileContext.close()
+  } catch (error: any) {
+    console.error("Callnow Links check failed:", error)
+  } finally {
+    if (browser) {
+      await browser.close()
+    }
+  }
+
+  const screenshotUrls = [
+    pluginScreenshotUrl,
+    mobileScreenshotUrl,
+    settingsScreenshotUrl,
+  ]
+    .filter(Boolean)
+    .join(",")
+
+  return [
+    {
+      check_factor: "callnow_links",
+      severity: "medium",
+      title: "Verify Call Now Button & Links",
+      description: `Please verify the Call Now plugin setup and homepage links using the evidence screenshots.\n\nChecks to perform:\n- [ ] Call now installed\n- [ ] Number added\n- [ ] Visible in mobile view\n- [ ] Valid phone\n- [ ] Valid email\n- [ ] All links functional`,
+      screenshot_url: screenshotUrls,
+      status: "open",
+      ai_generated: false,
+    } as Finding,
+  ]
 }
