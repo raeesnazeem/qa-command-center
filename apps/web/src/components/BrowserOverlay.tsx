@@ -60,17 +60,21 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
     setError(null)
     setCurrentProxiedUrl(targetUrl)
     try {
-      const response = await axios.post(
-        "/api/proxy-browser",
-        { url: targetUrl },
-        {
-          responseType: "blob",
-        },
-      )
+      // const response = await axios.post(
+      //   "/api/proxy-browser",
+      //   { url: targetUrl },
+      //   {
+      //     responseType: "blob",
+      //   },
+      // )
 
-      const blob = new Blob([response.data], { type: "text/html" })
-      const dataUrl = URL.createObjectURL(blob)
-      setIframeUrl(dataUrl)
+      // const blob = new Blob([response.data], { type: "text/html" })
+      // const dataUrl = URL.createObjectURL(blob)
+      // setIframeUrl(dataUrl)
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3001"
+      setIframeUrl(
+        `${apiUrl}/api/proxy-browser?url=${encodeURIComponent(targetUrl)}`,
+      )
     } catch (err: any) {
       console.error("[BrowserOverlay] Proxy load failed:", err)
       setError(
