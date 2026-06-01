@@ -10,6 +10,7 @@ import { LogoCheckFindingCard } from "./LogoCheckFindingCard"
 import { SingleScriptFindingCard } from "./SingleScriptFindingCard"
 import { HeaderFindingCard } from "./HeaderFindingCard"
 import { CallnowFindingCard } from "./CallnowFindingCard"
+import { PaidMediaFindingCard } from "./PaidMediaFindingCard"
 
 interface FindingCardProps {
   finding: QAFinding
@@ -77,6 +78,10 @@ export const FindingCard: React.FC<FindingCardProps> = (props) => {
 
   if (finding.check_factor === "callnow_links") {
     return <CallnowFindingCard {...props} />
+  }
+
+  if (finding.check_factor === "paid_media") {
+    return <PaidMediaFindingCard {...props} />
   }
 
   // Fallback for everything else (Paid Media, Generic, SEO, etc.)

@@ -2,9 +2,6 @@ import { Job } from "bullmq"
 import { supabase } from "../lib/supabase"
 import { decrypt } from "../../../api/src/lib/encryption"
 import { checkProjectPlan } from "../checks/projectPlanCheck"
-import { checkPaidMedia } from "../checks/preReleaseSuite"
-import { checkPrivacyPolicy } from "../checks/privacyPolicyCheck"
-
 import pino from "pino"
 
 const logger = pino({
@@ -105,36 +102,6 @@ export async function processCheckProjectPlanJob(job: Job) {
         { id: pageId, siteUrl: run?.site_url },
       )
       findings = [...findings, ...planFindings]
-    }
-
-    // 2. Run Paid Media Check if enabled
-    if (enabledChecks.includes("paid_media")) {
-      logger.info("Calling checkPaidMedia with basecamp settings")
-      const { data: project } = await supabase
-        .from("projects")
-        .select("has_paid_media")
-        .eq("id", projectId)
-        .single()
-
-      const projectSettings = {
-        has_paid_media: project?.has_paid_media || false,
-        basecamp_token: decryptedToken,
-        basecamp_account_id,
-        basecamp_project_id,
-      }
-
-      const paidMediaFindings = await checkPaidMedia(
-        null as any,
-        run,
-        projectSettings,
-      )
-      findings = [...findings, ...paidMediaFindings]
-    }
-    // 3. Run Privacy Policy Check if enabled
-    if (enabledChecks.includes("privacy_policy")) {
-      logger.info("Calling checkPrivacyPolicy for general check")
-      const privacyFindings = await checkPrivacyPolicy(run?.site_url, runId)
-      findings = [...findings, ...privacyFindings]
     }
   } catch (checkErr: any) {
     logger.error(

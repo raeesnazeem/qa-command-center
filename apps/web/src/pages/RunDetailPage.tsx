@@ -228,14 +228,19 @@ export const RunDetailPage = () => {
 
   const GENERAL_CHECK_FACTORS = [
     "project_plan",
-    "dead_links",
-    "hero_media",
     "paid_media",
     "privacy_policy",
+    "callnow_links",
+    "hero_media",
     "footer_logo",
     "single_script",
     "top_bar_sticky",
-    "callnow_links",
+    "favicon",
+    "contact_form",
+    "chatbot_consultation",
+    "text_share",
+    "dead_links",
+    "url_matching",
   ]
 
   // 1. Extract any general run-level findings (null page_id OR project plan factor OR hero_media matching selected page)
@@ -1055,13 +1060,18 @@ export const RunDetailPage = () => {
                   // Targeted Checks limit progress bars to the main domain
                   let relevantPages = run.pages || []
                   if (
-                    checkKey === "privacy_policy" ||
                     checkKey === "project_plan" ||
+                    checkKey === "paid_media" ||
+                    checkKey === "privacy_policy" ||
+                    checkKey === "callnow_links" ||
                     checkKey === "hero_media" ||
+                    checkKey === "footer_logo" ||
                     checkKey === "single_script" ||
                     checkKey === "top_bar_sticky" ||
-                    checkKey === "callnow_links" ||
-                    checkKey === "footer_logo"
+                    checkKey === "favicon" ||
+                    checkKey === "contact_form" ||
+                    checkKey === "chatbot_consultation" ||
+                    checkKey === "text_share"
                   ) {
                     relevantPages = relevantPages.filter((p) => {
                       const normalize = (u: string) =>

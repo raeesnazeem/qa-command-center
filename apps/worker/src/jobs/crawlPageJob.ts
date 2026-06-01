@@ -382,81 +382,95 @@ export async function processCrawlPageJob(job: Job) {
         )
       }
 
-      // 1. Privacy Policy Page Check
-      if (enabledChecks.includes("privacy_policy")) {
-        checkPromises.push(
-          checkPrivacyPolicy(page, run.is_woocommerce).catch((e) => {
-            logger.error("Privacy policy check failed:", e)
-            return []
-          }),
-        )
-      }
+      const normalizeUrl = (u: string) =>
+        u
+          .replace(/^https?:\/\//, "")
+          .replace(/^www\./, "")
+          .replace(/\/$/, "")
+          .toLowerCase()
+      const isHomepage = normalizeUrl(pageUrl) === normalizeUrl(run.site_url)
 
-      // 2. Footer Logo Check
-      if (
-        enabledChecks.includes("footer_logo") &&
-        pageUrl.replace(/\/$/, "").toLowerCase() ===
-          run.site_url.replace(/\/$/, "").toLowerCase()
-      ) {
-        checkPromises.push(
-          checkFooterLogo(pageUrl, runId, pageId).catch((e) => {
+      // --- HOMEPAGE-ONLY CHECKS ---
+      if (isHomepage) {
+        if (enabledChecks.includes("privacy_policy")) {
+          checkPromises.push(
+            checkPrivacyPolicy(page, run.is_woocommerce).catch((e) => {
+              logger.error("Privacy policy check failed:", e)
+              return []
+            }),
+          )
+        }
+
+        if (enabledChecks.includes("footer_logo")) {
+          const res = await checkFooterLogo(pageUrl, runId, pageId).catch((e) => {
             logger.error("Footer logo check failed:", e)
             return []
-          }),
-        )
-      }
-
-      // 4. Single Script Features Check
-      if (enabledChecks.includes("single_script")) {
-        const normalize = (u: string) =>
-          u
-            .replace(/^https?:\/\//, "")
-            .replace(/^www\./, "")
-            .replace(/\/$/, "")
-            .toLowerCase()
-        const isHomepage = normalize(pageUrl) === normalize(run.site_url)
-
-        if (isHomepage) {
-          checkPromises.push(
-            checkSingleScript(pageUrl, runId, pageId).catch((e) => {
-              logger.error("Single script check failed:", e)
-              return []
-            }),
-          )
+          })
+          checkPromises.push(Promise.resolve(res))
         }
-      }
 
-      // 5. Top Bar & Sticky Header Check
-      if (enabledChecks.includes("top_bar_sticky")) {
-        const normalize = (u: string) =>
-          u
-            .replace(/^https?:\/\//, "")
-            .replace(/^www\./, "")
-            .replace(/\/$/, "")
-            .toLowerCase()
-        const isHomepage = normalize(pageUrl) === normalize(run.site_url)
-
-        if (isHomepage) {
-          checkPromises.push(
-            checkTopBarAndStickyHeader(pageUrl, runId, pageId).catch((e) => {
-              logger.error("Top bar & sticky header check failed:", e)
-              return []
-            }),
-          )
-        }
-      }
-
-      // 6. Add Favicon Check
-      if (enabledChecks.includes("favicon")) {
-        checkPromises.push(
-          checkFavicon(page).catch((e) => {
-            logger.error("Favicon check failed:", e)
+        if (enabledChecks.includes("single_script")) {
+          const res = await checkSingleScript(pageUrl, runId, pageId).catch((e) => {
+            logger.error("Single script check failed:", e)
             return []
-          }),
-        )
+          })
+          checkPromises.push(Promise.resolve(res))
+        }
+
+        if (enabledChecks.includes("top_bar_sticky")) {
+          const res = await checkTopBarAndStickyHeader(pageUrl, runId, pageId).catch((e) => {
+            logger.error("Top bar & sticky header check failed:", e)
+            return []
+          })
+          checkPromises.push(Promise.resolve(res))
+        }
+
+        if (enabledChecks.includes("favicon")) {
+          checkPromises.push(
+            checkFavicon(page).catch((e) => {
+              logger.error("Favicon check failed:", e)
+              return []
+            }),
+          )
+        }
+
+        if (enabledChecks.includes("contact_form")) {
+          checkPromises.push(
+            checkGrowth99ContactForm(page).catch((e) => {
+              logger.error("Contact form check failed:", e)
+              return []
+            }),
+          )
+        }
+
+        if (enabledChecks.includes("chatbot_consultation")) {
+          checkPromises.push(
+            checkChatbotAndConsultation(page).catch((e) => {
+              logger.error("Chatbot consultation check failed:", e)
+              return []
+            }),
+          )
+        }
+
+        if (enabledChecks.includes("text_share")) {
+          checkPromises.push(
+            checkTextShareMetadata(page, projectName).catch((e) => {
+              logger.error("Text share metadata check failed:", e)
+              return []
+            }),
+          )
+        }
+
+        if (enabledChecks.includes("callnow_links")) {
+          const res = await checkCallnowLinks(pageUrl, runId, pageId, wpPassword).catch((e) => {
+            logger.error("Callnow & Links check failed:", e)
+            return []
+          })
+          checkPromises.push(Promise.resolve(res))
+        }
       }
 
-      // 7. URL & Tab Name Matching Check
+      // --- ALL-PAGES CHECKS ---
       if (enabledChecks.includes("url_matching")) {
         checkPromises.push(
           checkUrlAndTabMatching(page, devUrls, run.site_url).catch((e) => {
@@ -464,56 +478,6 @@ export async function processCrawlPageJob(job: Job) {
             return []
           }),
         )
-      }
-
-      // 8. Growth99 Contact Form Check
-      if (enabledChecks.includes("contact_form")) {
-        checkPromises.push(
-          checkGrowth99ContactForm(page).catch((e) => {
-            logger.error("Contact form check failed:", e)
-            return []
-          }),
-        )
-      }
-
-      // 9. Chatbot & Virtual Consultation Check
-      if (enabledChecks.includes("chatbot_consultation")) {
-        checkPromises.push(
-          checkChatbotAndConsultation(page).catch((e) => {
-            logger.error("Chatbot consultation check failed:", e)
-            return []
-          }),
-        )
-      }
-
-      // 10. Text Share Metadata Check
-      if (enabledChecks.includes("text_share")) {
-        checkPromises.push(
-          checkTextShareMetadata(page, projectName).catch((e) => {
-            logger.error("Text share metadata check failed:", e)
-            return []
-          }),
-        )
-      }
-
-      // 11. Callnow & Links Check
-      if (enabledChecks.includes("callnow_links")) {
-        const normalize = (u: string) =>
-          u
-            .replace(/^https?:\/\//, "")
-            .replace(/^www\./, "")
-            .replace(/\/$/, "")
-            .toLowerCase()
-        const isHomepage = normalize(pageUrl) === normalize(run.site_url)
-
-        if (isHomepage) {
-          checkPromises.push(
-            checkCallnowLinks(pageUrl, runId, pageId, wpPassword).catch((e) => {
-              logger.error("Callnow & Links check failed:", e)
-              return []
-            }),
-          )
-        }
       }
 
       // Attach a .then to stream findings into DB the instant each individual check finishes

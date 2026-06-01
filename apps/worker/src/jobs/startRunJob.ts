@@ -66,99 +66,96 @@ export async function processStartRunJob(job: Job) {
   }
 
   try {
-    const PAGE_CHECKS = [
+    const ALL_PAGES_CHECKS = [
       "visual_regression",
       "accessibility",
-      "console_errors",
       "performance",
-      "seo",
       "spelling",
-      "broken_links",
+      "console_errors",
+      "seo",
       "dummy_content",
-      "image_compliance",
-      "ai_content_audit",
-      "hero_media",
       "dead_links",
+      "url_matching",
+    ]
+
+    const HOMEPAGE_ONLY_CHECKS = [
+      "privacy_policy",
+      "callnow_links",
+      "hero_media",
       "footer_logo",
       "single_script",
       "top_bar_sticky",
       "favicon",
-      "url_matching",
       "contact_form",
       "chatbot_consultation",
       "text_share",
-      "callnow_links",
     ]
+
+    const PAGE_CHECKS = [...ALL_PAGES_CHECKS, ...HOMEPAGE_ONLY_CHECKS]
     const needsPageScan = run.enabled_checks?.some((c: string) =>
       PAGE_CHECKS.includes(c),
     )
-    let urls: string[] = []
+    const hasAllPagesCheck = run.enabled_checks?.some((c: string) =>
+      ALL_PAGES_CHECKS.includes(c),
+    )
     const hasDeadLinks = run.enabled_checks?.includes("dead_links")
+
+    let urls: string[] = []
 
     if (needsPageScan) {
       logger.info({ runId }, "Determining URLs to process")
 
-      // If dead_links check is enabled, ignore user selected_urls filter and check all pages!
-      if (run.selected_urls && run.selected_urls.length > 0 && !hasDeadLinks) {
-        logger.info(
-          { runId, count: run.selected_urls.length },
-          "Using provided selected_urls",
-        )
-        urls = [...run.selected_urls]
+      if (hasAllPagesCheck) {
+        // If dead_links check is enabled, ignore user selected_urls filter and check all pages!
+        if (
+          run.selected_urls &&
+          run.selected_urls.length > 0 &&
+          !hasDeadLinks
+        ) {
+          logger.info(
+            { runId, count: run.selected_urls.length },
+            "Using provided selected_urls",
+          )
+          urls = [...run.selected_urls]
+        } else {
+          logger.info(
+            { runId, siteUrl: run.site_url },
+            "Crawling site for all pages (crawlSitemap)",
+          )
+          urls = await crawlSitemap(run.site_url)
+        }
+
+        // Fallback to homepage URL if crawler returns nothing
+        if (!urls || urls.length === 0) {
+          urls = [run.site_url]
+        }
+
+        // Ensure homepage is first if hero_media or dead_links is active
+        const hasHeroMedia = run.enabled_checks?.includes("hero_media")
+        if (hasHeroMedia || hasDeadLinks) {
+          const homepage = run.site_url
+          const homepageNormalized = homepage.endsWith("/")
+            ? homepage.slice(0, -1)
+            : homepage
+          const hasHomepage = urls.some((url) => {
+            const u = url.endsWith("/") ? url.slice(0, -1) : url
+            return u.toLowerCase() === homepageNormalized.toLowerCase()
+          })
+          if (!hasHomepage) {
+            logger.info(
+              { runId, homepage },
+              "Forcing homepage inclusion in check sequence",
+            )
+            urls.unshift(homepage)
+          }
+        }
       } else {
-        logger.info(
-          { runId, siteUrl: run.site_url },
-          "Crawling site for all pages (crawlSitemap)",
-        )
-        urls = await crawlSitemap(run.site_url)
-      }
-
-      // Fallback to homepage URL if crawler returns nothing
-      if (!urls || urls.length === 0) {
-        urls = [run.site_url]
-      }
-
-      // Restrict to homepage only if all active page checks only require the homepage
-      const HOMEPAGE_ONLY_CHECKS = [
-        "hero_media",
-        "footer_logo",
-        "single_script",
-        "top_bar_sticky",
-        "callnow_links",
-      ]
-
-      const pageChecksActive =
-        run.enabled_checks?.filter((c: string) => PAGE_CHECKS.includes(c)) || []
-      const isOnlyHomepageChecks =
-        pageChecksActive.length > 0 &&
-        pageChecksActive.every((c: string) => HOMEPAGE_ONLY_CHECKS.includes(c))
-
-      if (isOnlyHomepageChecks) {
+        // Only homepage-specific checks are active. Restrict scan to homepage only.
         logger.info(
           { runId },
           "Only homepage-specific checks are active. Restricting scan to homepage only.",
         )
         urls = [run.site_url]
-      }
-
-      // Force homepage inclusion if hero_media or dead_links is active
-      const hasHeroMedia = run.enabled_checks?.includes("hero_media")
-      if (hasHeroMedia || hasDeadLinks) {
-        const homepage = run.site_url
-        const homepageNormalized = homepage.endsWith("/")
-          ? homepage.slice(0, -1)
-          : homepage
-        const hasHomepage = urls.some((url) => {
-          const u = url.endsWith("/") ? url.slice(0, -1) : url
-          return u.toLowerCase() === homepageNormalized.toLowerCase()
-        })
-        if (!hasHomepage) {
-          logger.info(
-            { runId, homepage },
-            "Forcing homepage inclusion in check sequence",
-          )
-          urls.unshift(homepage) // Prepends homepage to the start of the list
-        }
       }
     } else {
       logger.info(
@@ -297,37 +294,12 @@ export async function processStartRunJob(job: Job) {
       )
     }
 
-    // Enqueue project plan check if enabled (Always enqueued regardless of page scan skipping!)
-    // if (
-    //   run.enabled_checks &&
-    //   (run.enabled_checks.includes("project_plan") ||
-    //     run.enabled_checks.includes("paid_media") ||
-    //     run.enabled_checks.includes("callnow_links") ||
-    //     run.enabled_checks.includes("privacy_policy"))
-    // ) {
-    //   await qaQueue.add(
-    //     "check_project_plan",
-    //     { runId, projectId: run.project_id },
-    //     {
-    //       attempts: 3,
-    //       backoff: { type: "exponential", delay: 5000 },
-    //     },
-    //   )
-    //   logger.info({ runId }, "Enqueued check_project_plan job successfully")
-    // }
-    // Define the target checks you care about
-    const targetChecks = [
-      "project_plan",
-      "paid_media",
-      "callnow_links",
-      "privacy_policy",
-    ]
+    // Enqueue standalone API checks if they are enabled
+    const API_CHECKS = ["project_plan", "paid_media"]
 
-    for (const check of run.enabled_checks) {
-      if (targetChecks.includes(check)) {
-        // Dynamic task name matches the selected check (e.g., "check_paid_media")
+    for (const check of run.enabled_checks || []) {
+      if (API_CHECKS.includes(check)) {
         const jobName = `check_${check}`
-
         await qaQueue.add(
           jobName,
           { runId, projectId: run.project_id },

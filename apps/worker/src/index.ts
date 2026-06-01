@@ -9,10 +9,10 @@ import { processAnalyzeRebuttalJob } from "./jobs/analyzeRebuttalJob"
 import { processVisualDiffJob } from "./jobs/visualDiffJob"
 import { processGenerateEmbeddingsJob } from "./jobs/generateEmbeddingsJob"
 import { processCaptureScreenshotJob } from "./jobs/captureScreenshotJob"
-
 import { processRunAiChecksJob } from "./jobs/runAiChecksJob"
 import { processCrawlBatchJob } from "./jobs/crawlBatchJob"
 import { processCheckProjectPlanJob } from "./jobs/checkProjectPlanJob"
+import { processCheckPaidMediaJob } from "./jobs/checkPaidMediaJob"
 import { processCaptureMultiviewScreenshotsJob } from "./jobs/captureMultiviewScreenshotsJob"
 import { qaQueue, connection } from "./lib/queue"
 
@@ -53,6 +53,10 @@ const worker = new Worker(
         case "check_project_plan":
           await processCheckProjectPlanJob(job)
           break
+        case "check_paid_media":
+          await processCheckPaidMediaJob(job)
+          break
+
         case "run_checks":
           await processRunChecksJob(job)
           break

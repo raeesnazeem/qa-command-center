@@ -14,178 +14,6 @@ const logger = pino({
 
 /**
  * =========================================================================
- * 1️⃣ CHECK 1: Paid Media Check
- * =========================================================================
- * The Logic:
- * - We check if the project has 'has_paid_media' turned on.
- * - If yes, we make a call to the Basecamp API using 'basecamp_token'.
- * - We fetch the project bucket's Message Board or To-Do lists.
- * - We search for any To-Do item or Message containing words: "Google Ads", "Facebook Ads", "Campaign Started", "Paid Media".
- * - If we find that a campaign is active or created, we pass it!
- * - If we don't find it, we return a run-level finding so that the QA knows they need to ask.
- * - Tagging: "@Pankhila Kamble @Trixie Kate please provide details if campaign created..."
- */
-export async function checkPaidMedia(
-  page: PlaywrightPage,
-  run: any,
-  projectSettings: {
-    has_paid_media?: boolean
-    basecamp_token?: string
-    basecamp_account_id?: string | number
-    basecamp_project_id?: string | number
-  },
-): Promise<Finding[]> {
-  const {
-    has_paid_media,
-    basecamp_token,
-    basecamp_account_id,
-    basecamp_project_id,
-  } = projectSettings
-
-  if (!basecamp_token || !basecamp_account_id || !basecamp_project_id) {
-    logger.warn(
-      "Basecamp integration settings are missing credentials for Paid Media check.",
-    )
-    return [
-      {
-        check_factor: "paid_media",
-        severity: "medium",
-        title: "Paid Media Check - Missing Basecamp Credentials",
-        description:
-          "Basecamp integration details are not set up properly, so we could not verify Paid Media details automatically.",
-        status: "open",
-        ai_generated: false,
-      } as Finding,
-    ]
-  }
-
-  const headers = {
-    Authorization: `Bearer ${basecamp_token}`,
-    "User-Agent": "QACC (raees.nazeem@growth99.com)",
-    "Content-Type": "application/json",
-    Accept: "application/json",
-  }
-
-  try {
-    // Fetch project bucket details
-    const bucketUrl = `https://3.basecampapi.com/${basecamp_account_id}/buckets/${basecamp_project_id}.json`
-    const bucketResponse = await axios.get(bucketUrl, { headers })
-    const bucketData = bucketResponse.data
-
-    const keywords = [
-      "google ads",
-      "facebook ads",
-      "campaign started",
-      "paid media",
-    ]
-    let foundCampaign = false
-    let matchedItem = ""
-
-    // Scan Message Board Tool
-    const messageBoardTool = bucketData.dock?.find(
-      (tool: any) =>
-        tool.title === "Message Board" ||
-        tool.url?.includes("/message_boards/"),
-    )
-
-    if (messageBoardTool) {
-      const messagesUrl = messageBoardTool.url.replace(
-        ".json",
-        "/messages.json",
-      )
-      const messagesResponse = await axios.get(messagesUrl, { headers })
-      const messages = messagesResponse.data || []
-
-      for (const msg of messages) {
-        const textToScan =
-          `${msg.subject || ""} ${msg.title || ""} ${msg.excerpt || ""}`.toLowerCase()
-        if (keywords.some((keyword) => textToScan.includes(keyword))) {
-          foundCampaign = true
-          matchedItem = `Message Board post: "${msg.subject || msg.title}"`
-          break
-        }
-      }
-    }
-
-    // Scan To-Do Tool (if not found on the Message Board yet)
-    if (!foundCampaign) {
-      const todosTool = bucketData.dock?.find(
-        (tool: any) => tool.type === "todoset" || tool.title === "To-dos",
-      )
-
-      if (todosTool) {
-        const listsUrl = todosTool.url.replace(".json", "/todolists.json")
-        const listsResponse = await axios.get(listsUrl, { headers })
-        const lists = listsResponse.data || []
-
-        for (const list of lists) {
-          const listTitle = (list.name || "").toLowerCase()
-          if (keywords.some((keyword) => listTitle.includes(keyword))) {
-            foundCampaign = true
-            matchedItem = `To-Do List: "${list.name}"`
-            break
-          }
-
-          if (list.todos_url) {
-            const todosResponse = await axios.get(list.todos_url, { headers })
-            const todos = todosResponse.data || []
-            for (const todo of todos) {
-              const todoContent =
-                `${todo.content || ""} ${todo.description || ""}`.toLowerCase()
-              if (keywords.some((keyword) => todoContent.includes(keyword))) {
-                foundCampaign = true
-                matchedItem = `To-Do Item: "${todo.content}"`
-                break
-              }
-            }
-          }
-          if (foundCampaign) break
-        }
-      }
-    }
-
-    const findings: Finding[] = []
-
-    if (foundCampaign) {
-      logger.info({ matchedItem }, "Paid Media Campaign found!")
-      findings.push({
-        check_factor: "paid_media",
-        severity: "low",
-        title: "Paid Media Campaign Active",
-        description: `Verified: A Paid Media campaign was successfully found on Basecamp! Matched ${matchedItem}.`,
-        status: "open",
-        ai_generated: false,
-      } as Finding)
-    } else {
-      logger.info("Paid Media Campaign NOT found in Basecamp.")
-      findings.push({
-        check_factor: "paid_media",
-        severity: "high",
-        title: "Paid Media Campaign Not Found",
-        description: `We checked the Basecamp project but could not find an active or created Google/Facebook Ads campaign. @Pankhila Kamble @Trixie Kate please provide details if campaign created for Google and Facebook ADS and all services created under campaign`,
-        status: "open",
-        ai_generated: false,
-      } as Finding)
-    }
-
-    return findings
-  } catch (error: any) {
-    logger.error({ error: error.message }, "Error in Basecamp Paid Media check")
-    return [
-      {
-        check_factor: "paid_media",
-        severity: "medium",
-        title: "Paid Media Check Error",
-        description: `Failed to fetch details from Basecamp: ${error.message}. @Pankhila Kamble @Trixie Kate please provide details if campaign created for Google and Facebook ADS and all services created under campaign`,
-        status: "open",
-        ai_generated: false,
-      } as Finding,
-    ]
-  }
-}
-
-/**
- * =========================================================================
  * 2️⃣ CHECK 2: Privacy Policy Page Check
  * =========================================================================
  * The Logic:
@@ -369,14 +197,20 @@ export async function checkSingleScript(
     for (const vp of viewports) {
       const context = await browser.newContext({
         viewport: { width: vp.width, height: vp.height },
+        userAgent:
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       })
+
       const newPage = await context.newPage()
       await newPage
         // networkidle waits until there are no network connections for at least 500 ms (ensures JS fully loads)
         .goto(url, { waitUntil: "networkidle", timeout: 30000 })
         .catch(() => {})
+      await newPage.evaluate(() => window.scrollBy(0, 500)).catch(() => {})
 
-      // Wait an extra 5 seconds just in case there are slow CSS animations triggered by the JS
+      await newPage
+        .waitForSelector("#feature-buttons", { timeout: 15000 })
+        .catch(() => {})
       await newPage.waitForTimeout(5000)
 
       // Capture visible viewport only
@@ -392,12 +226,20 @@ export async function checkSingleScript(
     }
 
     // 4th screenshot: Page source of #feature-buttons code
-    const codeContext = await browser.newContext()
+    const codeContext = await browser.newContext({
+      userAgent:
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    })
+
     const codePage = await codeContext.newPage()
     await codePage
       .goto(url, { waitUntil: "networkidle", timeout: 30000 })
       .catch(() => {})
-    // Wait an extra 5 seconds for the JS injection to occur before evaluating
+    await codePage.evaluate(() => window.scrollBy(0, 500)).catch(() => {})
+
+    await codePage
+      .waitForSelector("#feature-buttons", { timeout: 15000 })
+      .catch(() => {})
     await codePage.waitForTimeout(5000)
 
     const codeSnippet = await codePage.evaluate(() => {

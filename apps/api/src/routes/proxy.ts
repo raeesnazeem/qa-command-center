@@ -13,6 +13,7 @@ const WHITELISTED_DOMAINS = [
   "ruma.com",
   "growth99.com",
   "example.com",
+  "elitederma.gogroth.com",
 ]
 
 /**
