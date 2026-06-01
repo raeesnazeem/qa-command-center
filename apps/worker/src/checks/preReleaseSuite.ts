@@ -952,7 +952,12 @@ export async function checkCallnowLinks(
       await userField.fill("onboarding.india@growth99.com")
       await passField.fill(wpPassword)
       await submitBtn.click()
-      await adminPage.waitForLoadState("networkidle")
+      // Use domcontentloaded instead of networkidle to prevent hangs from WordPress heartbeat/polling
+      await adminPage.waitForLoadState("domcontentloaded", { timeout: 15000 })
+      // Wait for the admin bar or dashboard to signal a successful login
+      await adminPage
+        .waitForSelector("#wpadminbar, .wrap", { timeout: 15000 })
+        .catch(() => {})
     }
 
     await adminPage

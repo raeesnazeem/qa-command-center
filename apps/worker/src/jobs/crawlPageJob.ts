@@ -15,6 +15,7 @@ import { checkWooCommerce } from "../checks/wooCommerceCheck"
 import { checkResponsiveVisual } from "../checks/responsiveVisualCheck"
 import { checkHeroMedia } from "../checks/heroMediaCheck"
 import { checkOptimizedLinks } from "../checks/optimizedLinksCheck"
+import { wpPasswordCache } from "../lib/credentialsCache"
 import {
   checkPrivacyPolicy,
   checkFooterLogo,
@@ -38,7 +39,7 @@ const logger = pino({
 })
 
 export async function processCrawlPageJob(job: Job) {
-  const { runId, pageId, url: pageUrl } = job.data
+  const { runId, pageId, url: pageUrl, wpPassword } = job.data
 
   if (!runId || !pageId || !pageUrl) {
     throw new Error(
@@ -51,9 +52,7 @@ export async function processCrawlPageJob(job: Job) {
   // Fetch run settings for conditional checks
   const { data: run, error: runError } = await supabase
     .from("qa_runs")
-    .select(
-      "status, is_woocommerce, site_url, enabled_checks, project_id, wp_password",
-    )
+    .select("status, is_woocommerce, site_url, enabled_checks, project_id")
     .eq("id", runId)
     .single()
 
@@ -509,12 +508,10 @@ export async function processCrawlPageJob(job: Job) {
 
         if (isHomepage) {
           checkPromises.push(
-            checkCallnowLinks(pageUrl, runId, pageId, run.wp_password).catch(
-              (e) => {
-                logger.error("Callnow & Links check failed:", e)
-                return []
-              },
-            ),
+            checkCallnowLinks(pageUrl, runId, pageId, wpPassword).catch((e) => {
+              logger.error("Callnow & Links check failed:", e)
+              return []
+            }),
           )
         }
       }

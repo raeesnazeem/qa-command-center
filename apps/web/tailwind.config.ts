@@ -8,7 +8,8 @@ export default {
       colors: {
         primary: "#000000",
         accent: "#93C0B1",
-        "bg-main": "#F8F9FA",
+        // "bg-main": "#F8F9FA",
+        "bg-main": "#F4F6F9",
       },
       fontFamily: {
         sans: ["Plus Jakarta Sans", "sans-serif"],

@@ -83,7 +83,13 @@ export const useStartRun = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (runId: string) => startRun(axios, runId),
+    mutationFn: ({
+      runId,
+      wp_password,
+    }: {
+      runId: string
+      wp_password?: string
+    }) => startRun(axios, runId, wp_password),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["run", data.id] })
       queryClient.invalidateQueries({ queryKey: ["runs"] })

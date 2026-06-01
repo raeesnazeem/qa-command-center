@@ -155,8 +155,11 @@ export const updateRunStatus = async (
 export const startRun = async (
   axios: AxiosInstance,
   runId: string,
+  wp_password?: string,
 ): Promise<QARun> => {
-  const response = await axios.post<QARun>(`/api/runs/${runId}/start`)
+  const response = await axios.post<QARun>(`/api/runs/${runId}/start`, {
+    wp_password,
+  })
   return response.data
 }
 

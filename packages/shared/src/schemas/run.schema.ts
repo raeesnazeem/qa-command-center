@@ -40,6 +40,7 @@ export const CreateRunSchema = z.object({
     .array(z.enum(["desktop", "tablet", "mobile"]))
     .default(["desktop", "tablet", "mobile"]),
   selected_urls: z.array(z.string().url()).optional(),
+  wp_password: z.string().optional(),
 })
 
 export type CreateRunInput = z.infer<typeof CreateRunSchema>

@@ -1,11 +1,11 @@
-import { Queue, QueueEvents } from 'bullmq';
-import IORedis from 'ioredis';
-import 'dotenv/config';
+import { Queue, QueueEvents } from "bullmq"
+import IORedis from "ioredis"
+import "dotenv/config"
 
-const redisUrl = process.env.UPSTASH_REDIS_URL;
+const redisUrl = process.env.UPSTASH_REDIS_URL
 
 if (!redisUrl) {
-  throw new Error('UPSTASH_REDIS_URL is not defined in environment variables');
+  throw new Error("UPSTASH_REDIS_URL is not defined in environment variables")
 }
 
 /**
@@ -14,52 +14,54 @@ if (!redisUrl) {
 const connection = new IORedis(redisUrl, {
   maxRetriesPerRequest: null,
   enableReadyCheck: false,
-  tls: redisUrl.startsWith('rediss://') ? {
-    rejectUnauthorized: false
-  } : undefined,
+  tls: redisUrl.startsWith("rediss://")
+    ? {
+        rejectUnauthorized: false,
+      }
+    : undefined,
   retryStrategy(times) {
-    const delay = Math.min(times * 50, 2000);
-    return delay;
+    const delay = Math.min(times * 50, 2000)
+    return delay
   },
   reconnectOnError(err) {
-    const targetError = 'READONLY';
+    const targetError = "READONLY"
     if (err.message.includes(targetError)) {
-      return true;
+      return true
     }
-    return false;
+    return false
   },
   connectTimeout: 10000,
   keepAlive: 10000,
-});
+})
 
 /**
  * QA Jobs Queue
  */
-export const qaQueue = new Queue('qa-jobs', { connection });
+export const qaQueue = new Queue("qa-jobs", { connection })
 
 /**
  * Singleton QueueEvents for monitoring job completion without leaking connections
  */
-export const qaQueueEvents = new QueueEvents('qa-jobs', { 
+export const qaQueueEvents = new QueueEvents("qa-jobs", {
   connection,
-  stalledInterval: 300000 // 5 minutes
-});
+  stalledInterval: 300000, // 5 minutes
+})
 
 /**
  * Enqueue a crawler job for a specific QA run
  * @param runId The UUID of the qa_run
  */
-export const addRunJob = async (runId: string) => {
+export const addRunJob = async (runId: string, wp_password?: string) => {
   return qaQueue.add(
-    'start_run',
-    { runId },
+    "start_run",
+    { runId, wp_password },
     {
       removeOnComplete: true,
       attempts: 3,
       backoff: {
-        type: 'exponential',
+        type: "exponential",
         delay: 5000,
       },
-    }
-  );
-};
+    },
+  )
+}

@@ -185,30 +185,18 @@ export const CallnowFindingCard: React.FC<FindingCardProps> = ({
             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
               Screenshots Evidence
             </p>
-            <div className="flex flex-col lg:flex-row items-start justify-between w-full gap-6">
-              <div className="w-full lg:w-[65%] flex gap-4 overflow-x-auto pb-2">
+            <div className="flex items-center gap-6">
+              <div className="flex gap-4">
                 {screenshotUrls.map((url, idx) => (
-                  <div
-                    key={url}
-                    className="space-y-1 w-1/3 min-w-[150px] flex-shrink-0"
-                  >
-                    <div className="w-full border border-slate-200 dark:border-slate-700 rounded-md overflow-hidden bg-slate-50 dark:bg-slate-800">
+                  <div key={url} className="space-y-1">
+                    <div>
                       <FindingCardWithScreenshot
                         finding={{ ...finding, screenshot_url: url }}
                         pageScreenshots={{}}
                         hideTabs={true}
                       />
                     </div>
-                    <p
-                      className="font-bold text-slate-400 uppercase tracking-widest text-center text-[8px] truncate px-1"
-                      title={
-                        idx === 0
-                          ? "Plugin Settings"
-                          : idx === 1
-                            ? "Mobile View"
-                            : "Backend Config"
-                      }
-                    >
+                    <p className="font-bold text-slate-400 uppercase tracking-widest text-center text-[8px]">
                       {idx === 0
                         ? "Plugin Settings"
                         : idx === 1
@@ -219,16 +207,16 @@ export const CallnowFindingCard: React.FC<FindingCardProps> = ({
                 ))}
               </div>
 
-              <div className="w-full lg:w-[30%] flex flex-col gap-3 lg:pl-4 lg:border-l border-slate-100 dark:border-slate-700/50">
+              <div className="flex flex-col gap-3 pl-4 border-l border-slate-100 dark:border-slate-700/50">
                 <label className="flex items-center gap-2 group/cb">
                   <input
                     type="checkbox"
                     disabled={isPushed}
                     checked={isInstalledVerified}
                     onChange={(e) => setIsInstalledVerified(e.target.checked)}
-                    className="w-3.5 h-3.5 text-accent border-slate-300 dark:border-slate-600 dark:bg-slate-800 rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed transition-all"
+                    className="w-3 h-3 text-accent border-slate-300 dark:border-slate-600 dark:bg-slate-800 rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 transition-all"
                   />
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider group-hover/cb:text-slate-900 transition-colors cursor-pointer truncate">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest group-hover/cb:text-slate-900 dark:group-hover/cb:text-slate-200 transition-colors cursor-pointer">
                     Call Now Installed
                   </span>
                 </label>
@@ -238,9 +226,9 @@ export const CallnowFindingCard: React.FC<FindingCardProps> = ({
                     disabled={isPushed}
                     checked={isNumberVerified}
                     onChange={(e) => setIsNumberVerified(e.target.checked)}
-                    className="w-3.5 h-3.5 text-accent border-slate-300 dark:border-slate-600 dark:bg-slate-800 rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed transition-all"
+                    className="w-3 h-3 text-accent border-slate-300 dark:border-slate-600 dark:bg-slate-800 rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 transition-all"
                   />
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider group-hover/cb:text-slate-900 transition-colors cursor-pointer truncate">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest group-hover/cb:text-slate-900 dark:group-hover/cb:text-slate-200 transition-colors cursor-pointer">
                     Number Added
                   </span>
                 </label>
@@ -250,9 +238,9 @@ export const CallnowFindingCard: React.FC<FindingCardProps> = ({
                     disabled={isPushed}
                     checked={isMobileVerified}
                     onChange={(e) => setIsMobileVerified(e.target.checked)}
-                    className="w-3.5 h-3.5 text-accent border-slate-300 dark:border-slate-600 dark:bg-slate-800 rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed transition-all"
+                    className="w-3 h-3 text-accent border-slate-300 dark:border-slate-600 dark:bg-slate-800 rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 transition-all"
                   />
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider group-hover/cb:text-slate-900 transition-colors cursor-pointer truncate">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest group-hover/cb:text-slate-900 dark:group-hover/cb:text-slate-200 transition-colors cursor-pointer">
                     Visible in Mobile
                   </span>
                 </label>
@@ -262,9 +250,9 @@ export const CallnowFindingCard: React.FC<FindingCardProps> = ({
                     disabled={isPushed}
                     checked={isValidPhoneVerified}
                     onChange={(e) => setIsValidPhoneVerified(e.target.checked)}
-                    className="w-3.5 h-3.5 text-accent border-slate-300 dark:border-slate-600 dark:bg-slate-800 rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed transition-all"
+                    className="w-3 h-3 text-accent border-slate-300 dark:border-slate-600 dark:bg-slate-800 rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 transition-all"
                   />
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider group-hover/cb:text-slate-900 transition-colors cursor-pointer truncate">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest group-hover/cb:text-slate-900 dark:group-hover/cb:text-slate-200 transition-colors cursor-pointer">
                     Valid Phone
                   </span>
                 </label>
@@ -274,9 +262,9 @@ export const CallnowFindingCard: React.FC<FindingCardProps> = ({
                     disabled={isPushed}
                     checked={isValidEmailVerified}
                     onChange={(e) => setIsValidEmailVerified(e.target.checked)}
-                    className="w-3.5 h-3.5 text-accent border-slate-300 dark:border-slate-600 dark:bg-slate-800 rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed transition-all"
+                    className="w-3 h-3 text-accent border-slate-300 dark:border-slate-600 dark:bg-slate-800 rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 transition-all"
                   />
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider group-hover/cb:text-slate-900 transition-colors cursor-pointer truncate">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest group-hover/cb:text-slate-900 dark:group-hover/cb:text-slate-200 transition-colors cursor-pointer">
                     Valid Email
                   </span>
                 </label>
@@ -286,9 +274,9 @@ export const CallnowFindingCard: React.FC<FindingCardProps> = ({
                     disabled={isPushed}
                     checked={isLinksVerified}
                     onChange={(e) => setIsLinksVerified(e.target.checked)}
-                    className="w-3.5 h-3.5 text-accent border-slate-300 dark:border-slate-600 dark:bg-slate-800 rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed transition-all"
+                    className="w-3 h-3 text-accent border-slate-300 dark:border-slate-600 dark:bg-slate-800 rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 transition-all"
                   />
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider group-hover/cb:text-slate-900 transition-colors cursor-pointer truncate">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest group-hover/cb:text-slate-900 dark:group-hover/cb:text-slate-200 transition-colors cursor-pointer">
                     All Links Functional
                   </span>
                 </label>

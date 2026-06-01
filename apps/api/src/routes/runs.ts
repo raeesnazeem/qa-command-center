@@ -693,8 +693,8 @@ router.post(
         console.error("[ActivityService] Failed to log run start:", logError)
       }
 
-      // 3. Enqueue the job in BullMQ for the worker to pick up
-      await addRunJob(id)
+      // 3. Enqueue the job in BullMQ for the worker to pick up, passing the RAM password
+      await addRunJob(id, req.body.wp_password)
 
       return res.json(updatedRun)
     } catch (error: any) {

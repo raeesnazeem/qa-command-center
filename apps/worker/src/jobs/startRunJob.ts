@@ -3,6 +3,8 @@ import { supabase } from "../lib/supabase"
 import { qaQueue } from "../lib/queue"
 import { crawlSitemap } from "../crawlers/sitemapCrawler"
 import * as activityService from "../services/activityService"
+import { wpPasswordCache } from "../lib/credentialsCache"
+
 import pino from "pino"
 
 const logger = pino({
@@ -15,6 +17,11 @@ const logger = pino({
 
 export async function processStartRunJob(job: Job) {
   const { runId } = job.data
+  const wpPassword = job.data.wpPassword || job.data.wp_password
+
+  if (wpPassword) {
+    wpPasswordCache.set(runId, wpPassword)
+  }
 
   if (!runId) {
     throw new Error("No runId provided to start_run job")
@@ -80,6 +87,7 @@ export async function processStartRunJob(job: Job) {
       "contact_form",
       "chatbot_consultation",
       "text_share",
+      "callnow_links",
     ]
     const needsPageScan = run.enabled_checks?.some((c: string) =>
       PAGE_CHECKS.includes(c),
@@ -107,6 +115,29 @@ export async function processStartRunJob(job: Job) {
 
       // Fallback to homepage URL if crawler returns nothing
       if (!urls || urls.length === 0) {
+        urls = [run.site_url]
+      }
+
+      // Restrict to homepage only if all active page checks only require the homepage
+      const HOMEPAGE_ONLY_CHECKS = [
+        "hero_media",
+        "footer_logo",
+        "single_script",
+        "top_bar_sticky",
+        "callnow_links",
+      ]
+
+      const pageChecksActive =
+        run.enabled_checks?.filter((c: string) => PAGE_CHECKS.includes(c)) || []
+      const isOnlyHomepageChecks =
+        pageChecksActive.length > 0 &&
+        pageChecksActive.every((c: string) => HOMEPAGE_ONLY_CHECKS.includes(c))
+
+      if (isOnlyHomepageChecks) {
+        logger.info(
+          { runId },
+          "Only homepage-specific checks are active. Restricting scan to homepage only.",
+        )
         urls = [run.site_url]
       }
 
@@ -232,7 +263,9 @@ export async function processStartRunJob(job: Job) {
               url: page.url,
               projectId: run.project_id,
               enabledChecks: run.enabled_checks,
+              wpPassword,
             },
+
             opts: {
               attempts: 3,
               backoff: { type: "exponential", delay: 5000 },
@@ -245,7 +278,9 @@ export async function processStartRunJob(job: Job) {
               runId,
               pages: chunk.map((p) => ({ id: p.id, url: p.url })),
               projectId: run.project_id,
+              wpPassword,
             },
+
             opts: {
               attempts: 3,
               backoff: { type: "exponential", delay: 5000 },
@@ -263,21 +298,46 @@ export async function processStartRunJob(job: Job) {
     }
 
     // Enqueue project plan check if enabled (Always enqueued regardless of page scan skipping!)
-    if (
-      (run.enabled_checks &&
-        (run.enabled_checks.includes("project_plan") ||
-          run.enabled_checks.includes("paid_media"))) ||
-      run.enabled_checks.includes("privacy_policy")
-    ) {
-      await qaQueue.add(
-        "check_project_plan",
-        { runId, projectId: run.project_id },
-        {
-          attempts: 3,
-          backoff: { type: "exponential", delay: 5000 },
-        },
-      )
-      logger.info({ runId }, "Enqueued check_project_plan job successfully")
+    // if (
+    //   run.enabled_checks &&
+    //   (run.enabled_checks.includes("project_plan") ||
+    //     run.enabled_checks.includes("paid_media") ||
+    //     run.enabled_checks.includes("callnow_links") ||
+    //     run.enabled_checks.includes("privacy_policy"))
+    // ) {
+    //   await qaQueue.add(
+    //     "check_project_plan",
+    //     { runId, projectId: run.project_id },
+    //     {
+    //       attempts: 3,
+    //       backoff: { type: "exponential", delay: 5000 },
+    //     },
+    //   )
+    //   logger.info({ runId }, "Enqueued check_project_plan job successfully")
+    // }
+    // Define the target checks you care about
+    const targetChecks = [
+      "project_plan",
+      "paid_media",
+      "callnow_links",
+      "privacy_policy",
+    ]
+
+    for (const check of run.enabled_checks) {
+      if (targetChecks.includes(check)) {
+        // Dynamic task name matches the selected check (e.g., "check_paid_media")
+        const jobName = `check_${check}`
+
+        await qaQueue.add(
+          jobName,
+          { runId, projectId: run.project_id },
+          {
+            attempts: 3,
+            backoff: { type: "exponential", delay: 5000 },
+          },
+        )
+        logger.info({ runId, jobName }, `Enqueued ${jobName} job successfully`)
+      }
     }
   } catch (error: any) {
     logger.error({ runId, error: error.message }, "Error during sitemap crawl")
