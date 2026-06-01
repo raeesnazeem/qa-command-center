@@ -56,7 +56,6 @@ const worker = new Worker(
         case "check_paid_media":
           await processCheckPaidMediaJob(job)
           break
-
         case "run_checks":
           await processRunChecksJob(job)
           break

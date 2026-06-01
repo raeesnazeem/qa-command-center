@@ -93,6 +93,7 @@ export async function checkFooterLogo(
   url: string,
   runId: string,
   pageId: string,
+  sharedBrowser?: any,
 ): Promise<Finding[]> {
   const { chromium } = require("playwright")
   const { uploadScreenshot } = require("../lib/supabaseStorage")
@@ -102,7 +103,7 @@ export async function checkFooterLogo(
   let mobileUrl = ""
 
   try {
-    const browser = await chromium.launch({ headless: true })
+    const browser = sharedBrowser || (await chromium.launch({ headless: true }))
     const viewports = [
       { name: "desktop", width: 1440, height: 900 },
       { name: "tablet", width: 768, height: 1024 },
@@ -143,7 +144,7 @@ export async function checkFooterLogo(
       }
       await context.close()
     }
-    await browser.close()
+    if (!sharedBrowser) await browser.close()
   } catch (e: any) {
     console.error("Footer screenshot failed", e)
   }
@@ -177,6 +178,7 @@ export async function checkSingleScript(
   url: string,
   runId: string,
   pageId: string,
+  sharedBrowser?: any,
 ): Promise<Finding[]> {
   const { chromium } = require("playwright")
   const { uploadScreenshot } = require("../lib/supabaseStorage")
@@ -187,7 +189,7 @@ export async function checkSingleScript(
   let codeUrl = ""
 
   try {
-    const browser = await chromium.launch({ headless: true })
+    const browser = sharedBrowser || (await chromium.launch({ headless: true }))
     const viewports = [
       { name: "desktop", width: 1440, height: 900 },
       { name: "tablet", width: 768, height: 1024 },
@@ -260,7 +262,7 @@ export async function checkSingleScript(
     )
 
     await codeContext.close()
-    await browser.close()
+    if (!sharedBrowser) await browser.close()
   } catch (e: any) {
     console.error("Single script screenshot failed", e)
   }
@@ -295,6 +297,7 @@ export async function checkTopBarAndStickyHeader(
   url: string,
   runId: string,
   pageId: string,
+  sharedBrowser?: any,
 ): Promise<Finding[]> {
   const { chromium } = require("playwright")
   const { uploadScreenshot } = require("../lib/supabaseStorage")
@@ -303,7 +306,7 @@ export async function checkTopBarAndStickyHeader(
   let headerUrl = ""
 
   try {
-    const browser = await chromium.launch({ headless: true })
+    const browser = sharedBrowser || (await chromium.launch({ headless: true }))
     const context = await browser.newContext({
       viewport: { width: 1440, height: 900 },
     })
@@ -347,7 +350,7 @@ export async function checkTopBarAndStickyHeader(
 
     await codeContext.close()
     await context.close()
-    await browser.close()
+    if (!sharedBrowser) await browser.close()
   } catch (e: any) {
     console.error("Header screenshot failed", e)
   }
@@ -749,6 +752,7 @@ export async function checkCallnowLinks(
   runId: string,
   pageId: string,
   wpPassword?: string,
+  sharedBrowser?: any,
 ): Promise<Finding[]> {
   const { chromium } = require("playwright")
   const { uploadScreenshot } = require("../lib/supabaseStorage")
@@ -773,7 +777,7 @@ export async function checkCallnowLinks(
 
   let browser
   try {
-    browser = await chromium.launch({ headless: true })
+    browser = sharedBrowser || (await chromium.launch({ headless: true }))
 
     const adminContext = await browser.newContext()
     const adminPage = await adminContext.newPage()
@@ -863,7 +867,7 @@ export async function checkCallnowLinks(
   } catch (error: any) {
     console.error("Callnow Links check failed:", error)
   } finally {
-    if (browser) {
+    if (browser && !sharedBrowser) {
       await browser.close()
     }
   }

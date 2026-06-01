@@ -402,27 +402,32 @@ export async function processCrawlPageJob(job: Job) {
         }
 
         if (enabledChecks.includes("footer_logo")) {
-          const res = await checkFooterLogo(pageUrl, runId, pageId).catch((e) => {
-            logger.error("Footer logo check failed:", e)
-            return []
-          })
-          checkPromises.push(Promise.resolve(res))
+          checkPromises.push(
+            checkFooterLogo(pageUrl, runId, pageId, browser).catch((e) => {
+              logger.error("Footer logo check failed:", e)
+              return []
+            }),
+          )
         }
 
         if (enabledChecks.includes("single_script")) {
-          const res = await checkSingleScript(pageUrl, runId, pageId).catch((e) => {
-            logger.error("Single script check failed:", e)
-            return []
-          })
-          checkPromises.push(Promise.resolve(res))
+          checkPromises.push(
+            checkSingleScript(pageUrl, runId, pageId, browser).catch((e) => {
+              logger.error("Single script check failed:", e)
+              return []
+            }),
+          )
         }
 
         if (enabledChecks.includes("top_bar_sticky")) {
-          const res = await checkTopBarAndStickyHeader(pageUrl, runId, pageId).catch((e) => {
-            logger.error("Top bar & sticky header check failed:", e)
-            return []
-          })
-          checkPromises.push(Promise.resolve(res))
+          checkPromises.push(
+            checkTopBarAndStickyHeader(pageUrl, runId, pageId, browser).catch(
+              (e) => {
+                logger.error("Top bar & sticky header check failed:", e)
+                return []
+              },
+            ),
+          )
         }
 
         if (enabledChecks.includes("favicon")) {
@@ -462,11 +467,18 @@ export async function processCrawlPageJob(job: Job) {
         }
 
         if (enabledChecks.includes("callnow_links")) {
-          const res = await checkCallnowLinks(pageUrl, runId, pageId, wpPassword).catch((e) => {
-            logger.error("Callnow & Links check failed:", e)
-            return []
-          })
-          checkPromises.push(Promise.resolve(res))
+          checkPromises.push(
+            checkCallnowLinks(
+              pageUrl,
+              runId,
+              pageId,
+              wpPassword,
+              browser,
+            ).catch((e) => {
+              logger.error("Callnow & Links check failed:", e)
+              return []
+            }),
+          )
         }
       }
 
