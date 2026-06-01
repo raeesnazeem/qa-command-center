@@ -204,9 +204,15 @@ export const DeadLinksFindingCard: React.FC<FindingCardProps> = ({
                 ) && (
                   <div className="flex flex-wrap items-center gap-2 mb-3">
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-600 border border-emerald-200 uppercase">
-                      {finding.context_text.match(
-                        /Total unique URLs checked in run so far: (\d+)/,
-                      )?.[1] || "0"}{" "}
+                      {Math.max(
+                        0,
+                        ...Array.from(
+                          finding.context_text.matchAll(
+                            /Total unique URLs checked in run so far: (\d+)/g,
+                          ),
+                          (m) => parseInt(m[1], 10),
+                        ),
+                      )}{" "}
                       URLs Scanned
                     </span>
                   </div>
@@ -463,9 +469,15 @@ export const DeadLinksFindingCard: React.FC<FindingCardProps> = ({
           {finding.context_text?.includes("Total unique URLs checked") && (
             <div className="flex flex-wrap items-center gap-2 mb-3">
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-600 border border-emerald-200 uppercase">
-                {finding.context_text.match(
-                  /Total unique URLs checked in run so far: (\d+)/,
-                )?.[1] || "0"}{" "}
+                {Math.max(
+                  0,
+                  ...Array.from(
+                    finding.context_text.matchAll(
+                      /Total unique URLs checked in run so far: (\d+)/g,
+                    ),
+                    (m) => parseInt(m[1], 10),
+                  ),
+                )}{" "}
                 URLs Scanned
               </span>
             </div>

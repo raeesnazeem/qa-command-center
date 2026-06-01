@@ -12,7 +12,7 @@ const logger = pino({
 })
 
 export async function processCrawlBatchJob(job: Job) {
-  const { runId, pages, projectId } = job.data
+  const { runId, pages, projectId, wpPassword } = job.data
 
   if (!runId || !pages || !Array.isArray(pages)) {
     throw new Error(
@@ -51,6 +51,7 @@ export async function processCrawlBatchJob(job: Job) {
             url: pageUrl,
             projectId,
             enabledChecks: job.data.enabledChecks,
+            wpPassword,
           },
         } as Job)
       } catch (error: any) {

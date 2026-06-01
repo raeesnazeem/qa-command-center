@@ -39,7 +39,8 @@ const logger = pino({
 })
 
 export async function processCrawlPageJob(job: Job) {
-  const { runId, pageId, url: pageUrl, wpPassword } = job.data
+  const { runId, pageId, url: pageUrl } = job.data
+  const wpPassword = job.data.wpPassword || wpPasswordCache.get(runId)
 
   if (!runId || !pageId || !pageUrl) {
     throw new Error(
@@ -191,8 +192,8 @@ export async function processCrawlPageJob(job: Job) {
     // }
 
     // Step 4: Run automated checks
+    // Step 4: Run automated checks
     logger.info({ pageId }, "Running automated checks")
-    await updateProgress(90, "Running quality checks...")
 
     const isOnlyDeadLinks =
       enabledChecks.length === 1 && enabledChecks.includes("dead_links")
@@ -236,7 +237,12 @@ export async function processCrawlPageJob(job: Job) {
           }
         })
 
+        await updateProgress(
+          10,
+          "Navigating to website (this takes a moment)...",
+        )
         await page.goto(pageUrl, { waitUntil: "load", timeout: 60000 })
+        await updateProgress(15, "Website loaded, initializing checks...")
 
         // Check for forms on page
         hasForms = (await page.$("form")) !== null
@@ -281,7 +287,10 @@ export async function processCrawlPageJob(job: Job) {
 
         if (isHomepage) {
           checkPromises.push(
-            checkHeroMedia(page, screenshots).catch((e) => {
+            checkHeroMedia(page, screenshots, async (p, m) => {
+              await updateProgress(p, m)
+              await new Promise((resolve) => setTimeout(resolve, 1500))
+            }).catch((e) => {
               logger.error("Hero media check failed:", e)
               return []
             }),

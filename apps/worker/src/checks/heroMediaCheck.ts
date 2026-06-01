@@ -4,8 +4,14 @@ import { Finding } from "@qacc/shared"
 export async function checkHeroMedia(
   page: PlaywrightPage,
   pageRecord: any,
+  onProgress?: (progress: number, message: string) => Promise<void>,
 ): Promise<Finding[]> {
   const findings: Finding[] = []
+
+  if (onProgress)
+    await onProgress(10, "Opened browser, checking for hero media...")
+
+  // --- 1. DETECT ELEMENTOR OR STANDARD HERO VIDEO ---
 
   // --- 1. DETECT ELEMENTOR OR STANDARD HERO VIDEO ---
   // Locate the FIRST Elementor video container on the page
@@ -20,7 +26,10 @@ export async function checkHeroMedia(
   let isHeroVideo = false
 
   if (hasElementorVideo) {
+    if (onProgress)
+      await onProgress(30, "Hero media found, checking for fallback image...")
     isHeroVideo = true
+
     // CHECK FOR FALLBACK IMAGE SETUP AND EXTRACT ITS LINK
     // Elementor stores the fallback image metadata in the `data-settings` attribute
     const dataSettingsAttr =
@@ -82,6 +91,8 @@ export async function checkHeroMedia(
     })
 
     if (standardVideoDetails) {
+      if (onProgress)
+        await onProgress(30, "Hero media found, checking for fallback image...")
       isHeroVideo = true
       hasVideoElement = true
       fallbackImageLink = standardVideoDetails.poster
@@ -107,7 +118,13 @@ export async function checkHeroMedia(
         ai_generated: false,
       })
     } else {
+      if (onProgress)
+        await onProgress(
+          50,
+          `Fallback image ${fallbackImageLink ? "found" : "not found"}, measuring load time...`,
+        )
       // 3. MEASURE VIDEO LOAD TIME (PLAY TIME)
+
       let loadDurationInSeconds: number | null = null
       let timedOut = false
 
@@ -213,7 +230,10 @@ export async function checkHeroMedia(
   }
 
   // --- 3. CHECK OTHER HERO IMAGES AS FALLBACK/PRIMARY ---
+  if (onProgress)
+    await onProgress(70, "Checking standard hero images and fallbacks...")
   // (Retains original checks for general hero images loaded status)
+
   const heroImages = await page.evaluate(() => {
     const heroElements = Array.from(
       document.querySelectorAll('[class*="hero" i], [id*="hero" i]'),
@@ -247,6 +267,8 @@ export async function checkHeroMedia(
   }
 
   // --- 4. SUCCESS / INFORMATIONAL FINDING IF NO ISSUES FOUND ---
+  if (onProgress)
+    await onProgress(90, "Hero media check complete, finalizing findings...")
   if (findings.length === 0) {
     const screenshotUrl =
       pageRecord?.desktopUrl || pageRecord?.screenshot_url_desktop || null

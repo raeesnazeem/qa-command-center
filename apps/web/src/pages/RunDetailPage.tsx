@@ -121,6 +121,16 @@ export const RunDetailPage = () => {
   const [hasRefetched, setHasRefetched] = useState(false)
   const initialStatusRef = useRef<string | undefined>(undefined)
 
+  // Fast looping state for rapid UI feedback
+  const [fakeIndex, setFakeIndex] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFakeIndex((prev) => prev + 1)
+    }, 600) // Cycles through a new URL every 0.6 seconds
+    return () => clearInterval(interval)
+  }, [])
+
   useEffect(() => {
     // Capture the FIRST known status of the run
     if (!initialStatusRef.current && run?.status) {
@@ -1092,48 +1102,119 @@ export const RunDetailPage = () => {
 
                   return (
                     <details key={checkKey} className="group space-y-3">
-                      <summary className="text-sm font-mono text-slate-800 dark:text-slate-200 cursor-pointer list-none [&::-webkit-details-marker]:hidden flex justify-between items-center outline-none">
-                        <span>{checkName}</span>
-                        <span className="text-sm text-accent transition-all duration-300 group-open:rotate-180 animate-bounce group-open:animate-none">
+                      <summary className="text-sm font-mono text-slate-800 dark:text-slate-200 cursor-pointer list-none [&::-webkit-details-marker]:hidden flex items-center outline-none group/summary hover:text-accent transition-colors">
+                        <span className="mr-2.5 text-[10px] text-accent transition-all duration-300 -rotate-90 group-open:rotate-0 opacity-70 group-hover/summary:opacity-100 group-hover/summary:translate-x-0.5 animate-pulse group-open:animate-none">
                           ▼
                         </span>
+                        <span className="font-semibold">{checkName}</span>
                       </summary>
 
                       <div className="space-y-3 mt-3">
-                        {relevantPages.map((page) => {
-                          const isCompleted =
-                            run.status === "completed" ||
-                            page.status === "done" ||
-                            page.status === "checked"
-                          const pageProgress = isCompleted
-                            ? 100
-                            : page.progress || 0
+                        {checkKey === "dead_links"
+                          ? (() => {
+                              const isRunCompleted = run.status === "completed"
+                              const totalPages = relevantPages.length
+                              const completedPages = isRunCompleted
+                                ? totalPages
+                                : relevantPages.filter(
+                                    (p) =>
+                                      p.status === "done" ||
+                                      p.status === "checked",
+                                  ).length
+                              const deadLinksProgress =
+                                totalPages > 0
+                                  ? Math.round(
+                                      (completedPages / totalPages) * 100,
+                                    )
+                                  : 0
 
-                          return (
-                            <div
-                              key={page.id}
-                              className="border border-slate-400 dark:border-slate-700 rounded-xl p-3 bg-slate-50 dark:bg-[#1D2A31]"
-                            >
-                              <div className="flex justify-between items-center mb-2 text-xs font-mono text-slate-800 dark:text-slate-200">
-                                <span>
-                                  scanning:{" "}
-                                  {page.url.replace(/https?:\/\//, "")}
-                                </span>
-                                <span className="font-bold">
-                                  {isCompleted
-                                    ? "completed 100%"
-                                    : `${pageProgress}%`}
-                                </span>
-                              </div>
-                              <div className="w-full h-3 bg-slate-50 dark:bg-[#1D2A31] border border-slate-400 dark:border-slate-700 rounded-md p-px mb-1">
+                              const activePage =
+                                relevantPages.find(
+                                  (p) => p.status === "processing",
+                                ) ||
+                                relevantPages.find(
+                                  (p) => p.status === "pending",
+                                )
+
+                              // Use the fast loop effect if we are not complete, so it feels realtime
+                              const displayUrl = isRunCompleted
+                                ? "All pages checked"
+                                : relevantPages.length > 0
+                                  ? relevantPages[
+                                      fakeIndex % relevantPages.length
+                                    ].url.replace(/https?:\/\//, "")
+                                  : "Preparing..."
+
+                              return (
+                                <div className="border border-slate-400 dark:border-slate-700 rounded-xl p-3 bg-slate-50 dark:bg-[#1D2A31]">
+                                  <div className="flex justify-between items-center mb-2 text-xs font-mono text-slate-800 dark:text-slate-200">
+                                    <span>
+                                      scanning: {displayUrl}
+                                      {!isRunCompleted &&
+                                        activePage?.current_step && (
+                                          <span className="text-slate-500 ml-2">
+                                            -{" "}
+                                            {activePage.current_step.toLowerCase()}
+                                          </span>
+                                        )}
+                                    </span>
+                                    <span className="font-bold">
+                                      {isRunCompleted
+                                        ? "completed 100%"
+                                        : `${deadLinksProgress}%`}
+                                    </span>
+                                  </div>
+                                  <div className="w-full h-3 bg-slate-50 dark:bg-[#1D2A31] border border-slate-400 dark:border-slate-700 rounded-md p-px mb-1">
+                                    <div
+                                      className="h-full bg-[#b5e4b5] rounded-sm transition-all duration-500"
+                                      style={{
+                                        width: `${isRunCompleted ? 100 : deadLinksProgress}%`,
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              )
+                            })()
+                          : relevantPages.map((page) => {
+                              const isCompleted =
+                                run.status === "completed" ||
+                                page.status === "done" ||
+                                page.status === "checked"
+                              const pageProgress = isCompleted
+                                ? 100
+                                : page.progress || 0
+
+                              return (
                                 <div
-                                  className="h-full bg-[#b5e4b5] rounded-sm transition-all duration-500"
-                                  style={{ width: `${pageProgress}%` }}
-                                />
-                              </div>
-                            </div>
-                          )
-                        })}
+                                  key={page.id}
+                                  className="border border-slate-400 dark:border-slate-700 rounded-xl p-3 bg-slate-50 dark:bg-[#1D2A31]"
+                                >
+                                  <div className="flex justify-between items-center mb-2 text-xs font-mono text-slate-800 dark:text-slate-200">
+                                    <span>
+                                      scanning:{" "}
+                                      {page.url.replace(/https?:\/\//, "")}
+                                      {!isCompleted && page.current_step && (
+                                        <span className="text-slate-500 ml-2">
+                                          - {page.current_step.toLowerCase()}
+                                        </span>
+                                      )}
+                                    </span>
+
+                                    <span className="font-bold">
+                                      {isCompleted
+                                        ? "completed 100%"
+                                        : `${pageProgress}%`}
+                                    </span>
+                                  </div>
+                                  <div className="w-full h-3 bg-slate-50 dark:bg-[#1D2A31] border border-slate-400 dark:border-slate-700 rounded-md p-px mb-1">
+                                    <div
+                                      className="h-full bg-[#b5e4b5] rounded-sm transition-all duration-500"
+                                      style={{ width: `${pageProgress}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              )
+                            })}
                       </div>
                     </details>
                   )

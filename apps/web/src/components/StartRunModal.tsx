@@ -55,12 +55,7 @@ export const StartRunModal = ({
       run_type: "pre_release",
       site_url: project.site_url,
       figma_url: "",
-      enabled_checks: [
-        "visual_regression",
-        "accessibility",
-        "console_errors",
-        "project_plan",
-      ],
+      enabled_checks: [],
       is_woocommerce: project.is_woocommerce,
       device_matrix: ["desktop"],
       selected_urls: [],
@@ -466,9 +461,33 @@ export const StartRunModal = ({
 
             {/* Enabled Checks */}
             <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                Checks to Run
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  Checks to Run
+                </label>
+                <div className="flex items-center space-x-3">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setValue(
+                        "enabled_checks",
+                        checkOptions.map((c) => c.id),
+                      )
+                    }
+                    className="text-[10px] font-bold uppercase tracking-wider text-accent hover:text-accent/80 transition-colors"
+                  >
+                    Select All
+                  </button>
+                  <span className="text-slate-300 dark:text-slate-600">|</span>
+                  <button
+                    type="button"
+                    onClick={() => setValue("enabled_checks", [])}
+                    className="text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
+                  >
+                    Deselect All
+                  </button>
+                </div>
+              </div>
               <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
                 {checkOptions.map((check) => (
                   <label
