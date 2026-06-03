@@ -152,11 +152,67 @@ export const RunDetailPage = () => {
     }
   }, [run?.status, hasRefetched, refetchFindings, refetchRunFindings])
 
+  const trueAverageProgress = useMemo(() => {
+    if (!run?.enabled_checks || !run?.pages) return progress
+
+    const SINGLE_PAGE_CHECKS = [
+      "project_plan",
+      "paid_media",
+      "privacy_policy",
+      "callnow_links",
+      "hero_media",
+      "footer_logo",
+      "single_script",
+      "top_bar_sticky",
+      "favicon",
+      "contact_form",
+      "chatbot_consultation",
+      "text_share",
+      "verify_plugin_updates",
+      "social_share_heading",
+    ]
+
+    const normalize = (u: string) =>
+      u.replace(/^https?:\/\//, "").replace(/\/$/, "")
+    const homepage = run.pages.find(
+      (p) => normalize(p.url) === normalize(run.site_url),
+    )
+    const isRunCompleted = run.status === "completed"
+    const totalPages = run.pages.length
+    const completedPages = isRunCompleted
+      ? totalPages
+      : run.pages.filter((p) => p.status === "done" || p.status === "checked")
+          .length
+    const allPagesProgress =
+      totalPages > 0 ? (completedPages / totalPages) * 100 : 0
+
+    const homepageProgress = homepage
+      ? isRunCompleted ||
+        homepage.status === "done" ||
+        homepage.status === "checked"
+        ? 100
+        : homepage.progress || 0
+      : 0
+
+    let totalCheckProgress = 0
+
+    run.enabled_checks.forEach((checkKey) => {
+      if (SINGLE_PAGE_CHECKS.includes(checkKey)) {
+        totalCheckProgress += homepageProgress
+      } else {
+        totalCheckProgress += allPagesProgress
+      }
+    })
+
+    return run.enabled_checks.length > 0
+      ? totalCheckProgress / run.enabled_checks.length
+      : progress
+  }, [run?.enabled_checks, run?.pages, run?.status, run?.site_url, progress])
+
   const displayStatus =
     run?.status === "completed" && !findingsLoaded ? "running" : run?.status
   const displayProgress =
-    run?.status === "completed" && !findingsLoaded ? 99 : progress
-
+    run?.status === "completed" && !findingsLoaded ? 99 : trueAverageProgress
   const { data: tasksData } = useTasks({ projectId: projectId! })
   const updateFindingMutation = useUpdateFinding(selectedPageId)
   const { mutate: createTask } = useCreateTask()
@@ -422,16 +478,16 @@ export const RunDetailPage = () => {
     if (
       run?.status === "running" &&
       run.started_at &&
-      pagesTotal > 0 &&
-      pagesProcessed > 0
+      displayProgress > 0 &&
+      displayProgress < 100
     ) {
       const startTime = new Date(run.started_at).getTime()
       const now = new Date().getTime()
       const elapsedMs = now - startTime
 
-      const msPerPage = elapsedMs / pagesProcessed
-      const remainingPages = pagesTotal - pagesProcessed
-      const remainingMs = remainingPages * msPerPage
+      // calculate how long it takes for 1% of progress
+      const totalExpectedMs = elapsedMs / (displayProgress / 100)
+      const remainingMs = totalExpectedMs - elapsedMs
 
       if (remainingMs > 0) {
         const remainingSecs = Math.ceil(remainingMs / 1000)
@@ -444,8 +500,7 @@ export const RunDetailPage = () => {
     } else {
       setEta(null)
     }
-  }, [pagesProcessed, pagesTotal, run?.status, run?.started_at])
-
+  }, [displayProgress, run?.status, run?.started_at])
   const isLoading = isLoadingRun || isLoadingProject
 
   if (isLoading) {

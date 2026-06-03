@@ -307,6 +307,18 @@ export const StartRunModal = ({
     },
   ]
 
+  const FUNCTIONAL_CHECK_IDS = [
+    "visual_regression",
+    "accessibility",
+    "console_errors",
+    "performance",
+  ]
+  const functionalChecks = checkOptions.filter((c) =>
+    FUNCTIONAL_CHECK_IDS.includes(c.id),
+  )
+  const generalChecks = checkOptions.filter(
+    (c) => !FUNCTIONAL_CHECK_IDS.includes(c.id),
+  )
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-200">
       <div className="absolute inset-0 bg-transparent" onClick={onClose} />
@@ -526,35 +538,146 @@ export const StartRunModal = ({
                   </button>
                 </div>
               </div>
-              <div className="space-y-2 max-h-[45vh] bg-[#1D2A31] overflow-y-auto pr-2 custom-scrollbar">
-                {checkOptions.map((check) => (
-                  <label
-                    key={check.id}
-                    className="flex items-start p-3 border border-slate-100 dark:border-slate-700 rounded-md bg-slate-50/50 dark:bg-slate-800/30 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors group"
-                  >
-                    <div className="flex items-center h-5 mr-3">
+              <div className="space-y-4 max-h-[45vh] bg-[#1D2A31] overflow-y-auto pr-2 custom-scrollbar">
+                {/* Functional Tests Group */}
+                <details className="group space-y-2" open>
+                  <summary className="text-sm font-bold text-slate-800 dark:text-slate-200 cursor-pointer list-none [&::-webkit-details-marker]:hidden flex items-center outline-none group/summary hover:text-accent transition-colors bg-slate-50 dark:bg-slate-800/50 p-3 rounded-md border border-slate-200 dark:border-slate-700">
+                    <span className="mr-3 text-[12px] text-slate-400 transition-transform duration-300 -rotate-90 group-open:rotate-0">
+                      ▼
+                    </span>
+                    <span className="flex-1 uppercase tracking-wider text-xs">
+                      Functional Tests
+                    </span>
+                    <div
+                      className="flex items-center"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <input
                         type="checkbox"
-                        {...register("enabled_checks")}
-                        value={check.id}
+                        checked={functionalChecks.every((c) =>
+                          enabledChecks.includes(c.id),
+                        )}
+                        onChange={(e) => {
+                          const isChecked = e.target.checked
+                          if (isChecked) {
+                            const newChecks = Array.from(
+                              new Set([
+                                ...enabledChecks,
+                                ...functionalChecks.map((c) => c.id),
+                              ]),
+                            )
+                            setValue("enabled_checks", newChecks)
+                          } else {
+                            const newChecks = enabledChecks.filter(
+                              (id) =>
+                                !functionalChecks.find((c) => c.id === id),
+                            )
+                            setValue("enabled_checks", newChecks)
+                          }
+                        }}
                         className="w-4 h-4 text-accent border-slate-300 rounded focus:ring-accent accent-accent"
                       />
                     </div>
-                    <div>
-                      <div className="text-[11px] font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider">
-                        {check.label}
-                      </div>
-                      <p className="text-[9px] text-slate-500 dark:text-slate-400 font-medium">
-                        {check.description}
-                      </p>
+                  </summary>
+                  <div className="space-y-2 pt-1 pl-4">
+                    {functionalChecks.map((check) => (
+                      <label
+                        key={check.id}
+                        className="flex items-start p-3 border border-slate-100 dark:border-slate-700 rounded-md bg-slate-50/50 dark:bg-slate-800/30 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors group"
+                      >
+                        <div className="flex items-center h-5 mr-3">
+                          <input
+                            type="checkbox"
+                            {...register("enabled_checks")}
+                            value={check.id}
+                            className="w-4 h-4 text-accent border-slate-300 rounded focus:ring-accent accent-accent"
+                          />
+                        </div>
+                        <div>
+                          <div className="text-[11px] font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider">
+                            {check.label}
+                          </div>
+                          <p className="text-[9px] text-slate-500 dark:text-slate-400 font-medium">
+                            {check.description}
+                          </p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </details>
+
+                {/* General Checks Group */}
+                <details className="group space-y-2" open>
+                  <summary className="text-sm font-bold text-slate-800 dark:text-slate-200 cursor-pointer list-none [&::-webkit-details-marker]:hidden flex items-center outline-none group/summary hover:text-accent transition-colors bg-slate-50 dark:bg-slate-800/50 p-3 rounded-md border border-slate-200 dark:border-slate-700">
+                    <span className="mr-3 text-[12px] text-slate-400 transition-transform duration-300 -rotate-90 group-open:rotate-0">
+                      ▼
+                    </span>
+                    <span className="flex-1 uppercase tracking-wider text-xs">
+                      General Checks
+                    </span>
+                    <div
+                      className="flex items-center"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={
+                          generalChecks.every((c) =>
+                            enabledChecks.includes(c.id),
+                          ) && generalChecks.length > 0
+                        }
+                        onChange={(e) => {
+                          const isChecked = e.target.checked
+                          if (isChecked) {
+                            const newChecks = Array.from(
+                              new Set([
+                                ...enabledChecks,
+                                ...generalChecks.map((c) => c.id),
+                              ]),
+                            )
+                            setValue("enabled_checks", newChecks)
+                          } else {
+                            const newChecks = enabledChecks.filter(
+                              (id) => !generalChecks.find((c) => c.id === id),
+                            )
+                            setValue("enabled_checks", newChecks)
+                          }
+                        }}
+                        className="w-4 h-4 text-accent border-slate-300 rounded focus:ring-accent accent-accent"
+                      />
                     </div>
-                  </label>
-                ))}
+                  </summary>
+                  <div className="space-y-2 pt-1 pl-4">
+                    {generalChecks.map((check) => (
+                      <label
+                        key={check.id}
+                        className="flex items-start p-3 border border-slate-100 dark:border-slate-700 rounded-md bg-slate-50/50 dark:bg-slate-800/30 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors group"
+                      >
+                        <div className="flex items-center h-5 mr-3">
+                          <input
+                            type="checkbox"
+                            {...register("enabled_checks")}
+                            value={check.id}
+                            className="w-4 h-4 text-accent border-slate-300 rounded focus:ring-accent accent-accent"
+                          />
+                        </div>
+                        <div>
+                          <div className="text-[11px] font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider">
+                            {check.label}
+                          </div>
+                          <p className="text-[9px] text-slate-500 dark:text-slate-400 font-medium">
+                            {check.description}
+                          </p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </details>
               </div>
             </div>
 
             {requiresPassword && (
-              <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-md mt-4">
+              <div className="p-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-md mt-4">
                 <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   WordPress Admin Password Required
                 </label>
@@ -566,7 +689,7 @@ export const StartRunModal = ({
                   type="password"
                   {...register("wp_password")}
                   placeholder="Enter today's WP password..."
-                  className="w-full bg-white dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md px-4 py-2.5 text-slate-900 dark:text-slate-200 focus:outline-none focus:border-accent transition-all"
+                  className="w-full bg-white dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md px-4 py-1.5 text-[13px] text-slate-900 dark:text-slate-200 focus:outline-none focus:border-accent transition-all"
                 />
               </div>
             )}
@@ -585,7 +708,7 @@ export const StartRunModal = ({
                   value={liveSiteUrl}
                   onChange={(e) => setLiveSiteUrl(e.target.value)}
                   placeholder="https://www.clientlivesite.com"
-                  className="w-full bg-white dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md px-4 py-2.5 text-slate-900 dark:text-slate-200 focus:outline-none focus:border-accent transition-all"
+                  className="w-full bg-white dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md px-4 py-1.5 text-[13px] text-slate-900 dark:text-slate-200 focus:outline-none focus:border-accent transition-all"
                 />
               </div>
             )}
