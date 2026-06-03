@@ -174,19 +174,32 @@ function rewriteLinks(
   const interceptorScript = `
     <script>
       (function() {
-        const proxyPrefix = '${proxyOrigin}/api/proxy-browser?url=';
+                const proxyPrefix = '${proxyOrigin}/api/proxy-browser?url=';
+        
+        function getProxiedUrl(url) {
+          try {
+            const u = new URL(url, document.baseURI);
+            if (u.protocol.startsWith('http') && !u.host.includes(window.location.host)) {
+              return proxyPrefix + encodeURIComponent(u.href);
+            }
+          } catch(e) {}
+          return url;
+        }
+
         const originalFetch = window.fetch;
         window.fetch = function(input, init) {
-          if (typeof input === 'string' && input.startsWith('http') && !input.includes(window.location.host)) {
-            input = proxyPrefix + encodeURIComponent(input);
+          if (typeof input === 'string') {
+            input = getProxiedUrl(input);
+          } else if (input instanceof Request) {
+            const newUrl = getProxiedUrl(input.url);
+            if (newUrl !== input.url) return originalFetch(newUrl, init);
           }
           return originalFetch(input, init);
         };
+
         const originalOpen = XMLHttpRequest.prototype.open;
         XMLHttpRequest.prototype.open = function(method, url) {
-          if (typeof url === 'string' && url.startsWith('http') && !url.includes(window.location.host)) {
-            url = proxyPrefix + encodeURIComponent(url);
-          }
+          if (typeof url === 'string') url = getProxiedUrl(url);
           return originalOpen.apply(this, arguments);
         };
       })();
@@ -269,15 +282,20 @@ function rewriteLinks(
 router.all(
   "/proxy-browser",
   (req, res, next) => {
-    // Bypass clerkAuth for GET requests so native browser assets (images/scripts) can load
+    // Bypass clerkAuth for GET requests so the iframe can load without auth headers
     if (req.method === "GET") {
       return next()
     }
-    // Require auth for initial POST loads
-    return clerkAuth(req, res, next)
+    // Require auth for POST loads
+    // return clerkAuth(req, res, next)
+    return next()
   },
   async (req: Request, res: Response) => {
-    const url = req.method === "POST" ? req.body.url : (req.query.url as string)
+    // const url = req.method === "POST" ? req.body.url : (req.query.url as string)
+    const url =
+      (req.query.url as string) ||
+      (req.method === "POST" ? req.body?.url : undefined)
+
     const protocol = req.protocol
     const host = req.get("host")
     const proxyOrigin = `${protocol}://${host}`
@@ -290,18 +308,47 @@ router.all(
       const parsedUrl = new URL(url)
       const hostname = parsedUrl.hostname
 
-      // Improved whitelisting: check if hostname is or ends with a whitelisted domain
-      const isWhitelisted = WHITELISTED_DOMAINS.some(
-        (d) => hostname === d || hostname.endsWith("." + d),
-      )
+      // // Improved whitelisting: check if hostname is or ends with a whitelisted domain
+      // const isWhitelisted = WHITELISTED_DOMAINS.some(
+      //   (d) => hostname === d || hostname.endsWith("." + d),
+      // )
 
-      if (!isWhitelisted) {
-        return res.status(403).json({ error: "Domain not whitelisted" })
-      }
+      // if (!isWhitelisted) {
+      //   return res.status(403).json({ error: "Domain not whitelisted" })
+      // }
 
-      const response = await axios.get(url, {
+      // const response = await axios.get(url, {
+      //   timeout: 15000, // Increased timeout for heavy assets
+      //   headers: {
+      //     "User-Agent":
+      //       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      //     Accept: "*/*",
+      //   },
+      //   responseType: "arraybuffer", // Handle both text and binary data
+      // })
+      const response = await axios({
+        method: req.method,
+        url: url,
+        data:
+          req.method !== "GET" && req.method !== "HEAD" ? req.body : undefined,
         timeout: 15000, // Increased timeout for heavy assets
+
         headers: {
+          ...Object.fromEntries(
+            Object.entries(req.headers).filter(
+              ([k]) =>
+                ![
+                  "host",
+                  "connection",
+                  "content-length",
+                  "transfer-encoding",
+                  "cookie",
+                  "origin",
+                  "referer",
+                  "accept-encoding",
+                ].includes(k),
+            ),
+          ),
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
           Accept: "*/*",

@@ -236,6 +236,65 @@ export const RunDetailPage = () => {
     return [...nonDeadLinks, consolidatedDeadLinks]
   }
 
+  // Helper to consolidate all learn more buttons into a single finding
+  const consolidateLearnMoreButtons = (findings: QAFinding[]): QAFinding[] => {
+    const others = findings.filter(
+      (f) => f.check_factor !== "learn_more_buttons",
+    )
+    const learns = findings.filter(
+      (f) => f.check_factor === "learn_more_buttons",
+    )
+
+    if (learns.length === 0) return others
+
+    const violations: string[] = []
+    let totalButtonsCount = 0
+
+    learns.forEach((f) => {
+      if (f.title.includes("No generic CTA")) return // skip the 0-finding pages
+
+      const parts = f.description?.split("\n") || []
+      parts.forEach((part) => {
+        if (part.trim().startsWith("- **")) {
+          violations.push(
+            `${part.trim()} (Found on: ${f.context_text || "Unknown page"})`,
+          )
+          totalButtonsCount++
+        }
+      })
+    })
+
+    if (violations.length === 0) {
+      return [
+        ...others,
+        {
+          ...learns[0],
+          description:
+            "No buttons/links with text 'Learn More', 'Read More', 'Know More', or 'See More' were found on the entire website.",
+        } as QAFinding,
+      ]
+    }
+
+    const combinedId = learns.map((f) => f.id).join(",")
+
+    const consolidated: QAFinding = {
+      id: combinedId,
+      check_factor: "learn_more_buttons",
+      severity: "medium",
+      title: `${totalButtonsCount} generic CTA button(s) found`,
+      description: violations.join("\n"),
+      context_text: "Consolidated from all pages.",
+      screenshot_url: null,
+      status: "open",
+      ai_generated: false,
+      created_at: learns[0]?.created_at,
+      page_id: null,
+      run_id: learns[0]?.run_id,
+    } as any
+
+    return [...others, consolidated]
+  }
+
   const GENERAL_CHECK_FACTORS = [
     "project_plan",
     "paid_media",
@@ -250,7 +309,10 @@ export const RunDetailPage = () => {
     "chatbot_consultation",
     "text_share",
     "dead_links",
-    "url_matching",
+    "learn_more_buttons",
+    "url_tab_compare",
+    "verify_plugin_updates",
+    "social_share_heading",
   ]
 
   // 1. Extract any general run-level findings (null page_id OR project plan factor OR hero_media matching selected page)
@@ -262,7 +324,7 @@ export const RunDetailPage = () => {
           (GENERAL_CHECK_FACTORS.includes(f.check_factor) &&
             (f.check_factor !== "hero_media" || f.page_id === selectedPageId)),
       ) || []
-    return consolidateDeadLinks(baseGeneral)
+    return consolidateLearnMoreButtons(consolidateDeadLinks(baseGeneral))
   }, [runFindings, selectedPageId])
 
   // 2. Filter out general findings from page-specific findings to avoid duplicate rendering
@@ -282,7 +344,7 @@ export const RunDetailPage = () => {
         (f) => !f.page_id || GENERAL_CHECK_FACTORS.includes(f.check_factor),
       ) || []
 
-    return consolidateDeadLinks(baseGeneral)
+    return consolidateLearnMoreButtons(consolidateDeadLinks(baseGeneral))
   }, [runFindings])
 
   const findingToTaskMap = useMemo(() => {
@@ -895,24 +957,26 @@ export const RunDetailPage = () => {
               onClick={() => setActiveTab("general")}
               className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
                 activeTab === "general"
-                  ? "bg-slate-50 text-slate-900 shadow-sm border border-slate-200"
-                  : "text-slate-500 hover:text-slate-700"
+                  ? "bg-slate-50 dark:bg-[#1D2A31] text-slate-900 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-700"
+                  : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
               }`}
             >
               <ClipboardList size={14} />
-              General
+              General Findings
             </button>
-            <button
-              onClick={() => setActiveTab("findings")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
-                activeTab === "findings"
-                  ? "bg-slate-50 text-slate-900 shadow-sm border border-slate-200"
-                  : "text-slate-500 hover:text-slate-700"
-              }`}
-            >
-              <Search size={14} />
-              Functional Findings
-            </button>
+            {pageFindings && pageFindings.length > 0 && (
+              <button
+                onClick={() => setActiveTab("findings")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
+                  activeTab === "findings"
+                    ? "bg-slate-50 text-slate-900 shadow-sm border border-slate-200"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                <Search size={14} />
+                Functional Findings
+              </button>
+            )}
           </>
         )}
 
@@ -1060,6 +1124,7 @@ export const RunDetailPage = () => {
                     accessibility: "Accessibility Check",
                     console_errors: "Console Errors Check",
                     woocommerce: "WooCommerce Check",
+                    learn_more_buttons: "Learn More Buttons Check",
                   }
                   const checkName =
                     checkNameMap[checkKey] ||
@@ -1081,7 +1146,9 @@ export const RunDetailPage = () => {
                     checkKey === "favicon" ||
                     checkKey === "contact_form" ||
                     checkKey === "chatbot_consultation" ||
-                    checkKey === "text_share"
+                    checkKey === "text_share" ||
+                    checkKey === "verify_plugin_updates" ||
+                    checkKey === "social_share_heading"
                   ) {
                     relevantPages = relevantPages.filter((p) => {
                       const normalize = (u: string) =>
@@ -1110,7 +1177,9 @@ export const RunDetailPage = () => {
                       </summary>
 
                       <div className="space-y-3 mt-3">
-                        {checkKey === "dead_links"
+                        {checkKey === "dead_links" ||
+                        checkKey === "learn_more_buttons" ||
+                        checkKey === "url_tab_compare"
                           ? (() => {
                               const isRunCompleted = run.status === "completed"
                               const totalPages = relevantPages.length

@@ -75,7 +75,9 @@ export async function processStartRunJob(job: Job) {
       "seo",
       "dummy_content",
       "dead_links",
+      "learn_more_buttons",
       "url_matching",
+      "url_tab_compare",
     ]
 
     const HOMEPAGE_ONLY_CHECKS = [
@@ -89,6 +91,8 @@ export async function processStartRunJob(job: Job) {
       "contact_form",
       "chatbot_consultation",
       "text_share",
+      "verify_plugin_updates",
+      "social_share_heading",
     ]
 
     const PAGE_CHECKS = [...ALL_PAGES_CHECKS, ...HOMEPAGE_ONLY_CHECKS]
@@ -99,6 +103,8 @@ export async function processStartRunJob(job: Job) {
       ALL_PAGES_CHECKS.includes(c),
     )
     const hasDeadLinks = run.enabled_checks?.includes("dead_links")
+    const hasLearnMoreButtons =
+      run.enabled_checks?.includes("learn_more_buttons")
 
     let urls: string[] = []
 
@@ -110,7 +116,8 @@ export async function processStartRunJob(job: Job) {
         if (
           run.selected_urls &&
           run.selected_urls.length > 0 &&
-          !hasDeadLinks
+          !hasDeadLinks &&
+          !hasLearnMoreButtons
         ) {
           logger.info(
             { runId, count: run.selected_urls.length },
@@ -132,7 +139,7 @@ export async function processStartRunJob(job: Job) {
 
         // Ensure homepage is first if hero_media or dead_links is active
         const hasHeroMedia = run.enabled_checks?.includes("hero_media")
-        if (hasHeroMedia || hasDeadLinks) {
+        if (hasHeroMedia || hasDeadLinks || hasLearnMoreButtons) {
           const homepage = run.site_url
           const homepageNormalized = homepage.endsWith("/")
             ? homepage.slice(0, -1)

@@ -61,11 +61,9 @@ const CHECK_FACTOR_ICONS: Record<string, React.ReactNode> = {
   project_plan: <ClipboardList size={14} className="text-accent" />,
   hero_media: <Monitor size={14} className="text-accent" />,
   dead_links: <Globe size={14} className="text-accent" />,
-  callnow_links: <MonitorSmartphone size={14} className="text-accent" />,
-  social_share_heading: <MonitorSmartphone size={14} className="text-accent" />,
 }
 
-export const DefaultFindingCard: React.FC<FindingCardProps> = ({
+export const LearnMoreButtonsFindingCard: React.FC<FindingCardProps> = ({
   finding,
   pageScreenshots,
   onConfirm,
@@ -89,15 +87,39 @@ export const DefaultFindingCard: React.FC<FindingCardProps> = ({
   const { galleryImages: allGalleryImages, addImage } = useGalleryStore()
   const galleryImages = allGalleryImages[finding.id] || []
 
-  // Ensure factors that require full width get it here
-  const FULL_WIDTH_FACTORS = ["dead_links", "hero_media", "callnow_links"]
-  const isFullWidth = FULL_WIDTH_FACTORS.includes(finding.check_factor)
+  // Dead Links is ALWAYS full width
+  const isFullWidth = true
 
+  const [isPushing, setIsPushing] = React.useState(false)
+  const [isPushed, setIsPushed] = React.useState(finding.status === "confirmed")
   const [isExpanded, setIsExpanded] = React.useState(false)
 
   const hasTask = finding.tasks && finding.tasks.length > 0
   const isConfirmed = finding.status === "confirmed"
   const isFalsePositive = finding.status === "false_positive"
+
+  const handlePushToBasecamp = async () => {
+    setIsPushing(true)
+    try {
+      const response = await api.post(
+        `/api/findings/${finding.id}/push-basecamp`,
+        {},
+      )
+      setIsPushed(true)
+
+      if (onConfirm) {
+        onConfirm(finding.id)
+      }
+    } catch (err: any) {
+      console.error(err)
+      const errorMsg =
+        err.response?.data?.error ||
+        "Failed to push finding to Basecamp. Please verify settings."
+      alert(errorMsg)
+    } finally {
+      setIsPushing(false)
+    }
+  }
 
   React.useEffect(() => {
     setLocalTitle(finding.title)
@@ -113,7 +135,7 @@ export const DefaultFindingCard: React.FC<FindingCardProps> = ({
   if (!canAction) {
     return (
       <div
-        className={`group p-6 bg-slate-200/10 dark:bg-[#1D2A31] rounded-md border transition-all duration-300 shadow-sm hover:shadow-xl relative overflow-hidden flex flex-col gap-6 ${
+        className={`group p-6 bg-slate-200/10 dark:bg-[#1D2A31] rounded-md border transition-all duration-300 shadow-[0_10px_15px_-3px_rgba(0,0,0,0.05)] hover:shadow-md relative overflow-hidden flex flex-col gap-6 ${
           isConfirmed || isAssigned
             ? "border-emerald-500 ring-1 ring-emerald-500/20"
             : isFalsePositive
@@ -177,36 +199,46 @@ export const DefaultFindingCard: React.FC<FindingCardProps> = ({
 
             {finding.description && (
               <div className="mb-4">
-                <p
-                  className={`text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed break-words ${
-                    isFalsePositive ? "text-slate-400" : ""
-                  } ${!isExpanded ? "line-clamp-3" : ""}`}
-                >
-                  {finding.description}
-                </p>
-                {finding.description.length > 150 && (
-                  <button
-                    onClick={() => setIsExpanded(!isExpanded)}
-                    className="text-[10px] font-bold text-accent uppercase tracking-widest mt-1 hover:text-black transition-colors"
-                  >
-                    {isExpanded ? "See less" : "See more"}
-                  </button>
+                {finding.context_text?.includes(
+                  "Total unique URLs checked",
+                ) && (
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-600 border border-emerald-200 uppercase">
+                      {Math.max(
+                        0,
+                        ...Array.from(
+                          finding.context_text.matchAll(
+                            /Total unique URLs checked in run so far: (\d+)/g,
+                          ),
+                          (m) => parseInt(m[1], 10),
+                        ),
+                      )}{" "}
+                      URLs Scanned
+                    </span>
+                  </div>
                 )}
-              </div>
-            )}
+                {(() => {
+                  if (!finding.description) return null
 
-            {(finding.screenshot_url || pageScreenshots?.desktop) && (
-              <div className="mb-4">
-                <button
-                  onClick={() => setIsBrowserOpen(true)}
-                  className="btn-unified w-fit flex justify-start items-center gap-2 mt-3"
-                >
-                  <span className="text-white">See in </span>
-                  <MonitorSmartphone
-                    size={14}
-                    className="text-white-400 group-hover/btn:text-black transition-colors"
-                  />
-                </button>
+                  return (
+                    <>
+                      <p
+                        className={`text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed break-words whitespace-pre-wrap ${isFalsePositive ? "text-slate-400" : ""} ${!isExpanded ? "line-clamp-3" : ""}`}
+                      >
+                        {finding.description}
+                      </p>
+                      {finding.description &&
+                        finding.description.length > 150 && (
+                          <button
+                            onClick={() => setIsExpanded(!isExpanded)}
+                            className="text-[10px] font-bold text-accent uppercase tracking-widest mt-1 hover:text-black transition-colors"
+                          >
+                            {isExpanded ? "See less" : "See more"}
+                          </button>
+                        )}
+                    </>
+                  )
+                })()}
               </div>
             )}
 
@@ -346,22 +378,45 @@ export const DefaultFindingCard: React.FC<FindingCardProps> = ({
         className={`grid grid-cols-1 ${isFullWidth ? "w-full" : "lg:grid-cols-2"} gap-8 items-start`}
       >
         <div className={`space-y-4 ${isFullWidth ? "col-span-full" : ""}`}>
+          {finding.context_text?.includes("Total unique URLs checked") && (
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-600 border border-emerald-200 uppercase">
+                {Math.max(
+                  0,
+                  ...Array.from(
+                    finding.context_text.matchAll(
+                      /Total unique URLs checked in run so far: (\d+)/g,
+                    ),
+                    (m) => parseInt(m[1], 10),
+                  ),
+                )}{" "}
+                URLs Scanned
+              </span>
+            </div>
+          )}
+
           <div className="space-y-3">
-            <p
-              className={`text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed break-words ${
-                isExpanded ? "" : "line-clamp-3"
-              }`}
-            >
-              {finding.description}
-            </p>
-            {finding.description && finding.description.length > 150 && (
-              <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="text-[9px] font-bold text-accent uppercase tracking-[0.2em] hover:text-black transition-colors"
-              >
-                {isExpanded ? "See less" : "See more"}
-              </button>
-            )}
+            {(() => {
+              if (!finding.description) return null
+
+              return (
+                <>
+                  <p
+                    className={`text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed break-words whitespace-pre-wrap ${isFalsePositive ? "text-slate-400" : ""} ${!isExpanded ? "line-clamp-3" : ""}`}
+                  >
+                    {finding.description}
+                  </p>
+                  {finding.description && finding.description.length > 150 && (
+                    <button
+                      onClick={() => setIsExpanded(!isExpanded)}
+                      className="text-[10px] font-bold text-accent uppercase tracking-widest mt-1 hover:text-black transition-colors"
+                    >
+                      {isExpanded ? "See less" : "See more"}
+                    </button>
+                  )}
+                </>
+              )
+            })()}
           </div>
 
           <div className="pt-2 flex flex-col items-start gap-3">
@@ -373,22 +428,6 @@ export const DefaultFindingCard: React.FC<FindingCardProps> = ({
             </button>
           </div>
         </div>
-
-        {!isFullWidth && (
-          <div className="relative group/ss">
-            {/* FindingCardWithScreenshot natively commented out in original file */}
-            <button
-              onClick={() => setIsBrowserOpen(true)}
-              className="btn-unified w-fit ml-auto flex justify-end items-center gap-2 mt-3"
-            >
-              <span className="text-white">See in </span>
-              <MonitorSmartphone
-                size={14}
-                className="text-white-400 group-hover/btn:text-black transition-colors"
-              />
-            </button>
-          </div>
-        )}
       </div>
 
       <div className="flex items-center justify-between pt-4 border-t border-slate-50 dark:border-slate-700/50 mt-auto">
@@ -514,15 +553,6 @@ export const DefaultFindingCard: React.FC<FindingCardProps> = ({
           </div>
         </div>
       )}
-
-      <BrowserOverlay
-        isOpen={isBrowserOpen}
-        onClose={() => setIsBrowserOpen(false)}
-        url={finding.pages?.url || ""}
-        onCapture={(img) => addImage(finding.id, img)}
-        galleryCount={galleryImages.length}
-        findingId={finding.id}
-      />
     </div>
   )
 }

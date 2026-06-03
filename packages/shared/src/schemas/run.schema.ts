@@ -30,7 +30,6 @@ export const CreateRunSchema = z.object({
       "single_script",
       "top_bar_sticky",
       "favicon",
-      "url_matching",
       "contact_form",
       "chatbot_consultation",
       "text_share",
@@ -40,6 +39,7 @@ export const CreateRunSchema = z.object({
     .array(z.enum(["desktop", "tablet", "mobile"]))
     .default(["desktop", "tablet", "mobile"]),
   selected_urls: z.array(z.string().url()).optional(),
+  live_site_url: z.string().url().or(z.literal("")).nullable().optional(),
   wp_password: z.string().optional(),
 })
 

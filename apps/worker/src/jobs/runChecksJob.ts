@@ -129,21 +129,32 @@ export async function processRunChecksJob(job: Job) {
             try {
               const transport = new StdioClientTransport({
                 command: "node",
-                args: ["/Users/ikkaavaforever/Documents/Work/react-projects/feature-mcp/packages/elementor-mcp/index.js"],
+                args: [
+                  "/Users/ikkaavaforever/Documents/Work/react-projects/feature-mcp/packages/elementor-mcp/index.js",
+                ],
               })
-              const mcpClient = new Client({ name: "qacc-worker", version: "1.0.0" }, { capabilities: {} })
+              const mcpClient = new Client(
+                { name: "qacc-worker", version: "1.0.0" },
+                { capabilities: {} },
+              )
               await mcpClient.connect(transport)
 
-              return await checkOptimizedLinks(
-                playwrightPage,
-                page,
-                mcpClient
-              )
+              return await checkOptimizedLinks(playwrightPage, page, mcpClient)
             } catch (e) {
               logger.error("Dead links check failed:", e)
               return []
             }
-          })()
+          })(),
+        )
+      }
+
+      if (checksToRun.includes("learn_more_buttons")) {
+        checkPromises.push(
+          (async () => {
+            const { checkLearnMoreButtons } =
+              await import("../checks/learnMoreButtonsCheck.js")
+            return await checkLearnMoreButtons(pageUrl, runId, pageId)
+          })(),
         )
       }
 

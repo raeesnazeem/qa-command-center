@@ -11,6 +11,10 @@ import { SingleScriptFindingCard } from "./SingleScriptFindingCard"
 import { HeaderFindingCard } from "./HeaderFindingCard"
 import { CallnowFindingCard } from "./CallnowFindingCard"
 import { PaidMediaFindingCard } from "./PaidMediaFindingCard"
+import { LearnMoreButtonsFindingCard } from "./LearnMoreButtonsFindingCard"
+import { UrlTabCompareFindingCard } from "./UrlTabCompareFindingCard"
+import { PluginUpdatesFindingCard } from "./PluginUpdatesFindingCard"
+import { SocialShareHeadingFindingCard } from "./SocialShareHeadingFindingCard"
 
 interface FindingCardProps {
   finding: QAFinding
@@ -82,6 +86,26 @@ export const FindingCard: React.FC<FindingCardProps> = (props) => {
 
   if (finding.check_factor === "paid_media") {
     return <PaidMediaFindingCard {...props} />
+  }
+
+  if (finding.check_factor === "learn_more_buttons") {
+    return <LearnMoreButtonsFindingCard {...props} />
+  }
+
+  if (finding.check_factor === "url_tab_compare") {
+    return <UrlTabCompareFindingCard {...props} />
+  }
+
+  if (finding.check_factor === "verify_plugin_updates") {
+    return <PluginUpdatesFindingCard {...props} />
+  }
+
+  if (finding.check_factor === "verify_plugin_updates") {
+    return <PluginUpdatesFindingCard {...props} />
+  }
+
+  if (finding.check_factor === "social_share_heading") {
+    return <SocialShareHeadingFindingCard {...props} />
   }
 
   // Fallback for everything else (Paid Media, Generic, SEO, etc.)

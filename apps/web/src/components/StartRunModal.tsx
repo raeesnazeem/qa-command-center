@@ -41,6 +41,7 @@ export const StartRunModal = ({
   const { isPending: isUpdating } = useUpdateRunStatus()
   const [isUrlsExpanded, setIsUrlsExpanded] = useState(false)
   const [selectedUrls, setSelectedUrls] = useState<string[]>([])
+  const [liveSiteUrl, setLiveSiteUrl] = useState("")
 
   const {
     register,
@@ -59,17 +60,23 @@ export const StartRunModal = ({
       is_woocommerce: project.is_woocommerce,
       device_matrix: ["desktop"],
       selected_urls: [],
+      live_site_url: "",
     },
   })
 
   const enabledChecks = useWatch({ control, name: "enabled_checks" }) || []
-  const PASSWORD_REQUIRED_CHECKS = ["callnow_links"]
+  const PASSWORD_REQUIRED_CHECKS = ["callnow_links", "verify_plugin_updates"]
   const requiresPassword = enabledChecks.some((c) =>
     PASSWORD_REQUIRED_CHECKS.includes(c),
   )
+  const requiresLiveSiteUrl = enabledChecks.includes("url_tab_compare")
 
   const isGeneralOnly = enabledChecks.every(
-    (c) => c === "project_plan" || c === "dead_links",
+    (c) =>
+      c === "project_plan" ||
+      c === "dead_links" ||
+      c === "learn_more_buttons" ||
+      c === "url_tab_compare",
   )
 
   const siteUrl = useWatch({ control, name: "site_url" })
@@ -117,6 +124,7 @@ export const StartRunModal = ({
       "ai_content_audit",
       "hero_media",
       "dead_links",
+      "learn_more_buttons",
     ]
     // 2. Check if any of these page scan checks are selected by the user
     const requiresPageScan = data.enabled_checks.some((c) =>
@@ -131,7 +139,11 @@ export const StartRunModal = ({
     // 4. If we are ONLY doing general checks (like Project Plan select), we don't need any page URLs!
     // const urlsToSubmit = requiresPageScan ? selectedUrls : []
     const requiresUrls = data.enabled_checks.some(
-      (c) => c !== "project_plan" && c !== "dead_links",
+      (c) =>
+        c !== "project_plan" &&
+        c !== "dead_links" &&
+        c !== "learn_more_buttons" &&
+        c !== "url_tab_compare",
     )
     if (requiresUrls && selectedUrls.length === 0) {
       return
@@ -142,6 +154,7 @@ export const StartRunModal = ({
       ...data,
       figma_url: data.figma_url === "" ? null : data.figma_url,
       selected_urls: requiresUrls ? selectedUrls : [],
+      live_site_url: liveSiteUrl || undefined,
     }
 
     createRun(payload, {
@@ -207,6 +220,15 @@ export const StartRunModal = ({
         "Detect dead links and broken anchors (#hash) using a super-fast native Playwright + Got hybrid approach",
     },
     {
+      id: "learn_more_buttons",
+      label: "Learn More Buttons Check",
+      description:
+        "Scan all pages for generic CTA texts like 'Learn More' or 'Read More'.",
+      category: "general",
+      enabled: true,
+    },
+
+    {
       id: "paid_media",
       label: "Paid Media Check",
       description:
@@ -231,6 +253,12 @@ export const StartRunModal = ({
         "Verify single script tag is injected and widgets are configured and displayed",
     },
     {
+      id: "url_tab_compare",
+      label: "URL & Tab Name Comparison",
+      description:
+        "Compare all dev site URLs and tab titles against the client's live website. Enter live site URL below when selected.",
+    },
+    {
       id: "top_bar_sticky",
       label: "Top Bar & Sticky Header Check",
       description:
@@ -240,12 +268,6 @@ export const StartRunModal = ({
       id: "favicon",
       label: "Favicon Check",
       description: "Verify favicon link is present in head and loads correctly",
-    },
-    {
-      id: "url_matching",
-      label: "URL & Tab Name Matching",
-      description:
-        "Compare dev site sitemap against old site sitemap to make sure no page is missed",
     },
     {
       id: "contact_form",
@@ -270,14 +292,27 @@ export const StartRunModal = ({
       label: "Callnow & Links Check",
       description: "Verify Call Now plugin installation and homepage links",
     },
+    {
+      id: "verify_plugin_updates",
+      label: "Verify Plugin Updates",
+      description:
+        "Verify if all plugins are in updated state except All-in-Migration, Litespeed Cache, Wp-Rocket, ELEMENTOR, WOO-COMMERCE",
+    },
+    {
+      id: "social_share_heading",
+      label: "Social Share Heading Check",
+      description:
+        "Scan the homepage for social sharing previews on Facebook, X, and LinkedIn.",
+      category: "general",
+    },
   ]
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-200">
       <div className="absolute inset-0 bg-transparent" onClick={onClose} />
 
-      <div className="relative w-full max-w-lg bg-slate-50 dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md shadow-sm overflow-hidden transition-all duration-200">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+      <div className="relative w-full max-w-lg bg-slate-50 dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md shadow-sm overflow-hidden transition-all duration-200 max-h-[90vh] flex flex-col">
+        <div className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
           <div className="flex items-center space-x-2">
             <div className="p-1.5 bg-accent/10 rounded-md text-accent">
               <PlayCircle className="w-5 h-5" />
@@ -294,14 +329,17 @@ export const StartRunModal = ({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
-          <div className="space-y-4">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="flex flex-col min-h-0"
+        >
+          <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
             {/* Run Type */}
             <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              <label className="block text-[9px] font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                 Run Type
               </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <label className="relative cursor-pointer">
                   <input
                     type="radio"
@@ -309,7 +347,7 @@ export const StartRunModal = ({
                     value="pre_release"
                     className="sr-only peer"
                   />
-                  <div className="p-3 border border-slate-200 dark:border-slate-700 rounded-md text-center peer-checked:border-accent peer-checked:bg-accent/5 dark:peer-checked:bg-accent/10 transition-all">
+                  <div className="p-1 border border-slate-200 dark:border-slate-700 rounded-md text-center peer-checked:border-accent peer-checked:bg-accent/5 dark:peer-checked:bg-accent/10 transition-all">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 peer-checked:text-accent">
                       Pre-Release
                     </span>
@@ -322,7 +360,7 @@ export const StartRunModal = ({
                     value="post_release"
                     className="sr-only peer"
                   />
-                  <div className="p-3 border border-slate-200 dark:border-slate-700 rounded-md text-center peer-checked:border-accent peer-checked:bg-accent/5 dark:peer-checked:bg-accent/10 transition-all">
+                  <div className="p-1 border border-slate-200 dark:border-slate-700 rounded-md text-center peer-checked:border-accent peer-checked:bg-accent/5 dark:peer-checked:bg-accent/10 transition-all">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 peer-checked:text-accent">
                       Post-Release
                     </span>
@@ -333,14 +371,14 @@ export const StartRunModal = ({
 
             {/* Site URL */}
             <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              <label className="block text-[9px] font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                 Target URL
               </label>
               <div className="relative">
-                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-slate-400" />
                 <input
                   {...register("site_url")}
-                  className="w-full bg-slate-50 dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md pl-10 pr-4 py-2.5 text-slate-900 dark:text-slate-200 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
+                  className="w-full bg-slate-50 dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md pl-8 pr-4 py-1.5 text-[13px] text-slate-900 dark:text-slate-200 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
                 />
               </div>
               {errors.site_url && (
@@ -352,18 +390,18 @@ export const StartRunModal = ({
 
             {/* Figma URL */}
             <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              <label className="block text-[9px] font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                 Figma Design URL{" "}
-                <span className="text-slate-400 text-[10px] uppercase ml-1">
+                <span className="text-slate-400 text-[8px] uppercase ml-1">
                   (Optional)
                 </span>
               </label>
               <div className="relative">
-                <Layout className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Layout className="absolute left-3 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-slate-400" />
                 <input
                   {...register("figma_url")}
                   placeholder="https://figma.com/file/..."
-                  className="w-full bg-slate-50 dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md pl-10 pr-4 py-2.5 text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
+                  className="w-full bg-slate-50 dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md pl-7 pr-4 py-1.5 text-[13px] text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
                 />
               </div>
               {errors.figma_url && (
@@ -462,7 +500,7 @@ export const StartRunModal = ({
             {/* Enabled Checks */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+                <label className="block text-[10px] font-semibold text-slate-700 dark:text-slate-300">
                   Checks to Run
                 </label>
                 <div className="flex items-center space-x-3">
@@ -474,7 +512,7 @@ export const StartRunModal = ({
                         checkOptions.map((c) => c.id),
                       )
                     }
-                    className="text-[10px] font-bold uppercase tracking-wider text-accent hover:text-accent/80 transition-colors"
+                    className="text-[9px] font-bold uppercase tracking-wider text-accent hover:text-accent/80 transition-colors"
                   >
                     Select All
                   </button>
@@ -488,7 +526,7 @@ export const StartRunModal = ({
                   </button>
                 </div>
               </div>
-              <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+              <div className="space-y-2 max-h-[45vh] bg-[#1D2A31] overflow-y-auto pr-2 custom-scrollbar">
                 {checkOptions.map((check) => (
                   <label
                     key={check.id}
@@ -503,10 +541,10 @@ export const StartRunModal = ({
                       />
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider">
+                      <div className="text-[11px] font-bold text-slate-900 dark:text-slate-200 uppercase tracking-wider">
                         {check.label}
                       </div>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                      <p className="text-[9px] text-slate-500 dark:text-slate-400 font-medium">
                         {check.description}
                       </p>
                     </div>
@@ -532,9 +570,28 @@ export const StartRunModal = ({
                 />
               </div>
             )}
+
+            {requiresLiveSiteUrl && (
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-md mt-4">
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Client's Live Site URL — Required
+                </label>
+                <p className="text-[10px] text-slate-500 mb-3 font-medium">
+                  Enter the client's CURRENT live website URL. We will compare
+                  all pages from this site against our dev site.
+                </p>
+                <input
+                  type="url"
+                  value={liveSiteUrl}
+                  onChange={(e) => setLiveSiteUrl(e.target.value)}
+                  placeholder="https://www.clientlivesite.com"
+                  className="w-full bg-white dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md px-4 py-2.5 text-slate-900 dark:text-slate-200 focus:outline-none focus:border-accent transition-all"
+                />
+              </div>
+            )}
           </div>
 
-          <div className="flex space-x-3 pt-2">
+          <div className="shrink-0 p-4 px-6 border-t border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex space-x-3">
             <button
               type="button"
               onClick={onClose}

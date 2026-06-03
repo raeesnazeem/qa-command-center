@@ -21,64 +21,294 @@ const logger = pino({
  * - If WooCommerce is enabled, we navigate to '/checkout' and verify that it contains a "Privacy Policy" notice.
  */
 export async function checkPrivacyPolicy(
-  page: PlaywrightPage,
-  isWooCommerce: boolean,
-  pageRecord?: any,
+  url: string,
+  runId: string,
+  pageId: string,
+  sharedBrowser?: any,
 ): Promise<Finding[]> {
-  const findings: Finding[] = []
+  const { chromium } = require("playwright")
+  const sharp = require("sharp")
+  const { uploadScreenshot } = require("../lib/supabaseStorage")
 
-  // Check footer first
-  let footerHasLink = false
-  const footerElement = page.locator(
-    'footer, div[class*="footer"], section[class*="footer"]',
-  )
-  if ((await footerElement.count()) > 0) {
-    const privacyLinks = footerElement.locator(
-      'a:has-text("Privacy Policy"), a:has-text("Privacy")',
-    )
-    if ((await privacyLinks.count()) > 0) {
-      footerHasLink = true
+  let screenshotUrl = ""
+  let checkoutScreenshotUrl = ""
+
+  let browser
+  try {
+    browser = sharedBrowser || (await chromium.launch({ headless: true }))
+    const context = await browser.newContext()
+    const page = await context.newPage()
+    await page.setViewportSize({ width: 1920, height: 1080 })
+
+    // 1. Check Homepage Footer
+    await page
+      .goto(url, { waitUntil: "networkidle", timeout: 25000 })
+      .catch(() => {})
+
+    let footerHasLink = false
+    let footerElement = page.locator("footer").first()
+    if ((await footerElement.count()) === 0) {
+      footerElement = page
+        .locator(
+          '.site-footer, .footer, #footer, [data-elementor-type="footer"]',
+        )
+        .first()
     }
-  }
 
-  if (!footerHasLink) {
-    findings.push({
-      check_factor: "privacy_policy",
-      severity: "medium",
-      title: "Missing Privacy Policy link in Footer",
-      description:
-        "We scanned the website footer, but we could not find the Privacy Policy link. Please add it to stay compliant.",
-      status: "open",
-      ai_generated: false,
-    } as Finding)
-  }
+    if ((await footerElement.count()) > 0) {
+      const privacyLinks = footerElement.locator(
+        'a:has-text("Privacy Policy"), a:has-text("Privacy")',
+      )
+      if ((await privacyLinks.count()) > 0) {
+        footerHasLink = true
+        await footerElement.scrollIntoViewIfNeeded().catch(() => null)
+        const screenshotBuffer = await footerElement
+          .screenshot()
+          .catch(() => null)
+        if (screenshotBuffer) {
+          const compressed = await sharp(screenshotBuffer)
+            .jpeg({ quality: 85 })
+            .toBuffer()
+          const storagePath = `evidence/privacy_policy/${runId}-footer-${Date.now()}.jpg`
+          screenshotUrl = await uploadScreenshot(compressed, storagePath, {
+            bucket: "evidence",
+            isPublic: true,
+          }).catch(() => "")
+        }
+      }
+    }
 
-  // If WooCommerce check is enabled, check WooCommerce checkout page text
-  if (isWooCommerce) {
-    const currentUrl = page.url()
-    if (currentUrl.includes("/checkout")) {
+    if (!footerHasLink) {
+      const screenshotBuffer = await page.screenshot().catch(() => null)
+      if (screenshotBuffer) {
+        const compressed = await sharp(screenshotBuffer)
+          .jpeg({ quality: 85 })
+          .toBuffer()
+        const storagePath = `evidence/privacy_policy/${runId}-fallback-${Date.now()}.jpg`
+        screenshotUrl = await uploadScreenshot(compressed, storagePath, {
+          bucket: "evidence",
+          isPublic: true,
+        }).catch(() => "")
+      }
+    }
+
+    // 2. Check Checkout Page
+    const checkoutUrl = url.endsWith("/") ? `${url}checkout` : `${url}/checkout`
+    let hasPrivacyPolicyOnCheckout = false
+
+    try {
+      await page.goto(checkoutUrl, { waitUntil: "networkidle", timeout: 15000 })
       const checkoutText = await page.evaluate(() =>
         document.body.innerText.toLowerCase(),
       )
-      const hasPrivacyPolicyOnCheckout =
+      hasPrivacyPolicyOnCheckout =
         checkoutText.includes("privacy policy") ||
         checkoutText.includes("privacy")
+    } catch (e) {
+      // Ignored if checkout page is inaccessible
+    }
 
-      if (!hasPrivacyPolicyOnCheckout) {
-        findings.push({
+    // 3. Check Full Privacy Policy Page
+    const policyUrl = url.endsWith("/")
+      ? `${url}privacy-policy`
+      : `${url}/privacy-policy`
+    let fullPolicyScreenshotUrl = ""
+    let isContentMatch = false
+    let actualPolicyText = ""
+
+    try {
+      await page.goto(policyUrl, { waitUntil: "networkidle", timeout: 15000 })
+      let policyText = await page.evaluate(() => document.body.innerText)
+
+      const startMatch = policyText.match(/Privacy Policy/i)
+      if (startMatch && startMatch.index !== undefined) {
+        policyText = policyText.substring(startMatch.index)
+      }
+
+      const endMarker =
+        "If you have any questions or concerns about our Privacy Policy or how your information is handled, please contact us."
+      const endMatch = policyText.match(
+        new RegExp(endMarker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"),
+      )
+      if (endMatch && endMatch.index !== undefined) {
+        policyText = policyText.substring(0, endMatch.index + endMarker.length)
+      }
+
+      actualPolicyText = policyText
+
+      const templateStr = `[Your Business Name] Privacy Policy
+
+Effective Date: [Current Date]
+
+Our Commitment to Your Privacy
+
+At [Your Business Name], we are dedicated to respecting and protecting your privacy. This Privacy Policy outlines how we collect, use, and safeguard your personal information when you interact with our website, mobile app, or services.
+
+1. Data We Collect. We collect various types of information:
+
+   1.1. Non-Personally-Identifying Information. This includes details such as browser type, language preference, referring site, and the date and time of each visitor request. This information helps us understand how visitors use our website and improve our services.
+
+   1.2. Potentially Personally-Identifying Information. For users who log in or leave comments on our website, we may collect Internet Protocol (IP) addresses.
+
+   1.3. Personally-Identifying Information. When you engage with our services, we may collect personal details such as your name, contact information (email and phone number), and other information relevant to the services you request.
+
+2. How We Use Your Information. Your data is used to:
+
+   2.1. Operate and improve our website and services.
+
+   2.2. Customize your experience with our offerings.
+
+   2.3. Develop new services and products.
+
+   2.4. Communicate with you regarding appointments, promotions, and updates.
+
+   2.5. Process financial transactions.
+
+   2.6. Send you notifications, with your consent.
+
+   2.7. Ensure security and prevent fraudulent activities.
+
+3. Sharing Your Information. We may share your information with:
+
+   3.1. Third-Party Service Providers. These providers support our operations, such as customer support, payment processing, and technical services. These third parties are bound by confidentiality agreements and are only permitted to use your data for the purposes we specify.
+
+   3.2. Legal Authorities. We may disclose your information if required by law or if we believe in good faith that it is necessary to protect the rights, property, or safety of [Your Business Name], our users, or the public.
+
+   3.3. We do not rent or sell your personally-identifying information to third parties for marketing or advertising purposes.
+
+4. Protection of Your Data.
+
+   4.1. We implement a variety of security measures to protect your personal information from unauthorized access, alteration, or destruction. While we strive to use commercially acceptable means to protect your data, please note that no method of transmission over the Internet or electronic storage is 100% secure.
+
+5. Your Data Rights. Depending on your location, you may have the following rights:
+
+   5.1. Access. You can request access to the personal data we hold about you.
+
+   5.2. Correction. You can request that we correct any inaccuracies in your personal data.
+
+   5.3. Deletion. You can request that we delete your personal data, subject to certain legal obligations.
+
+   5.4. Restriction. You can request limitations on how we process your personal data.
+
+   5.5. To exercise any of these rights, please contact us using the information provided below.
+
+6. Cookies
+
+   6.1. We use cookies to enhance your experience on our website. Cookies help us track your preferences and understand how you interact with our site. If you prefer, you can set your browser to refuse cookies, but this may limit your ability to use certain features of our website.
+
+7. Children’s Privacy
+
+   7.1. We do not knowingly collect, solicit data from, or market to children under 18 years of age, nor do we knowingly sell such personal information. By using the Services, you represent that you are at least 18 or that you are the parent or guardian of such a minor and consent to such minor dependent's use of the Services. If we learn that personal information from users less than 18 years of age has been collected, we will deactivate the account and take reasonable measures to promptly delete such data from our records. If you become aware of any data we may have collected from children under age 18, please contact us at <<your email address>>.
+
+8. CCPA (doing business in California)
+
+   8.1. Information We Collect: We collect the following categories of personal information from California residents, depending on how you interact with our services:
+
+      8.1.1. Identifiers: Such as your name, email address, IP address, and other contact information.
+
+      8.1.2. Commercial Information: Such as records of products or services purchased.
+
+      8.1.3. Internet or Other Electronic Network Activity: Such as browsing history, search history, and interactions with our website.
+
+      8.1.4. Geolocation Data: Such as physical location from your device when using our website.
+
+      8.1.5. Professional or Employment-Related Information: Such as job title and company name.
+
+      8.1.6. Inferences: Derived from the information you provide to create a profile or analysis.
+
+9. SMS Communications
+
+   9.1. Use of SMS Communications: We may use your phone number to send SMS messages related to appointments, service updates, and promotional offers, where you have provided your consent to receive such communications.
+
+   9.2. Your Choices and Rights: You may opt out at any time by replying “STOP.” For assistance, reply “HELP” or contact us through our website. SMS consent is not a condition of purchase. Mobile numbers will not be shared with third parties for marketing purposes.
+
+10. Business Transfers
+
+   10.1. In the event that [Your Business Name] or substantially all of its assets are acquired, or if we go out of business or enter bankruptcy, your information may be transferred to or acquired by a third party. You acknowledge that such transfers may occur, and that any acquirer of [Your Business Name] may continue to use your personal information as set forth in this policy.
+
+11. Policy Updates
+
+   11.1. We may update this Privacy Policy from time to time. When changes are made, we will revise the "Effective Date" at the top of this page. We encourage you to review this policy periodically to stay informed about how we are protecting your information.
+
+12. Contact Information
+
+   12.1. If you have any questions or concerns about our Privacy Policy or how your information is handled, please contact us.
+   
+   12.2. [Address]`
+
+      const normalizeStr = (s: string) =>
+        s.replace(/\s+/g, " ").trim().toLowerCase()
+      const escapedTemplate = normalizeStr(templateStr).replace(
+        /[.*+?^${}()|[\]\\]/g,
+        "\\$&",
+      )
+      const regexPattern = escapedTemplate
+        .replace(/\\\[.*?\\\]/g, ".*?")
+        .replace(/<<.*?>>/g, ".*?")
+
+      isContentMatch = new RegExp(regexPattern, "i").test(
+        normalizeStr(policyText),
+      )
+
+      const screenshotBuffer = await page
+        .screenshot({ fullPage: true })
+        .catch(() => null)
+      if (screenshotBuffer) {
+        const compressed = await sharp(screenshotBuffer)
+          .jpeg({ quality: 85 })
+          .toBuffer()
+        const storagePath = `evidence/privacy_policy/${runId}-full-policy-${Date.now()}.jpg`
+        fullPolicyScreenshotUrl = await uploadScreenshot(
+          compressed,
+          storagePath,
+          {
+            bucket: "evidence",
+            isPublic: true,
+          },
+        ).catch(() => "")
+      }
+    } catch (e) {
+      // Ignored if privacy policy page is inaccessible
+    }
+
+    if (!sharedBrowser) await browser.close()
+
+    const finalScreenshotUrl = [screenshotUrl, fullPolicyScreenshotUrl]
+      .filter(Boolean)
+      .join(",")
+
+    if (footerHasLink && hasPrivacyPolicyOnCheckout) {
+      return [
+        {
           check_factor: "privacy_policy",
-          severity: "medium",
-          title: "Missing Privacy Policy on Checkout Page",
+          severity: "low",
+          title: "Privacy Policy Verified",
           description:
-            "We scanned the WooCommerce checkout page, but we could not find any Privacy Policy text or link within the checkout form. Please make sure the privacy policy checkbox/text is set up.",
+            "The Privacy Policy link was successfully found in the footer, and the policy notice is present on the checkout page.",
+          context_text: `Content Match: ${isContentMatch ? "Yes" : "No"}\n\n===ACTUAL POLICY TEXT===\n${actualPolicyText}`,
+          screenshot_url: finalScreenshotUrl,
           status: "open",
           ai_generated: false,
-        } as Finding)
-      }
+        } as Finding,
+      ]
+    } else {
+      return [
+        {
+          check_factor: "privacy_policy",
+          severity: "medium",
+          title: "Privacy Policy Missing",
+          description: `Privacy Policy check failed. Footer Link: ${footerHasLink ? "Found" : "Missing"}. Checkout Notice: ${hasPrivacyPolicyOnCheckout ? "Found" : "Missing"}.`,
+          context_text: `Content Match: ${isContentMatch ? "Yes" : "No"}\n\n===ACTUAL POLICY TEXT===\n${actualPolicyText}`,
+          screenshot_url: finalScreenshotUrl,
+          status: "open",
+          ai_generated: false,
+        } as Finding,
+      ]
     }
+  } catch (err: any) {
+    if (!sharedBrowser && browser) await browser.close().catch(() => null)
+    throw err
   }
-
-  return findings
 }
 
 /**
@@ -886,6 +1116,392 @@ export async function checkCallnowLinks(
       severity: "medium",
       title: "Verify Call Now Button & Links",
       description: `Please verify the Call Now plugin setup and homepage links using the evidence screenshots.\n\nChecks to perform:\n- [ ] Call now installed\n- [ ] Number added\n- [ ] Visible in mobile view\n- [ ] Valid phone\n- [ ] Valid email\n- [ ] All links functional`,
+      screenshot_url: screenshotUrls,
+      status: "open",
+      ai_generated: false,
+    } as Finding,
+  ]
+}
+
+/**
+ * =========================================================================
+ * CHECK: URL & Tab Name Comparison Check
+ * =========================================================================
+ * The Logic:
+ * - Crawl all pages of the dev/project site and collect URL + tab title pairs.
+ * - Crawl the client's live site URL and collect URL + tab title pairs.
+ * - Store both sets as JSON in context_text.
+ * - The Finding Card in the UI will parse this and show a side-by-side comparison.
+ */
+export async function checkUrlTabComparison(
+  devSiteUrl: string,
+  liveSiteUrl: string,
+  runId: string,
+  pageId: string,
+  allDevUrls: string[],
+): Promise<Finding[]> {
+  const { chromium } = require("playwright")
+
+  // Helper: fetch tab title for a URL using playwright
+  async function fetchTabTitles(
+    browser: any,
+    urls: string[],
+  ): Promise<{ url: string; title: string }[]> {
+    const results: { url: string; title: string }[] = []
+    for (const url of urls.slice(0, 50)) {
+      // limit to 50 pages max to avoid timeout
+      try {
+        const context = await browser.newContext()
+        const page = await context.newPage()
+        await page
+          .goto(url, { waitUntil: "domcontentloaded", timeout: 15000 })
+          .catch(() => {})
+        const title = await page.title().catch(() => "")
+        results.push({ url, title: title || "(no title)" })
+        await context.close()
+      } catch (e) {
+        results.push({ url, title: "(error loading)" })
+      }
+    }
+    return results
+  }
+
+  // Helper: crawl sitemap of a site and return all page URLs
+  async function crawlSiteUrls(
+    browser: any,
+    baseUrl: string,
+  ): Promise<string[]> {
+    const visited = new Set<string>()
+    const toVisit = [baseUrl]
+    const found: string[] = []
+
+    const normalizeBase = baseUrl.replace(/\/$/, "")
+
+    while (toVisit.length > 0 && found.length < 60) {
+      const current = toVisit.shift()!
+      if (visited.has(current)) continue
+      visited.add(current)
+      found.push(current)
+
+      try {
+        const context = await browser.newContext()
+        const page = await context.newPage()
+        await page
+          .goto(current, { waitUntil: "domcontentloaded", timeout: 12000 })
+          .catch(() => {})
+
+        const hrefs: string[] = await page
+          .evaluate((base: string) => {
+            const baseHost = new URL(base).hostname.replace(/^www\./, "")
+            const links = Array.from(document.querySelectorAll("a[href]"))
+            return links
+              .map((a) => (a as HTMLAnchorElement).href)
+              .filter((href) => {
+                try {
+                  const url = new URL(href)
+                  return (
+                    url.hostname.includes(baseHost) &&
+                    !href.includes("#") &&
+                    !href.match(/\.(pdf|jpg|jpeg|png|gif|svg|zip|mp4|webm)$/i)
+                  )
+                } catch {
+                  return false
+                }
+              })
+          }, normalizeBase)
+
+          .catch(() => [])
+
+        for (const href of hrefs) {
+          const clean = href.replace(/\/$/, "")
+          if (!visited.has(clean) && !toVisit.includes(clean)) {
+            toVisit.push(clean)
+          }
+        }
+        await context.close()
+      } catch (e) {
+        // skip
+      }
+    }
+
+    return found
+  }
+
+  let browser: any
+  try {
+    browser = await chromium.launch({ headless: true })
+
+    // Step 1: Use provided dev URLs (already crawled by the run) if available, else crawl
+    const devUrls =
+      allDevUrls.length > 0
+        ? allDevUrls
+        : await crawlSiteUrls(browser, devSiteUrl)
+
+    // Step 2: Crawl live site
+    const liveUrls = await crawlSiteUrls(browser, liveSiteUrl)
+
+    // Step 3: Fetch tab titles for both
+    const devPages = await fetchTabTitles(browser, devUrls)
+    const livePages = await fetchTabTitles(browser, liveUrls)
+
+    await browser.close()
+
+    // Step 4: Build context_text as JSON string
+    const contextData = {
+      devPages,
+      livePages,
+    }
+
+    const devPaths = devPages.map((p) => {
+      try {
+        return new URL(p.url).pathname.replace(/\/$/, "") || "/"
+      } catch {
+        return p.url
+      }
+    })
+    const livePaths = livePages.map((p) => {
+      try {
+        return new URL(p.url).pathname.replace(/\/$/, "") || "/"
+      } catch {
+        return p.url
+      }
+    })
+
+    const missingInDev = livePages.filter((lp) => {
+      const livePath = (() => {
+        try {
+          return new URL(lp.url).pathname.replace(/\/$/, "") || "/"
+        } catch {
+          return lp.url
+        }
+      })()
+      return !devPaths.some((dp) => dp === livePath)
+    })
+
+    const missingInLive = devPages.filter((dp) => {
+      const devPath = (() => {
+        try {
+          return new URL(dp.url).pathname.replace(/\/$/, "") || "/"
+        } catch {
+          return dp.url
+        }
+      })()
+      return !livePaths.some((lp) => lp === devPath)
+    })
+
+    const totalMissing = missingInDev.length + missingInLive.length
+    const severity =
+      totalMissing >= 10 ? "high" : totalMissing >= 4 ? "medium" : "low"
+
+    return [
+      {
+        check_factor: "url_tab_compare",
+        severity,
+        title: `URL & Tab Name Comparison — ${totalMissing} discrepancies found`,
+        description: `Compared ${devPages.length} dev site pages with ${livePages.length} live site pages. Found ${missingInDev.length} URLs missing in dev (present in live) and ${missingInLive.length} URLs missing in live (present in dev).`,
+        context_text: JSON.stringify(contextData),
+        status: "open",
+        ai_generated: false,
+      } as Finding,
+    ]
+  } catch (err: any) {
+    if (browser) await browser.close().catch(() => {})
+    logger.error({ error: err.message }, "URL Tab Comparison check failed")
+    return [
+      {
+        check_factor: "url_tab_compare",
+        severity: "low",
+        title: "URL & Tab Comparison — Check Failed",
+        description: `The URL comparison check failed to run: ${err.message}`,
+        context_text: JSON.stringify({ devPages: [], livePages: [] }),
+        status: "open",
+        ai_generated: false,
+      } as Finding,
+    ]
+  }
+}
+
+/**
+ * =========================================================================
+ * CHECK: Verify Plugin Updates
+ * =========================================================================
+ */
+export async function checkPluginUpdates(
+  url: string,
+  runId: string,
+  pageId: string,
+  wpPassword?: string,
+  sharedBrowser?: any,
+): Promise<Finding[]> {
+  const { chromium } = require("playwright")
+  const { uploadScreenshot } = require("../lib/supabaseStorage")
+
+  if (!wpPassword) {
+    return [
+      {
+        check_factor: "verify_plugin_updates",
+        severity: "medium",
+        title: "Plugins Update Check Failed",
+        description: "WordPress password was not provided.",
+        screenshot_url: null,
+        status: "open",
+        ai_generated: false,
+      } as Finding,
+    ]
+  }
+
+  let screenshotUrl = ""
+
+  try {
+    const browser = sharedBrowser || (await chromium.launch({ headless: true }))
+    const context = await browser.newContext()
+    const newPage = await context.newPage()
+    await newPage.setViewportSize({ width: 1440, height: 900 })
+
+    const loginUrl = url.endsWith("/")
+      ? `${url}wp-login.php`
+      : `${url}/wp-login.php`
+    await newPage
+      .goto(loginUrl, { waitUntil: "networkidle", timeout: 30000 })
+      .catch(() => {})
+
+    // Hardcoded username as requested
+    await newPage
+      .fill("#user_login", "onboarding.india@growth99.com")
+      .catch(() => {})
+    await newPage.fill("#user_pass", wpPassword).catch(() => {})
+    await newPage.click("#wp-submit").catch(() => {})
+    await newPage
+      .waitForNavigation({ waitUntil: "networkidle", timeout: 30000 })
+      .catch(() => {})
+
+    const pluginsUrl = url.endsWith("/")
+      ? `${url}wp-admin/plugins.php`
+      : `${url}/wp-admin/plugins.php`
+    await newPage
+      .goto(pluginsUrl, { waitUntil: "networkidle", timeout: 30000 })
+      .catch(() => {})
+
+    // Wait for the plugins list to fully load
+    await newPage.waitForTimeout(5000)
+
+    const buffer = await newPage
+      .screenshot({ fullPage: true })
+      .catch(() => null)
+    if (buffer) {
+      const storagePath = `${runId}/plugins_update.png`
+      screenshotUrl = await uploadScreenshot(buffer, storagePath)
+    }
+
+    if (!sharedBrowser) await browser.close()
+  } catch (e: any) {
+    console.error("Plugins screenshot failed", e)
+  }
+
+  return [
+    {
+      check_factor: "verify_plugin_updates",
+      severity: "medium",
+      title: "Verify Plugin Updates",
+      description:
+        "Please verify if all plugins are in updated state except All-in-Migration, Litespeed Cache, Wp-Rocket, ELEMENTOR, WOO-COMMERCE.",
+      screenshot_url: screenshotUrl,
+      status: "open",
+      ai_generated: false,
+    } as Finding,
+  ]
+}
+
+/**
+ * =========================================================================
+ * CHECK: Social Share Heading Check
+ * =========================================================================
+ */
+export async function checkSocialShareHeading(
+  url: string,
+  runId: string,
+  pageId: string,
+  sharedBrowser?: any,
+): Promise<Finding[]> {
+  const { chromium } = require("playwright")
+  const { uploadScreenshot } = require("../lib/supabaseStorage")
+
+  let facebookUrl = ""
+  let xUrl = ""
+  let linkedinUrl = ""
+
+  let browser
+  try {
+    browser = sharedBrowser || (await chromium.launch({ headless: true }))
+    const context = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+    })
+    const page = await context.newPage()
+
+    await page.goto("https://socialsharepreview.com/", {
+      waitUntil: "networkidle",
+      timeout: 45000,
+    })
+
+    // Fill the URL and hit enter
+    const inputLocator = page
+      .locator('input[type="url"], input[type="text"]')
+      .first()
+    await inputLocator.fill(url)
+    await inputLocator.press("Enter")
+
+    // Wait for the result to load visually
+    await page.waitForTimeout(6000)
+
+    // Capture Facebook tab
+    const fbTab = page
+      .locator('.tabs-component-tab-a:has-text("Facebook")')
+      .first()
+    if ((await fbTab.count()) > 0) await fbTab.click()
+    await page.waitForTimeout(2000)
+    const fbBuffer = await page.screenshot()
+    facebookUrl = await uploadScreenshot(
+      fbBuffer,
+      `${runId}/${pageId}/social_fb.png`,
+    )
+
+    // Capture X tab
+    const xTab = page.locator('.tabs-component-tab-a:has-text("X")').first()
+    if ((await xTab.count()) > 0) await xTab.click()
+    await page.waitForTimeout(2000)
+    const xBuffer = await page.screenshot()
+    xUrl = await uploadScreenshot(xBuffer, `${runId}/${pageId}/social_x.png`)
+
+    // Capture LinkedIn tab
+    const lnTab = page
+      .locator('.tabs-component-tab-a:has-text("LinkedIn")')
+      .first()
+
+    if ((await lnTab.count()) > 0) await lnTab.click()
+    await page.waitForTimeout(2000)
+    const lnBuffer = await page.screenshot()
+    linkedinUrl = await uploadScreenshot(
+      lnBuffer,
+      `${runId}/${pageId}/social_ln.png`,
+    )
+
+    if (!sharedBrowser) await browser.close()
+  } catch (err: any) {
+    if (!sharedBrowser && browser) await browser.close().catch(() => null)
+    console.error("Social Share Heading Check failed:", err)
+  }
+
+  const screenshotUrls = [facebookUrl, xUrl, linkedinUrl]
+    .filter(Boolean)
+    .join(",")
+
+  return [
+    {
+      check_factor: "social_share_heading",
+      severity: "medium",
+      title: "Social Share Heading Check",
+      description:
+        "Verify the social sharing preview headings for Facebook, X, and LinkedIn.",
       screenshot_url: screenshotUrls,
       status: "open",
       ai_generated: false,

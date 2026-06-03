@@ -53,6 +53,8 @@ export const OnboardingPage = () => {
       queryClient.invalidateQueries({ queryKey: ["me"] })
 
       toast.success("Welcome aboard!")
+      await queryClient.invalidateQueries({ queryKey: ["me"] })
+      await queryClient.refetchQueries({ queryKey: ["me"] })
       navigate("/dashboard")
     } catch (error: any) {
       toast.error(

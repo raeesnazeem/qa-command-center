@@ -1,4 +1,5 @@
 import { Job } from "bullmq"
+import { checkLearnMoreButtons } from "../checks/learnMoreButtonsCheck"
 import { chromium } from "playwright"
 import { supabase } from "../lib/supabase"
 import { qaQueue } from "../lib/queue"
@@ -27,6 +28,9 @@ import {
   checkChatbotAndConsultation,
   checkTextShareMetadata,
   checkCallnowLinks,
+  checkUrlTabComparison,
+  checkPluginUpdates,
+  checkSocialShareHeading,
 } from "../checks/preReleaseSuite"
 import pino from "pino"
 
@@ -53,7 +57,9 @@ export async function processCrawlPageJob(job: Job) {
   // Fetch run settings for conditional checks
   const { data: run, error: runError } = await supabase
     .from("qa_runs")
-    .select("status, is_woocommerce, site_url, enabled_checks, project_id")
+    .select(
+      "status, is_woocommerce, site_url, enabled_checks, project_id, live_site_url",
+    )
     .eq("id", runId)
     .single()
 
@@ -195,8 +201,11 @@ export async function processCrawlPageJob(job: Job) {
     // Step 4: Run automated checks
     logger.info({ pageId }, "Running automated checks")
 
-    const isOnlyDeadLinks =
-      enabledChecks.length === 1 && enabledChecks.includes("dead_links")
+    const isOnlyFastScanChecks =
+      enabledChecks.length > 0 &&
+      enabledChecks.every(
+        (c: string) => c === "dead_links" || c === "learn_more_buttons",
+      )
 
     let browser: any = null
     let context: any = null
@@ -205,7 +214,7 @@ export async function processCrawlPageJob(job: Job) {
     const criticalErrors: string[] = []
     let hasForms = false
 
-    if (!isOnlyDeadLinks) {
+    if (!isOnlyFastScanChecks) {
       browser = await chromium.launch({
         headless: true,
         args: [
@@ -217,7 +226,7 @@ export async function processCrawlPageJob(job: Job) {
     }
 
     try {
-      if (!isOnlyDeadLinks) {
+      if (!isOnlyFastScanChecks) {
         context = await browser.newContext()
         page = await context.newPage()
 
@@ -257,7 +266,7 @@ export async function processCrawlPageJob(job: Job) {
 
       if (
         enabledChecks.includes("text_share") ||
-        enabledChecks.includes("url_matching")
+        enabledChecks.includes("url_tab_compare")
       ) {
         const { data: project } = await supabase
           .from("projects")
@@ -267,7 +276,7 @@ export async function processCrawlPageJob(job: Job) {
 
         projectName = project?.name || ""
 
-        if (enabledChecks.includes("url_matching")) {
+        if (enabledChecks.includes("url_tab_compare")) {
           const { data: runPages } = await supabase
             .from("pages")
             .select("url")
@@ -375,6 +384,19 @@ export async function processCrawlPageJob(job: Job) {
         )
       }
 
+      if (enabledChecks.includes("learn_more_buttons")) {
+        checkPromises.push(
+          (async () => {
+            try {
+              return await checkLearnMoreButtons(pageUrl, runId, pageId)
+            } catch (e) {
+              logger.error(e, "Learn More Buttons check failed:")
+              return []
+            }
+          })(),
+        )
+      }
+
       if (run?.is_woocommerce && enabledChecks.includes("woocommerce")) {
         checkPromises.push(
           (async () => {
@@ -403,7 +425,7 @@ export async function processCrawlPageJob(job: Job) {
       if (isHomepage) {
         if (enabledChecks.includes("privacy_policy")) {
           checkPromises.push(
-            checkPrivacyPolicy(page, run.is_woocommerce).catch((e) => {
+            checkPrivacyPolicy(pageUrl, runId, pageId, browser).catch((e) => {
               logger.error("Privacy policy check failed:", e)
               return []
             }),
@@ -489,17 +511,53 @@ export async function processCrawlPageJob(job: Job) {
             }),
           )
         }
+
+        if (enabledChecks.includes("url_tab_compare") && run.live_site_url) {
+          checkPromises.push(
+            checkUrlTabComparison(
+              pageUrl,
+              run.live_site_url,
+              runId,
+              pageId,
+              devUrls,
+            ).catch((e) => {
+              logger.error("URL Tab Comparison check failed:", e)
+              return []
+            }),
+          )
+        }
+
+        if (enabledChecks.includes("verify_plugin_updates")) {
+          checkPromises.push(
+            checkPluginUpdates(
+              pageUrl,
+              runId,
+              pageId,
+              wpPassword,
+              browser,
+            ).catch((e) => {
+              logger.error("Plugin updates check failed:", e)
+              return []
+            }),
+          )
+                }
+
+        if (enabledChecks.includes("social_share_heading")) {
+          checkPromises.push(
+            checkSocialShareHeading(
+              pageUrl,
+              runId,
+              pageId,
+              browser,
+            ).catch((e) => {
+              logger.error("Social share heading check failed:", e)
+              return []
+            }),
+          )
+        }
       }
 
       // --- ALL-PAGES CHECKS ---
-      if (enabledChecks.includes("url_matching")) {
-        checkPromises.push(
-          checkUrlAndTabMatching(page, devUrls, run.site_url).catch((e) => {
-            logger.error("URL and tab matching check failed:", e)
-            return []
-          }),
-        )
-      }
 
       // Attach a .then to stream findings into DB the instant each individual check finishes
 
