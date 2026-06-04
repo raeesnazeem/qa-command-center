@@ -120,7 +120,11 @@ export async function processRunChecksJob(job: Job) {
       }
 
       if (checksToRun.includes("hero_media")) {
-        checkPromises.push(checkHeroMedia(playwrightPage, page))
+        checkPromises.push(
+          checkHeroMedia(playwrightPage, page, async (p, m) => {
+            await updateProgress(p, m)
+          }),
+        )
       }
 
       if (checksToRun.includes("dead_links")) {
@@ -139,7 +143,14 @@ export async function processRunChecksJob(job: Job) {
               )
               await mcpClient.connect(transport)
 
-              return await checkOptimizedLinks(playwrightPage, page, mcpClient)
+              return await checkOptimizedLinks(
+                playwrightPage,
+                page,
+                mcpClient,
+                async (p, m) => {
+                  await updateProgress(p, m)
+                },
+              )
             } catch (e) {
               logger.error("Dead links check failed:", e)
               return []
@@ -153,7 +164,14 @@ export async function processRunChecksJob(job: Job) {
           (async () => {
             const { checkLearnMoreButtons } =
               await import("../checks/learnMoreButtonsCheck.js")
-            return await checkLearnMoreButtons(pageUrl, runId, pageId)
+            return await checkLearnMoreButtons(
+              pageUrl,
+              runId,
+              pageId,
+              async (p, m) => {
+                await updateProgress(p, m)
+              },
+            )
           })(),
         )
       }

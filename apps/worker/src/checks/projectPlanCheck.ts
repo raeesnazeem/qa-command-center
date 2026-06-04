@@ -20,6 +20,7 @@ export async function checkProjectPlan(
     basecamp_project_id: string | number
   },
   pageRecord?: any,
+  onProgress?: (progress: number, message: string) => Promise<void>,
 ): Promise<Finding[]> {
   const { basecamp_token, basecamp_account_id, basecamp_project_id } =
     projectSettings
@@ -44,12 +45,16 @@ export async function checkProjectPlan(
   }
 
   try {
+    axios.defaults.timeout = 15000
+    if (onProgress) await onProgress(20, "Fetching Basecamp bucket details...")
     // 1. Fetch project bucket details
     const bucketUrl = `https://3.basecampapi.com/${basecamp_account_id}/buckets/${basecamp_project_id}.json`
     logger.info({ bucketUrl }, "Fetching Basecamp bucket via API")
 
     const bucketResponse = await axios.get(bucketUrl, { headers })
     const bucketData = bucketResponse.data
+
+    if (onProgress) await onProgress(40, "Locating Message Board tool...")
 
     // 2. Find Message Board tool
     const messageBoardTool = bucketData.dock?.find(
@@ -63,6 +68,9 @@ export async function checkProjectPlan(
         `Message Board tool not found in project dock for bucket: ${bucketData.name || basecamp_project_id}`,
       )
     }
+
+    if (onProgress)
+      await onProgress(60, "Fetching messages from Message Board...")
 
     // 3. Fetch messages from Message Board
     const messagesUrl = messageBoardTool.url.replace(".json", "/messages.json")
@@ -160,6 +168,10 @@ export async function checkProjectPlan(
     try {
       const context = await browser.newContext()
       const page = await context.newPage()
+
+      page.setDefaultTimeout(15000)
+      page.setDefaultNavigationTimeout(15000)
+      if (onProgress) await onProgress(80, "Capturing visual evidence...")
 
       const styledHtml = `
         <html>
@@ -384,6 +396,18 @@ export async function checkProjectPlan(
       { error: error.message },
       "Error in Basecamp project plan check",
     )
+    if (error) {
+      return [
+        {
+          check_factor: "project_plan",
+          severity: "high",
+          title: "Project Plan Check Failed or Timed Out",
+          description: `The check encountered a timeout or error: ${error.message}. Process aborted gracefully to prevent stalling.`,
+          status: "open",
+          ai_generated: false,
+        } as Finding,
+      ]
+    }
     throw error
   }
 }

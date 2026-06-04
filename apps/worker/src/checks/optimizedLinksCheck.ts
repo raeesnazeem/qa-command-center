@@ -350,118 +350,142 @@ function extractUrlsFromHTML(html: string, baseUrl: string): ExtractedLink[] {
 export async function checkOptimizedLinks(
   page: any,
   pageRecord: any,
+  mcpClient?: any,
+  onProgress?: (progress: number, message: string) => Promise<void>,
 ): Promise<Finding[]> {
   const pageUrl = pageRecord.url
   let extractedLinks: ExtractedLink[] = []
-
   try {
-    const response = await got.get(pageUrl, {
-      headers: BROWSER_HEADERS,
-      timeout: { request: 15000 },
-      retry: { limit: 2 },
-    })
+    try {
+      if (onProgress) await onProgress(10, "Extracting links from page HTML...")
+      const response = await got.get(pageUrl, {
+        headers: BROWSER_HEADERS,
+        timeout: { request: 15000 },
+        retry: { limit: 2 },
+      })
 
-    extractedLinks = extractUrlsFromHTML(response.body, pageUrl)
+      extractedLinks = extractUrlsFromHTML(response.body, pageUrl)
 
-    logger.info(
-      { pageUrl, linkCount: extractedLinks.length },
-      "Extracted links from rendered HTML",
+      logger.info(
+        { pageUrl, linkCount: extractedLinks.length },
+        "Extracted links from rendered HTML",
+      )
+    } catch (error: any) {
+      logger.error(
+        { pageUrl, error: error.message },
+        "Failed to fetch HTML for link extraction",
+      )
+      return []
+    }
+
+    if (extractedLinks.length === 0) return []
+    if (onProgress)
+      await onProgress(
+        40,
+        `Checking status of ${extractedLinks.length} extracted links...`,
+      )
+    const brokenLinks: {
+      url: string
+      status: number
+      sourceUrl: string
+      text: string
+    }[] = []
+    const checkLimit = pLimit(50)
+    const runId = pageRecord.run_id
+
+    if (!runCheckedLinks.has(runId)) runCheckedLinks.set(runId, new Set())
+    if (!runBrokenLinks.has(runId)) runBrokenLinks.set(runId, [])
+
+    const checkedLinks = runCheckedLinks.get(runId)!
+    const knownBrokenLinks = runBrokenLinks.get(runId)!
+
+    const checkPromises = extractedLinks.map(
+      ({ url: urlToCheck, text: linkText }) =>
+        checkLimit(async () => {
+          // --- CACHE CHECK: skip if we already checked this URL in this run ---
+          if (checkedLinks.has(urlToCheck)) {
+            // We do not add it to brokenLinks again to prevent massive UI duplication
+            return
+          }
+          checkedLinks.add(urlToCheck)
+
+          try {
+            const response = await got.head(urlToCheck, {
+              headers: BROWSER_HEADERS,
+              timeout: { request: 10000 },
+              retry: { limit: 1 },
+              followRedirect: true,
+            })
+
+            if (response.statusCode >= 400) {
+              brokenLinks.push({
+                url: urlToCheck,
+                status: response.statusCode,
+                sourceUrl: pageUrl,
+                text: linkText,
+              })
+              knownBrokenLinks.push({
+                url: urlToCheck,
+                reason: `Status ${response.statusCode}`,
+                text: linkText,
+                statusCode: response.statusCode,
+              })
+            }
+          } catch (error: any) {
+            const statusCode = error.response?.statusCode || 0
+            if (statusCode >= 400 || statusCode === 0) {
+              brokenLinks.push({
+                url: urlToCheck,
+                status: statusCode,
+                sourceUrl: pageUrl,
+                text: linkText,
+              })
+              knownBrokenLinks.push({
+                url: urlToCheck,
+                reason:
+                  statusCode === 0
+                    ? "Connection Failed"
+                    : `Status ${statusCode}`,
+                text: linkText,
+                statusCode,
+              })
+            }
+          }
+        }),
     )
+    await Promise.all(checkPromises)
+
+    if (brokenLinks.length === 0) return []
+    if (onProgress) await onProgress(90, "Finalizing dead link findings...")
+    return [
+      {
+        check_factor: "dead_links",
+        severity: brokenLinks.length > 5 ? "critical" : "medium",
+        title: `${brokenLinks.length} broken link${brokenLinks.length === 1 ? "" : "s"} found`,
+        description: brokenLinks
+          .map(
+            (b) =>
+              `- **${b.url}**\n  * Reason: ${b.status || "Failed"}\n  * Link Text: ${b.text}\n  * Found on: ${b.sourceUrl}`,
+          )
+          .join("\n"),
+        status: "open",
+        ai_generated: false,
+        screenshot_url: null,
+        context_text: `URLs scanned on this page: ${extractedLinks.length} | Total unique URLs checked in run so far: ${runCheckedLinks.get(runId)!.size}`,
+      },
+    ]
   } catch (error: any) {
-    logger.error(
-      { pageUrl, error: error.message },
-      "Failed to fetch HTML for link extraction",
-    )
-    return []
+    return [
+      {
+        check_factor: "dead_links",
+        severity: "high",
+        title: "Dead Links Check Failed",
+        description: `The check encountered an unexpected error: ${error.message}. Process aborted gracefully.`,
+        context_text: "System Error",
+        screenshot_url: null,
+        status: "open",
+        ai_generated: false,
+      } as Finding,
+    ]
   }
-
-  if (extractedLinks.length === 0) return []
-
-  const brokenLinks: {
-    url: string
-    status: number
-    sourceUrl: string
-    text: string
-  }[] = []
-  const checkLimit = pLimit(50)
-  const runId = pageRecord.run_id
-
-  if (!runCheckedLinks.has(runId)) runCheckedLinks.set(runId, new Set())
-  if (!runBrokenLinks.has(runId)) runBrokenLinks.set(runId, [])
-
-  const checkedLinks = runCheckedLinks.get(runId)!
-  const knownBrokenLinks = runBrokenLinks.get(runId)!
-
-  const checkPromises = extractedLinks.map(
-    ({ url: urlToCheck, text: linkText }) =>
-      checkLimit(async () => {
-        // --- CACHE CHECK: skip if we already checked this URL in this run ---
-        if (checkedLinks.has(urlToCheck)) {
-          // We do not add it to brokenLinks again to prevent massive UI duplication
-          return
-        }
-        checkedLinks.add(urlToCheck)
-
-        try {
-          const response = await got.head(urlToCheck, {
-            headers: BROWSER_HEADERS,
-            timeout: { request: 10000 },
-            retry: { limit: 1 },
-            followRedirect: true,
-          })
-
-          if (response.statusCode >= 400) {
-            brokenLinks.push({
-              url: urlToCheck,
-              status: response.statusCode,
-              sourceUrl: pageUrl,
-              text: linkText,
-            })
-            knownBrokenLinks.push({
-              url: urlToCheck,
-              reason: `Status ${response.statusCode}`,
-              text: linkText,
-              statusCode: response.statusCode,
-            })
-          }
-        } catch (error: any) {
-          const statusCode = error.response?.statusCode || 0
-          if (statusCode >= 400 || statusCode === 0) {
-            brokenLinks.push({
-              url: urlToCheck,
-              status: statusCode,
-              sourceUrl: pageUrl,
-              text: linkText,
-            })
-            knownBrokenLinks.push({
-              url: urlToCheck,
-              reason:
-                statusCode === 0 ? "Connection Failed" : `Status ${statusCode}`,
-              text: linkText,
-              statusCode,
-            })
-          }
-        }
-      }),
-  )
-  await Promise.all(checkPromises)
-
-  if (brokenLinks.length === 0) return []
-  return [
-    {
-      check_factor: "dead_links",
-      severity: brokenLinks.length > 5 ? "critical" : "medium",
-      title: `${brokenLinks.length} broken link${brokenLinks.length === 1 ? "" : "s"} found`,
-      description: brokenLinks
-        .map(
-          (b) =>
-            `- **${b.url}**\n  * Reason: ${b.status || "Failed"}\n  * Link Text: ${b.text}\n  * Found on: ${b.sourceUrl}`,
-        )
-        .join("\n"),
-      status: "open",
-      ai_generated: false,
-      screenshot_url: null,
-      context_text: `URLs scanned on this page: ${extractedLinks.length} | Total unique URLs checked in run so far: ${runCheckedLinks.get(runId)!.size}`,
-    },
-  ]
 }

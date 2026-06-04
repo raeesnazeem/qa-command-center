@@ -25,6 +25,7 @@ export async function checkPrivacyPolicy(
   runId: string,
   pageId: string,
   sharedBrowser?: any,
+  onProgress?: (progress: number, message: string) => Promise<void>,
 ): Promise<Finding[]> {
   const { chromium } = require("playwright")
   const sharp = require("sharp")
@@ -39,6 +40,8 @@ export async function checkPrivacyPolicy(
     const context = await browser.newContext()
     const page = await context.newPage()
     await page.setViewportSize({ width: 1920, height: 1080 })
+    if (onProgress)
+      await onProgress(10, "Navigating to homepage to check footer...")
 
     // 1. Check Homepage Footer
     await page
@@ -93,6 +96,9 @@ export async function checkPrivacyPolicy(
     }
 
     // 2. Check Checkout Page
+    if (onProgress)
+      await onProgress(40, "Checking checkout page for privacy notice...")
+
     const checkoutUrl = url.endsWith("/") ? `${url}checkout` : `${url}/checkout`
     let hasPrivacyPolicyOnCheckout = false
 
@@ -109,6 +115,9 @@ export async function checkPrivacyPolicy(
     }
 
     // 3. Check Full Privacy Policy Page
+    if (onProgress)
+      await onProgress(70, "Scanning full Privacy Policy content...")
+
     const policyUrl = url.endsWith("/")
       ? `${url}privacy-policy`
       : `${url}/privacy-policy`
@@ -272,6 +281,7 @@ At [Your Business Name], we are dedicated to respecting and protecting your priv
     }
 
     if (!sharedBrowser) await browser.close()
+    if (onProgress) await onProgress(90, "Finalizing findings...")
 
     const finalScreenshotUrl = [screenshotUrl, fullPolicyScreenshotUrl]
       .filter(Boolean)
@@ -307,7 +317,18 @@ At [Your Business Name], we are dedicated to respecting and protecting your priv
     }
   } catch (err: any) {
     if (!sharedBrowser && browser) await browser.close().catch(() => null)
-    throw err
+    return [
+      {
+        check_factor: "privacy_policy",
+        severity: "high",
+        title: "Privacy Policy Check Failed",
+        description: `The check encountered an unexpected error: ${err.message}. Process aborted gracefully.`,
+        context_text: "System Error",
+        screenshot_url: null,
+        status: "open",
+        ai_generated: false,
+      } as Finding,
+    ]
   }
 }
 
@@ -324,6 +345,7 @@ export async function checkFooterLogo(
   runId: string,
   pageId: string,
   sharedBrowser?: any,
+  onProgress?: (progress: number, message: string) => Promise<void>,
 ): Promise<Finding[]> {
   const { chromium } = require("playwright")
   const { uploadScreenshot } = require("../lib/supabaseStorage")
@@ -339,8 +361,13 @@ export async function checkFooterLogo(
       { name: "tablet", width: 768, height: 1024 },
       { name: "mobile", width: 375, height: 812 },
     ]
+    if (onProgress)
+      await onProgress(10, "Initializing viewports for footer logo check...")
 
     for (const vp of viewports) {
+      if (onProgress)
+        await onProgress(30, `Checking footer logo on ${vp.name}...`)
+
       const context = await browser.newContext({
         viewport: { width: vp.width, height: vp.height },
       })
@@ -355,6 +382,9 @@ export async function checkFooterLogo(
 
       if ((await footer.count()) > 0) {
         // Scroll the footer into view to trigger lazy loading of images
+        if (onProgress)
+          await onProgress(60, `Taking screenshot of footer on ${vp.name}...`)
+
         await footer.scrollIntoViewIfNeeded().catch(() => {})
 
         // 5s delay AFTER scrolling to let the logo and dynamic content load
@@ -377,6 +407,17 @@ export async function checkFooterLogo(
     if (!sharedBrowser) await browser.close()
   } catch (e: any) {
     console.error("Footer screenshot failed", e)
+    return [
+      {
+        check_factor: "footer_logo",
+        severity: "high",
+        title: "Footer Logo Check Failed",
+        description: `The check encountered an unexpected error: ${e.message}. Process aborted gracefully.`,
+        screenshot_url: null,
+        status: "open",
+        ai_generated: false,
+      } as Finding,
+    ]
   }
 
   const screenshotUrls = [desktopUrl, tabletUrl, mobileUrl]
@@ -409,6 +450,7 @@ export async function checkSingleScript(
   runId: string,
   pageId: string,
   sharedBrowser?: any,
+  onProgress?: (progress: number, message: string) => Promise<void>,
 ): Promise<Finding[]> {
   const { chromium } = require("playwright")
   const { uploadScreenshot } = require("../lib/supabaseStorage")
@@ -425,8 +467,13 @@ export async function checkSingleScript(
       { name: "tablet", width: 768, height: 1024 },
       { name: "mobile", width: 375, height: 812 },
     ]
+    if (onProgress)
+      await onProgress(10, "Initializing viewports for single script check...")
 
     for (const vp of viewports) {
+      if (onProgress)
+        await onProgress(30, `Checking single script on ${vp.name}...`)
+
       const context = await browser.newContext({
         viewport: { width: vp.width, height: vp.height },
         userAgent:
@@ -458,6 +505,9 @@ export async function checkSingleScript(
     }
 
     // 4th screenshot: Page source of #feature-buttons code
+    if (onProgress)
+      await onProgress(70, "Fetching page source for script verification...")
+
     const codeContext = await browser.newContext({
       userAgent:
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -493,8 +543,20 @@ export async function checkSingleScript(
 
     await codeContext.close()
     if (!sharedBrowser) await browser.close()
+    if (onProgress) await onProgress(90, "Finalizing findings...")
   } catch (e: any) {
     console.error("Single script screenshot failed", e)
+    return [
+      {
+        check_factor: "single_script",
+        severity: "high",
+        title: "Single Script Check Failed",
+        description: `The check encountered an unexpected error: ${e.message}. Process aborted gracefully.`,
+        screenshot_url: null,
+        status: "open",
+        ai_generated: false,
+      } as Finding,
+    ]
   }
 
   const screenshotUrls = [desktopUrl, tabletUrl, mobileUrl, codeUrl]
@@ -528,6 +590,7 @@ export async function checkTopBarAndStickyHeader(
   runId: string,
   pageId: string,
   sharedBrowser?: any,
+  onProgress?: (progress: number, message: string) => Promise<void>,
 ): Promise<Finding[]> {
   const { chromium } = require("playwright")
   const { uploadScreenshot } = require("../lib/supabaseStorage")
@@ -541,11 +604,15 @@ export async function checkTopBarAndStickyHeader(
       viewport: { width: 1440, height: 900 },
     })
     const newPage = await context.newPage()
+    if (onProgress)
+      await onProgress(10, "Navigating to homepage to check top bar...")
+
     await newPage
       .goto(url, { waitUntil: "networkidle", timeout: 30000 })
       .catch(() => {})
 
     await newPage.waitForTimeout(5000)
+    if (onProgress) await onProgress(40, "Taking screenshot of the header...")
 
     const headerElement = newPage
       .locator(
@@ -559,6 +626,8 @@ export async function checkTopBarAndStickyHeader(
         `${runId}/${pageId}/header_nav.png`,
       )
     }
+
+    if (onProgress) await onProgress(70, "Extracting header code snippet...")
 
     const codeSnippet = await newPage.evaluate(() => {
       const el = document.querySelector(
@@ -579,10 +648,22 @@ export async function checkTopBarAndStickyHeader(
     )
 
     await codeContext.close()
+    if (onProgress) await onProgress(90, "Finalizing findings...")
     await context.close()
     if (!sharedBrowser) await browser.close()
   } catch (e: any) {
     console.error("Header screenshot failed", e)
+    return [
+      {
+        check_factor: "top_bar_sticky",
+        severity: "high",
+        title: "Top Bar & Sticky Header Check Failed",
+        description: `The check encountered an unexpected error: ${e.message}. Process aborted gracefully.`,
+        screenshot_url: null,
+        status: "open",
+        ai_generated: false,
+      } as Finding,
+    ]
   }
 
   const screenshotUrls = [codeUrl, headerUrl].filter(Boolean).join(",")
@@ -610,55 +691,174 @@ export async function checkTopBarAndStickyHeader(
  * - Issue a fast HTTP request (axios.head) to verify the favicon resource returns 200 OK.
  */
 export async function checkFavicon(
-  page: PlaywrightPage,
-  pageRecord?: any,
+  url: string,
+  runId: string,
+  pageId: string,
+  sharedBrowser?: any,
+  onProgress?: (progress: number, message: string) => Promise<void>,
 ): Promise<Finding[]> {
-  const findings: Finding[] = []
+  const { chromium } = require("playwright")
+  const { uploadScreenshot } = require("../lib/supabaseStorage")
 
-  const faviconHref = await page.evaluate(() => {
-    const link = document.querySelector(
-      'link[rel*="icon"], link[rel*="shortcut"]',
-    ) as HTMLLinkElement
-    return link ? link.href : null
-  })
-
-  if (!faviconHref) {
-    findings.push({
-      check_factor: "favicon",
-      severity: "low",
-      title: "Favicon Link Tag Missing",
-      description:
-        'We could not find any favicon link tag (<link rel="icon">) in the page head section.',
-      status: "open",
-      ai_generated: false,
-    } as Finding)
-    return findings
-  }
+  let desktopUrl = ""
+  let tabletUrl = ""
+  let mobileUrl = ""
+  let codeUrl = ""
 
   try {
-    const response = await axios.head(faviconHref, { timeout: 10000 })
-    if (response.status !== 200) {
-      findings.push({
+    const browser = sharedBrowser || (await chromium.launch({ headless: true }))
+    const viewports = [
+      { name: "desktop", width: 1440, height: 900 },
+      { name: "tablet", width: 768, height: 1024 },
+      { name: "mobile", width: 375, height: 812 },
+    ]
+
+    if (onProgress)
+      await onProgress(10, "Initializing viewports for favicon check...")
+
+    for (const vp of viewports) {
+      if (onProgress) await onProgress(30, `Checking favicon on ${vp.name}...`)
+
+      const context = await browser.newContext({
+        viewport: { width: vp.width, height: vp.height },
+        userAgent:
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      })
+
+      const newPage = await context.newPage()
+      await newPage
+        .goto(url, { waitUntil: "networkidle", timeout: 30000 })
+        .catch(() => {})
+
+      // Inject mock browser tab UI to visually verify the favicon inside the viewport screenshot
+      await newPage
+        .evaluate(async () => {
+          const faviconUrl = document.querySelector(
+            'link[rel*="icon" i], link[rel*="shortcut" i], link[rel="apple-touch-icon" i]',
+          ) as HTMLLinkElement | null
+          const urlStr = faviconUrl
+            ? faviconUrl.href
+            : window.location.origin + "/favicon.ico"
+          const pageTitle = document.title || "Untitled"
+
+          const bar = document.createElement("div")
+          bar.style.cssText =
+            "position: fixed; top: 0; left: 0; width: 100vw; height: 40px; background: #dee1e6; display: flex; align-items: flex-end; padding: 0 8px; z-index: 2147483647; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; box-sizing: border-box;"
+
+          bar.innerHTML =
+            '<div style="display: flex; gap: 6px; padding-bottom: 12px; padding-left: 8px;">' +
+            '<div style="width: 12px; height: 12px; border-radius: 50%; background: #ff5f56;"></div>' +
+            '<div style="width: 12px; height: 12px; border-radius: 50%; background: #ffbd2e;"></div>' +
+            '<div style="width: 12px; height: 12px; border-radius: 50%; background: #27c93f;"></div>' +
+            "</div>" +
+            '<div style="display: flex; align-items: center; background: #ffffff; height: 32px; min-width: 200px; max-width: 240px; margin-left: 16px; border-radius: 8px 8px 0 0; padding: 0 12px; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">' +
+            (urlStr
+              ? '<img src="' +
+                urlStr +
+                '" style="width: 16px; height: 16px; object-fit: contain;">'
+              : '<div style="width: 16px; height: 16px; border: 1px dashed #ccc;"></div>') +
+            '<span style="font-size: 12px; color: #3c4043; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;">' +
+            pageTitle +
+            "</span>" +
+            "</div>"
+
+          document.documentElement.appendChild(bar)
+
+          if (document.body) {
+            document.body.style.marginTop = "40px"
+          }
+
+          // Wait for the favicon image to fully load before taking the screenshot
+          const img = bar.querySelector("img")
+          if (img) {
+            await new Promise((resolve) => {
+              if (img.complete) {
+                resolve(true)
+              } else {
+                img.onload = resolve
+                img.onerror = resolve
+                setTimeout(resolve, 2000) // 2 second timeout fallback
+              }
+            })
+          }
+        })
+        .catch(() => {})
+
+      const buffer = await newPage.screenshot({ fullPage: false })
+      const storagePath = `${runId}/${pageId}/favicon_${vp.name}.png`
+      const publicUrl = await uploadScreenshot(buffer, storagePath)
+
+      if (vp.name === "desktop") desktopUrl = publicUrl
+      if (vp.name === "tablet") tabletUrl = publicUrl
+      if (vp.name === "mobile") mobileUrl = publicUrl
+
+      await context.close()
+    }
+
+    if (onProgress)
+      await onProgress(70, "Fetching page source for favicon verification...")
+
+    const codeContext = await browser.newContext({
+      userAgent:
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    })
+
+    const codePage = await codeContext.newPage()
+    await codePage
+      .goto(url, { waitUntil: "networkidle", timeout: 30000 })
+      .catch(() => {})
+
+    const codeSnippet = await codePage.evaluate(() => {
+      const el = document.querySelector(
+        'link[rel*="icon"], link[rel*="shortcut"]',
+      )
+      return el ? el.outerHTML : "Favicon element not found in page source"
+    })
+
+    const renderPage = await codeContext.newPage()
+    await renderPage.setContent(
+      `<pre style="font-size: 14px; white-space: pre-wrap; word-wrap: break-word; padding: 20px; background: #f4f4f4;">${codeSnippet.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>`,
+    )
+    const codeBuffer = await renderPage.screenshot({ fullPage: false })
+    codeUrl = await uploadScreenshot(
+      codeBuffer,
+      `${runId}/${pageId}/favicon_code.png`,
+    )
+
+    await codeContext.close()
+    if (!sharedBrowser) await browser.close()
+    if (onProgress) await onProgress(90, "Finalizing findings...")
+  } catch (e: any) {
+    console.error("Favicon screenshot failed", e)
+    return [
+      {
         check_factor: "favicon",
-        severity: "low",
-        title: `Favicon Link Broken (${response.status})`,
-        description: `A favicon link was found, but fetching the file returned an HTTP status of ${response.status}.`,
+        severity: "high",
+        title: "Favicon Check Failed",
+        description: `The check encountered an unexpected error: ${e.message}. Process aborted gracefully.`,
+        screenshot_url: null,
         status: "open",
         ai_generated: false,
-      } as Finding)
-    }
-  } catch (err: any) {
-    findings.push({
-      check_factor: "favicon",
-      severity: "low",
-      title: "Favicon Loading Failed",
-      description: `We found a favicon link at "${faviconHref}", but we encountered an error while trying to fetch it: ${err.message}`,
-      status: "open",
-      ai_generated: false,
-    } as Finding)
+      } as Finding,
+    ]
   }
 
-  return findings
+  const screenshotUrls = [desktopUrl, tabletUrl, mobileUrl, codeUrl]
+    .filter(Boolean)
+    .join(",")
+
+  return [
+    {
+      check_factor: "favicon",
+      severity: "medium",
+      title: "Verify Favicon",
+      description:
+        "Please verify the favicon across Desktop, Tablet, Mobile and verify the favicon code addition.",
+      screenshot_url: screenshotUrls,
+      status: "open",
+      ai_generated: false,
+    } as Finding,
+  ]
 }
 
 /**
@@ -983,6 +1183,7 @@ export async function checkCallnowLinks(
   pageId: string,
   wpPassword?: string,
   sharedBrowser?: any,
+  onProgress?: (progress: number, message: string) => Promise<void>,
 ): Promise<Finding[]> {
   const { chromium } = require("playwright")
   const { uploadScreenshot } = require("../lib/supabaseStorage")
@@ -1011,6 +1212,7 @@ export async function checkCallnowLinks(
 
     const adminContext = await browser.newContext()
     const adminPage = await adminContext.newPage()
+    if (onProgress) await onProgress(10, "Logging into WordPress admin...")
 
     const baseUrl = new URL(url).origin
     await adminPage
@@ -1048,12 +1250,18 @@ export async function checkCallnowLinks(
       )
       .first()
     if ((await pluginRow.count()) > 0) {
+      if (onProgress)
+        await onProgress(40, "Checking Call Now Button plugin status...")
+
       const buffer = await pluginRow.screenshot()
       pluginScreenshotUrl = await uploadScreenshot(
         buffer,
         `${runId}/${pageId}/callnow_plugin.png`,
       )
     } else {
+      if (onProgress)
+        await onProgress(40, "Call Now Button plugin not found in list...")
+
       const buffer = await adminPage.screenshot({ fullPage: true })
       pluginScreenshotUrl = await uploadScreenshot(
         buffer,
@@ -1068,6 +1276,8 @@ export async function checkCallnowLinks(
       })
       .catch(() => {})
     const settingsBuffer = await adminPage.screenshot({ fullPage: true })
+    if (onProgress) await onProgress(60, "Capturing plugin settings...")
+
     settingsScreenshotUrl = await uploadScreenshot(
       settingsBuffer,
       `${runId}/${pageId}/callnow_settings.png`,
@@ -1082,6 +1292,9 @@ export async function checkCallnowLinks(
         "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1",
     })
     const mobilePage = await mobileContext.newPage()
+    if (onProgress)
+      await onProgress(80, "Verifying Call Now button on mobile view...")
+
     await mobilePage
       .goto(url, { waitUntil: "networkidle", timeout: 30000 })
       .catch(() => {})
@@ -1096,6 +1309,17 @@ export async function checkCallnowLinks(
     await mobileContext.close()
   } catch (error: any) {
     console.error("Callnow Links check failed:", error)
+    return [
+      {
+        check_factor: "callnow_links",
+        severity: "high",
+        title: "Call Now & Links Check Failed",
+        description: `The check encountered an unexpected error: ${error.message}. Process aborted gracefully.`,
+        screenshot_url: null,
+        status: "open",
+        ai_generated: false,
+      } as Finding,
+    ]
   } finally {
     if (browser && !sharedBrowser) {
       await browser.close()
@@ -1139,6 +1363,7 @@ export async function checkUrlTabComparison(
   runId: string,
   pageId: string,
   allDevUrls: string[],
+  onProgress?: (progress: number, message: string) => Promise<void>,
 ): Promise<Finding[]> {
   const { chromium } = require("playwright")
 
@@ -1232,21 +1457,30 @@ export async function checkUrlTabComparison(
     browser = await chromium.launch({ headless: true })
 
     // Step 1: Use provided dev URLs (already crawled by the run) if available, else crawl
+    if (onProgress) await onProgress(10, "Fetching dev site URLs...")
+
     const devUrls =
       allDevUrls.length > 0
         ? allDevUrls
         : await crawlSiteUrls(browser, devSiteUrl)
 
     // Step 2: Crawl live site
+    if (onProgress) await onProgress(40, "Crawling live site URLs...")
+
     const liveUrls = await crawlSiteUrls(browser, liveSiteUrl)
 
     // Step 3: Fetch tab titles for both
+    if (onProgress)
+      await onProgress(70, "Fetching tab titles for dev and live pages...")
+
     const devPages = await fetchTabTitles(browser, devUrls)
     const livePages = await fetchTabTitles(browser, liveUrls)
 
     await browser.close()
 
     // Step 4: Build context_text as JSON string
+    if (onProgress) await onProgress(90, "Analyzing discrepancies...")
+
     const contextData = {
       devPages,
       livePages,
@@ -1310,9 +1544,9 @@ export async function checkUrlTabComparison(
     return [
       {
         check_factor: "url_tab_compare",
-        severity: "low",
+        severity: "high",
         title: "URL & Tab Comparison — Check Failed",
-        description: `The URL comparison check failed to run: ${err.message}`,
+        description: `The check encountered an unexpected error: ${err.message}. Process aborted gracefully.`,
         context_text: JSON.stringify({ devPages: [], livePages: [] }),
         status: "open",
         ai_generated: false,
@@ -1332,6 +1566,7 @@ export async function checkPluginUpdates(
   pageId: string,
   wpPassword?: string,
   sharedBrowser?: any,
+  onProgress?: (progress: number, message: string) => Promise<void>,
 ): Promise<Finding[]> {
   const { chromium } = require("playwright")
   const { uploadScreenshot } = require("../lib/supabaseStorage")
@@ -1356,6 +1591,9 @@ export async function checkPluginUpdates(
     const browser = sharedBrowser || (await chromium.launch({ headless: true }))
     const context = await browser.newContext()
     const newPage = await context.newPage()
+    if (onProgress)
+      await onProgress(10, "Navigating to WordPress admin login...")
+
     await newPage.setViewportSize({ width: 1440, height: 900 })
 
     const loginUrl = url.endsWith("/")
@@ -1366,6 +1604,8 @@ export async function checkPluginUpdates(
       .catch(() => {})
 
     // Hardcoded username as requested
+    if (onProgress) await onProgress(30, "Logging into WordPress...")
+
     await newPage
       .fill("#user_login", "onboarding.india@growth99.com")
       .catch(() => {})
@@ -1374,6 +1614,8 @@ export async function checkPluginUpdates(
     await newPage
       .waitForNavigation({ waitUntil: "networkidle", timeout: 30000 })
       .catch(() => {})
+
+    if (onProgress) await onProgress(60, "Navigating to Plugins page...")
 
     const pluginsUrl = url.endsWith("/")
       ? `${url}wp-admin/plugins.php`
@@ -1384,6 +1626,7 @@ export async function checkPluginUpdates(
 
     // Wait for the plugins list to fully load
     await newPage.waitForTimeout(5000)
+    if (onProgress) await onProgress(80, "Taking screenshot of plugins list...")
 
     const buffer = await newPage
       .screenshot({ fullPage: true })
@@ -1394,8 +1637,20 @@ export async function checkPluginUpdates(
     }
 
     if (!sharedBrowser) await browser.close()
+    if (onProgress) await onProgress(90, "Finalizing findings...")
   } catch (e: any) {
     console.error("Plugins screenshot failed", e)
+    return [
+      {
+        check_factor: "verify_plugin_updates",
+        severity: "high",
+        title: "Verify Plugin Updates Check Failed",
+        description: `The check encountered an unexpected error: ${e.message}. Process aborted gracefully.`,
+        screenshot_url: null,
+        status: "open",
+        ai_generated: false,
+      } as Finding,
+    ]
   }
 
   return [
@@ -1422,6 +1677,7 @@ export async function checkSocialShareHeading(
   runId: string,
   pageId: string,
   sharedBrowser?: any,
+  onProgress?: (progress: number, message: string) => Promise<void>,
 ): Promise<Finding[]> {
   const { chromium } = require("playwright")
   const { uploadScreenshot } = require("../lib/supabaseStorage")
@@ -1438,6 +1694,9 @@ export async function checkSocialShareHeading(
     })
     const page = await context.newPage()
 
+    if (onProgress)
+      await onProgress(10, "Navigating to social share preview tool...")
+
     await page.goto("https://socialsharepreview.com/", {
       waitUntil: "networkidle",
       timeout: 45000,
@@ -1449,11 +1708,13 @@ export async function checkSocialShareHeading(
       .first()
     await inputLocator.fill(url)
     await inputLocator.press("Enter")
+    if (onProgress) await onProgress(30, "Generating social share previews...")
 
     // Wait for the result to load visually
     await page.waitForTimeout(6000)
 
     // Capture Facebook tab
+    if (onProgress) await onProgress(50, "Capturing Facebook preview...")
     const fbTab = page
       .locator('.tabs-component-tab-a:has-text("Facebook")')
       .first()
@@ -1466,6 +1727,8 @@ export async function checkSocialShareHeading(
     )
 
     // Capture X tab
+    if (onProgress) await onProgress(70, "Capturing X (Twitter) preview...")
+
     const xTab = page.locator('.tabs-component-tab-a:has-text("X")').first()
     if ((await xTab.count()) > 0) await xTab.click()
     await page.waitForTimeout(2000)
@@ -1473,6 +1736,8 @@ export async function checkSocialShareHeading(
     xUrl = await uploadScreenshot(xBuffer, `${runId}/${pageId}/social_x.png`)
 
     // Capture LinkedIn tab
+    if (onProgress) await onProgress(90, "Capturing LinkedIn preview...")
+
     const lnTab = page
       .locator('.tabs-component-tab-a:has-text("LinkedIn")')
       .first()
@@ -1489,6 +1754,17 @@ export async function checkSocialShareHeading(
   } catch (err: any) {
     if (!sharedBrowser && browser) await browser.close().catch(() => null)
     console.error("Social Share Heading Check failed:", err)
+    return [
+      {
+        check_factor: "social_share_heading",
+        severity: "high",
+        title: "Social Share Heading Check Failed",
+        description: `The check encountered an unexpected error: ${err.message}. Process aborted gracefully.`,
+        screenshot_url: null,
+        status: "open",
+        ai_generated: false,
+      } as Finding,
+    ]
   }
 
   const screenshotUrls = [facebookUrl, xUrl, linkedinUrl]

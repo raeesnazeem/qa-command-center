@@ -78,6 +78,66 @@ export async function processCheckProjectPlanJob(job: Job) {
     return
   }
 
+  // 1. Detect if this run is API-only (no web crawl)
+  const PAGE_CHECKS = [
+    "visual_regression",
+    "accessibility",
+    "console_errors",
+    "performance",
+    "seo",
+    "spelling",
+    "broken_links",
+    "dummy_content",
+    "image_compliance",
+    "ai_content_audit",
+    "hero_media",
+    "dead_links",
+    "footer_logo",
+    "single_script",
+    "top_bar_sticky",
+    "favicon",
+    "url_matching",
+    "contact_form",
+    "chatbot_consultation",
+    "text_share",
+  ]
+  const { data: runConfig } = await supabase
+    .from("qa_runs")
+    .select("enabled_checks")
+    .eq("id", runId)
+    .single()
+  const isApiOnly = !runConfig?.enabled_checks?.some((c: string) =>
+    PAGE_CHECKS.includes(c),
+  )
+
+  // 2. If API-only, reset the placeholder page to processing so the UI progress bar starts at 0%
+  if (isApiOnly && pageId) {
+    await supabase
+      .from("pages")
+      .update({
+        status: "processing",
+        progress: 0,
+        current_step: "Initializing check...",
+      })
+      .eq("id", pageId)
+  }
+
+  const updateProgress = async (progress: number, step: string) => {
+    // Only update the database progress if we own the page (API-only)
+    if (pageId && isApiOnly) {
+      await supabase
+        .from("pages")
+        .update({ progress, current_step: step })
+        .eq("id", pageId)
+    }
+    const channel = supabase.channel(`run:${runId}`)
+    await channel.send({
+      type: "broadcast",
+      event: "page_progress",
+      payload: { pageId, progress, current_step: step },
+    })
+  }
+
   // Step 3: Call the general check functions
   let findings: any[] = []
   try {
@@ -100,6 +160,7 @@ export async function processCheckProjectPlanJob(job: Job) {
           basecamp_project_id,
         },
         { id: pageId, siteUrl: run?.site_url },
+        updateProgress,
       )
       findings = [...findings, ...planFindings]
     }
@@ -136,6 +197,10 @@ export async function processCheckProjectPlanJob(job: Job) {
     }
   }
 
+  if (isApiOnly && pageId) {
+    await supabase.from("pages").update({ status: "done", progress: 100 }).eq("id", pageId);
+  }
+
   // Step 5: Broadcast progress update
   const progressChannel = supabase.channel(`run:${runId}`)
   await progressChannel.send({
@@ -153,29 +218,6 @@ export async function processCheckProjectPlanJob(job: Job) {
     .select("enabled_checks, pages_total")
     .eq("id", runId)
     .single()
-
-  const PAGE_CHECKS = [
-    "visual_regression",
-    "accessibility",
-    "console_errors",
-    "performance",
-    "seo",
-    "spelling",
-    "broken_links",
-    "dummy_content",
-    "image_compliance",
-    "ai_content_audit",
-    "hero_media",
-    "dead_links",
-    "footer_logo",
-    "single_script",
-    "top_bar_sticky",
-    "favicon",
-    "url_matching",
-    "contact_form",
-    "chatbot_consultation",
-    "text_share",
-  ]
 
   const needsPageScan = runData?.enabled_checks?.some((c: string) =>
     PAGE_CHECKS.includes(c),

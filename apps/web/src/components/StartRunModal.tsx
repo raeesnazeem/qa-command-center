@@ -149,7 +149,18 @@ export const StartRunModal = ({
       return
     }
 
+    if (
+      data.enabled_checks.includes("url_tab_compare") &&
+      !liveSiteUrl.trim()
+    ) {
+      alert(
+        "Client's Live Site URL is required for the URL & Tab Compare check.",
+      )
+      return
+    }
+
     // 5. Construct the payload safely
+
     const payload = {
       ...data,
       figma_url: data.figma_url === "" ? null : data.figma_url,

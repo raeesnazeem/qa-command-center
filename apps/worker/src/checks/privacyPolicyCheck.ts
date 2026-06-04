@@ -12,6 +12,9 @@ const logger = pino({
 export async function checkPrivacyPolicy(
   siteUrl: string,
   runId: string,
+  pageId?: string,
+  browserObj?: any,
+  onProgress?: (progress: number, message: string) => Promise<void>,
 ): Promise<Finding[]> {
   logger.info({ siteUrl }, "Starting general Privacy Policy check")
 
@@ -31,6 +34,8 @@ export async function checkPrivacyPolicy(
     const context = await browser.newContext()
     const page = await context.newPage()
     await page.setViewportSize({ width: 1920, height: 1080 })
+    if (onProgress)
+      await onProgress(10, "Navigating to homepage to check footer...")
 
     // 1. Check Homepage Footer
     logger.info({ siteUrl }, "Navigating to homepage to check footer")
@@ -87,6 +92,9 @@ export async function checkPrivacyPolicy(
     }
 
     // 2. Check Checkout Page
+    if (onProgress)
+      await onProgress(40, "Checking checkout page for privacy notice...")
+
     const checkoutUrl = siteUrl.endsWith("/")
       ? `${siteUrl}checkout`
       : `${siteUrl}/checkout`
@@ -105,6 +113,9 @@ export async function checkPrivacyPolicy(
     }
 
     // 3. Check Full Privacy Policy Page
+    if (onProgress)
+      await onProgress(70, "Scanning full Privacy Policy content...")
+
     const policyUrl = siteUrl.endsWith("/")
       ? `${siteUrl}privacy-policy`
       : `${siteUrl}/privacy-policy`
@@ -276,6 +287,8 @@ At [Your Business Name], we are dedicated to respecting and protecting your priv
     await browser.close()
 
     // Combine URLs for the UI thumbnails
+    if (onProgress) await onProgress(90, "Finalizing findings...")
+
     const finalScreenshotUrl = [screenshotUrl, fullPolicyScreenshotUrl]
       .filter(Boolean)
       .join(",")
@@ -312,6 +325,17 @@ At [Your Business Name], we are dedicated to respecting and protecting your priv
   } catch (err: any) {
     logger.error({ error: err.message }, "Error during privacy policy check")
     await browser.close().catch(() => null)
-    throw err
+    return [
+      {
+        check_factor: "privacy_policy",
+        severity: "high",
+        title: "Privacy Policy Check Failed",
+        description: `The check encountered an unexpected error: ${err.message}. Process aborted gracefully.`,
+        context_text: "System Error",
+        screenshot_url: null,
+        status: "open",
+        ai_generated: false,
+      } as Finding,
+    ]
   }
 }

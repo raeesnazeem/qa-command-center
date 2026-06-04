@@ -370,12 +370,19 @@ export async function processCrawlPageJob(job: Job) {
         checkPromises.push(
           (async () => {
             try {
-              return await checkOptimizedLinks(page, {
-                id: pageId,
-                run_id: runId,
-                site_url: run.site_url,
-                url: pageUrl,
-              })
+              return await checkOptimizedLinks(
+                page,
+                {
+                  id: pageId,
+                  run_id: runId,
+                  site_url: run.site_url,
+                  url: pageUrl,
+                },
+                undefined,
+                async (p, m) => {
+                  await updateProgress(p, m)
+                },
+              )
             } catch (e) {
               logger.error("Dead links check failed:", e)
               return []
@@ -388,7 +395,14 @@ export async function processCrawlPageJob(job: Job) {
         checkPromises.push(
           (async () => {
             try {
-              return await checkLearnMoreButtons(pageUrl, runId, pageId)
+              return await checkLearnMoreButtons(
+                pageUrl,
+                runId,
+                pageId,
+                async (p, m) => {
+                  await updateProgress(p, m)
+                },
+              )
             } catch (e) {
               logger.error(e, "Learn More Buttons check failed:")
               return []
@@ -423,53 +437,77 @@ export async function processCrawlPageJob(job: Job) {
 
       // --- HOMEPAGE-ONLY CHECKS ---
       if (isHomepage) {
+        await Promise.all(checkPromises)
         if (enabledChecks.includes("privacy_policy")) {
           checkPromises.push(
-            checkPrivacyPolicy(pageUrl, runId, pageId, browser).catch((e) => {
+            checkPrivacyPolicy(
+              pageUrl,
+              runId,
+              pageId,
+              browser,
+              async (p, m) => {
+                await updateProgress(p, m)
+              },
+            ).catch((e) => {
               logger.error("Privacy policy check failed:", e)
               return []
             }),
           )
         }
-
+        await Promise.all(checkPromises)
         if (enabledChecks.includes("footer_logo")) {
           checkPromises.push(
-            checkFooterLogo(pageUrl, runId, pageId, browser).catch((e) => {
+            checkFooterLogo(pageUrl, runId, pageId, browser, async (p, m) => {
+              await updateProgress(p, m)
+            }).catch((e) => {
               logger.error("Footer logo check failed:", e)
               return []
             }),
           )
         }
 
+        await Promise.all(checkPromises)
         if (enabledChecks.includes("single_script")) {
           checkPromises.push(
-            checkSingleScript(pageUrl, runId, pageId, browser).catch((e) => {
+            checkSingleScript(pageUrl, runId, pageId, browser, async (p, m) => {
+              await updateProgress(p, m)
+            }).catch((e) => {
               logger.error("Single script check failed:", e)
               return []
             }),
           )
         }
 
+        await Promise.all(checkPromises)
         if (enabledChecks.includes("top_bar_sticky")) {
           checkPromises.push(
-            checkTopBarAndStickyHeader(pageUrl, runId, pageId, browser).catch(
-              (e) => {
-                logger.error("Top bar & sticky header check failed:", e)
-                return []
+            checkTopBarAndStickyHeader(
+              pageUrl,
+              runId,
+              pageId,
+              browser,
+              async (p, m) => {
+                await updateProgress(p, m)
               },
-            ),
+            ).catch((e) => {
+              logger.error("Top bar & sticky header check failed:", e)
+              return []
+            }),
           )
         }
-
+        await Promise.all(checkPromises)
         if (enabledChecks.includes("favicon")) {
           checkPromises.push(
-            checkFavicon(page).catch((e) => {
+            checkFavicon(pageUrl, runId, pageId, browser, async (p, m) => {
+              await updateProgress(p, m)
+            }).catch((e) => {
               logger.error("Favicon check failed:", e)
               return []
             }),
           )
         }
 
+        await Promise.all(checkPromises)
         if (enabledChecks.includes("contact_form")) {
           checkPromises.push(
             checkGrowth99ContactForm(page).catch((e) => {
@@ -479,6 +517,7 @@ export async function processCrawlPageJob(job: Job) {
           )
         }
 
+        await Promise.all(checkPromises)
         if (enabledChecks.includes("chatbot_consultation")) {
           checkPromises.push(
             checkChatbotAndConsultation(page).catch((e) => {
@@ -488,6 +527,7 @@ export async function processCrawlPageJob(job: Job) {
           )
         }
 
+        await Promise.all(checkPromises)
         if (enabledChecks.includes("text_share")) {
           checkPromises.push(
             checkTextShareMetadata(page, projectName).catch((e) => {
@@ -497,6 +537,7 @@ export async function processCrawlPageJob(job: Job) {
           )
         }
 
+        await Promise.all(checkPromises)
         if (enabledChecks.includes("callnow_links")) {
           checkPromises.push(
             checkCallnowLinks(
@@ -505,6 +546,9 @@ export async function processCrawlPageJob(job: Job) {
               pageId,
               wpPassword,
               browser,
+              async (p, m) => {
+                await updateProgress(p, m)
+              },
             ).catch((e) => {
               logger.error("Callnow & Links check failed:", e)
               return []
@@ -512,6 +556,7 @@ export async function processCrawlPageJob(job: Job) {
           )
         }
 
+        await Promise.all(checkPromises)
         if (enabledChecks.includes("url_tab_compare") && run.live_site_url) {
           checkPromises.push(
             checkUrlTabComparison(
@@ -520,6 +565,9 @@ export async function processCrawlPageJob(job: Job) {
               runId,
               pageId,
               devUrls,
+              async (p, m) => {
+                await updateProgress(p, m)
+              },
             ).catch((e) => {
               logger.error("URL Tab Comparison check failed:", e)
               return []
@@ -527,6 +575,7 @@ export async function processCrawlPageJob(job: Job) {
           )
         }
 
+        await Promise.all(checkPromises)
         if (enabledChecks.includes("verify_plugin_updates")) {
           checkPromises.push(
             checkPluginUpdates(
@@ -535,13 +584,17 @@ export async function processCrawlPageJob(job: Job) {
               pageId,
               wpPassword,
               browser,
+              async (p, m) => {
+                await updateProgress(p, m)
+              },
             ).catch((e) => {
               logger.error("Plugin updates check failed:", e)
               return []
             }),
           )
-                }
+        }
 
+        await Promise.all(checkPromises)
         if (enabledChecks.includes("social_share_heading")) {
           checkPromises.push(
             checkSocialShareHeading(
@@ -549,6 +602,9 @@ export async function processCrawlPageJob(job: Job) {
               runId,
               pageId,
               browser,
+              async (p, m) => {
+                await updateProgress(p, m)
+              },
             ).catch((e) => {
               logger.error("Social share heading check failed:", e)
               return []

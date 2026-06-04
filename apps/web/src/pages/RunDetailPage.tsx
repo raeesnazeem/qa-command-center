@@ -186,12 +186,40 @@ export const RunDetailPage = () => {
     const allPagesProgress =
       totalPages > 0 ? (completedPages / totalPages) * 100 : 0
 
+    // Detect API only run for accurate progress calculation
+    const isApiOnlyRun = !run.enabled_checks.some((c: string) =>
+      [
+        "visual_regression",
+        "accessibility",
+        "console_errors",
+        "performance",
+        "seo",
+        "spelling",
+        "broken_links",
+        "dummy_content",
+        "image_compliance",
+        "ai_content_audit",
+        "hero_media",
+        "dead_links",
+        "footer_logo",
+        "single_script",
+        "top_bar_sticky",
+        "favicon",
+        "url_matching",
+        "contact_form",
+        "chatbot_consultation",
+        "text_share",
+      ].includes(c),
+    )
+
     const homepageProgress = homepage
-      ? isRunCompleted ||
-        homepage.status === "done" ||
-        homepage.status === "checked"
+      ? isRunCompleted
         ? 100
-        : homepage.progress || 0
+        : isApiOnlyRun
+          ? homepage.progress || 0 // Strictly respect dynamic progress for API runs
+          : homepage.status === "done" || homepage.status === "checked"
+            ? 100
+            : homepage.progress || 0
       : 0
 
     let totalCheckProgress = 0
@@ -309,12 +337,12 @@ export const RunDetailPage = () => {
     learns.forEach((f) => {
       if (f.title.includes("No generic CTA")) return // skip the 0-finding pages
 
-      const parts = f.description?.split("\n") || []
-      parts.forEach((part) => {
-        if (part.trim().startsWith("- **")) {
-          violations.push(
-            `${part.trim()} (Found on: ${f.context_text || "Unknown page"})`,
-          )
+      const parts = f.description?.split("- **") || []
+      parts.forEach((part, index) => {
+        if (index === 0) return // Before the first "- **"
+        const cleanPart = part.trim()
+        if (cleanPart) {
+          violations.push(`- **${cleanPart}`)
           totalButtonsCount++
         }
       })
@@ -566,10 +594,39 @@ export const RunDetailPage = () => {
     }
   }
 
+  // 1. Detect if this run is API-only (no web crawl)
+  const isApiOnly =
+    run?.enabled_checks &&
+    !run.enabled_checks.some((c: string) =>
+      [
+        "visual_regression",
+        "accessibility",
+        "console_errors",
+        "performance",
+        "seo",
+        "spelling",
+        "broken_links",
+        "dummy_content",
+        "image_compliance",
+        "ai_content_audit",
+        "hero_media",
+        "dead_links",
+        "footer_logo",
+        "single_script",
+        "top_bar_sticky",
+        "favicon",
+        "url_matching",
+        "contact_form",
+        "chatbot_consultation",
+        "text_share",
+      ].includes(c),
+    )
+  // 2. Prevent the "Sitemap Discovery" placeholder if it's API-only
   const isDiscovering =
-    run.status === "running" &&
+    !isApiOnly &&
+    run?.status === "running" &&
     pagesTotal === 0 &&
-    (!run.selected_urls || run.selected_urls.length === 0)
+    (!run?.selected_urls || run.selected_urls.length === 0)
 
   const handlePause = () => {
     updateStatus.mutate({ runId: run.id, status: "paused" })
@@ -1078,18 +1135,25 @@ export const RunDetailPage = () => {
             <div className="flex justify-between items-end">
               <div className="space-y-1">
                 <h3 className="text-sm font-bold text-slate-900 dark:text-slate-200 uppercase tracking-widest flex items-center gap-2">
-                  {isDiscovering
-                    ? "Phase 1: Sitemap Discovery"
-                    : "Phase 2: Scanning Pages"}
+                  {isApiOnly
+                    ? "Executing API Checks"
+                    : isDiscovering
+                      ? "Phase 1: Sitemap Discovery"
+                      : "Phase 2: Scanning Pages"}
                 </h3>
                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">
-                  {isDiscovering
-                    ? "Identifying all target URLs..."
-                    : run.status === "completed"
-                      ? "Scan complete. All pages verified."
-                      : `Scanning: ${(run.pages || []).filter((p) => p.status === "processing" || p.status === "screenshotted").length} active | ${pagesProcessed} / ${pagesTotal} total`}
+                  {isApiOnly
+                    ? run?.status === "completed"
+                      ? "API checks complete."
+                      : "Fetching and verifying data via API integrations..."
+                    : isDiscovering
+                      ? "Identifying all target URLs..."
+                      : run?.status === "completed"
+                        ? "Scan complete. All pages verified."
+                        : `Scanning: ${(run?.pages || []).filter((p: any) => p.status === "processing" || p.status === "screenshotted").length} active | ${pagesProcessed} / ${pagesTotal} total`}
                 </p>
               </div>
+
               <div className="text-right flex items-center gap-4">
                 {canActionManual && (
                   <button
@@ -1102,13 +1166,6 @@ export const RunDetailPage = () => {
                     Manual Scan
                   </button>
                 )}
-                <p className="text-2xl font-bold text-slate-900 dark:text-slate-200">
-                  {isDiscovering
-                    ? "..."
-                    : run.status === "completed"
-                      ? "100%"
-                      : `${Math.max(1, Math.round(progress))}%`}
-                </p>
               </div>
             </div>
 
@@ -1121,53 +1178,6 @@ export const RunDetailPage = () => {
               </div>
             ) : (
               <div className="space-y-8 mt-4">
-                {/* Current Run Overall Progress */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-mono text-slate-800 dark:text-slate-200">
-                    Current Run
-                  </h3>
-                  <div className="border border-slate-400 dark:border-slate-700 rounded-xl p-3 bg-slate-50 dark:bg-[#1D2A31]">
-                    <div className="flex justify-between items-center mb-2 text-xs font-mono text-slate-800 dark:text-slate-200">
-                      <span>
-                        current task:{" "}
-                        {(() => {
-                          if (isDiscovering) return "sitemap discovery"
-                          if (run.status === "paused") return "scan paused"
-                          if (
-                            run.status === "cancelled" ||
-                            run.status === "failed"
-                          )
-                            return `scan ${run.status}`
-                          if (run.status === "completed" && !findingsLoaded)
-                            return "getting findings ready"
-                          if (findingsLoaded) return "findings available"
-
-                          const activePage = (run.pages || []).find(
-                            (p) => p.status === "processing",
-                          )
-                          return (
-                            activePage?.current_step?.toLowerCase() ||
-                            "scanning pages"
-                          )
-                        })()}
-                      </span>
-                      <span className="font-bold">
-                        {findingsLoaded
-                          ? "100%"
-                          : `${Math.max(1, Math.round(displayProgress))}%`}
-                      </span>
-                    </div>
-                    <div className="w-full h-3 bg-slate-50 dark:bg-[#1D2A31] border border-slate-400 dark:border-slate-700 rounded-md p-px">
-                      <div
-                        className="h-full bg-[#b5e4b5] rounded-sm transition-all duration-500"
-                        style={{
-                          width: `${findingsLoaded ? 100 : Math.max(1, displayProgress)}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
                 {(run.enabled_checks || []).map((checkKey) => {
                   const checkNameMap: Record<string, string> = {
                     project_plan: "Project Plan Check",
@@ -1223,7 +1233,7 @@ export const RunDetailPage = () => {
                   }
 
                   return (
-                    <details key={checkKey} className="group space-y-3">
+                    <details key={checkKey} className="group space-y-2" open>
                       <summary className="text-sm font-mono text-slate-800 dark:text-slate-200 cursor-pointer list-none [&::-webkit-details-marker]:hidden flex items-center outline-none group/summary hover:text-accent transition-colors">
                         <span className="mr-2.5 text-[10px] text-accent transition-all duration-300 -rotate-90 group-open:rotate-0 opacity-70 group-hover/summary:opacity-100 group-hover/summary:translate-x-0.5 animate-pulse group-open:animate-none">
                           ▼
@@ -1302,8 +1312,9 @@ export const RunDetailPage = () => {
                           : relevantPages.map((page) => {
                               const isCompleted =
                                 run.status === "completed" ||
-                                page.status === "done" ||
-                                page.status === "checked"
+                                (!isApiOnly &&
+                                  (page.status === "done" ||
+                                    page.status === "checked"))
                               const pageProgress = isCompleted
                                 ? 100
                                 : page.progress || 0

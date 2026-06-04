@@ -220,6 +220,60 @@ export const LearnMoreButtonsFindingCard: React.FC<FindingCardProps> = ({
                 {(() => {
                   if (!finding.description) return null
 
+                  let links: any[] = []
+                  try {
+                    const regex =
+                      /- \*\*(.*?)\*\*\s*\* Actual Text:\s*(.*?)(?=\s+- \*\*|$)/gs
+                    let match
+                    while ((match = regex.exec(finding.description)) !== null) {
+                      links.push({
+                        url: match[1].trim(),
+                        text: match[2].trim(),
+                      })
+                    }
+                  } catch (e) {}
+
+                  if (links.length > 0) {
+                    return (
+                      <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-md my-2">
+                        <table className="w-full text-[10px] text-left">
+                          <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                            <tr>
+                              <th className="px-3 py-2 font-bold uppercase tracking-wider">
+                                Page URL
+                              </th>
+                              <th className="px-3 py-2 font-bold uppercase tracking-wider">
+                                Actual Text
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
+                            {links.map((link: any, idx: number) => (
+                              <tr
+                                key={idx}
+                                className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50"
+                              >
+                                <td className="px-3 py-2 break-all text-blue-500 min-w-[150px]">
+                                  <a
+                                    href={link.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="hover:underline"
+                                  >
+                                    {link.url}
+                                  </a>
+                                </td>
+                                <td className="px-3 py-2 font-medium">
+                                  "{link.text}"
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )
+                  }
+
                   return (
                     <>
                       <p
@@ -398,6 +452,60 @@ export const LearnMoreButtonsFindingCard: React.FC<FindingCardProps> = ({
           <div className="space-y-3">
             {(() => {
               if (!finding.description) return null
+
+              let links: any[] = []
+              try {
+                const regex =
+                  /- \*\*(.*?)\*\*\s*\* Actual Text:\s*(.*?)(?=\s+- \*\*|$)/gs
+                let match
+                while ((match = regex.exec(finding.description)) !== null) {
+                  links.push({
+                    url: match[1].trim(),
+                    text: match[2].trim(),
+                  })
+                }
+              } catch (e) {}
+
+              if (links.length > 0) {
+                return (
+                  <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-md my-2">
+                    <table className="w-full text-[10px] text-left">
+                      <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                        <tr>
+                          <th className="px-3 py-2 font-bold uppercase tracking-wider">
+                            Page URL
+                          </th>
+                          <th className="px-3 py-2 font-bold uppercase tracking-wider">
+                            Actual Text
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-700 text-slate-600 dark:text-slate-300">
+                        {links.map((link: any, idx: number) => (
+                          <tr
+                            key={idx}
+                            className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50"
+                          >
+                            <td className="px-3 py-2 break-all text-blue-500 min-w-[150px]">
+                              <a
+                                href={link.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="hover:underline"
+                              >
+                                {link.url}
+                              </a>
+                            </td>
+                            <td className="px-3 py-2 font-medium">
+                              "{link.text}"
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )
+              }
 
               return (
                 <>
