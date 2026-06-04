@@ -170,6 +170,7 @@ export const RunDetailPage = () => {
       "text_share",
       "verify_plugin_updates",
       "social_share_heading",
+      "logo_chatbot",
     ]
 
     const normalize = (u: string) =>
@@ -209,6 +210,7 @@ export const RunDetailPage = () => {
         "contact_form",
         "chatbot_consultation",
         "text_share",
+        "logo_chatbot",
       ].includes(c),
     )
 
@@ -379,6 +381,40 @@ export const RunDetailPage = () => {
     return [...others, consolidated]
   }
 
+  // Helper to consolidate all contact form findings into a single finding
+  const consolidateContactForms = (findings: QAFinding[]): QAFinding[] => {
+    const others = findings.filter((f) => f.check_factor !== "contact_form")
+    const forms = findings.filter((f) => f.check_factor === "contact_form")
+
+    if (forms.length === 0) return others
+
+    const allData: { url: string; hasForm: boolean }[] = []
+    let screenshots = ""
+
+    forms.forEach((f) => {
+      try {
+        const data = JSON.parse(f.context_text || "{}")
+        if (data.url) allData.push(data)
+      } catch (e) {}
+
+      if (f.screenshot_url && !screenshots) {
+        screenshots = f.screenshot_url
+      }
+    })
+
+    const combinedId = forms.map((f) => f.id).join(",")
+
+    const consolidated: QAFinding = {
+      ...forms[0],
+      id: combinedId,
+      context_text: JSON.stringify(allData),
+      screenshot_url: screenshots,
+      page_id: "",
+    }
+
+    return [...others, consolidated]
+  }
+
   const GENERAL_CHECK_FACTORS = [
     "project_plan",
     "paid_media",
@@ -397,6 +433,7 @@ export const RunDetailPage = () => {
     "url_tab_compare",
     "verify_plugin_updates",
     "social_share_heading",
+    "logo_chatbot",
   ]
 
   // 1. Extract any general run-level findings (null page_id OR project plan factor OR hero_media matching selected page)
@@ -408,7 +445,9 @@ export const RunDetailPage = () => {
           (GENERAL_CHECK_FACTORS.includes(f.check_factor) &&
             (f.check_factor !== "hero_media" || f.page_id === selectedPageId)),
       ) || []
-    return consolidateLearnMoreButtons(consolidateDeadLinks(baseGeneral))
+    return consolidateContactForms(
+      consolidateLearnMoreButtons(consolidateDeadLinks(baseGeneral)),
+    )
   }, [runFindings, selectedPageId])
 
   // 2. Filter out general findings from page-specific findings to avoid duplicate rendering
@@ -428,7 +467,9 @@ export const RunDetailPage = () => {
         (f) => !f.page_id || GENERAL_CHECK_FACTORS.includes(f.check_factor),
       ) || []
 
-    return consolidateLearnMoreButtons(consolidateDeadLinks(baseGeneral))
+    return consolidateContactForms(
+      consolidateLearnMoreButtons(consolidateDeadLinks(baseGeneral)),
+    )
   }, [runFindings])
 
   const findingToTaskMap = useMemo(() => {
@@ -619,6 +660,7 @@ export const RunDetailPage = () => {
         "contact_form",
         "chatbot_consultation",
         "text_share",
+        "logo_chatbot",
       ].includes(c),
     )
   // 2. Prevent the "Sitemap Discovery" placeholder if it's API-only
@@ -1190,6 +1232,7 @@ export const RunDetailPage = () => {
                     console_errors: "Console Errors Check",
                     woocommerce: "WooCommerce Check",
                     learn_more_buttons: "Learn More Buttons Check",
+                    logo_chatbot: "Logo on Chatbot Check",
                   }
                   const checkName =
                     checkNameMap[checkKey] ||
@@ -1213,7 +1256,8 @@ export const RunDetailPage = () => {
                     checkKey === "chatbot_consultation" ||
                     checkKey === "text_share" ||
                     checkKey === "verify_plugin_updates" ||
-                    checkKey === "social_share_heading"
+                    checkKey === "social_share_heading" ||
+                    checkKey === "logo_chatbot"
                   ) {
                     relevantPages = relevantPages.filter((p) => {
                       const normalize = (u: string) =>

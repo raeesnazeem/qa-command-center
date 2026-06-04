@@ -12,6 +12,9 @@ const logger = pino({
   },
 })
 
+// Memory lock to prevent multiple pages from taking screenshots at the exact same time
+const contactFormScreenshotLocks = new Set<string>()
+
 /**
  * =========================================================================
  * 2️⃣ CHECK 2: Privacy Policy Page Check
@@ -946,84 +949,186 @@ export async function checkUrlAndTabMatching(
  * - Verify the form fields and submit button are present, enabled, and responsive.
  */
 export async function checkGrowth99ContactForm(
-  page: PlaywrightPage,
-  pageRecord?: any,
+  url: string,
+  runId: string,
+  pageId: string,
+  sharedBrowser?: any,
+  onProgress?: (progress: number, message: string) => Promise<void>,
 ): Promise<Finding[]> {
-  const findings: Finding[] = []
+  const { chromium } = require("playwright")
+  const { uploadScreenshot } = require("../lib/supabaseStorage")
+  const { supabase } = require("../lib/supabase")
 
-  const formLocator = page
-    .locator(
-      'form:has(input[type="email"]), form[class*="contact"], form[id*="contact"], form:has(input[placeholder*="Email"])',
-    )
-    .first()
+  let hasForm = false
+  let screenshots: string[] = []
 
-  if ((await formLocator.count()) > 0) {
-    const isVisible = await formLocator.isVisible()
-    if (!isVisible) {
-      findings.push({
-        check_factor: "contact_form",
-        severity: "medium",
-        title: "Contact Form Hidden",
-        description:
-          "We detected a contact form markup in the DOM, but it is not visible on the screen. Please check CSS styling.",
-        status: "open",
-        ai_generated: false,
-      } as Finding)
-      return findings
-    }
+  const browser = sharedBrowser || (await chromium.launch({ headless: true }))
+  let context: any = null
+  let page: any = null
 
-    try {
-      const nameInput = formLocator
-        .locator(
-          'input[name*="name"], input[placeholder*="Name"], input[type="text"]',
-        )
-        .first()
-      const emailInput = formLocator
-        .locator(
-          'input[type="email"], input[name*="email"], input[placeholder*="Email"]',
-        )
-        .first()
-      const phoneInput = formLocator
-        .locator(
-          'input[type="tel"], input[name*="phone"], input[placeholder*="Phone"]',
-        )
-        .first()
-      const submitBtn = formLocator
-        .locator('button[type="submit"], input[type="submit"], .submit-btn')
-        .first()
-
-      if ((await nameInput.count()) > 0) await nameInput.fill("Test User")
-      if ((await emailInput.count()) > 0)
-        await emailInput.fill("test@growth99.com")
-      if ((await phoneInput.count()) > 0) await phoneInput.fill("1234567890")
-
-      const canSubmit =
-        (await submitBtn.count()) > 0 && (await submitBtn.isEnabled())
-
-      if (!canSubmit) {
-        findings.push({
-          check_factor: "contact_form",
-          severity: "high",
-          title: "Contact Form Submit Button Disabled or Missing",
-          description:
-            "A contact form was detected, but its submit button is either disabled or cannot be located on the page.",
-          status: "open",
-          ai_generated: false,
-        } as Finding)
-      }
-    } catch (e: any) {
-      findings.push({
-        check_factor: "contact_form",
-        severity: "high",
-        title: "Contact Form Interaction Failed",
-        description: `We attempted to interact with the contact form on this page, but experienced an error: ${e.message}`,
-        status: "open",
-        ai_generated: false,
-      } as Finding)
-    }
+  if (
+    sharedBrowser &&
+    sharedBrowser.contexts().length > 0 &&
+    sharedBrowser.contexts()[0].pages().length > 0
+  ) {
+    page = sharedBrowser.contexts()[0].pages()[0]
+  } else {
+    context = await browser.newContext()
+    page = await context.newPage()
   }
 
-  return findings
+  try {
+    if (onProgress)
+      await onProgress(10, "Checking page source for contact form...")
+
+    if (context) {
+      await page
+        .goto(url, { waitUntil: "networkidle", timeout: 30000 })
+        .catch(() => {})
+    }
+    const content = await page.content().catch(() => "")
+
+    hasForm = content.includes(
+      "widget-ui.growth99.com/assets/widgets/new-form.html",
+    )
+
+    if (hasForm) {
+      // Check if any screenshots were already taken for this run to avoid duplicates
+      const { data: existingFindings } = await supabase
+        .from("findings")
+        .select("screenshot_url")
+        .eq("run_id", runId)
+        .eq("check_factor", "contact_form")
+        .not("screenshot_url", "is", null)
+
+      const alreadyHasScreenshots =
+        existingFindings &&
+        existingFindings.length > 0 &&
+        existingFindings[0].screenshot_url
+
+      // Only give permission to take screenshots if no other page has already locked it
+      let acquiredLock = false
+      if (!contactFormScreenshotLocks.has(runId)) {
+        contactFormScreenshotLocks.add(runId)
+        acquiredLock = true
+      }
+
+      if (!alreadyHasScreenshots && acquiredLock) {
+        if (onProgress)
+          await onProgress(
+            30,
+            "Taking multiview screenshots of the contact form...",
+          )
+
+        const viewports = [
+          { name: "desktop", width: 1440, height: 900 },
+          { name: "tablet", width: 768, height: 1024 },
+          { name: "mobile", width: 375, height: 812 },
+        ]
+
+        for (const vp of viewports) {
+          const vpContext = await browser.newContext({
+            viewport: { width: vp.width, height: vp.height },
+          })
+          const vpPage = await vpContext.newPage()
+          await vpPage
+            .goto(url, { waitUntil: "networkidle", timeout: 30000 })
+            .catch(() => {})
+
+          const iframeLoc = vpPage
+            .locator(
+              'iframe[src*="widget-ui.growth99.com/assets/widgets/new-form.html"]',
+            )
+            .first()
+          if ((await iframeLoc.count()) > 0) {
+            await iframeLoc.scrollIntoViewIfNeeded().catch(() => {})
+            await vpPage.waitForTimeout(2000)
+          }
+
+          const buffer = await vpPage.screenshot({ fullPage: false })
+          const publicUrl = await uploadScreenshot(
+            buffer,
+            `${runId}/${pageId}/contact_form_${vp.name}.png`,
+          )
+          screenshots.push(publicUrl)
+          await vpContext.close()
+        }
+
+        if (onProgress)
+          await onProgress(70, "Submitting dummy data to the contact form...")
+
+        const iframeElement = await page
+          .waitForSelector(
+            'iframe[src*="widget-ui.growth99.com/assets/widgets/new-form.html"]',
+            { timeout: 10000 },
+          )
+          .catch(() => null)
+        if (iframeElement) {
+          await iframeElement.scrollIntoViewIfNeeded().catch(() => {})
+          const frame = await iframeElement.contentFrame()
+          if (frame) {
+            await frame
+              .fill('input[name="First Name"]', "Test Name", { timeout: 3000 })
+              .catch(() => {})
+            await frame
+              .fill('input[name="Last Name"]', "User", { timeout: 3000 })
+              .catch(() => {})
+            await frame
+              .fill('input[name="Email"]', "test@growth99.com", {
+                timeout: 3000,
+              })
+              .catch(() => {})
+            await frame
+              .fill('input[name="Phone Number"]', "1234567890", {
+                timeout: 3000,
+              })
+              .catch(() => {})
+            await frame
+              .fill('input[name="Message"]', "Test Message", { timeout: 3000 })
+              .catch(() => {})
+            await frame
+              .click('button[type="submit"]', { timeout: 3000 })
+              .catch(() => {})
+
+            await page.waitForTimeout(4000) // Wait for thank you page
+
+            const thankYouBuffer = await page.screenshot({ fullPage: false })
+            const thankYouUrl = await uploadScreenshot(
+              thankYouBuffer,
+              `${runId}/${pageId}/contact_form_thankyou.png`,
+            )
+            screenshots.push(thankYouUrl)
+          }
+        }
+      }
+    }
+
+    if (onProgress) await onProgress(90, "Finalizing contact form findings...")
+  } catch (e: any) {
+    console.error("Growth99 contact form check failed:", e)
+    contactFormScreenshotLocks.delete(runId) // release the lock on error
+  } finally {
+    if (context) await context.close()
+    if (!sharedBrowser) await browser.close()
+  }
+
+  const findingData = {
+    url,
+    hasForm,
+  }
+
+  return [
+    {
+      check_factor: "contact_form",
+      severity: "medium",
+      title: "Verify Contact Form",
+      description: "Verify the Growth99 contact form across all pages.",
+      context_text: JSON.stringify(findingData),
+      screenshot_url: screenshots.length > 0 ? screenshots.join(",") : null,
+      status: "open",
+      ai_generated: false,
+    } as Finding,
+  ]
 }
 
 /**
@@ -1778,6 +1883,171 @@ export async function checkSocialShareHeading(
       title: "Social Share Heading Check",
       description:
         "Verify the social sharing preview headings for Facebook, X, and LinkedIn.",
+      screenshot_url: screenshotUrls,
+      status: "open",
+      ai_generated: false,
+    } as Finding,
+  ]
+}
+
+/**
+ * =========================================================================
+ * CHECK: Logo on Chatbot Check
+ * =========================================================================
+ */
+export async function checkLogoOnChatbot(
+  url: string,
+  runId: string,
+  pageId: string,
+  sharedBrowser?: any,
+  onProgress?: (progress: number, message: string) => Promise<void>,
+): Promise<Finding[]> {
+  const { chromium } = require("playwright")
+  const { uploadScreenshot } = require("../lib/supabaseStorage")
+
+  let codeScreenshotUrl = ""
+  let homepageScreenshotUrl = ""
+  let openChatbotScreenshotUrl = ""
+  let isChatbotActive = false
+
+  try {
+    const browser = sharedBrowser || (await chromium.launch({ headless: true }))
+    const context = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+      userAgent:
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    })
+
+    const page = await context.newPage()
+    if (onProgress)
+      await onProgress(
+        10,
+        "Navigating to homepage for Logo on Chatbot check...",
+      )
+
+    await page
+      .goto(url, { waitUntil: "networkidle", timeout: 30000 })
+      .catch(() => {})
+    await page.evaluate(() => window.scrollBy(0, 500)).catch(() => {})
+    await page.waitForTimeout(5000)
+
+    if (onProgress)
+      await onProgress(30, "Checking if chatbot script is present...")
+
+    // Check script
+    const codeSnippet = await page.evaluate(() => {
+      const scriptEl = document.querySelector(
+        'script[src*="chatbot.growth99.com/assets/js/integration.js"]',
+      )
+      if (scriptEl) {
+        const prevEl = scriptEl.previousElementSibling
+        return (prevEl ? prevEl.outerHTML + "\n" : "") + scriptEl.outerHTML
+      }
+      return null
+    })
+
+    if (codeSnippet) {
+      isChatbotActive = true
+      if (onProgress)
+        await onProgress(40, "Taking screenshot of the chatbot script...")
+
+      const codeContext = await browser.newContext()
+      const renderPage = await codeContext.newPage()
+      await renderPage.setContent(
+        `<pre style="font-size: 14px; white-space: pre-wrap; word-wrap: break-word; padding: 20px; background: #f4f4f4;">${codeSnippet.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>`,
+      )
+      const codeBuffer = await renderPage.screenshot({ fullPage: false })
+      codeScreenshotUrl = await uploadScreenshot(
+        codeBuffer,
+        `${runId}/${pageId}/logo_chatbot_code.png`,
+      )
+      await codeContext.close()
+    } else {
+      isChatbotActive = false
+    }
+
+    if (onProgress)
+      await onProgress(60, "Taking screenshot of the homepage for chatbot...")
+    const hpBuffer = await page.screenshot({ fullPage: false })
+    homepageScreenshotUrl = await uploadScreenshot(
+      hpBuffer,
+      `${runId}/${pageId}/logo_chatbot_homepage.png`,
+    )
+
+    if (isChatbotActive) {
+      if (onProgress)
+        await onProgress(
+          75,
+          "Waiting for chatbot icon to appear and clicking...",
+        )
+
+      const chatbotLauncher = page.locator(
+        "#g99-chatbot-launcher, .g99-chatbot-launcher, #g99-chatbot-button, #cliffhanger-button, [class*='chatbot-launcher'], #chatbot-icon-div-tracker, .chat-bot-icon",
+      )
+
+      try {
+        // Actively wait for the element to appear in the DOM (up to 15 seconds)
+        await chatbotLauncher
+          .first()
+          .waitFor({ state: "attached", timeout: 15000 })
+
+        // Click the launcher to open the chatbot
+        await chatbotLauncher
+          .first()
+          .click({ timeout: 5000 })
+          .catch(() => {})
+
+        // Wait 5 seconds for the chatbot animation/modal to fully open
+        await page.waitForTimeout(5000)
+
+        // Take the screenshot of the open chatbot
+        const openBuffer = await page.screenshot({ fullPage: false })
+        openChatbotScreenshotUrl = await uploadScreenshot(
+          openBuffer,
+          `${runId}/${pageId}/logo_chatbot_open.png`,
+        )
+      } catch (e) {
+        console.error(
+          "Chatbot launcher did not appear in time or could not be clicked",
+          e,
+        )
+      }
+    }
+
+    if (onProgress) await onProgress(90, "Finalizing findings...")
+    await context.close()
+    if (!sharedBrowser) await browser.close()
+  } catch (e: any) {
+    console.error("Logo on chatbot screenshot failed", e)
+    return [
+      {
+        check_factor: "logo_chatbot",
+        severity: "high",
+        title: "Logo on Chatbot Check Failed",
+        description: `The check encountered an unexpected error: ${e.message}. Process aborted gracefully.`,
+        screenshot_url: null,
+        status: "open",
+        ai_generated: false,
+      } as Finding,
+    ]
+  }
+
+  const screenshotUrls = [
+    codeScreenshotUrl,
+    homepageScreenshotUrl,
+    openChatbotScreenshotUrl,
+  ]
+    .filter(Boolean)
+    .join(",")
+
+  return [
+    {
+      check_factor: "logo_chatbot",
+      severity: "medium",
+      title: "Verify Logo on Chatbot",
+      description: isChatbotActive
+        ? "Please verify the actual brand logo on the chatbot using the provided screenshots."
+        : "The chatbot script was not found on the homepage.",
       screenshot_url: screenshotUrls,
       status: "open",
       ai_generated: false,

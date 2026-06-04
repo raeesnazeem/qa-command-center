@@ -293,10 +293,9 @@ export const StartRunModal = ({
         "Verify that chatbot and virtual consultation modals open and function correctly",
     },
     {
-      id: "text_share",
-      label: "Text Share Metadata Check",
-      description:
-        "Verify that social preview tags (og:title, og:site_name) match the business name",
+      id: "logo_chatbot",
+      label: "Logo on chatbot check",
+      description: "Verify that logo on the chatbot is the actual brand logo",
     },
     {
       id: "callnow_links",

@@ -78,6 +78,7 @@ export async function processStartRunJob(job: Job) {
       "learn_more_buttons",
       "url_matching",
       "url_tab_compare",
+      "contact_form",
     ]
 
     const HOMEPAGE_ONLY_CHECKS = [
@@ -88,11 +89,11 @@ export async function processStartRunJob(job: Job) {
       "single_script",
       "top_bar_sticky",
       "favicon",
-      "contact_form",
       "chatbot_consultation",
       "text_share",
       "verify_plugin_updates",
       "social_share_heading",
+      "logo_chatbot",
     ]
 
     const PAGE_CHECKS = [...ALL_PAGES_CHECKS, ...HOMEPAGE_ONLY_CHECKS]

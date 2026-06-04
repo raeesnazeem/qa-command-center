@@ -31,6 +31,7 @@ import {
   checkUrlTabComparison,
   checkPluginUpdates,
   checkSocialShareHeading,
+  checkLogoOnChatbot,
 } from "../checks/preReleaseSuite"
 import pino from "pino"
 
@@ -391,6 +392,27 @@ export async function processCrawlPageJob(job: Job) {
         )
       }
 
+      if (enabledChecks.includes("contact_form")) {
+        checkPromises.push(
+          (async () => {
+            try {
+              return await checkGrowth99ContactForm(
+                pageUrl,
+                runId,
+                pageId,
+                browser,
+                async (p, m) => {
+                  await updateProgress(p, m)
+                },
+              )
+            } catch (e) {
+              logger.error("Contact form check failed:", e)
+              return []
+            }
+          })(),
+        )
+      }
+
       if (enabledChecks.includes("learn_more_buttons")) {
         checkPromises.push(
           (async () => {
@@ -508,20 +530,28 @@ export async function processCrawlPageJob(job: Job) {
         }
 
         await Promise.all(checkPromises)
-        if (enabledChecks.includes("contact_form")) {
+        if (enabledChecks.includes("chatbot_consultation")) {
           checkPromises.push(
-            checkGrowth99ContactForm(page).catch((e) => {
-              logger.error("Contact form check failed:", e)
+            checkChatbotAndConsultation(page).catch((e) => {
+              logger.error("Chatbot consultation check failed:", e)
               return []
             }),
           )
         }
 
         await Promise.all(checkPromises)
-        if (enabledChecks.includes("chatbot_consultation")) {
+        if (enabledChecks.includes("logo_chatbot")) {
           checkPromises.push(
-            checkChatbotAndConsultation(page).catch((e) => {
-              logger.error("Chatbot consultation check failed:", e)
+            checkLogoOnChatbot(
+              pageUrl,
+              runId,
+              pageId,
+              browser,
+              async (p, m) => {
+                await updateProgress(p, m)
+              },
+            ).catch((e) => {
+              logger.error("Logo on chatbot check failed:", e)
               return []
             }),
           )

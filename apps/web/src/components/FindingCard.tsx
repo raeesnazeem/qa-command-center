@@ -16,6 +16,8 @@ import { UrlTabCompareFindingCard } from "./UrlTabCompareFindingCard"
 import { PluginUpdatesFindingCard } from "./PluginUpdatesFindingCard"
 import { SocialShareHeadingFindingCard } from "./SocialShareHeadingFindingCard"
 import { FaviconFindingCard } from "./FaviconFindingCard"
+import { ContactFormFindingCard } from "./ContactFormFindingCard"
+import { LogoOnChatbotFindingCard } from "./LogoOnChatbotFindingCard"
 
 interface FindingCardProps {
   finding: QAFinding
@@ -111,6 +113,14 @@ export const FindingCard: React.FC<FindingCardProps> = (props) => {
 
   if (finding.check_factor === "favicon") {
     return <FaviconFindingCard {...props} />
+  }
+
+  if (finding.check_factor === "contact_form") {
+    return <ContactFormFindingCard {...props} />
+  }
+
+  if (finding.check_factor === "logo_chatbot") {
+    return <LogoOnChatbotFindingCard {...props} />
   }
 
   // Fallback for everything else (Paid Media, Generic, SEO, etc.)
