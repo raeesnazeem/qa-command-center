@@ -51,7 +51,7 @@ export const DashboardPage = () => {
     return (
       <div className="relative w-full h-full min-h-screen">
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-bg-main  dark:bg-teal-500/5 rounded-full blur-3xl animate-gemini-glow"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-emerald-400/5 dark:bg-teal-500/5 rounded-full blur-3xl animate-gemini-glow"></div>
         </div>
         <main className="relative z-10 max-w-7xl mx-auto space-y-10 animate-in fade-in duration-700 pb-12 px-4">
           <header className="space-y-3">
@@ -76,7 +76,7 @@ export const DashboardPage = () => {
 
           <section className="space-y-6">
             <Skeleton className="h-4 w-32" />
-            <div className="bg-[#e2e8f0] dark:bg-slate-700 border border-slate-100 dark:border-slate-800 rounded-lg h-64 overflow-hidden relative">
+            <div className="bg-[#e2e8f0] dark:bg-slate-700 border border-slate-300 dark:border-slate-800 rounded-lg h-64 overflow-hidden relative">
               <Skeleton className="absolute inset-0" />
             </div>
           </section>
@@ -99,7 +99,7 @@ export const DashboardPage = () => {
     return (
       <div className="relative w-full h-full min-h-screen">
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-emerald-400/20  dark:bg-teal-500/5 rounded-full blur-3xl animate-gemini-glow"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-emerald-400/5 dark:bg-teal-500/5 rounded-full blur-3xl animate-gemini-glow"></div>
         </div>
         <main className="relative z-10 max-w-7xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 px-4">
           <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/60 dark:bg-[#1D2A31]/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-sm mb-2">
@@ -139,7 +139,7 @@ export const DashboardPage = () => {
                 </div>
 
                 {data?.pre_release_projects?.length === 0 ? (
-                  <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-800 rounded-lg p-8 text-center text-slate-500 dark:text-slate-400 text-sm">
+                  <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-300 dark:border-slate-800 rounded-lg p-8 text-center text-slate-500 dark:text-slate-400 text-sm">
                     No pending pre-release projects.
                   </div>
                 ) : (
@@ -148,7 +148,7 @@ export const DashboardPage = () => {
                       <Link
                         key={project.id}
                         to={`/projects/${project.id}`}
-                        className="bg-slate-50 dark:bg-[#1D2A31] border-2 dark:border-slate-800 rounded-lg p-4 shadow-sm hover:shadow-lg hover:border-accent dark:hover:border-accent transition-all group relative overflow-hidden min-w-[240px] flex-shrink-0 flex flex-col"
+                        className="bg-slate-50 dark:bg-[#1D2A31] border-2 border-slate-300 dark:border-slate-800 rounded-lg p-4 shadow-sm hover:shadow-lg hover:border-accent dark:hover:border-accent transition-all group relative overflow-hidden min-w-[240px] flex-shrink-0 flex flex-col"
                       >
                         <div
                           className="hidden dark:block absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
@@ -198,7 +198,7 @@ export const DashboardPage = () => {
                 </div>
 
                 {data?.post_release_projects?.length === 0 ? (
-                  <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-800 rounded-lg p-8 text-center text-slate-500 dark:text-slate-400 text-sm">
+                  <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-300 dark:border-slate-800 rounded-lg p-8 text-center text-slate-500 dark:text-slate-400 text-sm">
                     No post-release projects found.
                   </div>
                 ) : (
@@ -207,7 +207,7 @@ export const DashboardPage = () => {
                       <Link
                         key={project.id}
                         to={`/projects/${project.id}`}
-                        className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-800 rounded-lg p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group relative overflow-hidden"
+                        className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-300 dark:border-slate-800 rounded-lg p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group relative overflow-hidden"
                       >
                         <div
                           className="hidden dark:block absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
@@ -274,7 +274,7 @@ export const DashboardPage = () => {
                       <Link
                         key={task.id}
                         to={`/tasks?taskId=${task.id}`}
-                        className="bg-slate-50 border border-slate-100 rounded-lg p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group flex flex-col h-full relative overflow-hidden"
+                        className="bg-slate-50 border border-slate-300 rounded-lg p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group flex flex-col h-full relative overflow-hidden"
                       >
                         <div
                           className="hidden dark:block absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
@@ -362,7 +362,7 @@ export const DashboardPage = () => {
     return (
       <div className="relative w-full h-full min-h-screen">
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-emerald-400/20  dark:bg-teal-500/5 rounded-full blur-3xl animate-gemini-glow"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-emerald-400/5 dark:bg-teal-500/5 rounded-full blur-3xl animate-gemini-glow"></div>
         </div>
         <main className="relative z-10 max-w-7xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 px-4">
           <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/60 dark:bg-[#1D2A31]/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-sm mb-2">
@@ -385,7 +385,7 @@ export const DashboardPage = () => {
             </div>
 
             {data?.pre_release_projects?.length === 0 ? (
-              <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-800 rounded-lg p-8 text-center text-slate-500 dark:text-slate-400 text-sm">
+              <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-300 dark:border-slate-800 rounded-lg p-8 text-center text-slate-500 dark:text-slate-400 text-sm">
                 No pending pre-release projects.
               </div>
             ) : (
@@ -394,7 +394,7 @@ export const DashboardPage = () => {
                   <Link
                     key={project.id}
                     to={`/projects/${project.id}`}
-                    className="bg-slate-50 dark:bg-[#1D2A31] border-2 border-slate-100 dark:border-slate-800 rounded-lg p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group relative overflow-hidden min-w-[300px] flex-shrink-0"
+                    className="bg-slate-50 dark:bg-[#1D2A31] border-2 border-slate-300 dark:border-slate-800 rounded-lg p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group relative overflow-hidden min-w-[300px] flex-shrink-0"
                   >
                     <div
                       className="hidden dark:block absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
@@ -446,7 +446,7 @@ export const DashboardPage = () => {
             </div>
 
             {data?.post_release_projects?.length === 0 ? (
-              <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-800 rounded-lg p-8 text-center text-slate-500 dark:text-slate-400 text-sm">
+              <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-300 dark:border-slate-800 rounded-lg p-8 text-center text-slate-500 dark:text-slate-400 text-sm">
                 No post-release projects found.
               </div>
             ) : (
@@ -455,7 +455,7 @@ export const DashboardPage = () => {
                   <Link
                     key={project.id}
                     to={`/projects/${project.id}`}
-                    className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-800 rounded-lg p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group relative overflow-hidden min-w-[300px] flex-shrink-0"
+                    className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-300 dark:border-slate-800 rounded-lg p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group relative overflow-hidden min-w-[300px] flex-shrink-0"
                   >
                     <div
                       className="hidden dark:block absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
@@ -514,7 +514,7 @@ export const DashboardPage = () => {
               </div>
             </div>
 
-            <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-800 rounded-lg overflow-hidden shadow-sm overflow-x-auto">
+            <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-300 dark:border-slate-800 rounded-lg overflow-hidden shadow-sm overflow-x-auto">
               <div className="min-w-[800px]">
                 <table className="w-full text-left border-collapse">
                   <thead>
@@ -633,7 +633,7 @@ export const DashboardPage = () => {
   return (
     <div className="relative w-full h-full min-h-screen bg-bg-main dark:bg-[#131D22]">
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-emerald-400/20  dark:bg-teal-500/5 rounded-full blur-3xl animate-gemini-glow"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-emerald-400/5 dark:bg-teal-500/5 rounded-full blur-3xl animate-gemini-glow"></div>
       </div>
       <main className="relative z-10 p-6 lg:p-10 space-y-10">
         <header className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-slate-50/60 dark:bg-[#1D2A31]/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-sm">
@@ -661,7 +661,7 @@ export const DashboardPage = () => {
           {stats.map((stat) => (
             <div
               key={stat.label}
-              className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-800 rounded-lg p-6 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden"
+              className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-300 dark:border-slate-800 rounded-lg p-6 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden"
             >
               <div
                 className="hidden dark:block absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
@@ -688,16 +688,18 @@ export const DashboardPage = () => {
           ))}
         </div>
 
-        {/* 2. Pre-release Projects (Admin) */}
-        <section className="max-w-7xl mx-auto space-y-6">
-          <h3 className="font-bold text-slate-900 dark:text-slate-200 flex items-center gap-2 uppercase tracking-widest text-xs">
-            Pre-release Projects
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-10">
+          <div className="lg:col-span-2 space-y-10">
+            {/* 2. Pre-release Projects (Admin) */}
+            <section className="space-y-6">
+              <h3 className="font-bold text-slate-900 dark:text-slate-200 flex items-center gap-2 uppercase tracking-widest text-xs">
+                Pre-release Projects
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {data?.pre_release_projects?.map((project) => (
               <div
                 key={project.id}
-                className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-800 rounded-lg p-6 shadow-sm hover:shadow-xl transition-all group relative flex flex-col overflow-hidden"
+                className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-300 dark:border-slate-800 rounded-lg p-6 shadow-sm hover:shadow-xl transition-all group relative flex flex-col overflow-hidden"
               >
                 <div
                   className="hidden dark:block absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
@@ -741,17 +743,17 @@ export const DashboardPage = () => {
           </div>
         </section>
 
-        {/* 3. Post-release Projects (Admin) */}
-        <section className="max-w-7xl mx-auto space-y-6">
-          <h3 className="font-bold text-slate-900 dark:text-slate-200 flex items-center gap-2 uppercase tracking-widest text-xs">
-            <Layers className="w-4 h-4 text-slate-400" />
-            Post-release Projects
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* 3. Post-release Projects (Admin) */}
+            <section className="space-y-6">
+              <h3 className="font-bold text-slate-900 dark:text-slate-200 flex items-center gap-2 uppercase tracking-widest text-xs">
+                <Layers className="w-4 h-4 text-slate-400" />
+                Post-release Projects
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {data?.post_release_projects?.map((project) => (
               <div
                 key={project.id}
-                className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-800 rounded-lg p-6 shadow-sm hover:shadow-xl transition-all group relative flex flex-col overflow-hidden"
+                className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-300 dark:border-slate-800 rounded-lg p-6 shadow-sm hover:shadow-xl transition-all group relative flex flex-col overflow-hidden"
               >
                 <div
                   className="hidden dark:block absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
@@ -792,14 +794,13 @@ export const DashboardPage = () => {
           </div>
         </section>
 
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-10">
-          {/* Real-time QA Activity */}
-          <div className="lg:col-span-2 space-y-6">
+            {/* Real-time QA Activity */}
+            <div className="space-y-6">
             <h3 className="font-bold text-slate-900 dark:text-slate-200 flex items-center gap-2 uppercase tracking-widest text-xs">
               <PlayCircle className="w-4 h-4 text-slate-400" />
               Real-time QA Activity
             </h3>
-            <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-800 rounded-lg overflow-hidden shadow-sm">
+            <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-300 dark:border-slate-800 rounded-lg overflow-hidden shadow-sm">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50/50 dark:bg-[#1D2A31]/50 border-b border-slate-100 dark:border-slate-800">
@@ -895,6 +896,7 @@ export const DashboardPage = () => {
               </table>
             </div>
           </div>
+          </div>
 
           {/* Management Side Column */}
           <div className="space-y-10">
@@ -903,7 +905,7 @@ export const DashboardPage = () => {
                 <CheckSquare className="w-4 h-4 text-slate-400" />
                 Critical Assignments
               </h3>
-              <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-800 rounded-lg shadow-sm divide-y divide-slate-50 dark:divide-slate-800 overflow-hidden">
+              <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-300 dark:border-slate-800 rounded-lg shadow-sm divide-y divide-slate-50 dark:divide-slate-800 overflow-hidden">
                 {data?.my_tasks.length === 0 ? (
                   <div className="p-12 text-center">
                     <p className="text-xs text-slate-400 font-medium italic">

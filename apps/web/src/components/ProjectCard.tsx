@@ -12,10 +12,12 @@ import {
   X,
   Loader2,
   Check,
+  Edit,
 } from "lucide-react"
 import { useAuthAxios } from "../lib/useAuthAxios"
 import { useRole } from "../hooks/useRole"
 import toast from "react-hot-toast"
+import { EditProjectModal } from "./EditProjectModal"
 
 interface ProjectCardProps {
   project: Project
@@ -31,10 +33,13 @@ export const ProjectCard = ({ project }: ProjectCardProps) => {
     "qa_engineer",
   )
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
 
   const canManage = ["super_admin", "admin", "sub_admin"].includes(
     userRole || "",
   )
+
+  const canEdit = ["super_admin", "admin", "sub_admin"].includes(userRole || "")
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "Never"
@@ -117,6 +122,19 @@ export const ProjectCard = ({ project }: ProjectCardProps) => {
                 <Users className="w-4 h-4" />
               </button>
             )}
+            {canEdit && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setIsEditModalOpen(true)
+                }}
+                className="p-1.5 rounded-md transition-colors text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
+                title="Edit Project"
+              >
+                <Edit className="w-4 h-4" />
+              </button>
+            )}
+
             <span
               className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
                 project.status === "active"
@@ -266,6 +284,12 @@ export const ProjectCard = ({ project }: ProjectCardProps) => {
           <ChevronRight className="w-3 h-3 group-hover/ongoing:translate-x-0.5 transition-transform" />
         </Link>
       )}
+
+      <EditProjectModal
+        project={project}
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+      />
     </div>
   )
 }

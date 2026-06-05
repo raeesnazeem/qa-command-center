@@ -195,7 +195,7 @@ export const AppLayout = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
-        <header className="h-16 bg-slate-50 dark:bg-[#0B151B] border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 shadow-sm z-10">
+        <header className="h-16 bg-slate-50 dark:bg-[#0B151B] border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 shadow-sm z-49">
           <div className="flex items-center space-x-2">
             <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-1.5 py-1 rounded-md dark:px-3 dark:bg-black dark:text-emerald dark:rounded-md dark:border dark:border-emerald">
               {role?.replace("_", " ")}

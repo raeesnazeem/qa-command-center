@@ -34,7 +34,7 @@ export const ProjectsPage = () => {
           <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-200 tracking-tight">
             Projects
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-slate-500 dark:text-slate-400 text-sm">
             Manage and monitor your QA tests
           </p>
         </div>
