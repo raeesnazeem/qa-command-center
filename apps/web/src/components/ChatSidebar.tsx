@@ -38,10 +38,10 @@ export const ChatSidebar: React.FC = () => {
     <div className="absolute bottom-0 right-0 left-0 z-50 flex flex-col pointer-events-none">
       {/* Expanded Panel */}
       <div
-        className={`bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col transition-all duration-300 ease-in-out pointer-events-auto ${isOpen ? "h-[500px]" : "h-0"}`}
+        className={`bg-slate-50 dark:bg-[#131d22] border-t border-slate-200 dark:border-slate-800 shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col transition-all duration-300 ease-in-out pointer-events-auto ${isOpen ? "h-[500px]" : "h-0"}`}
       >
         {/* Header */}
-        <div className="bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 p-3 flex items-center justify-between shrink-0">
+        <div className="bg-slate-50 dark:bg-[#131d22] border-b border-slate-100 dark:border-slate-800 p-3 flex items-center justify-between shrink-0">
           <div className="flex flex-col">
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 rounded-full bg-accent" />
@@ -58,7 +58,7 @@ export const ChatSidebar: React.FC = () => {
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setIsOpen(false)}
-              className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md transition-all"
+              className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#1d2a31] rounded-md transition-all"
             >
               <X className="w-4 h-4" />
             </button>
@@ -66,7 +66,7 @@ export const ChatSidebar: React.FC = () => {
         </div>
 
         {/* Chat Messages */}
-        <div className="flex-1 overflow-y-auto p-6 bg-slate-50/20 dark:bg-slate-900 space-y-4">
+        <div className="flex-1 overflow-y-auto p-6 bg-slate-50/20 dark:bg-[#131d22] space-y-4">
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-8 opacity-60">
               <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center mb-3">
@@ -93,7 +93,7 @@ export const ChatSidebar: React.FC = () => {
               ))}
               {isLoading && !isStreaming && (
                 <div className="flex justify-start">
-                  <div className="bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 px-3 py-1.5 rounded-xl rounded-bl-none shadow-sm flex items-center space-x-1">
+                  <div className="bg-slate-50 dark:bg-[#1d2a31] border border-slate-100 dark:border-slate-700 px-3 py-1.5 rounded-xl rounded-bl-none shadow-sm flex items-center space-x-1">
                     <div className="w-1 h-1 bg-slate-300 dark:bg-slate-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
                     <div className="w-1 h-1 bg-slate-300 dark:bg-slate-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
                     <div className="w-1 h-1 bg-slate-300 dark:bg-slate-500 rounded-full animate-bounce" />
@@ -120,7 +120,7 @@ export const ChatSidebar: React.FC = () => {
         <div className="shrink-0">
           {providerMetadata && (
             <div className="px-4 pb-1.5 flex justify-end">
-              <div className="flex items-center bg-slate-50/40 dark:bg-slate-800/40 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 rounded-full px-2.5 py-0.5 shadow-sm space-x-2 overflow-hidden transition-all duration-500 animate-in fade-in slide-in-from-bottom-1">
+              <div className="flex items-center bg-slate-50/40 dark:bg-[#1d2a31]/40 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 rounded-full px-2.5 py-0.5 shadow-sm space-x-2 overflow-hidden transition-all duration-500 animate-in fade-in slide-in-from-bottom-1">
                 {/* Active Model */}
                 <div className="flex items-center space-x-1.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
@@ -156,7 +156,7 @@ export const ChatSidebar: React.FC = () => {
 
                 {/* Separator if there are failed providers */}
                 {providerMetadata.failedProviders.length > 0 && (
-                  <div className="w-px h-2.5 bg-slate-200 dark:bg-slate-700" />
+                  <div className="w-px h-2.5 bg-slate-200 dark:bg-[#1d2a31]" />
                 )}
 
                 {/* Failed Providers */}
@@ -219,7 +219,7 @@ export const ChatSidebar: React.FC = () => {
       {/* Terminal Bar (Always visible at the bottom) */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className="h-10 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors pointer-events-auto shadow-sm"
+        className="h-10 bg-slate-50 dark:bg-[#131d22] border-t border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1d2a31] transition-colors pointer-events-auto shadow-sm"
       >
         <div className="flex items-center space-x-3">
           <div
@@ -239,7 +239,7 @@ export const ChatSidebar: React.FC = () => {
           <span className="text-[9px] font-medium text-slate-400 dark:text-slate-500">
             {isProjectPage ? `Context: Active` : "No context"}
           </span>
-          <div className="w-px h-4 bg-slate-200 dark:bg-slate-700" />
+          <div className="w-px h-4 bg-slate-200 dark:bg-[#1d2a31]" />
           {isOpen ? (
             <X className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
           ) : (

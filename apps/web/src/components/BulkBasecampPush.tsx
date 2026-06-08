@@ -126,8 +126,8 @@ export const BulkBasecampPush = ({
           disabled={isPushing}
           className={`inline-flex items-center space-x-2 px-4 py-2 rounded-md font-bold text-sm transition-all shadow-sm active:scale-95 disabled:opacity-70 ${
             isPushing
-              ? "bg-slate-100 text-slate-500 border border-slate-200"
-              : "bg-[#F97316] text-white hover:bg-[#EA580C]"
+              ? "bg-slate-100 dark:bg-[#1d2a31] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-[#131d22]"
+              : "bg-[#F97316] dark:bg-[#EA580C] text-white hover:bg-[#EA580C] dark:hover:bg-[#C2410C]"
           }`}
         >
           {isPushing ? (
@@ -155,25 +155,25 @@ export const BulkBasecampPush = ({
 
       {/* Status Selection Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-900/40 dark:bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
           <div
             className="absolute inset-0"
             onClick={() => !isPushing && setIsModalOpen(false)}
           />
-          <div className="relative w-full max-w-sm bg-slate-50 border border-slate-200 rounded-[12px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+          <div className="relative w-full max-w-sm bg-slate-50 dark:bg-[#131d22] border border-slate-200 dark:border-[#1d2a31] rounded-[12px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-5 border-b border-slate-100 dark:border-[#1d2a31] bg-slate-50/50 dark:bg-[#1d2a31]/50 flex justify-between items-center">
               <div>
-                <h3 className="font-bold text-slate-900 text-lg tracking-tight">
+                <h3 className="font-bold text-slate-900 dark:text-white text-lg tracking-tight">
                   Select Status
                 </h3>
-                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-0.5">
+                <p className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-0.5">
                   Basecamp Comment Workflow
                 </p>
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
                 disabled={isPushing}
-                className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
+                className="p-1.5 rounded-md text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1d2a31] transition-all"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -186,19 +186,19 @@ export const BulkBasecampPush = ({
                   disabled={isPushing}
                   className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all group ${
                     selectedStatus === "pending"
-                      ? "bg-amber-50 border-amber-200 shadow-md scale-105"
-                      : "bg-slate-50 border-slate-100 hover:border-slate-200 grayscale opacity-60"
+                      ? "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50 shadow-md scale-105"
+                      : "bg-slate-50 dark:bg-[#1d2a31] border-slate-100 dark:border-[#1d2a31] hover:border-slate-200 dark:hover:border-slate-700 grayscale opacity-60"
                   }`}
                 >
                   <div
-                    className={`p-2 rounded-lg ${selectedStatus === "pending" ? "bg-amber-100 text-amber-600" : "bg-slate-50 text-slate-400"}`}
+                    className={`p-2 rounded-lg ${selectedStatus === "pending" ? "bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400" : "bg-slate-50 dark:bg-[#131d22] text-slate-400 dark:text-slate-500"}`}
                   >
                     <Loader2
                       className={`w-5 h-5 ${selectedStatus === "pending" && !isPushing ? "animate-pulse" : ""}`}
                     />
                   </div>
                   <span
-                    className={`text-[11px] font-bold uppercase tracking-widest ${selectedStatus === "pending" ? "text-amber-600" : "text-slate-400"}`}
+                    className={`text-[11px] font-bold uppercase tracking-widest ${selectedStatus === "pending" ? "text-amber-600 dark:text-amber-400" : "text-slate-400 dark:text-slate-500"}`}
                   >
                     Pending
                   </span>
@@ -209,17 +209,17 @@ export const BulkBasecampPush = ({
                   disabled={isPushing}
                   className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all group ${
                     selectedStatus === "completed"
-                      ? "bg-emerald-50 border-emerald-200 shadow-md scale-105"
-                      : "bg-slate-50 border-slate-100 hover:border-slate-200 grayscale opacity-60"
+                      ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/50 shadow-md scale-105"
+                      : "bg-slate-50 dark:bg-[#1d2a31] border-slate-100 dark:border-[#1d2a31] hover:border-slate-200 dark:hover:border-slate-700 grayscale opacity-60"
                   }`}
                 >
                   <div
-                    className={`p-2 rounded-lg ${selectedStatus === "completed" ? "bg-emerald-100 text-emerald-600" : "bg-slate-50 text-slate-400"}`}
+                    className={`p-2 rounded-lg ${selectedStatus === "completed" ? "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400" : "bg-slate-50 dark:bg-[#131d22] text-slate-400 dark:text-slate-500"}`}
                   >
                     <CheckCircle2 className="w-5 h-5" />
                   </div>
                   <span
-                    className={`text-[11px] font-bold uppercase tracking-widest ${selectedStatus === "completed" ? "text-emerald-600" : "text-slate-400"}`}
+                    className={`text-[11px] font-bold uppercase tracking-widest ${selectedStatus === "completed" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400 dark:text-slate-500"}`}
                   >
                     Completed
                   </span>
@@ -247,7 +247,7 @@ export const BulkBasecampPush = ({
                 <button
                   onClick={() => setIsModalOpen(false)}
                   disabled={isPushing}
-                  className="w-full py-2 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors"
+                  className="w-full py-2 text-xs font-bold text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                 >
                   Cancel
                 </button>

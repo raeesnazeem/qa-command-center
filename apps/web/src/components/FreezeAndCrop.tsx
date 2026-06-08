@@ -302,12 +302,12 @@ export const FreezeAndCrop: React.FC<FreezeAndCropProps> = ({
   }
 
   return (
-    <div className="w-full h-full flex flex-col bg-slate-900 rounded-sm overflow-hidden border border-slate-200">
+    <div className="w-full h-full flex flex-col bg-slate-900 dark:bg-[#131d22] rounded-sm overflow-hidden border border-slate-200 dark:border-slate-700">
       {/* Controls Header */}
-      <div className="h-12 bg-slate-50 border-b border-slate-200 flex items-center justify-between px-4 shrink-0">
+      <div className="h-12 bg-slate-50 dark:bg-[#1d2a31] border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 shrink-0">
         <div className="flex items-center gap-2">
           <div className={`w-2 h-2 rounded-full ${isFrozen ? "bg-amber-500" : "bg-emerald-500 animate-pulse"}`} />
-          <span className="text-[10px] font-bold text-slate-900 uppercase tracking-widest">
+          <span className="text-[10px] font-bold text-slate-900 dark:text-white uppercase tracking-widest">
             {isFrozen ? "Frozen — Annotate & Crop" : "Live Browser"}
           </span>
         </div>
@@ -326,7 +326,7 @@ export const FreezeAndCrop: React.FC<FreezeAndCropProps> = ({
             <>
               <button
                 onClick={handleCancelFreeze}
-                className="flex items-center gap-2 px-4 py-1.5 bg-slate-100 text-slate-600 rounded-sm hover:bg-slate-200 transition-all"
+                className="flex items-center gap-2 px-4 py-1.5 bg-slate-100 dark:bg-[#131d22] text-slate-600 dark:text-slate-300 rounded-sm hover:bg-slate-200 dark:hover:bg-[#1d2a31] transition-all"
               >
                 <X size={14} />
                 <span className="text-[10px] font-bold uppercase tracking-widest">Unfreeze</span>
@@ -346,8 +346,8 @@ export const FreezeAndCrop: React.FC<FreezeAndCropProps> = ({
 
       {/* Annotation Toolbar — separate bar, only shown when frozen, never overlaps canvas */}
       {isFrozen && (
-        <div className="shrink-0 bg-slate-50 border-b border-slate-200 flex items-center gap-3 px-4 py-2">
-          <div className="flex items-center bg-slate-100 rounded-lg p-0.5 gap-0.5">
+        <div className="shrink-0 bg-slate-50 dark:bg-[#1d2a31] border-b border-slate-200 dark:border-slate-700 flex items-center gap-3 px-4 py-2">
+          <div className="flex items-center bg-slate-100 dark:bg-[#131d22] rounded-lg p-0.5 gap-0.5">
             {[
               { id: "select", icon: <MousePointer2 size={13} />, label: "Crop" },
               { id: "rect",   icon: <Square size={13} />,        label: "Box" },
@@ -358,7 +358,7 @@ export const FreezeAndCrop: React.FC<FreezeAndCropProps> = ({
                 key={t.id}
                 onClick={() => setTool(t.id as any)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all text-[9px] font-bold uppercase tracking-widest ${
-                  tool === t.id ? "bg-slate-50 shadow-sm text-blue-600" : "text-slate-400 hover:text-slate-700"
+                  tool === t.id ? "bg-slate-50 dark:bg-[#1d2a31] shadow-sm text-blue-600 dark:text-blue-400" : "text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                 }`}
               >
                 {t.icon}{t.label}
@@ -366,7 +366,7 @@ export const FreezeAndCrop: React.FC<FreezeAndCropProps> = ({
             ))}
           </div>
 
-          <div className="w-px h-4 bg-slate-200" />
+          <div className="w-px h-4 bg-slate-200 dark:bg-slate-700" />
 
           <div className="flex items-center gap-1">
             {["#ef4444", "#3b82f6", "#22c55e", "#eab308", "#000000", "#ffffff"].map((c) => (
@@ -381,11 +381,11 @@ export const FreezeAndCrop: React.FC<FreezeAndCropProps> = ({
             ))}
           </div>
 
-          <div className="w-px h-4 bg-slate-200" />
+          <div className="w-px h-4 bg-slate-200 dark:bg-slate-700" />
 
           <button
             onClick={() => setAnnotations([])}
-            className="p-1.5 hover:bg-slate-100 text-slate-400 hover:text-slate-900 rounded-md transition-all"
+            className="p-1.5 hover:bg-slate-100 dark:hover:bg-[#1d2a31] text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-md transition-all"
             title="Clear annotations"
           >
             <Trash2 size={14} />
@@ -394,9 +394,9 @@ export const FreezeAndCrop: React.FC<FreezeAndCropProps> = ({
       )}
 
       {/* Content Area */}
-      <div className="flex-1 relative bg-slate-100 overflow-auto">
+      <div className="flex-1 relative bg-slate-100 dark:bg-[#131d22] overflow-auto">
         {isLoadingProxy && (
-          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-50/80 backdrop-blur-sm">
+          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-50/80 dark:bg-[#131d22]/80 backdrop-blur-sm">
             <Loader2 className="w-8 h-8 text-accent animate-spin mb-2" />
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Loading Live Page...</p>
           </div>
@@ -414,7 +414,7 @@ export const FreezeAndCrop: React.FC<FreezeAndCropProps> = ({
           <iframe
             ref={iframeRef}
             src={iframeUrl}
-            className="w-full h-full border-none bg-slate-50"
+            className="w-full h-full border-none bg-slate-50 dark:bg-[#131d22]"
             title="Live Proxy"
           />
         ) : (
@@ -433,7 +433,7 @@ export const FreezeAndCrop: React.FC<FreezeAndCropProps> = ({
               {activeTextId && typingPos && (
                 <textarea
                   ref={textareaRef}
-                  className="absolute bg-slate-50 border-2 border-blue-600 shadow-2xl p-2 resize-none font-bold overflow-hidden rounded-lg outline-none text-slate-900 ring-4 ring-blue-500/20"
+                  className="absolute bg-slate-50 dark:bg-[#1d2a31] border-2 border-blue-600 shadow-2xl p-2 resize-none font-bold overflow-hidden rounded-lg outline-none text-slate-900 dark:text-white ring-4 ring-blue-500/20"
                   value={textInput}
                   onChange={(e) => setTextInput(e.target.value)}
                   onMouseDown={(e) => e.stopPropagation()}

@@ -70,7 +70,7 @@ export const EditProjectModal = ({
       <div className="absolute inset-0 bg-transparent" onClick={onClose} />
 
       <div className="relative w-full max-w-lg bg-slate-50 dark:bg-[#0B151B] border border-slate-200 dark:border-slate-800 rounded-md shadow-sm overflow-hidden transition-all duration-200">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-[#131d22]/50">
           <div className="flex items-center gap-2">
             <Settings2 className="w-5 h-5 text-slate-400" />
             <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
@@ -79,7 +79,7 @@ export const EditProjectModal = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-md text-slate-400 hover:text-slate-300 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+            className="p-1 rounded-md text-slate-400 hover:text-slate-300 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1d2a31] transition-all"
           >
             <X className="w-6 h-6" />
           </button>
@@ -95,11 +95,11 @@ export const EditProjectModal = ({
               <input
                 {...register("name")}
                 placeholder="e.g. My Awesome Shop"
-                className={`w-full bg-[#F2F6FC] dark:bg-slate-900 hover:bg-[#fcfcfc] dark:hover:bg-slate-900 border ${
+                className={`w-full bg-[#F2F6FC] dark:bg-[#131d22] hover:bg-[#fcfcfc] dark:hover:bg-[#131d22] border ${
                   errors.name
                     ? "border-red-500/50"
                     : "border-slate-300 dark:border-slate-700 hover:border-accent dark:hover:border-accent"
-                } rounded-md px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:bg-[#fcfcfc] dark:focus:bg-slate-900 focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all`}
+                } rounded-md px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:bg-[#fcfcfc] dark:focus:bg-[#131d22] focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all`}
               />
 
               {errors.name && (
@@ -119,11 +119,11 @@ export const EditProjectModal = ({
                 <input
                   {...register("site_url")}
                   placeholder="https://example.com"
-                  className={`w-full bg-[#F2F6FC] dark:bg-slate-900 hover:bg-[#fcfcfc] dark:hover:bg-slate-900 border ${
+                  className={`w-full bg-[#F2F6FC] dark:bg-[#131d22] hover:bg-[#fcfcfc] dark:hover:bg-[#131d22] border ${
                     errors.site_url
                       ? "border-red-500/50"
                       : "border-slate-300 dark:border-slate-700 hover:border-accent dark:hover:border-accent"
-                  } rounded-md pl-10 pr-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:bg-[#fcfcfc] dark:focus:bg-slate-900 focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all`}
+                  } rounded-md pl-10 pr-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:bg-[#fcfcfc] dark:focus:bg-[#131d22] focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all`}
                 />
               </div>
               {errors.site_url && (
@@ -146,7 +146,7 @@ export const EditProjectModal = ({
                 <input
                   {...register("client_name")}
                   placeholder="ACME Corp"
-                  className="w-full bg-[#F2F6FC] dark:bg-slate-900 hover:bg-[#fcfcfc] dark:hover:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:border-accent dark:hover:border-accent rounded-md pl-10 pr-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:bg-[#fcfcfc] dark:focus:bg-slate-900 focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
+                  className="w-full bg-[#F2F6FC] dark:bg-[#131d22] hover:bg-[#fcfcfc] dark:hover:bg-[#131d22] border border-slate-300 dark:border-slate-700 hover:border-accent dark:hover:border-accent rounded-md pl-10 pr-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:bg-[#fcfcfc] dark:focus:bg-[#131d22] focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
                 />
               </div>
             </div>
@@ -158,7 +158,7 @@ export const EditProjectModal = ({
               </label>
               <select
                 {...register("status")}
-                className="w-full bg-[#F2F6FC] dark:bg-slate-900 hover:bg-[#fcfcfc] dark:hover:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:border-accent dark:hover:border-accent rounded-md px-4 py-2.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:bg-[#fcfcfc] dark:focus:bg-slate-900 focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
+                className="w-full bg-[#F2F6FC] dark:bg-[#131d22] hover:bg-[#fcfcfc] dark:hover:bg-[#131d22] border border-slate-300 dark:border-slate-700 hover:border-accent dark:hover:border-accent rounded-md px-4 py-2.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:bg-[#fcfcfc] dark:focus:bg-[#131d22] focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
               >
                 <option value="active">Active</option>
                 <option value="archived">Archived</option>
@@ -209,7 +209,7 @@ export const EditProjectModal = ({
             <button
               type="button"
               onClick={onClose}
-              className="btn-unified-secondary flex-1 dark:bg-[#1D2A31] dark:border-slate-800 dark:hover:bg-slate-800 dark:text-slate-200"
+              className="btn-unified-secondary flex-1 dark:bg-[#1D2A31] dark:border-slate-800 dark:hover:bg-[#1d2a31] dark:text-slate-200"
             >
               Cancel
             </button>

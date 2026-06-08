@@ -157,7 +157,7 @@ export const TasksTab = ({ project }: TasksTabProps) => {
       case "low":
         return "bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 border-yellow-100 dark:border-yellow-800"
       default:
-        return "bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700"
+        return "bg-slate-50 dark:bg-[#131d22] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700"
     }
   }
 
@@ -213,7 +213,7 @@ export const TasksTab = ({ project }: TasksTabProps) => {
               <CanDo role="qa_engineer">
                 <button
                   disabled
-                  className="inline-flex items-center space-x-2 bg-slate-100 dark:bg-slate-800 text-slate-400 px-4 py-2 rounded-md font-bold text-sm cursor-not-allowed opacity-60"
+                  className="inline-flex items-center space-x-2 bg-slate-100 dark:bg-[#1d2a31] text-slate-400 px-4 py-2 rounded-md font-bold text-sm cursor-not-allowed opacity-60"
                   title="Select tasks to see bulk actions"
                 >
                   <MoreHorizontal className="w-4 h-4" />
@@ -249,7 +249,7 @@ export const TasksTab = ({ project }: TasksTabProps) => {
                 <h3 className="font-bold text-slate-900 dark:text-slate-200">
                   {column.title}
                 </h3>
-                <span className="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                <span className="bg-slate-100 dark:bg-[#131d22] text-slate-500 dark:text-slate-400 text-[10px] font-bold px-2 py-0.5 rounded-full">
                   {groupedTasks.filter((t) => t.status === column.id).length}
                 </span>
               </div>
@@ -313,7 +313,7 @@ export const TasksTab = ({ project }: TasksTabProps) => {
                               selectedTaskIds.includes(id),
                             )
                               ? "bg-accent border-accent text-white shadow-sm"
-                              : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-transparent hover:border-accent group-hover:text-slate-200 dark:group-hover:text-slate-700"
+                              : "bg-slate-50 dark:bg-[#131d22] border-slate-200 dark:border-slate-700 text-transparent hover:border-accent group-hover:text-slate-200 dark:group-hover:text-slate-700"
                           }`}
                         >
                           <CheckCircle2 size={12} strokeWidth={3} />
@@ -347,7 +347,7 @@ export const TasksTab = ({ project }: TasksTabProps) => {
                                 e.target.value as TaskStatus,
                               )
                             }
-                            className="text-[10px] font-bold uppercase tracking-wider bg-slate-50 dark:bg-slate-800 border-none rounded px-1.5 py-0.5 focus:ring-0 cursor-pointer appearance-none text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                            className="text-[10px] font-bold uppercase tracking-wider bg-slate-50 dark:bg-[#1d2a31] border-none rounded px-1.5 py-0.5 focus:ring-0 cursor-pointer appearance-none text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                           >
                             {columns.map((col) => (
                               <option key={col.id} value={col.id}>
@@ -428,7 +428,7 @@ export const TasksTab = ({ project }: TasksTabProps) => {
                           {task.assignees?.map((user: any) => (
                             <div
                               key={user.id}
-                              className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500 dark:text-slate-400 border-2 border-white dark:border-slate-600 uppercase"
+                              className="w-6 h-6 rounded-full bg-slate-100 dark:bg-[#131d22] flex items-center justify-center text-[10px] font-bold text-slate-500 dark:text-slate-400 border-2 border-white dark:border-slate-600 uppercase"
                               title={`Assigned to: ${user.full_name}`}
                             >
                               {user.full_name
@@ -438,7 +438,7 @@ export const TasksTab = ({ project }: TasksTabProps) => {
                             </div>
                           ))}
                           {!task.assignees?.length && (
-                            <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500 dark:text-slate-400 border-2 border-white dark:border-[#1B2A30] uppercase">
+                            <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-[#131d22] flex items-center justify-center text-[10px] font-bold text-slate-500 dark:text-slate-400 border-2 border-white dark:border-[#1B2A30] uppercase">
                               ?
                             </div>
                           )}

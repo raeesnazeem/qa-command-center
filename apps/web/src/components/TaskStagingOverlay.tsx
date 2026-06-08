@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react"
+import { createPortal } from "react-dom"
 import {
   X,
   UserPlus,
@@ -151,26 +152,26 @@ export const TaskStagingOverlay: React.FC<TaskStagingOverlayProps> = ({
 
   if (!isOpen || stagedFindings.length === 0) return null
 
-  return (
-    <div className="fixed inset-y-0 right-0 w-96 bg-slate-50 shadow-2xl z-[100] border-l border-slate-200 flex flex-col animate-in slide-in-from-right duration-300">
+  return createPortal(
+    <div className="fixed top-0 right-0 h-screen w-96 bg-slate-50 dark:bg-[#131D22] shadow-2xl z-[100] border-l border-slate-200 dark:border-slate-800 flex flex-col animate-in slide-in-from-right duration-300">
       {/* Header */}
-      <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+      <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-[#131D22]">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-accent/10 rounded-xl text-accent">
             <ClipboardList size={20} />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-slate-900 leading-none">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white leading-none">
               Task Stage
             </h2>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">
               {stagedFindings.length} findings ready
             </p>
           </div>
         </div>
         <button
           onClick={() => setIsOpen(false)}
-          className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400"
+          className="p-2 hover:bg-slate-100 dark:hover:bg-[#1d2a31] rounded-full transition-colors text-slate-400"
         >
           <X size={20} />
         </button>
@@ -179,23 +180,23 @@ export const TaskStagingOverlay: React.FC<TaskStagingOverlayProps> = ({
       {/* Staged Findings List */}
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
         <div className="space-y-3">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
             Staged Findings
           </p>
           <div className="space-y-2">
             {stagedFindings.map((finding) => (
               <div
                 key={finding.id}
-                className="group p-4 bg-slate-50 border border-slate-100 rounded-md hover:border-accent/20 transition-all space-y-3"
+                className="group p-4 bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-800 rounded-md hover:border-accent/20 transition-all space-y-3"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0 space-y-2">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 px-1">
-                        <span className="text-[9px] font-bold bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded shadow-sm">
+                        <span className="text-[9px] font-bold bg-slate-200 dark:bg-[#1d2a31] text-slate-700 dark:text-slate-300 px-1.5 py-0.5 rounded shadow-sm">
                           Issue #{(finding as any).issue_number}
                         </span>
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                        <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                           Heading
                         </p>
                       </div>
@@ -206,12 +207,12 @@ export const TaskStagingOverlay: React.FC<TaskStagingOverlayProps> = ({
                             title: e.target.value,
                           })
                         }
-                        className="w-full bg-slate-50 border border-slate-200 rounded-md px-2 py-1.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-accent/10 focus:border-accent outline-none transition-all"
+                        className="w-full bg-slate-50 dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md px-2 py-1.5 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-accent/10 focus:border-accent outline-none transition-all"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1">
+                      <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">
                         Description
                       </p>
                       <textarea
@@ -222,7 +223,7 @@ export const TaskStagingOverlay: React.FC<TaskStagingOverlayProps> = ({
                           })
                         }
                         rows={2}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-md px-2 py-1.5 text-[11px] font-medium text-slate-600 focus:ring-2 focus:ring-accent/10 focus:border-accent outline-none transition-all resize-none"
+                        className="w-full bg-slate-50 dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md px-2 py-1.5 text-[11px] font-medium text-slate-600 dark:text-slate-300 focus:ring-2 focus:ring-accent/10 focus:border-accent outline-none transition-all resize-none"
                       />
                     </div>
 
@@ -255,12 +256,12 @@ export const TaskStagingOverlay: React.FC<TaskStagingOverlayProps> = ({
         </div>
 
         {/* Assign Section */}
-        <div className="space-y-4 pt-4 border-t border-slate-100">
+        <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
           <div className="space-y-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
               Assign User(s)
             </p>
-            <p className="text-[10px] text-slate-500 font-medium">
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
               Search and select team members for these tasks
             </p>
           </div>
@@ -276,7 +277,7 @@ export const TaskStagingOverlay: React.FC<TaskStagingOverlayProps> = ({
               placeholder="Search members..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all"
+              className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md text-xs focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all dark:text-white"
             />
           </div>
 
@@ -294,7 +295,7 @@ export const TaskStagingOverlay: React.FC<TaskStagingOverlayProps> = ({
                   className={`w-full flex items-center justify-between p-2.5 rounded-md border transition-all ${
                     selectedUserIds.has(member.user_id)
                       ? "bg-accent/5 border-accent/30 shadow-sm"
-                      : "bg-slate-50 border-transparent hover:bg-slate-50"
+                      : "bg-slate-50 dark:bg-[#1D2A31] border-transparent hover:bg-slate-50 dark:hover:bg-[#1D2A31]/80"
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -302,7 +303,7 @@ export const TaskStagingOverlay: React.FC<TaskStagingOverlayProps> = ({
                       className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors ${
                         selectedUserIds.has(member.user_id)
                           ? "bg-accent text-white"
-                          : "bg-slate-100 text-slate-500"
+                          : "bg-slate-100 text-slate-500 dark:bg-[#1d2a31] dark:text-slate-400"
                       }`}
                     >
                       {member.users.full_name
@@ -312,10 +313,10 @@ export const TaskStagingOverlay: React.FC<TaskStagingOverlayProps> = ({
                         .toUpperCase()}
                     </div>
                     <div className="text-left">
-                      <p className="text-xs font-bold text-slate-900 leading-none">
+                      <p className="text-xs font-bold text-slate-900 dark:text-white leading-none">
                         {member.users.full_name}
                       </p>
-                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tight mt-1">
+                      <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tight mt-1">
                         {member.role.replace("_", " ")}
                       </p>
                     </div>
@@ -326,8 +327,8 @@ export const TaskStagingOverlay: React.FC<TaskStagingOverlayProps> = ({
                 </button>
               ))
             ) : (
-              <div className="py-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+              <div className="py-8 text-center bg-slate-50 dark:bg-[#1D2A31] rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">
                   No members found
                 </p>
               </div>
@@ -337,10 +338,10 @@ export const TaskStagingOverlay: React.FC<TaskStagingOverlayProps> = ({
       </div>
 
       {/* Footer */}
-      <div className="p-6 bg-slate-50/80 border-t border-slate-100 space-y-3">
+      <div className="p-6 bg-slate-50/80 dark:bg-[#131D22] border-t border-slate-100 dark:border-slate-800 space-y-3">
         <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest px-1">
-          <span className="text-slate-500">Assignment Preview</span>
-          <span className="text-slate-900">
+          <span className="text-slate-500 dark:text-slate-400">Assignment Preview</span>
+          <span className="text-slate-900 dark:text-white">
             {stagedFindings.length} tasks × {selectedUserIds.size} users
           </span>
         </div>
@@ -370,6 +371,7 @@ export const TaskStagingOverlay: React.FC<TaskStagingOverlayProps> = ({
           Clear Stage
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

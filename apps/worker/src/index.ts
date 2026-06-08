@@ -101,7 +101,7 @@ const worker = new Worker(
   },
   {
     connection,
-    concurrency: 5, // Process up to 5 jobs simultaneously
+    concurrency: 20, // Process up to 5 jobs simultaneously
     drainDelay: 60, // Only poll every 60 seconds when the queue is empty
     stalledInterval: 300000, // 5 minutes
     checkStalledInterval: 300000, // 5 minutes

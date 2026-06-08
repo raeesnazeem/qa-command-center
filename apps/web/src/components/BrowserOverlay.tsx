@@ -144,9 +144,9 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 z-[60] bg-slate-50 flex flex-col animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[60] bg-slate-50 dark:bg-[#131d22] flex flex-col animate-in fade-in duration-300">
       {/* Browser Toolbar */}
-      <div className="h-14 border-b border-slate-200 bg-slate-50 flex items-center justify-between px-4 shrink-0">
+      <div className="h-14 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#1d2a31] flex items-center justify-between px-4 shrink-0">
         <div className="flex items-center gap-4 flex-1">
           <div className="flex items-center gap-1">
             <button className="p-2 hover:bg-slate-200 rounded-md transition-colors text-slate-400">
@@ -171,13 +171,13 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
               type="text"
               value={currentProxiedUrl}
               readOnly
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg py-1.5 pl-9 pr-4 text-xs text-slate-600 focus:outline-none focus:ring-1 focus:ring-accent/20"
+              className="w-full bg-slate-50 dark:bg-[#131d22] border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 pl-9 pr-4 text-xs text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-accent/20"
             />
           </div>
 
-          <div className="h-8 w-px bg-slate-200 mx-2" />
+          <div className="h-8 w-px bg-slate-200 dark:bg-[#1d2a31] mx-2" />
 
-          <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl p-1 gap-1">
+          <div className="flex items-center bg-slate-50 dark:bg-[#131d22] border border-slate-200 dark:border-slate-700 rounded-xl p-1 gap-1">
             {(Object.keys(RESOLUTIONS) as DeviceMode[]).map((mode) => {
               const Icon = {
                 desktop: Monitor,
@@ -192,8 +192,8 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
                   onClick={() => setDeviceMode(mode)}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all ${
                     active
-                      ? "bg-black text-white shadow-sm"
-                      : "text-slate-400 hover:bg-slate-50 hover:text-slate-600"
+                      ? "bg-black dark:bg-[#1d2a31] text-white shadow-sm"
+                      : "text-slate-400 hover:bg-slate-50 dark:hover:bg-[#1d2a31] hover:text-slate-600 dark:hover:text-slate-300"
                   }`}
                   title={RESOLUTIONS[mode].label}
                 >
@@ -216,9 +216,9 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
       </div>
 
       {/* Browser Content */}
-      <div className="flex-1 bg-slate-100 relative overflow-hidden">
+      <div className="flex-1 bg-slate-100 dark:bg-[#131d22] relative overflow-hidden">
         {loading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-slate-50/50 backdrop-blur-sm z-10">
+          <div className="absolute inset-0 flex items-center justify-center bg-slate-50/50 dark:bg-[#131d22]/80 backdrop-blur-sm z-10">
             <div className="flex flex-col items-center gap-3">
               <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
@@ -229,16 +229,16 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
         )}
 
         {error ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-20">
+          <div className="absolute inset-0 flex items-center justify-center bg-slate-50 dark:bg-[#131d22] z-20">
             <div className="max-w-md w-full p-8 text-center flex flex-col items-center gap-4">
-              <div className="p-4 bg-red-50 rounded-full text-red-500">
+              <div className="p-4 bg-red-50 dark:bg-red-900/30 rounded-full text-red-500 dark:text-red-400">
                 <AlertCircle size={40} />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest mb-2">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest mb-2">
                   Proxy Connection Blocked
                 </h3>
-                <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
                   {error}. For security reasons, some domains cannot be
                   displayed in the in-app browser.
                 </p>
@@ -257,7 +257,7 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
         ) : (
           <div className="w-full h-full flex items-center justify-center p-8 overflow-auto">
             <div
-              className="bg-slate-50 shadow-2xl rounded-sm overflow-hidden transition-all duration-500 relative"
+              className="bg-slate-50 dark:bg-white shadow-2xl rounded-sm overflow-hidden transition-all duration-500 relative border dark:border-slate-700"
               style={{
                 width: RESOLUTIONS[deviceMode].width,
                 height: RESOLUTIONS[deviceMode].height,
@@ -332,17 +332,17 @@ export const BrowserOverlay: React.FC<BrowserOverlayProps> = ({
       )}
 
       {/* Sticky Bottom Toolbar */}
-      <div className="h-16 border-t border-slate-200 bg-slate-50/80 backdrop-blur-md flex items-center justify-between px-6 shrink-0 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+      <div className="h-16 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-[#1d2a31]/90 backdrop-blur-md flex items-center justify-between px-6 shrink-0 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center border border-slate-200">
-              <ImageIcon size={16} className="text-slate-400" />
+            <div className="w-8 h-8 bg-slate-100 dark:bg-[#131d22] rounded-lg flex items-center justify-center border border-slate-200 dark:border-slate-700">
+              <ImageIcon size={16} className="text-slate-400 dark:text-slate-500" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-900 uppercase tracking-widest leading-none">
+              <p className="text-[10px] font-bold text-slate-900 dark:text-white uppercase tracking-widest leading-none">
                 Task Gallery
               </p>
-              <p className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">
+              <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase mt-0.5">
                 {galleryCount} / 3 Images
               </p>
             </div>

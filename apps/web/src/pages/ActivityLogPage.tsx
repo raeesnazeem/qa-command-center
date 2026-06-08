@@ -92,13 +92,13 @@ const SearchableDropdown: React.FC<{
             onChange(e.target.value)
             setIsOpen(true)
           }}
-          className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-sm text-slate-900 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+          className="w-full px-3 py-2 bg-slate-50 dark:bg-[#24343D] border border-slate-200 dark:border-slate-700 rounded-md text-sm text-slate-900 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
         />
         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
       </div>
 
       {isOpen && filteredOptions.length > 0 && (
-        <div className="absolute z-[60] w-full mt-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md shadow-xl max-h-40 overflow-y-auto">
+        <div className="absolute z-[60] w-full mt-1 bg-slate-50 dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md shadow-xl max-h-40 overflow-y-auto">
           {filteredOptions.map((opt, i) => (
             <button
               key={i}
@@ -342,14 +342,14 @@ export const ActivityLogPage: React.FC = () => {
 
   return (
     <RoleGuardRoute minRole="admin">
-      <div className="p-6 space-y-6">
+      <div className="max-w-7xl mx-auto p-6 space-y-6 pb-20 animate-in fade-in duration-500">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-slate-50/60 dark:bg-[#1D2A31]/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-lg dark:shadow-sm transition-all">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-200 tracking-tight">
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-200 tracking-tight">
               System Activity Logs
             </h1>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
               Monitor all actions across the platform in real-time.
             </p>
           </div>
@@ -376,7 +376,7 @@ export const ActivityLogPage: React.FC = () => {
         </div>
 
         {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 dark:bg-slate-900 p-4 rounded-md border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 dark:bg-[#1D2A31] p-4 rounded-md border border-slate-200 dark:border-slate-800 shadow-lg hover:shadow-xl dark:shadow-sm dark:hover:shadow-md transition-all">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
@@ -384,7 +384,7 @@ export const ActivityLogPage: React.FC = () => {
               placeholder="Search by user name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-sm text-slate-900 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+              className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-[#24343D] border border-slate-200 dark:border-slate-700 rounded-md text-sm text-slate-900 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
             />
           </div>
 
@@ -393,7 +393,7 @@ export const ActivityLogPage: React.FC = () => {
             <select
               value={entityType}
               onChange={(e) => setEntityType(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-sm text-slate-900 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent appearance-none transition-all"
+              className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-[#24343D] border border-slate-200 dark:border-slate-700 rounded-md text-sm text-slate-900 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent appearance-none transition-all"
             >
               <option value="">All Entities</option>
               <option value="project">Projects</option>
@@ -418,9 +418,9 @@ export const ActivityLogPage: React.FC = () => {
         </div>
 
         {/* Table */}
-        <div className="bg-slate-50 dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div className="bg-slate-50 dark:bg-[#1D2A31] rounded-md border border-slate-200 dark:border-slate-800 shadow-lg hover:shadow-xl dark:shadow-sm dark:hover:shadow-md transition-all overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse border border-slate-300 dark:border-slate-800">
               <thead>
                 <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
                   <th className="px-4 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
@@ -441,10 +441,10 @@ export const ActivityLogPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100/80 dark:divide-y dark:divide-slate-100/10">
-                {logs.map((log) => (
+                {logs.map((log, index) => (
                   <React.Fragment key={log.id}>
                     <tr
-                      className={`hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors ${expandedId === log.id ? "bg-slate-50/80 dark:bg-slate-800/80" : ""}`}
+                      className={`border-b border-slate-300 dark:border-slate-800 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors ${index % 2 === 0 ? "bg-white dark:bg-[#131D22]/30" : "bg-slate-50/50 dark:bg-transparent"} ${expandedId === log.id ? "bg-slate-100/80 dark:bg-slate-800/80" : ""}`}
                     >
                       <td className="px-4 py-2">
                         <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 whitespace-nowrap">
@@ -507,9 +507,9 @@ export const ActivityLogPage: React.FC = () => {
 
                     {/* Expanded Detail View */}
                     {expandedId === log.id && (
-                      <tr className="bg-slate-50/80 dark:bg-slate-800/80">
+                      <tr className="bg-slate-50/80 dark:bg-slate-800/80 border-b border-slate-300 dark:border-slate-800">
                         <td colSpan={5} className="px-6 py-4">
-                          <div className="bg-slate-50 dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-700 p-6 shadow-inner space-y-4">
+                          <div className="bg-slate-50 dark:bg-[#1D2A31] rounded-md border border-slate-200 dark:border-slate-700 p-6 shadow-inner space-y-4">
                             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-4">
                               <div className="flex items-center gap-3">
                                 <div>
@@ -604,7 +604,7 @@ export const ActivityLogPage: React.FC = () => {
 
           {/* Pagination */}
           {logs.length < total && (
-            <div className="p-6 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800 text-center">
+            <div className="p-6 bg-slate-50/50 dark:bg-[#1D2A31]/50 border-t border-slate-200 dark:border-slate-800 text-center">
               <button
                 onClick={() => {
                   const nextPage = page + 1
@@ -628,7 +628,7 @@ export const ActivityLogPage: React.FC = () => {
         {/* Export Modal */}
         {isExportModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-            <div className="bg-slate-50 dark:bg-slate-900 rounded-md shadow-2xl border border-slate-200 dark:border-slate-700 w-full max-w-md overflow-hidden">
+            <div className="bg-slate-50 dark:bg-[#1D2A31] rounded-md shadow-2xl border border-slate-200 dark:border-slate-700 w-full max-w-md overflow-hidden">
               <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
                 <div className="flex items-center gap-2 text-slate-900 dark:text-slate-200">
                   <FileDown className="w-5 h-5 text-accent" />
@@ -662,7 +662,7 @@ export const ActivityLogPage: React.FC = () => {
                           startDate: e.target.value,
                         })
                       }
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-sm text-slate-900 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-[#24343D] border border-slate-200 dark:border-slate-700 rounded-md text-sm text-slate-900 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
                     />
                   </div>
                   <div className="space-y-1">
@@ -678,7 +678,7 @@ export const ActivityLogPage: React.FC = () => {
                           endDate: e.target.value,
                         })
                       }
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-sm text-slate-900 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-[#24343D] border border-slate-200 dark:border-slate-700 rounded-md text-sm text-slate-900 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
                     />
                   </div>
                 </div>

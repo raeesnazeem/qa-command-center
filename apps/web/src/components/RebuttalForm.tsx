@@ -114,13 +114,13 @@ export const RebuttalForm: React.FC<RebuttalFormProps> = ({
 
   if (isAiAnalyzing) {
     return (
-      <div className="bg-slate-50 border border-red-200 rounded-md p-8 shadow-xl flex flex-col items-center justify-center space-y-4 animate-in zoom-in duration-300">
-        <div className="p-4 bg-red-50 rounded-full relative">
+      <div className="bg-slate-50 dark:bg-[#1d2a31] border border-red-200 dark:border-red-900/50 rounded-md p-8 shadow-xl flex flex-col items-center justify-center space-y-4 animate-in zoom-in duration-300">
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-full relative">
           <Loader2 className="w-8 h-8 text-red-600 animate-spin" />
           <div className="absolute inset-0 bg-red-500/10 rounded-full animate-ping" />
         </div>
         <div className="text-center">
-          <h4 className="font-bold text-slate-900 uppercase tracking-widest text-sm">
+          <h4 className="font-bold text-slate-900 dark:text-white uppercase tracking-widest text-sm">
             Rebuttal submitted
           </h4>
           <p className="text-xs text-slate-500 font-bold uppercase tracking-tighter mt-1">
@@ -134,16 +134,16 @@ export const RebuttalForm: React.FC<RebuttalFormProps> = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-slate-50 border border-red-200 rounded-md p-6 shadow-xl space-y-6 ring-4 ring-red-500/5 animate-in slide-in-from-top-4 duration-300"
+      className="bg-slate-50 dark:bg-[#1d2a31] border border-red-200 dark:border-red-900/50 rounded-md p-6 shadow-xl space-y-6 ring-4 ring-red-500/5 animate-in slide-in-from-top-4 duration-300"
     >
       <div className="flex items-center justify-between">
-        <h4 className="text-[10px] font-bold uppercase tracking-widest text-red-600">
+        <h4 className="text-[10px] font-bold uppercase tracking-widest text-red-600 dark:text-red-400">
           New Rebuttal Submission
         </h4>
         <button
           type="button"
           onClick={onCancel}
-          className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors"
+          className="p-1.5 hover:bg-slate-100 dark:hover:bg-[#131d22] rounded-lg text-slate-400 transition-colors"
         >
           <X size={16} />
         </button>
@@ -158,7 +158,7 @@ export const RebuttalForm: React.FC<RebuttalFormProps> = ({
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Explain why this is fixed or not an issue..."
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/40 focus:bg-slate-50 transition-all resize-none min-h-[120px]"
+            className="w-full bg-slate-50 dark:bg-[#131d22] border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-medium focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/40 focus:bg-slate-50 dark:focus:bg-[#131d22] transition-all resize-none min-h-[120px]"
             required
             minLength={20}
           />
@@ -169,7 +169,7 @@ export const RebuttalForm: React.FC<RebuttalFormProps> = ({
             Evidence Screenshot (Optional, Max 5MB)
           </label>
           {previewUrl ? (
-            <div className="relative group rounded-xl overflow-hidden border-2 border-slate-200 aspect-video bg-slate-100">
+            <div className="relative group rounded-xl overflow-hidden border-2 border-slate-200 dark:border-slate-700 aspect-video bg-slate-100 dark:bg-[#131d22]">
               <img
                 src={previewUrl}
                 alt="Preview"
@@ -197,12 +197,12 @@ export const RebuttalForm: React.FC<RebuttalFormProps> = ({
                 e.stopPropagation()
                 onDrop(e)
               }}
-              className="border-2 border-dashed border-slate-200 rounded-xl p-8 flex flex-col items-center justify-center gap-3 hover:border-red-300 hover:bg-red-50/30 transition-all cursor-pointer group"
+              className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-8 flex flex-col items-center justify-center gap-3 hover:border-red-300 dark:hover:border-red-500/50 hover:bg-red-50/30 dark:hover:bg-red-900/10 transition-all cursor-pointer group"
               onClick={() =>
                 document.getElementById("screenshot-upload")?.click()
               }
             >
-              <div className="p-3 bg-slate-100 rounded-xl group-hover:bg-red-100 transition-colors">
+              <div className="p-3 bg-slate-100 dark:bg-[#1d2a31] rounded-xl group-hover:bg-red-100 dark:group-hover:bg-red-900/30 transition-colors">
                 <Upload
                   size={20}
                   className="text-slate-400 group-hover:text-red-600"
@@ -232,7 +232,7 @@ export const RebuttalForm: React.FC<RebuttalFormProps> = ({
         <button
           type="button"
           onClick={onCancel}
-          className="px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-800 transition-colors"
+          className="px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors"
         >
           Cancel
         </button>

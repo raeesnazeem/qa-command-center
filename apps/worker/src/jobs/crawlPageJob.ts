@@ -101,6 +101,34 @@ export async function processCrawlPageJob(job: Job) {
       current_step: step,
     })
   }
+  let currentCheckProgress: Record<string, { progress: number; step: string }> =
+    {}
+
+  const updateCheckProgress = async (
+    checkKey: string,
+    progress: number,
+    step: string,
+  ) => {
+    currentCheckProgress[checkKey] = { progress, step }
+
+    const { error: progressError } = await supabase
+      .from("pages")
+      .update({ check_progress: currentCheckProgress })
+      .eq("id", pageId)
+
+    if (progressError) {
+      logger.error(
+        { pageId, error: progressError.message, progress, step },
+        "Failed to update check progress",
+      )
+    }
+
+    const progressChannel = supabase.channel(`run:${runId}`)
+    await progressChannel.httpSend("page_progress", {
+      pageId,
+      check_progress: currentCheckProgress,
+    })
+  }
 
   try {
     // Step 1: Update page status to 'processing' and set initial step
@@ -251,11 +279,30 @@ export async function processCrawlPageJob(job: Job) {
           10,
           "Navigating to website (this takes a moment)...",
         )
-        await page.goto(pageUrl, { waitUntil: "load", timeout: 60000 })
+        try {
+          await page.goto(pageUrl, { waitUntil: "load", timeout: 60000 })
+        } catch (e: any) {
+          if (
+            e.message.includes("Timeout") ||
+            e.message.includes("aborted") ||
+            e.message.includes("closed")
+          ) {
+            logger.warn(
+              { pageUrl, error: e.message },
+              "Page load timed out or was aborted, proceeding with checks anyway",
+            )
+          } else {
+            throw e
+          }
+        }
         await updateProgress(15, "Website loaded, initializing checks...")
 
         // Check for forms on page
-        hasForms = (await page.$("form")) !== null
+        try {
+          hasForms = (await page.$("form")) !== null
+        } catch {
+          hasForms = false
+        }
       }
 
       const enabledChecks = run?.enabled_checks || []
@@ -298,7 +345,7 @@ export async function processCrawlPageJob(job: Job) {
         if (isHomepage) {
           checkPromises.push(
             checkHeroMedia(page, screenshots, async (p, m) => {
-              await updateProgress(p, m)
+              await updateCheckProgress("hero_media", p, m)
               await new Promise((resolve) => setTimeout(resolve, 1500))
             }).catch((e) => {
               logger.error("Hero media check failed:", e)
@@ -381,7 +428,7 @@ export async function processCrawlPageJob(job: Job) {
                 },
                 undefined,
                 async (p, m) => {
-                  await updateProgress(p, m)
+                  await updateCheckProgress("dead_links", p, m)
                 },
               )
             } catch (e) {
@@ -402,7 +449,7 @@ export async function processCrawlPageJob(job: Job) {
                 pageId,
                 browser,
                 async (p, m) => {
-                  await updateProgress(p, m)
+                  await updateCheckProgress("contact_form", p, m)
                 },
               )
             } catch (e) {
@@ -422,7 +469,7 @@ export async function processCrawlPageJob(job: Job) {
                 runId,
                 pageId,
                 async (p, m) => {
-                  await updateProgress(p, m)
+                  await updateCheckProgress("learn_more_buttons", p, m)
                 },
               )
             } catch (e) {
@@ -468,7 +515,7 @@ export async function processCrawlPageJob(job: Job) {
               pageId,
               browser,
               async (p, m) => {
-                await updateProgress(p, m)
+                await updateCheckProgress("privacy_policy", p, m)
               },
             ).catch((e) => {
               logger.error("Privacy policy check failed:", e)
@@ -480,7 +527,7 @@ export async function processCrawlPageJob(job: Job) {
         if (enabledChecks.includes("footer_logo")) {
           checkPromises.push(
             checkFooterLogo(pageUrl, runId, pageId, browser, async (p, m) => {
-              await updateProgress(p, m)
+              await updateCheckProgress("footer_logo", p, m)
             }).catch((e) => {
               logger.error("Footer logo check failed:", e)
               return []
@@ -492,7 +539,7 @@ export async function processCrawlPageJob(job: Job) {
         if (enabledChecks.includes("single_script")) {
           checkPromises.push(
             checkSingleScript(pageUrl, runId, pageId, browser, async (p, m) => {
-              await updateProgress(p, m)
+              await updateCheckProgress("single_script", p, m)
             }).catch((e) => {
               logger.error("Single script check failed:", e)
               return []
@@ -509,7 +556,7 @@ export async function processCrawlPageJob(job: Job) {
               pageId,
               browser,
               async (p, m) => {
-                await updateProgress(p, m)
+                await updateCheckProgress("top_bar_sticky", p, m)
               },
             ).catch((e) => {
               logger.error("Top bar & sticky header check failed:", e)
@@ -521,7 +568,7 @@ export async function processCrawlPageJob(job: Job) {
         if (enabledChecks.includes("favicon")) {
           checkPromises.push(
             checkFavicon(pageUrl, runId, pageId, browser, async (p, m) => {
-              await updateProgress(p, m)
+              await updateCheckProgress("favicon", p, m)
             }).catch((e) => {
               logger.error("Favicon check failed:", e)
               return []
@@ -548,7 +595,7 @@ export async function processCrawlPageJob(job: Job) {
               pageId,
               browser,
               async (p, m) => {
-                await updateProgress(p, m)
+                await updateCheckProgress("logo_chatbot", p, m)
               },
             ).catch((e) => {
               logger.error("Logo on chatbot check failed:", e)
@@ -577,7 +624,7 @@ export async function processCrawlPageJob(job: Job) {
               wpPassword,
               browser,
               async (p, m) => {
-                await updateProgress(p, m)
+                await updateCheckProgress("callnow_links", p, m)
               },
             ).catch((e) => {
               logger.error("Callnow & Links check failed:", e)
@@ -596,7 +643,7 @@ export async function processCrawlPageJob(job: Job) {
               pageId,
               devUrls,
               async (p, m) => {
-                await updateProgress(p, m)
+                await updateCheckProgress("url_tab_compare", p, m)
               },
             ).catch((e) => {
               logger.error("URL Tab Comparison check failed:", e)
@@ -615,7 +662,7 @@ export async function processCrawlPageJob(job: Job) {
               wpPassword,
               browser,
               async (p, m) => {
-                await updateProgress(p, m)
+                await updateCheckProgress("verify_plugin_updates", p, m)
               },
             ).catch((e) => {
               logger.error("Plugin updates check failed:", e)
@@ -633,7 +680,7 @@ export async function processCrawlPageJob(job: Job) {
               pageId,
               browser,
               async (p, m) => {
-                await updateProgress(p, m)
+                await updateCheckProgress("social_share_heading", p, m)
               },
             ).catch((e) => {
               logger.error("Social share heading check failed:", e)
@@ -719,7 +766,14 @@ export async function processCrawlPageJob(job: Job) {
     )
 
     if (pageId) {
-      await supabase.from("pages").update({ status: "failed" }).eq("id", pageId)
+      const errorMessage = error.message.split("\n")[0] || "Unknown error"
+      await supabase
+        .from("pages")
+        .update({
+          status: "failed",
+          current_step: `Error: ${errorMessage}`,
+        })
+        .eq("id", pageId)
     }
 
     throw error

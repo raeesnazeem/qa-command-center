@@ -62,9 +62,9 @@ export const PagesTable: React.FC<PagesTableProps> = ({
   }
 
   return (
-    <div className="bg-slate-50 dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col h-full min-h-[400px]">
+    <div className="bg-slate-50 dark:bg-[#131d22] rounded-md border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col h-full min-h-[400px]">
       {/* Table Header */}
-      <div className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 px-6 py-3 flex items-center text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+      <div className="bg-slate-50 dark:bg-[#1d2a31] border-b border-slate-200 dark:border-slate-700 px-6 py-3 flex items-center text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
         <div className="w-16">Step</div>
         <div className="flex-1">Page URL</div>
         <div className="w-24 text-center">Status</div>
@@ -76,7 +76,7 @@ export const PagesTable: React.FC<PagesTableProps> = ({
       {/* Virtualized Body */}
       <div
         ref={parentRef}
-        className="flex-1 overflow-auto bg-slate-50 dark:bg-slate-900"
+        className="flex-1 overflow-auto bg-slate-50 dark:bg-[#131d22]"
         style={{ height: "500px" }} // Fixed height for virtualization container
       >
         <div
@@ -98,13 +98,13 @@ export const PagesTable: React.FC<PagesTableProps> = ({
                 data-index={virtualRow.index}
                 ref={rowVirtualizer.measureElement}
                 onClick={() => onPageSelect(page)}
-                className="absolute top-0 left-0 w-full border-b border-slate-100 dark:border-slate-800/50 transition-colors group flex items-start px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer"
+                className="absolute top-0 left-0 w-full border-b border-slate-100 dark:border-slate-700 transition-colors group flex items-start px-6 py-4 hover:bg-slate-50 dark:hover:bg-[#1d2a31] cursor-pointer"
                 style={{
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
               >
                 <div className="w-16 pt-1">
-                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-[#1d2a31] px-1.5 py-0.5 rounded">
                     {(virtualRow.index + 1).toString().padStart(2, "0")}
                   </span>
                 </div>
@@ -130,9 +130,9 @@ export const PagesTable: React.FC<PagesTableProps> = ({
 
                   {/* Progress Section - Only shown for active processing pages */}
                   {page.status === "processing" && (
-                    <div className="mt-4 space-y-3 max-w-[320px] bg-slate-50/50 dark:bg-slate-800/50 p-2.5 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm">
+                    <div className="mt-4 space-y-3 max-w-[320px] bg-slate-50/50 dark:bg-[#1d2a31] p-2.5 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm">
                       {/* 1. Progress Bar - High visibility track */}
-                      <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden relative shadow-inner">
+                      <div className="w-full h-2 bg-slate-200 dark:bg-[#131d22] rounded-full overflow-hidden relative shadow-inner">
                         <div
                           className={`h-full transition-all duration-1000 ease-in-out ${
                             page.status === "processing"
@@ -215,7 +215,7 @@ export const PagesTable: React.FC<PagesTableProps> = ({
                 {showVisuals && (
                   <div className="w-20 flex justify-center pt-1">
                     {page.screenshot_url_desktop ? (
-                      <div className="w-10 h-6 bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 overflow-hidden relative group/img">
+                      <div className="w-10 h-6 bg-slate-100 dark:bg-[#131d22] rounded border border-slate-200 dark:border-slate-700 overflow-hidden relative group/img">
                         <img
                           src={page.screenshot_url_desktop}
                           alt="Preview"
@@ -223,7 +223,7 @@ export const PagesTable: React.FC<PagesTableProps> = ({
                         />
                       </div>
                     ) : (
-                      <div className="w-10 h-6 bg-slate-50 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 flex items-center justify-center">
+                      <div className="w-10 h-6 bg-slate-50 dark:bg-[#131d22] rounded border border-slate-200 dark:border-slate-700 flex items-center justify-center">
                         <ImageIcon size={12} className="text-slate-300 dark:text-slate-600" />
                       </div>
                     )}

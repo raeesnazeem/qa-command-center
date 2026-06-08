@@ -193,10 +193,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   }, [value])
 
   return (
-    <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
+    <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-[#131d22]">
       <div className="relative">
         {showSettings && (
-          <div className="absolute bottom-full mb-2 right-0 w-64 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-3 z-50 animate-in fade-in slide-in-from-bottom-2">
+          <div className="absolute bottom-full mb-2 right-0 w-64 bg-slate-50 dark:bg-[#1d2a31] border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-3 z-50 animate-in fade-in slide-in-from-bottom-2">
             <h4 className="text-[10px] font-bold text-slate-900 dark:text-slate-200 uppercase tracking-widest mb-2">
               Microphone Settings
             </h4>
@@ -215,7 +215,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                         className={`w-full text-left text-[10px] truncate p-1.5 rounded border transition-all ${
                           selectedMicId === mic.deviceId
                             ? "bg-accent/10 border-accent text-accent font-medium"
-                            : "bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+                            : "bg-slate-50 dark:bg-[#131d22] border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1d2a31]"
                         }`}
                       >
                         {mic.label || `Microphone ${idx + 1}`}
@@ -259,7 +259,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           }
           disabled={disabled || isTranscribing}
           maxLength={MAX_CHARS}
-          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 rounded-xl py-3 pl-4 pr-24 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all resize-none min-h-[44px] max-h-[120px] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-slate-50 dark:bg-[#131d22] border border-slate-200 dark:border-slate-700 dark:text-slate-200 rounded-xl py-3 pl-4 pr-24 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all resize-none min-h-[44px] max-h-[120px] disabled:opacity-50 disabled:cursor-not-allowed"
           rows={1}
         />
 
@@ -274,7 +274,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           </span>
           <button
             onClick={() => setShowSettings(!showSettings)}
-            className={`p-1.5 rounded-lg transition-all ${showSettings ? "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"}`}
+            className={`p-1.5 rounded-lg transition-all ${showSettings ? "bg-slate-200 dark:bg-[#1d2a31] text-slate-700 dark:text-slate-200" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1d2a31]"}`}
             title="Microphone Settings"
             type="button"
           >
@@ -287,7 +287,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             className={`p-1.5 rounded-lg transition-all shadow-sm ${
               isListening
                 ? "bg-red-500 text-white hover:bg-red-600 animate-pulse"
-                : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                : "bg-slate-100 dark:bg-[#131d22] text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-[#1d2a31]"
             } disabled:opacity-50`}
             title="Voice input"
             type="button"

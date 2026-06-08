@@ -157,12 +157,12 @@ export const TaskDetailPanel = ({
 
       {/* Panel */}
       <div
-        className={`fixed top-0 bottom-10 right-0 w-full max-w-xl bg-slate-50 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col overflow-hidden !mt-0 ${isOpen ? "translate-x-0" : "translate-x-full"}`}
+        className={`fixed top-0 bottom-10 right-0 w-full max-w-xl bg-slate-50 dark:bg-[#131D22] shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col overflow-hidden !mt-0 ${isOpen ? "translate-x-0" : "translate-x-full"}`}
       >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-[#131D22]">
           <div className="flex items-center space-x-3">
-            <h2 className="font-bold text-slate-900">Task Details</h2>
+            <h2 className="font-bold text-slate-900 dark:text-white">Task Details</h2>
             <span
               className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${getSeverityStyles(task.severity)}`}
             >
@@ -171,7 +171,7 @@ export const TaskDetailPanel = ({
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-slate-200 rounded-full transition-colors"
+            className="p-2 hover:bg-slate-200 dark:hover:bg-[#1d2a31] rounded-full transition-colors"
           >
             <X className="w-5 h-5 text-slate-500" />
           </button>
@@ -182,7 +182,7 @@ export const TaskDetailPanel = ({
           <div className="p-6 space-y-8">
             {/* Title & Status */}
             <div className="space-y-4">
-              <h1 className="text-2xl font-bold text-slate-900 leading-tight">
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">
                 {(() => {
                   const match = task.title.match(/^(Issue #\d+):?\s*(.*)$/)
                   if (match) {
@@ -201,7 +201,7 @@ export const TaskDetailPanel = ({
 
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex flex-col space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                     Current Status
                   </span>
                   <select
@@ -220,7 +220,7 @@ export const TaskDetailPanel = ({
 
                 <CanDo role="qa_engineer">
                   <div className="flex flex-col space-y-2">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                       Assignees
                     </span>
                     <div className="flex flex-wrap gap-2 items-center">
@@ -230,7 +230,7 @@ export const TaskDetailPanel = ({
                           className={`flex items-center border rounded px-2.5 py-1 space-x-2 transition-all ${
                             a.taskId === task.id
                               ? "bg-accent/10 border-accent/20 text-accent"
-                              : "bg-slate-50 border-slate-200 text-slate-700"
+                              : "bg-slate-50 dark:bg-[#1D2A31] border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
                           }`}
                         >
                           <span className="text-[11px] font-bold uppercase tracking-wider">
@@ -251,7 +251,7 @@ export const TaskDetailPanel = ({
                                 },
                               })
                             }}
-                            className="p-0.5 hover:bg-slate-200/50 rounded-full transition-colors"
+                            className="p-0.5 hover:bg-slate-200/50 dark:hover:bg-[#1d2a31]/50 rounded-full transition-colors"
                           >
                             <X size={10} strokeWidth={3} />
                           </button>
@@ -275,7 +275,7 @@ export const TaskDetailPanel = ({
                               gallery_images: task.gallery_images,
                             } as any)
                           }}
-                          className="appearance-none bg-slate-50 border-2 border-dashed border-slate-200 hover:border-accent hover:text-accent text-slate-400 text-[10px] font-bold uppercase tracking-widest rounded-lg px-3 py-1 pr-8 cursor-pointer transition-all focus:outline-none"
+                          className="appearance-none bg-slate-50 dark:bg-[#1D2A31] border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-accent hover:text-accent text-slate-400 dark:text-slate-500 text-[10px] font-bold uppercase tracking-widest rounded-lg px-3 py-1 pr-8 cursor-pointer transition-all focus:outline-none"
                         >
                           <option value="">+ Add Dev</option>
                           {project?.project_members
@@ -314,20 +314,20 @@ export const TaskDetailPanel = ({
             </div>
 
             {/* Meta Grid */}
-            <div className="grid grid-cols-2 gap-6 pt-6 border-t border-slate-50">
+            <div className="grid grid-cols-2 gap-6 pt-6 border-t border-slate-50 dark:border-slate-800">
               <div className="space-y-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center">
                   <Layers className="w-3 h-3 mr-1" /> Project
                 </span>
-                <p className="text-sm font-medium text-slate-700">
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
                   {task.projects?.name || "N/A"}
                 </p>
               </div>
               <div className="space-y-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center">
                   <Calendar className="w-3 h-3 mr-1" /> Created
                 </span>
-                <p className="text-sm font-medium text-slate-700">
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
                   {format(new Date(task.created_at), "MMM d, yyyy")}
                 </p>
               </div>
@@ -335,10 +335,10 @@ export const TaskDetailPanel = ({
 
             {/* Description */}
             <div className="space-y-2">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                 Description
               </span>
-              <div className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap bg-slate-50 p-4 rounded-xl border border-slate-100 min-h-[100px]">
+              <div className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap bg-slate-50 dark:bg-[#1D2A31] p-4 rounded-xl border border-slate-100 dark:border-slate-700 min-h-[100px]">
                 {task.description || "No description provided."}
               </div>
             </div>
@@ -346,7 +346,7 @@ export const TaskDetailPanel = ({
             {/* Evidence Gallery */}
             {task.gallery_images && task.gallery_images.length > 0 && (
               <div className="space-y-3">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center">
                   <ImageIcon className="w-3 h-3 mr-1" /> Evidence Gallery
                 </span>
                 <div className="grid grid-cols-3 gap-3">
@@ -356,7 +356,7 @@ export const TaskDetailPanel = ({
                       href={img}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="aspect-square bg-slate-100 rounded-xl overflow-hidden border border-slate-200 group/img relative"
+                      className="aspect-square bg-slate-100 dark:bg-[#1D2A31] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 group/img relative"
                     >
                       <img
                         src={img}
@@ -376,7 +376,7 @@ export const TaskDetailPanel = ({
             )}
 
             {/* Comment Thread */}
-            <div className="pt-8 border-t border-slate-100">
+            <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
               <CommentThread
                 taskId={task.id}
                 comments={task.comments || []}
@@ -386,7 +386,7 @@ export const TaskDetailPanel = ({
 
             {/* Rebuttal Section */}
             {(hasRebuttals || isDeveloper) && (
-              <div className="space-y-4 pt-8 border-t border-slate-100">
+              <div className="space-y-4 pt-8 border-t border-slate-100 dark:border-slate-800">
                 <div className="flex items-center space-x-2 text-red-600">
                   <ShieldAlert className="w-4 h-4" />
                   <h3 className="font-bold uppercase tracking-widest text-xs">
@@ -407,7 +407,7 @@ export const TaskDetailPanel = ({
                       {task.rebuttals?.map((r) => (
                         <div
                           key={r.id}
-                          className="bg-slate-50 border border-red-100 p-3 rounded-lg space-y-2"
+                          className="bg-slate-50 dark:bg-[#1D2A31] border border-red-100 dark:border-red-900/50 p-3 rounded-lg space-y-2"
                         >
                           <div className="flex items-center justify-between text-[10px] font-bold uppercase text-red-400">
                             <span>{r.users?.full_name}</span>
@@ -415,7 +415,7 @@ export const TaskDetailPanel = ({
                               {format(new Date(r.created_at), "MMM d, HH:mm")}
                             </span>
                           </div>
-                          <p className="text-sm text-slate-700 italic">
+                          <p className="text-sm text-slate-700 dark:text-slate-300 italic">
                             {r.text}
                           </p>
                           {r.screenshot_url && (
@@ -440,7 +440,7 @@ export const TaskDetailPanel = ({
                         value={rebuttalText}
                         onChange={(e) => setRebuttalText(e.target.value)}
                         placeholder="Explain why this finding is incorrect..."
-                        className="w-full bg-slate-50 border border-red-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 resize-none min-h-[80px]"
+                        className="w-full bg-slate-50 dark:bg-[#1D2A31] border border-red-100 dark:border-red-900/50 rounded-lg px-3 py-2 text-sm dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/20 resize-none min-h-[80px]"
                       />
                       <div className="flex items-center space-x-2">
                         <div className="relative flex-1">
@@ -450,7 +450,7 @@ export const TaskDetailPanel = ({
                             value={rebuttalUrl}
                             onChange={(e) => setRebuttalUrl(e.target.value)}
                             placeholder="Screenshot URL (optional)"
-                            className="w-full bg-slate-50 border border-red-100 rounded-lg pl-10 pr-3 py-2 text-xs focus:outline-none"
+                            className="w-full bg-slate-50 dark:bg-[#1D2A31] border border-red-100 dark:border-red-900/50 rounded-lg pl-10 pr-3 py-2 text-xs dark:text-white focus:outline-none"
                           />
                         </div>
                         <button
@@ -468,17 +468,17 @@ export const TaskDetailPanel = ({
             )}
 
             {/* Activity Feed Sidebar/Section */}
-            <div className="pt-8 border-t border-slate-100">
+            <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
               <TaskActivityFeed taskId={task.id} />
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
+        <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-[#131D22] flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Clock className="w-4 h-4 text-slate-400" />
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
               Last update:
               <br /> {format(new Date(task.updated_at), "MMM d, HH:mm")}
             </span>
@@ -512,29 +512,29 @@ export const TaskDetailPanel = ({
 const getSeverityStyles = (severity: TaskSeverity) => {
   switch (severity) {
     case "critical":
-      return "bg-red-50 text-red-600 border-red-100"
+      return "bg-red-50 text-red-600 border-red-100 dark:bg-[#1D2A31] dark:border-red-900/50 dark:text-red-400"
     case "high":
-      return "bg-orange-50 text-orange-600 border-orange-100"
+      return "bg-orange-50 text-orange-600 border-orange-100 dark:bg-[#1D2A31] dark:border-orange-900/50 dark:text-orange-400"
     case "medium":
-      return "bg-yellow-50 text-yellow-600 border-yellow-100"
+      return "bg-yellow-50 text-yellow-600 border-yellow-100 dark:bg-[#1D2A31] dark:border-yellow-900/50 dark:text-yellow-400"
     case "low":
-      return "bg-yellow-50 text-yellow-600 border-yellow-100"
+      return "bg-yellow-50 text-yellow-600 border-yellow-100 dark:bg-[#1D2A31] dark:border-yellow-900/50 dark:text-yellow-400"
     default:
-      return "bg-slate-50 text-slate-600 border-slate-100"
+      return "bg-slate-50 text-slate-600 border-slate-100 dark:bg-[#1D2A31] dark:border-slate-700 dark:text-slate-400"
   }
 }
 
 const getStatusStyles = (status: TaskStatus) => {
   switch (status) {
     case "open":
-      return "bg-blue-50 text-blue-600 border-blue-100"
+      return "bg-blue-50 text-blue-600 border-blue-100 dark:bg-[#1D2A31] dark:border-blue-900/50 dark:text-blue-400"
     case "in_progress":
-      return "bg-indigo-50 text-indigo-600 border-indigo-100"
+      return "bg-indigo-50 text-indigo-600 border-indigo-100 dark:bg-[#1D2A31] dark:border-indigo-900/50 dark:text-indigo-400"
     case "resolved":
-      return "bg-green-50 text-green-600 border-green-100"
+      return "bg-green-50 text-green-600 border-green-100 dark:bg-[#1D2A31] dark:border-green-900/50 dark:text-green-400"
     case "closed":
-      return "bg-slate-50 text-slate-600 border-slate-100"
+      return "bg-slate-50 text-slate-600 border-slate-100 dark:bg-[#1D2A31] dark:border-slate-700 dark:text-slate-400"
     default:
-      return "bg-slate-50 text-slate-600 border-slate-100"
+      return "bg-slate-50 text-slate-600 border-slate-100 dark:bg-[#1D2A31] dark:border-slate-700 dark:text-slate-400"
   }
 }

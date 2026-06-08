@@ -93,12 +93,12 @@ export const TeamPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-slate-50/60 dark:bg-[#1D2A31]/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-md dark:shadow-xs transition-all">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-200 tracking-tight">
             Organization Team
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
             Manage your team members and their global roles.
           </p>
         </div>
@@ -128,7 +128,7 @@ export const TeamPage = () => {
         </button>
       </div>
 
-      <div className="bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
+      <div className="bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden shadow-md dark:shadow-xs transition-all">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
@@ -243,7 +243,7 @@ export const TeamPage = () => {
 
       {/* Role Guide */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="p-6 bg-accent rounded-xl text-white shadow-xl shadow-accent/10">
+        <div className="p-6 bg-accent rounded-xl text-white shadow-md dark:shadow-xs transition-all">
           <ShieldCheck className="w-8 h-8 text-white mb-4 animate-pulse" />
           <h4 className="font-bold text-lg text-white mb-2">Admins</h4>
           <p className="text-xs text-white leading-relaxed font-medium opacity-90">
@@ -252,7 +252,7 @@ export const TeamPage = () => {
           </p>
         </div>
 
-        <div className="p-6 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm">
+        <div className="p-6 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-md dark:shadow-xs transition-all">
           <Users className="w-8 h-8 text-black dark:text-white mb-4" />
           <h4 className="font-bold text-lg text-slate-900 dark:text-slate-200 mb-2">
             QA Engineers
@@ -262,7 +262,7 @@ export const TeamPage = () => {
             developer rebuttals.
           </p>
         </div>
-        <div className="p-6 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm">
+        <div className="p-6 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-md dark:shadow-xs transition-all">
           <Shield className="w-8 h-8 text-slate-400 dark:text-slate-500 mb-4" />
           <h4 className="font-bold text-lg text-slate-900 dark:text-slate-200 mb-2">Developers</h4>
           <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">

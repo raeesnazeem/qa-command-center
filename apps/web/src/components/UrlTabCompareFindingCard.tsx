@@ -213,7 +213,7 @@ export const UrlTabCompareFindingCard: React.FC<FindingCardProps> = ({
           <input
             value={localTitle}
             onChange={(e) => setLocalTitle(e.target.value)}
-            className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-md font-bold text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-accent/30 focus:border-accent/50 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500"
+            className="w-full px-4 py-3.5 bg-slate-50 dark:bg-[#131d22]/50 border border-slate-200 dark:border-slate-600 rounded-md font-bold text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-accent/30 focus:border-accent/50 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500"
             placeholder="URL & Tab Name Comparison"
           />
           <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover/input:opacity-100 transition-opacity">
@@ -277,7 +277,7 @@ export const UrlTabCompareFindingCard: React.FC<FindingCardProps> = ({
           <button
             onClick={handleRunAiCheck}
             title="Run Smart AI Comparison"
-            className="p-1.5 rounded-md bg-purple-50 text-purple-600 hover:bg-purple-100 hover:scale-105 active:scale-95 border border-purple-200 transition-all flex items-center justify-center shadow-sm"
+            className="p-1.5 rounded-md bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/40 hover:scale-105 active:scale-95 border border-purple-200 dark:border-purple-800/30 transition-all flex items-center justify-center shadow-sm"
           >
             <Sparkles size={14} />
           </button>
@@ -348,7 +348,7 @@ export const UrlTabCompareFindingCard: React.FC<FindingCardProps> = ({
           </div>
 
           {assignedUsers.length > 0 && (
-            <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-1.5 rounded-full pl-3 pr-2">
+            <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-[#131d22] border border-slate-100 dark:border-slate-700 p-1.5 rounded-full pl-3 pr-2">
               <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">
                 Assigned
               </span>
@@ -356,7 +356,7 @@ export const UrlTabCompareFindingCard: React.FC<FindingCardProps> = ({
                 {assignedUsers.map((u, idx) => (
                   <div
                     key={u.id || idx}
-                    className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-white dark:border-[#1D2A31] flex items-center justify-center text-[8px] font-bold text-slate-500 dark:text-slate-300 relative group/avatar"
+                    className="w-6 h-6 rounded-full bg-slate-200 dark:bg-[#1d2a31] border-2 border-white dark:border-[#1D2A31] flex items-center justify-center text-[8px] font-bold text-slate-500 dark:text-slate-300 relative group/avatar"
                   >
                     {u.avatar_url ? (
                       <img
@@ -399,7 +399,7 @@ export const UrlTabCompareFindingCard: React.FC<FindingCardProps> = ({
               </div>
               <button
                 onClick={() => setIsUrlModalOpen(false)}
-                className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-all active:scale-90"
+                className="p-2 hover:bg-slate-200 dark:hover:bg-[#1d2a31] rounded-xl transition-all active:scale-90"
               >
                 <XCircle size={24} className="text-slate-400" />
               </button>
@@ -426,7 +426,7 @@ export const UrlTabCompareFindingCard: React.FC<FindingCardProps> = ({
                       return (
                         <div
                           key={i}
-                          className={`p-2 rounded border text-[10px] ${isMissingInDev ? "bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800/30" : "bg-white dark:bg-slate-800/50 border-slate-100 dark:border-slate-700"}`}
+                          className={`p-2 rounded border text-[10px] ${isMissingInDev ? "bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800/30" : "bg-white dark:bg-[#131d22] border-slate-100 dark:border-slate-700"}`}
                         >
                           <p className="font-mono text-slate-700 dark:text-slate-300 break-all font-medium">
                             {path}
@@ -465,7 +465,7 @@ export const UrlTabCompareFindingCard: React.FC<FindingCardProps> = ({
                       return (
                         <div
                           key={i}
-                          className={`p-2 rounded border text-[10px] ${isMissingInLive ? "bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/30" : "bg-white dark:bg-slate-800/50 border-slate-100 dark:border-slate-700"}`}
+                          className={`p-2 rounded border text-[10px] ${isMissingInLive ? "bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/30" : "bg-white dark:bg-[#131d22] border-slate-100 dark:border-slate-700"}`}
                         >
                           <p className="font-mono text-slate-700 dark:text-slate-300 break-all font-medium">
                             {path}
@@ -516,7 +516,7 @@ export const UrlTabCompareFindingCard: React.FC<FindingCardProps> = ({
               </h3>
               <button
                 onClick={() => setIsAiModalOpen(false)}
-                className="text-[10px] font-bold px-3 py-1.5 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 uppercase"
+                className="text-[10px] font-bold px-3 py-1.5 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors bg-white dark:bg-[#131d22] rounded border border-slate-200 dark:border-slate-700 uppercase"
               >
                 Close
               </button>

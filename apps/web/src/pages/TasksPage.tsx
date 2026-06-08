@@ -28,7 +28,7 @@ import { useAuthAxios } from "../lib/useAuthAxios"
 const ProjectCard = ({ project }: { project: any }) => (
   <Link
     to={`/projects/${project.id}`}
-    className="flex-shrink-0 w-80 bg-slate-50 border border-slate-100 rounded-md p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group flex flex-col h-full"
+    className="flex-shrink-0 w-80 bg-slate-50 border border-slate-100 rounded-md p-6 shadow-md dark:shadow-sm hover:border-accent/20 transition-all group flex flex-col h-full"
   >
     <div className="flex justify-between items-start mb-4">
       <span
@@ -159,9 +159,17 @@ const KanbanCard = ({
   return (
     <div
       onClick={() => onClick(task)}
-      className="bg-[#fbfbfd] dark:bg-[#1B2A30] dark:hover:bg-transparent p-4 rounded-xl border border-transparent dark:border-slate-700 shadow-sm hover:shadow-md transition-all cursor-pointer group relative dark:hover:border-accent/50"
+      className="bg-[#fbfbfd] dark:bg-[#1B2A30] dark:hover:bg-transparent p-4 rounded-xl border border-transparent dark:border-slate-700 shadow-md dark:shadow-sm transition-all cursor-pointer group relative dark:hover:border-accent/50"
     >
-      <div className="absolute inset-0 rounded-xl pointer-events-none p-[1px] drop-shadow-sm opacity-100 dark:opacity-0 transition-opacity duration-500 overflow-hidden" style={{ mask: "linear-gradient(#fff 0 0) content-box exclude, linear-gradient(#fff 0 0)", WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)", WebkitMaskComposite: "xor" }}>
+      <div
+        className="absolute inset-0 rounded-xl pointer-events-none p-[1px] drop-shadow-sm opacity-100 dark:opacity-0 transition-opacity duration-500 overflow-hidden"
+        style={{
+          mask: "linear-gradient(#fff 0 0) content-box exclude, linear-gradient(#fff 0 0)",
+          WebkitMask:
+            "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+          WebkitMaskComposite: "xor",
+        }}
+      >
         <div className="absolute inset-0 bg-gradient-to-br from-slate-200 via-accent/30 to-slate-200/30 group-hover:opacity-50 transition-opacity duration-700"></div>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300%] aspect-square bg-[conic-gradient(from_0deg,transparent_0_45deg,theme(colors.accent)_135deg,transparent_180deg_225deg,#a3d4c7_315deg,transparent_360deg)] opacity-100 dark:opacity-0 group-hover:opacity-100 group-hover:animate-[spin_4s_linear_infinite]"></div>
       </div>
@@ -472,7 +480,7 @@ export const TasksPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-500 pb-20">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-slate-50/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-sm">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-slate-50/60 dark:bg-[#1D2A31]/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-md dark:shadow-xs transition-all">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-200 tracking-tight">
             {isDev ? "Developer Task Flow" : "Real-time Tasks Monitor"}
@@ -498,45 +506,38 @@ export const TasksPage = () => {
       <div className="space-y-16">
         {/* ADMIN & SUB-ADMIN VIEW */}
         {(isAdmin || isSubAdmin) && (
-          <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[8px] overflow-hidden shadow-sm shadow-slate-200/50 flex flex-col animate-in slide-in-from-bottom-4 duration-700">
-            <div className="relative overflow-x-auto bg-slate-50/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
-              <table className="w-full text-sm text-left rtl:text-right text-slate-500 dark:text-slate-400">
-                {/* QA Section */}
-                <tbody className="border-b border-slate-100">
-                  <tr
-                    className="bg-slate-50/50 dark:bg-slate-800 cursor-pointer hover:bg-slate-100/80 transition-all group select-none"
-                    onClick={() => setQaExpanded(!qaExpanded)}
+          <div className="flex flex-col gap-6 animate-in slide-in-from-bottom-4 duration-700">
+            {/* QA Section */}
+            <div className="bg-slate-200 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-[8px] overflow-hidden shadow-md dark:shadow-xs flex flex-col">
+              <div
+                className="bg-slate-50/50 dark:bg-[#1D2A31]/60 backdrop-blur-md cursor-pointer hover:bg-slate-100/80 dark:hover:bg-[#1D2A31]/80 transition-all group select-none flex items-center gap-4 px-8 py-4 border-b border-slate-100 dark:border-slate-800"
+                onClick={() => setQaExpanded(!qaExpanded)}
+              >
+                <div
+                  className={`transition-all duration-300 flex items-center justify-center ${qaExpanded ? "p-1 bg-emerald-50 text-emerald-600 rounded-md text-[10px] font-bold uppercase tracking-widest border border-accent rotate-0" : "p-1 rounded-md bg-slate-200 text-slate-500 -rotate-90"}`}
+                >
+                  <ChevronDown className="w-3 h-3" />
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <span
+                    className={`${qaExpanded ? "text-slate dark:text-slate-200" : "text-slate-400"} py-1 bg-transparent font-semibold text-[15px]`}
                   >
-                    <td colSpan={4} className="px-8 py-4">
-                      <div className="flex items-center gap-4">
-                        <div
-                          className={`transition-all duration-300 flex items-center justify-center ${qaExpanded ? "p-1 bg-emerald-50 text-emerald-600 rounded-sm text-[10px] font-bold uppercase tracking-widest border border-emerald-100 rotate-0" : "p-1 rounded-sm bg-slate-200 text-slate-500 -rotate-90"}`}
-                        >
-                          <ChevronDown className="w-3 h-3" />
-                        </div>
-                        <div className="flex items-center gap-2.5">
-                          <span
-                            className={`${qaExpanded ? "text-slate dark:text-slate-200" : "text-slate-400"} py-3 bg-transparent font-semibold text-[18px] dark:bg-transparent`}
-                          >
-                            Current QA Tasks
-                          </span>
-                        </div>
-                        <div className="ml-auto">
-                          <span className="text-[10px] font-bold text-accent dark:text-slate-300 uppercase tracking-widest bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm">
-                            {data?.qa_projects?.length || 0} Total
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
+                    Current QA Tasks
+                  </span>
+                </div>
+                <div className="ml-auto">
+                  <span className="text-[10px] font-bold text-accent dark:text-slate-300 uppercase tracking-widest bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm">
+                    {data?.qa_projects?.length || 0} Total
+                  </span>
+                </div>
+              </div>
 
-                  {qaExpanded && (
-                    <>
-                      <tr className="dark:bg-emerald-900 text-sm text-slate-500 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800">
-                        <th
-                          scope="col"
-                          className="px-6 py-3 bg-slate-50 dark:bg-slate-800/50 font-medium"
-                        >
+              {qaExpanded && (
+                <div className="relative overflow-y-auto max-h-[280px] bg-slate-50/60 dark:bg-[#1D2A31]/60 custom-scrollbar">
+                  <table className="w-full text-sm text-left rtl:text-right text-slate-500 dark:text-slate-400 relative">
+                    <thead className="sticky top-0 z-10 shadow-sm">
+                      <tr className="dark:bg-[#24343D] bg-accent text-sm text-white dark:text-slate-200 border-b border-slate-200 dark:border-slate-800">
+                        <th scope="col" className="px-6 py-3 font-medium">
                           Project Name
                         </th>
                         <th
@@ -547,7 +548,7 @@ export const TasksPage = () => {
                         </th>
                         <th
                           scope="col"
-                          className="px-6 py-3 bg-slate-50 dark:bg-slate-800/50 font-medium text-center"
+                          className="px-6 py-3 font-medium text-center"
                         >
                           Issues
                         </th>
@@ -555,6 +556,8 @@ export const TasksPage = () => {
                           Assigned QA
                         </th>
                       </tr>
+                    </thead>
+                    <tbody>
                       {data?.qa_projects?.map((project: any) => (
                         <tr
                           key={project.id}
@@ -562,7 +565,7 @@ export const TasksPage = () => {
                         >
                           <th
                             scope="row"
-                            className="px-6 py-4 font-medium text-slate-900 dark:text-slate-200 whitespace-nowrap bg-slate-50 dark:bg-slate-800/50"
+                            className="px-6 py-4 font-medium text-slate-900 dark:text-slate-200 whitespace-nowrap bg-slate-50 dark:bg-[#1D2A31]/50"
                           >
                             <Link
                               to={`/projects/${project.id}`}
@@ -572,19 +575,21 @@ export const TasksPage = () => {
                               <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-all text-emerald-500" />
                             </Link>
                           </th>
-                          <td className="px-6 py-4 dark:bg-slate-850 text-center">
+                          <td className="px-6 py-4 bg-white dark:bg-transparent text-center">
                             <span className="text-[10px] font-bold text-[#93c0b1] bg-[#93c0b1]/10 px-2.5 py-1 rounded-lg border border-[#93c0b1]/10 uppercase tracking-wider">
                               {project.is_pre_release
                                 ? "Pre-Release"
                                 : "Post-Release"}
                             </span>
                           </td>
-                          <td className="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 text-center">
+                          <td className="px-6 py-4 bg-slate-50 dark:bg-[#1D2A31]/50 text-center">
                             <span className="text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-700 px-3 py-1 rounded-full border border-slate-200/50 dark:border-slate-600">
                               {project.open_issues_count || 0}
                             </span>
                           </td>
-                          <td className="px-6 py-4">{getQAName(project)}</td>
+                          <td className="px-6 py-4 bg-white dark:bg-transparent">
+                            {getQAName(project)}
+                          </td>
                         </tr>
                       ))}
                       {(!data?.qa_projects ||
@@ -598,46 +603,43 @@ export const TasksPage = () => {
                           </td>
                         </tr>
                       )}
-                    </>
-                  )}
-                </tbody>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
 
-                {/* Developer Section */}
-                <tbody>
-                  <tr
-                    className="dark:bg-slate-800 bg-slate-50/50 cursor-pointer hover:bg-slate-100/80 transition-all group select-none"
-                    onClick={() => setDevExpanded(!devExpanded)}
+            {/* Developer Section */}
+            <div className="bg-slate-200 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-[8px] overflow-hidden shadow-md dark:shadow-xs flex flex-col">
+              <div
+                className="bg-slate-50/50 dark:bg-[#1D2A31]/60 backdrop-blur-md cursor-pointer hover:bg-slate-100/80 dark:hover:bg-[#1D2A31]/80 transition-all group select-none flex items-center gap-4 px-8 py-4 border-b border-slate-100 dark:border-slate-800"
+                onClick={() => setDevExpanded(!devExpanded)}
+              >
+                <div
+                  className={`transition-all duration-300 flex items-center justify-center ${devExpanded ? "p-1 bg-emerald-50 text-emerald-600 rounded-md text-[10px] font-bold uppercase tracking-widest border border-accent rotate-0" : "p-1 rounded-md bg-slate-200 text-slate-500 -rotate-90"}`}
+                >
+                  <ChevronDown className="w-3 h-3" />
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <span
+                    className={`${devExpanded ? "text-slate dark:text-slate-200" : "text-slate-400"} py-1 font-semibold text-[18px]`}
                   >
-                    <td colSpan={4} className="px-8 py-4">
-                      <div className="flex items-center gap-4">
-                        <div
-                          className={`transition-all duration-300 flex items-center justify-center ${devExpanded ? "p-1 bg-emerald-50 text-emerald-600 rounded-sm text-[10px] font-bold uppercase tracking-widest border border-emerald-100 rotate-0" : "p-1 rounded-sm bg-slate-200 text-slate-500 -rotate-90"}`}
-                        >
-                          <ChevronDown className="w-3 h-3" />
-                        </div>
-                        <div className="flex items-center gap-2.5">
-                          <span
-                            className={`${qaExpanded ? "text-slate dark:text-slate-200" : "text-slate-400"} py-3 font-semibold text-[18px] dark:bg-transparent`}
-                          >
-                            Current Developer Tasks
-                          </span>
-                        </div>
-                        <div className="ml-auto">
-                          <span className="text-[10px] font-bold text-accent dark:text-slate-300 uppercase tracking-widest bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm">
-                            {data?.dev_projects?.length || 0} Total
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
+                    Current Developer Tasks
+                  </span>
+                </div>
+                <div className="ml-auto">
+                  <span className="text-[10px] font-bold text-accent dark:text-slate-300 uppercase tracking-widest bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm">
+                    {data?.dev_projects?.length || 0} Total
+                  </span>
+                </div>
+              </div>
 
-                  {devExpanded && (
-                    <>
-                      <tr className="dark:bg-emerald-900 text-sm text-slate-500 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800">
-                        <th
-                          scope="col"
-                          className="px-6 py-3 bg-slate-50 dark:bg-slate-800/50 font-medium"
-                        >
+              {devExpanded && (
+                <div className="relative overflow-y-auto max-h-[280px] bg-slate-50/60 dark:bg-[#1D2A31]/60 custom-scrollbar">
+                  <table className="w-full text-sm text-left rtl:text-right text-slate-500 dark:text-slate-400 relative">
+                    <thead className="sticky top-0 z-10 shadow-sm">
+                      <tr className="dark:bg-[#24343D] bg-accent text-sm text-white dark:text-slate-200 border-b border-slate-200 dark:border-slate-800">
+                        <th scope="col" className="px-6 py-3 font-medium">
                           Project Name
                         </th>
                         <th
@@ -648,6 +650,8 @@ export const TasksPage = () => {
                           Assigned Developers (Active on Tasks)
                         </th>
                       </tr>
+                    </thead>
+                    <tbody>
                       {data?.dev_projects?.map((project: any) => (
                         <tr
                           key={project.id}
@@ -655,7 +659,7 @@ export const TasksPage = () => {
                         >
                           <th
                             scope="row"
-                            className="px-6 py-4 font-medium text-slate-900 dark:text-slate-200 whitespace-nowrap bg-slate-50 dark:bg-slate-800/50"
+                            className="px-6 py-4 font-medium text-slate-900 dark:text-slate-200 whitespace-nowrap bg-slate-50 dark:bg-[#1D2A31]/50"
                           >
                             <Link
                               to={`/projects/${project.id}`}
@@ -665,7 +669,10 @@ export const TasksPage = () => {
                               <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-all text-[#93c0b1]" />
                             </Link>
                           </th>
-                          <td colSpan={3} className="px-6 py-4">
+                          <td
+                            colSpan={3}
+                            className="px-6 py-4 bg-white dark:bg-transparent"
+                          >
                             <div className="flex flex-wrap gap-2">
                               {getDevNames(project)
                                 .split(", ")
@@ -696,10 +703,10 @@ export const TasksPage = () => {
                           </td>
                         </tr>
                       )}
-                    </>
-                  )}
-                </tbody>
-              </table>
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -757,7 +764,7 @@ export const TasksPage = () => {
 
               if (myTasks.length === 0) {
                 return (
-                  <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-[40px] p-24 text-center space-y-6 shadow-xl shadow-slate-100/50 animate-in zoom-in-95 duration-700">
+                  <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-[40px] p-24 text-center space-y-6 shadow-md dark:shadow-xs animate-in zoom-in-95 duration-700">
                     <div className="w-20 h-20 bg-emerald-50 dark:bg-emerald-900/30 rounded-[28px] flex items-center justify-center mx-auto border border-emerald-100 dark:border-emerald-800">
                       <CheckSquare className="w-10 h-10 text-emerald-500" />
                     </div>

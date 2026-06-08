@@ -108,7 +108,7 @@ export const ContactFormFindingCard: React.FC<ContactFormFindingCardProps> = ({
         <input
           value={localTitle}
           onChange={(e) => setLocalTitle(e.target.value)}
-          className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-md font-bold text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-accent/30 focus:border-accent/50 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500"
+          className="w-full px-4 py-3.5 bg-slate-50 dark:bg-[#131d22] border border-slate-200 dark:border-slate-600 rounded-md font-bold text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-accent/30 focus:border-accent/50 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500"
           placeholder="Input for Heading to be entered by Admin / QA"
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover/input:opacity-100 transition-opacity">
@@ -221,13 +221,13 @@ export const ContactFormFindingCard: React.FC<ContactFormFindingCardProps> = ({
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/40 dark:bg-slate-900/80 backdrop-blur-sm transition-opacity duration-200">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/40 dark:bg-[#131d22]/80 backdrop-blur-sm transition-opacity duration-200">
           <div
             className="absolute inset-0 bg-transparent"
             onClick={() => setIsModalOpen(false)}
           />
-          <div className="relative w-full max-w-3xl bg-slate-50 dark:bg-[#152028] border border-slate-200 dark:border-slate-700 rounded-md shadow-2xl overflow-hidden transition-all duration-200 flex flex-col max-h-[80vh]">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex-shrink-0">
+          <div className="relative w-full max-w-3xl bg-slate-50 dark:bg-[#1d2a31] border border-slate-200 dark:border-slate-700 rounded-md shadow-2xl overflow-hidden transition-all duration-200 flex flex-col max-h-[80vh]">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-[#1d2a31] flex-shrink-0">
               <div className="flex items-center space-x-2">
                 <div className="p-1.5 bg-accent/10 dark:bg-accent/20 rounded-md text-accent">
                   <FileSearch className="w-5 h-5" />
@@ -238,7 +238,7 @@ export const ContactFormFindingCard: React.FC<ContactFormFindingCardProps> = ({
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1 rounded-md text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                className="p-1 rounded-md text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1d2a31] transition-all"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -246,7 +246,7 @@ export const ContactFormFindingCard: React.FC<ContactFormFindingCardProps> = ({
 
             <div className="p-0 overflow-y-auto flex-1">
               <table className="w-full text-left border-collapse">
-                <thead className="bg-slate-100 dark:bg-slate-800 sticky top-0 shadow-sm z-10">
+                <thead className="bg-slate-100 dark:bg-[#131d22] sticky top-0 shadow-sm z-10">
                   <tr>
                     <th className="p-4 text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest border-b border-slate-200 dark:border-slate-700 w-12 text-center">
                       #
@@ -263,7 +263,7 @@ export const ContactFormFindingCard: React.FC<ContactFormFindingCardProps> = ({
                   {pagesData.map((data, idx) => (
                     <tr
                       key={idx}
-                      className="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+                      className="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50/50 dark:hover:bg-[#131d22] transition-colors"
                     >
                       <td className="p-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 text-center">
                         {idx + 1}
@@ -278,7 +278,7 @@ export const ContactFormFindingCard: React.FC<ContactFormFindingCardProps> = ({
                             <span>Present</span>
                           </div>
                         ) : (
-                          <div className="inline-flex items-center space-x-1 text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full text-[9px] uppercase tracking-widest font-bold">
+                          <div className="inline-flex items-center space-x-1 text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-[#131d22] px-2 py-1 rounded-full text-[9px] uppercase tracking-widest font-bold">
                             <AlertCircle className="w-3 h-3" />
                             <span>Missing</span>
                           </div>

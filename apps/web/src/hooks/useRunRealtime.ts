@@ -72,6 +72,7 @@ export const useRunRealtime = (runId: string) => {
                         progress: newPage.progress,
                         current_step: newPage.current_step,
                         status: newPage.status,
+                        check_progress: newPage.check_progress,
                       }
                     : p,
                 ),

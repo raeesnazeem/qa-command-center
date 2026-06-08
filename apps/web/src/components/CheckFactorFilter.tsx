@@ -75,8 +75,8 @@ export const CheckFactorFilter: React.FC<CheckFactorFilterProps> = ({
         disabled={!canGoPrev}
         className={`p-1.5 rounded-full transition-all ${
           canGoPrev
-            ? "text-slate-600 hover:bg-slate-100 cursor-pointer"
-            : "text-slate-200 cursor-not-allowed opacity-50"
+            ? "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1d2a31] cursor-pointer"
+            : "text-slate-200 dark:text-slate-700 cursor-not-allowed opacity-50"
         }`}
       >
         <ChevronLeft size={18} strokeWidth={3} />
@@ -123,8 +123,8 @@ export const CheckFactorFilter: React.FC<CheckFactorFilterProps> = ({
         disabled={!canGoNext}
         className={`p-1.5 rounded-full transition-all ${
           canGoNext
-            ? "text-slate-600 hover:bg-slate-100 cursor-pointer"
-            : "text-slate-200 cursor-not-allowed opacity-50"
+            ? "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#1d2a31] cursor-pointer"
+            : "text-slate-200 dark:text-slate-700 cursor-not-allowed opacity-50"
         }`}
       >
         <ChevronRight size={18} strokeWidth={3} />

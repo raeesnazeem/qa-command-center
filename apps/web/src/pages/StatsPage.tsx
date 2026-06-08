@@ -16,14 +16,14 @@ const StatsPage: React.FC = () => {
   const { data, isLoading, isError } = useLeaderboardStats(year, month)
 
   return (
-    <div className="p-6 space-y-6 animate-in fade-in duration-500">
+    <div className="max-w-7xl mx-auto p-6 space-y-6 animate-in fade-in duration-500 pb-20">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-slate-50/60 dark:bg-[#1D2A31]/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-md dark:shadow-xs transition-all">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-200 tracking-tight flex items-center gap-2">
             Performance Leaderboard
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
             Track and compare performance metrics.
           </p>
         </div>
@@ -116,7 +116,7 @@ const StatsPage: React.FC = () => {
           </div>
         </div>
       ) : isError ? (
-        <div className="h-64 flex items-center justify-center text-red-500 dark:text-red-400 font-bold uppercase text-xs tracking-widest border border-slate-200 dark:border-slate-800 rounded-md bg-slate-50 dark:bg-slate-900 shadow-sm">
+        <div className="h-64 flex items-center justify-center text-red-500 dark:text-red-400 font-bold uppercase text-xs tracking-widest border border-slate-200 dark:border-slate-800 rounded-md bg-slate-50 dark:bg-slate-900 shadow-md dark:shadow-xs transition-all">
           Failed to load statistics. Please try again.
         </div>
       ) : (

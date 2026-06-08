@@ -34,7 +34,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
             ${
               isUser
                 ? "bg-[#76a394] text-white rounded-br-none"
-                : "bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-bl-none"
+                : "bg-slate-50 dark:bg-[#131d22] border border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-bl-none"
             }`}
         >
           <div className="whitespace-pre-wrap break-words">
@@ -63,7 +63,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
           {citations.map((citation, idx) => (
             <div
               key={idx}
-              className="flex items-center space-x-1 px-2 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-tighter"
+              className="flex items-center space-x-1 px-2 py-0.5 bg-slate-100 dark:bg-[#1d2a31] border border-slate-200 dark:border-slate-700 rounded-full text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-tighter"
             >
               <FileText className="w-3 h-3 text-slate-400" />
               <span>

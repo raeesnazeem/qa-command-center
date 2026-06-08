@@ -283,7 +283,7 @@ export const HeroMediaFindingCard: React.FC<FindingCardProps> = ({
                 <p className="text-[8px] font-bold text-slate-400 uppercase mb-1.5 tracking-widest">
                   Contextual Data
                 </p>
-                <div className="h-[80px] p-3 bg-slate-900 rounded-[10px] border border-slate-800 font-mono text-[10px] text-slate-300 whitespace-pre-wrap break-words overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-[#93C0B1] [&::-webkit-scrollbar-track]:bg-transparent">
+                <div className="h-[80px] p-3 bg-slate-900 dark:bg-[#131d22] rounded-[10px] border border-slate-800 dark:border-slate-700 font-mono text-[10px] text-slate-300 whitespace-pre-wrap break-words overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-[#93C0B1] [&::-webkit-scrollbar-track]:bg-transparent">
                   {finding.context_text}
                 </div>
               </div>
@@ -311,8 +311,8 @@ export const HeroMediaFindingCard: React.FC<FindingCardProps> = ({
 
             {finding.tasks?.[0]?.rebuttals?.[0] &&
               !finding.tasks[0].rebuttals[0].ai_verdict && (
-                <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-md border border-slate-100 dark:border-slate-700 flex items-center gap-3">
-                  <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg shadow-sm">
+                <div className="mb-6 p-4 bg-slate-50 dark:bg-[#1d2a31] rounded-md border border-slate-100 dark:border-slate-700 flex items-center gap-3">
+                  <div className="p-2 bg-slate-50 dark:bg-[#131d22] rounded-lg shadow-sm">
                     <Activity
                       size={16}
                       className="text-blue-500 animate-pulse"
@@ -402,7 +402,7 @@ export const HeroMediaFindingCard: React.FC<FindingCardProps> = ({
         <input
           value={localTitle}
           onChange={(e) => setLocalTitle(e.target.value)}
-          className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-md font-bold text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-accent/30 focus:border-accent/50 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500"
+          className="w-full px-4 py-3.5 bg-slate-50 dark:bg-[#131d22] border border-slate-200 dark:border-slate-600 rounded-md font-bold text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-accent/30 focus:border-accent/50 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500"
           placeholder="Input for Heading to be entered by Admin / QA"
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover/input:opacity-100 transition-opacity">
@@ -609,7 +609,7 @@ export const HeroMediaFindingCard: React.FC<FindingCardProps> = ({
         </div>
 
         {assignedUsers.length > 0 && (
-          <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-1.5 rounded-full pl-3 pr-2">
+          <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-[#131d22] border border-slate-100 dark:border-slate-700 p-1.5 rounded-full pl-3 pr-2">
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">
               Assigned
             </span>
@@ -617,7 +617,7 @@ export const HeroMediaFindingCard: React.FC<FindingCardProps> = ({
               {assignedUsers.map((u, idx) => (
                 <div
                   key={u.id || idx}
-                  className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 border-2 border-white dark:border-[#1D2A31] flex items-center justify-center text-[8px] font-bold text-slate-500 dark:text-slate-300 relative group/avatar"
+                  className="w-6 h-6 rounded-full bg-slate-200 dark:bg-[#1d2a31] border-2 border-white dark:border-[#1D2A31] flex items-center justify-center text-[8px] font-bold text-slate-500 dark:text-slate-300 relative group/avatar"
                 >
                   {u.avatar_url ? (
                     <img
@@ -661,7 +661,7 @@ export const HeroMediaFindingCard: React.FC<FindingCardProps> = ({
               </div>
               <button
                 onClick={() => setIsContextModalOpen(false)}
-                className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-all active:scale-90"
+                className="p-2 hover:bg-slate-200 dark:hover:bg-[#1d2a31] rounded-xl transition-all active:scale-90"
               >
                 <XCircle size={24} className="text-slate-400" />
               </button>

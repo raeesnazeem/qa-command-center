@@ -29,7 +29,7 @@ export const ProjectsPage = () => {
   return (
     <div className="min-h-screen bg-bg-main dark:bg-[#131D22] p-6 lg:p-10">
       {/* Header */}
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 bg-slate-50/60 dark:bg-[#1D2A31] backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-sm">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 bg-slate-50/60 dark:bg-[#1D2A31] backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-lg dark:shadow-sm transition-all">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-200 tracking-tight">
             Projects

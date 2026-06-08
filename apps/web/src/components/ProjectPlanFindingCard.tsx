@@ -260,7 +260,7 @@ export const ProjectPlanFindingCard: React.FC<FindingCardProps> = ({
                 <p className="text-[8px] font-bold text-slate-400 uppercase mb-1.5 tracking-widest">
                   Contextual Data
                 </p>
-                <div className="h-[80px] p-3 bg-slate-900 rounded-[10px] border border-slate-800 font-mono text-[10px] text-slate-300 whitespace-pre-wrap break-words overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-[#93C0B1] [&::-webkit-scrollbar-track]:bg-transparent">
+                <div className="h-[80px] p-3 bg-slate-900 dark:bg-[#131d22] rounded-[10px] border border-slate-800 font-mono text-[10px] text-slate-300 whitespace-pre-wrap break-words overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-[#93C0B1] [&::-webkit-scrollbar-track]:bg-transparent">
                   {finding.context_text}
                 </div>
               </div>
@@ -288,8 +288,8 @@ export const ProjectPlanFindingCard: React.FC<FindingCardProps> = ({
 
             {finding.tasks?.[0]?.rebuttals?.[0] &&
               !finding.tasks[0].rebuttals[0].ai_verdict && (
-                <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-md border border-slate-100 dark:border-slate-700 flex items-center gap-3">
-                  <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg shadow-sm">
+                <div className="mb-6 p-4 bg-slate-50 dark:bg-[#1d2a31] rounded-md border border-slate-100 dark:border-slate-700 flex items-center gap-3">
+                  <div className="p-2 bg-slate-50 dark:bg-[#131d22] rounded-lg shadow-sm">
                     <Activity
                       size={16}
                       className="text-blue-500 animate-pulse"
@@ -394,7 +394,7 @@ export const ProjectPlanFindingCard: React.FC<FindingCardProps> = ({
         <input
           value={localTitle}
           onChange={(e) => setLocalTitle(e.target.value)}
-          className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-md font-bold text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-accent/30 focus:border-accent/50 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500"
+          className="w-full px-4 py-3.5 bg-slate-50 dark:bg-[#131d22] border border-slate-200 dark:border-slate-600 rounded-md font-bold text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-accent/30 focus:border-accent/50 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500"
           placeholder="Input for Heading to be entered by Admin / QA"
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover/input:opacity-100 transition-opacity">
@@ -439,7 +439,7 @@ export const ProjectPlanFindingCard: React.FC<FindingCardProps> = ({
                     disabled={isPushed}
                     checked={isPlanVerified}
                     onChange={(e) => setIsPlanVerified(e.target.checked)}
-                    className="w-3 h-3 text-accent border-slate-300 dark:border-slate-600 dark:bg-slate-800 rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 transition-all"
+                    className="w-3 h-3 text-accent border-slate-300 dark:border-slate-600 dark:bg-[#131d22] rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 transition-all"
                   />
                   <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest group-hover/cb:text-slate-900 dark:group-hover/cb:text-slate-200 transition-colors cursor-pointer">
                     {isPlanVerified ? "Plan Verified" : "Verify Plan"}
@@ -451,7 +451,7 @@ export const ProjectPlanFindingCard: React.FC<FindingCardProps> = ({
                     disabled={isPushed}
                     checked={isReviewsVerified}
                     onChange={(e) => setIsReviewsVerified(e.target.checked)}
-                    className="w-3 h-3 text-accent border-slate-300 dark:border-slate-600 dark:bg-slate-800 rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 transition-all"
+                    className="w-3 h-3 text-accent border-slate-300 dark:border-slate-600 dark:bg-[#131d22] rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 transition-all"
                   />
                   <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest group-hover/cb:text-slate-900 dark:group-hover/cb:text-slate-200 transition-colors cursor-pointer">
                     {isReviewsVerified ? "Reviews Verified" : "Verify Reviews"}
@@ -609,7 +609,7 @@ export const ProjectPlanFindingCard: React.FC<FindingCardProps> = ({
               This project plan was fetched dynamically from your Basecamp
               Message Board topic: <strong>"Project Order Details"</strong>.
             </p>
-            <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 p-6 rounded-xl text-slate-800 dark:text-slate-300 font-medium text-sm mb-6 shadow-inner max-h-[300px] overflow-y-auto">
+            <div className="bg-slate-50 dark:bg-[#1d2a31] border border-slate-100 dark:border-slate-700 p-6 rounded-xl text-slate-800 dark:text-slate-300 font-medium text-sm mb-6 shadow-inner max-h-[300px] overflow-y-auto">
               {finding.description}
             </div>
             <div className="flex justify-end">

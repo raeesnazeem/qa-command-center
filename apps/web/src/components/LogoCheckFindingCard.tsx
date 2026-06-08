@@ -225,7 +225,7 @@ export const LogoCheckFindingCard: React.FC<FindingCardProps> = ({
         <input
           value={localTitle}
           onChange={(e) => setLocalTitle(e.target.value)}
-          className="w-full px-4 py-3.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-md font-bold text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-accent/30 focus:border-accent/50 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500"
+          className="w-full px-4 py-3.5 bg-slate-50 dark:bg-[#131d22] border border-slate-200 dark:border-slate-600 rounded-md font-bold text-slate-900 dark:text-slate-200 focus:ring-2 focus:ring-accent/30 focus:border-accent/50 outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-slate-500"
           placeholder="Input for Heading to be entered by Admin / QA"
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover/input:opacity-100 transition-opacity">
@@ -274,7 +274,7 @@ export const LogoCheckFindingCard: React.FC<FindingCardProps> = ({
                     disabled={isPushed}
                     checked={isDesktopVerified}
                     onChange={(e) => setIsDesktopVerified(e.target.checked)}
-                    className="w-3 h-3 text-accent border-slate-300 dark:border-slate-600 dark:bg-slate-800 rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 transition-all"
+                    className="w-3 h-3 text-accent border-slate-300 dark:border-slate-600 dark:bg-[#131d22] rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 transition-all"
                   />
                   <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest group-hover/cb:text-slate-900 dark:group-hover/cb:text-slate-200 transition-colors cursor-pointer">
                     {isDesktopVerified ? "Desktop Verified" : "Verify Desktop"}
@@ -286,7 +286,7 @@ export const LogoCheckFindingCard: React.FC<FindingCardProps> = ({
                     disabled={isPushed}
                     checked={isTabletVerified}
                     onChange={(e) => setIsTabletVerified(e.target.checked)}
-                    className="w-3 h-3 text-accent border-slate-300 dark:border-slate-600 dark:bg-slate-800 rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 transition-all"
+                    className="w-3 h-3 text-accent border-slate-300 dark:border-slate-600 dark:bg-[#131d22] rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 transition-all"
                   />
                   <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest group-hover/cb:text-slate-900 dark:group-hover/cb:text-slate-200 transition-colors cursor-pointer">
                     {isTabletVerified ? "Tablet Verified" : "Verify Tablet"}
@@ -298,7 +298,7 @@ export const LogoCheckFindingCard: React.FC<FindingCardProps> = ({
                     disabled={isPushed}
                     checked={isMobileVerified}
                     onChange={(e) => setIsMobileVerified(e.target.checked)}
-                    className="w-3 h-3 text-accent border-slate-300 dark:border-slate-600 dark:bg-slate-800 rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 transition-all"
+                    className="w-3 h-3 text-accent border-slate-300 dark:border-slate-600 dark:bg-[#131d22] rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 transition-all"
                   />
                   <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest group-hover/cb:text-slate-900 dark:group-hover/cb:text-slate-200 transition-colors cursor-pointer">
                     {isMobileVerified ? "Mobile Verified" : "Verify Mobile"}

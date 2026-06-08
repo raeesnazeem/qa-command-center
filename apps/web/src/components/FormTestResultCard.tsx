@@ -21,23 +21,23 @@ export const FormTestResultCard: React.FC<FormTestResultCardProps> = ({
   const pageUrl = finding.pages?.url
 
   return (
-    <div className="p-4 bg-slate-50 border border-slate-200 rounded-md shadow-sm hover:shadow-md transition-all">
-      <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-50">
+    <div className="p-4 bg-slate-50 dark:bg-[#1d2a31] border border-slate-200 dark:border-slate-700 rounded-md shadow-sm hover:shadow-md transition-all">
+      <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-50 dark:border-slate-700">
         <div className="flex items-center gap-2">
           <div
-            className={`p-1.5 rounded-lg ${isPassed ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"}`}
+            className={`p-1.5 rounded-lg ${isPassed ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400" : "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400"}`}
           >
             <ClipboardList size={14} />
           </div>
-          <span className="text-[10px] font-bold text-slate-900 uppercase tracking-widest">
+          <span className="text-[10px] font-bold text-slate-900 dark:text-white uppercase tracking-widest">
             Form Submission Test
           </span>
         </div>
         <div
           className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-widest ${
             isPassed
-              ? "bg-emerald-100 text-emerald-700"
-              : "bg-red-100 text-red-700"
+              ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300"
+              : "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300"
           }`}
         >
           {isPassed ? (
@@ -60,7 +60,7 @@ export const FormTestResultCard: React.FC<FormTestResultCardProps> = ({
             <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
               Location
             </span>
-            <div className="flex items-center gap-1.5 text-[10px] text-slate-600 bg-slate-50 px-2 py-1 rounded border border-slate-100 truncate">
+            <div className="flex items-center gap-1.5 text-[10px] text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-[#131d22] px-2 py-1 rounded border border-slate-100 dark:border-slate-700 truncate">
               <Globe size={10} className="text-slate-400" />
               {pageUrl}
             </div>
@@ -72,7 +72,7 @@ export const FormTestResultCard: React.FC<FormTestResultCardProps> = ({
             <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
               Form Identifier
             </span>
-            <span className="text-[10px] font-mono text-slate-700 bg-slate-50 px-2 py-1 rounded border border-slate-100 truncate">
+            <span className="text-[10px] font-mono text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-[#131d22] px-2 py-1 rounded border border-slate-100 dark:border-slate-700 truncate">
               {formId}
             </span>
           </div>
@@ -81,7 +81,7 @@ export const FormTestResultCard: React.FC<FormTestResultCardProps> = ({
             <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
               Target Action
             </span>
-            <span className="text-[10px] font-mono text-slate-700 truncate bg-slate-50 px-2 py-1 rounded border border-slate-100 truncate">
+            <span className="text-[10px] font-mono text-slate-700 dark:text-slate-300 truncate bg-slate-50 dark:bg-[#131d22] px-2 py-1 rounded border border-slate-100 dark:border-slate-700 truncate">
               {action}
             </span>
           </div>
@@ -93,7 +93,7 @@ export const FormTestResultCard: React.FC<FormTestResultCardProps> = ({
               Submit Result
             </span>
             <p
-              className={`text-[10px] font-medium leading-relaxed ${isPassed ? "text-slate-600" : "text-red-600"}`}
+              className={`text-[10px] font-medium leading-relaxed ${isPassed ? "text-slate-600 dark:text-slate-300" : "text-red-600 dark:text-red-400"}`}
             >
               {finding.description}
             </p>
@@ -101,11 +101,11 @@ export const FormTestResultCard: React.FC<FormTestResultCardProps> = ({
         )}
 
         {!isPassed && (
-          <div className="mt-1 p-2 bg-red-50 rounded-lg border border-red-100">
-            <p className="text-[9px] text-red-600 font-bold uppercase tracking-tight mb-1">
+          <div className="mt-1 p-2 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-900/30">
+            <p className="text-[9px] text-red-600 dark:text-red-400 font-bold uppercase tracking-tight mb-1">
               Root Cause
             </p>
-            <p className="text-[10px] text-red-600 font-medium leading-relaxed italic">
+            <p className="text-[10px] text-red-600 dark:text-red-400 font-medium leading-relaxed italic">
               No confirmation message or redirect detected within the 5s
               timeout.
             </p>

@@ -1,6 +1,7 @@
 import { Page as PlaywrightPage } from "playwright"
 import { Finding } from "@qacc/shared"
 import axios from "axios"
+import * as cheerio from "cheerio"
 import pino from "pino"
 
 // 1. Initialize Logger
@@ -1473,22 +1474,34 @@ export async function checkUrlTabComparison(
   const { chromium } = require("playwright")
 
   // Helper: fetch tab title for a URL using playwright
+  // Helper: fetch tab title for a URL using playwright
+  // Helper: fetch tab title for a URL using axios & cheerio
   async function fetchTabTitles(
-    browser: any,
+    browser: any, // kept for signature compatibility
     urls: string[],
+    label: string,
+    baseProg: number,
   ): Promise<{ url: string; title: string }[]> {
     const results: { url: string; title: string }[] = []
-    for (const url of urls.slice(0, 50)) {
-      // limit to 50 pages max to avoid timeout
+    const targetUrls = urls.slice(0, 50)
+
+    for (let i = 0; i < targetUrls.length; i++) {
+      const url = targetUrls[i]
+      if (onProgress) {
+        const cur = baseProg + Math.round((i / targetUrls.length) * 20)
+        await onProgress(
+          cur,
+          `Collecting ${label} title ${i + 1} of ${targetUrls.length}: ${url.replace(/^https?:\/\//, "")}`,
+        )
+      }
       try {
-        const context = await browser.newContext()
-        const page = await context.newPage()
-        await page
-          .goto(url, { waitUntil: "domcontentloaded", timeout: 15000 })
-          .catch(() => {})
-        const title = await page.title().catch(() => "")
-        results.push({ url, title: title || "(no title)" })
-        await context.close()
+        const response = await axios.get(url, {
+          timeout: 10000,
+          validateStatus: () => true,
+        })
+        const $ = cheerio.load(response.data || "")
+        const titleText = $("title").text().trim() || "(no title)"
+        results.push({ url, title: titleText })
       } catch (e) {
         results.push({ url, title: "(error loading)" })
       }
@@ -1497,91 +1510,85 @@ export async function checkUrlTabComparison(
   }
 
   // Helper: crawl sitemap of a site and return all page URLs
+  // Helper: crawl sitemap of a site and return all page URLs using axios & cheerio
   async function crawlSiteUrls(
-    browser: any,
+    browser: any, // kept for signature compatibility
     baseUrl: string,
+    label: string,
+    baseProg: number,
   ): Promise<string[]> {
     const visited = new Set<string>()
     const toVisit = [baseUrl]
     const found: string[] = []
 
-    const normalizeBase = baseUrl.replace(/\/$/, "")
+    const baseHost = new URL(baseUrl).hostname.replace(/^www\./, "")
 
     while (toVisit.length > 0 && found.length < 60) {
+      if (onProgress) {
+        const cur = baseProg + Math.round((found.length / 60) * 15)
+        await onProgress(
+          cur,
+          `Discovering ${label} URLs: found ${found.length}/60`,
+        )
+      }
       const current = toVisit.shift()!
+
       if (visited.has(current)) continue
       visited.add(current)
       found.push(current)
 
       try {
-        const context = await browser.newContext()
-        const page = await context.newPage()
-        await page
-          .goto(current, { waitUntil: "domcontentloaded", timeout: 12000 })
-          .catch(() => {})
+        const response = await axios.get(current, {
+          timeout: 10000,
+          validateStatus: () => true,
+        })
+        const $ = cheerio.load(response.data || "")
 
-        const hrefs: string[] = await page
-          .evaluate((base: string) => {
-            const baseHost = new URL(base).hostname.replace(/^www\./, "")
-            const links = Array.from(document.querySelectorAll("a[href]"))
-            return links
-              .map((a) => (a as HTMLAnchorElement).href)
-              .filter((href) => {
-                try {
-                  const url = new URL(href)
-                  return (
-                    url.hostname.includes(baseHost) &&
-                    !href.includes("#") &&
-                    !href.match(/\.(pdf|jpg|jpeg|png|gif|svg|zip|mp4|webm)$/i)
-                  )
-                } catch {
-                  return false
-                }
-              })
-          }, normalizeBase)
+        $("a[href]").each((_: any, a: any) => {
+          try {
+            const rawHref = $(a).attr("href")
+            if (!rawHref) return
 
-          .catch(() => [])
+            // Automatically resolve relative URLs (e.g. "/about" -> "https://domain.com/about")
+            const urlObj = new URL(rawHref, current)
+            const href = urlObj.href
 
-        for (const href of hrefs) {
-          const clean = href.replace(/\/$/, "")
-          if (!visited.has(clean) && !toVisit.includes(clean)) {
-            toVisit.push(clean)
+            if (
+              urlObj.hostname.includes(baseHost) &&
+              !href.includes("#") &&
+              !href.match(/\.(pdf|jpg|jpeg|png|gif|svg|zip|mp4|webm)$/i)
+            ) {
+              const clean = href.replace(/\/$/, "")
+              if (!visited.has(clean) && !toVisit.includes(clean)) {
+                toVisit.push(clean)
+              }
+            }
+          } catch (e) {
+            // skip invalid URLs
           }
-        }
-        await context.close()
+        })
       } catch (e) {
-        // skip
+        // skip failed pages
       }
     }
 
     return found
   }
 
-  let browser: any
+  let browser: any = null
   try {
-    browser = await chromium.launch({ headless: true })
-
     // Step 1: Use provided dev URLs (already crawled by the run) if available, else crawl
-    if (onProgress) await onProgress(10, "Fetching dev site URLs...")
-
     const devUrls =
       allDevUrls.length > 0
         ? allDevUrls
-        : await crawlSiteUrls(browser, devSiteUrl)
+        : await crawlSiteUrls(null, devSiteUrl, "dev site", 0)
 
     // Step 2: Crawl live site
-    if (onProgress) await onProgress(40, "Crawling live site URLs...")
-
-    const liveUrls = await crawlSiteUrls(browser, liveSiteUrl)
+    const liveUrls = await crawlSiteUrls(null, liveSiteUrl, "live site", 15)
 
     // Step 3: Fetch tab titles for both
-    if (onProgress)
-      await onProgress(70, "Fetching tab titles for dev and live pages...")
-
-    const devPages = await fetchTabTitles(browser, devUrls)
-    const livePages = await fetchTabTitles(browser, liveUrls)
-
-    await browser.close()
+    const devPages = await fetchTabTitles(null, devUrls, "dev site", 30)
+    const livePages = await fetchTabTitles(null, liveUrls, "live site", 60)
 
     // Step 4: Build context_text as JSON string
     if (onProgress) await onProgress(90, "Analyzing discrepancies...")

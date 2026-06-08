@@ -333,8 +333,8 @@ export const StartRunModal = ({
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-200">
       <div className="absolute inset-0 bg-transparent" onClick={onClose} />
 
-      <div className="relative w-full max-w-lg bg-slate-50 dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md shadow-sm overflow-hidden transition-all duration-200 max-h-[90vh] flex flex-col">
-        <div className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+      <div className="relative w-full max-w-lg bg-slate-50 dark:bg-[#0B151B] border border-slate-200 dark:border-slate-800 rounded-md shadow-sm overflow-hidden transition-all duration-200 max-h-[90vh] flex flex-col">
+        <div className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-[#131d22]/50">
           <div className="flex items-center space-x-2">
             <div className="p-1.5 bg-accent/10 rounded-md text-accent">
               <PlayCircle className="w-5 h-5" />
@@ -345,7 +345,7 @@ export const StartRunModal = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+            className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1d2a31] transition-all"
           >
             <X className="w-6 h-6" />
           </button>
@@ -400,7 +400,7 @@ export const StartRunModal = ({
                 <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-slate-400" />
                 <input
                   {...register("site_url")}
-                  className="w-full bg-slate-50 dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md pl-8 pr-4 py-1.5 text-[13px] text-slate-900 dark:text-slate-200 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
+                  className="w-full bg-[#F2F6FC] dark:bg-[#131d22] hover:bg-[#fcfcfc] dark:hover:bg-[#131d22] border border-slate-300 dark:border-slate-700 hover:border-accent dark:hover:border-accent rounded-md pl-8 pr-4 py-1.5 text-[13px] text-slate-900 dark:text-slate-200 focus:outline-none focus:bg-[#fcfcfc] dark:focus:bg-[#131d22] focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
                 />
               </div>
               {errors.site_url && (
@@ -423,7 +423,7 @@ export const StartRunModal = ({
                 <input
                   {...register("figma_url")}
                   placeholder="https://figma.com/file/..."
-                  className="w-full bg-slate-50 dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md pl-7 pr-4 py-1.5 text-[13px] text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
+                  className="w-full bg-[#F2F6FC] dark:bg-[#131d22] hover:bg-[#fcfcfc] dark:hover:bg-[#131d22] border border-slate-300 dark:border-slate-700 hover:border-accent dark:hover:border-accent rounded-md pl-7 pr-4 py-1.5 text-[13px] text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:bg-[#fcfcfc] dark:focus:bg-[#131d22] focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
                 />
               </div>
               {errors.figma_url && (
@@ -434,11 +434,11 @@ export const StartRunModal = ({
             </div>
 
             {/* URL Selection Accordion */}
-            <div className="border border-slate-200 dark:border-slate-700 rounded-md overflow-hidden">
+            <div className="border border-slate-300 dark:border-slate-700 hover:border-accent dark:hover:border-accent transition-all rounded-md overflow-hidden">
               <button
                 type="button"
                 onClick={() => setIsUrlsExpanded(!isUrlsExpanded)}
-                className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="w-full flex items-center justify-between px-4 py-3 bg-[#F2F6FC] dark:bg-[#131d22] hover:bg-[#fcfcfc] dark:hover:bg-[#131d22] transition-colors"
               >
                 <div className="flex items-center space-x-2">
                   <Globe className="w-4 h-4 text-slate-500" />
@@ -458,7 +458,7 @@ export const StartRunModal = ({
               </button>
 
               {isUrlsExpanded && (
-                <div className="p-4 bg-slate-50 dark:bg-slate-800/30 border-t border-slate-200 dark:border-slate-700 space-y-3">
+                <div className="p-4 bg-[#fcfcfc] dark:bg-[#131d22] border-t border-slate-300 dark:border-slate-700 space-y-3">
                   <div className="flex items-center space-x-4 pb-2 border-b border-slate-100 dark:border-slate-700/50">
                     <button
                       type="button"
@@ -494,7 +494,7 @@ export const StartRunModal = ({
                       <div
                         key={url}
                         onClick={() => toggleUrl(url)}
-                        className="flex items-center space-x-2 px-2 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors group"
+                        className="flex items-center space-x-2 px-2 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-[#1d2a31]/50 cursor-pointer transition-colors group"
                       >
                         {selectedUrls.includes(url) ? (
                           <CheckSquare className="w-4 h-4 text-accent" />
@@ -548,10 +548,10 @@ export const StartRunModal = ({
                   </button>
                 </div>
               </div>
-              <div className="space-y-4 max-h-[45vh] bg-[#1D2A31] overflow-y-auto pr-2 custom-scrollbar">
+              <div className="space-y-4 max-h-[45vh] bg-transparent overflow-y-auto pr-2 custom-scrollbar">
                 {/* Functional Tests Group */}
                 <details className="group space-y-2" open>
-                  <summary className="text-sm font-bold text-slate-800 dark:text-slate-200 cursor-pointer list-none [&::-webkit-details-marker]:hidden flex items-center outline-none group/summary hover:text-accent transition-colors bg-slate-50 dark:bg-slate-800/50 p-3 rounded-md border border-slate-200 dark:border-slate-700">
+                  <summary className="text-sm font-bold text-slate-800 dark:text-slate-200 cursor-pointer list-none [&::-webkit-details-marker]:hidden flex items-center outline-none group/summary hover:text-accent transition-colors bg-[#F2F6FC] dark:bg-[#131d22] hover:bg-[#fcfcfc] dark:hover:bg-[#131d22] p-3 rounded-md border border-slate-300 dark:border-slate-700">
                     <span className="mr-3 text-[12px] text-slate-400 transition-transform duration-300 -rotate-90 group-open:rotate-0">
                       ▼
                     </span>
@@ -593,7 +593,7 @@ export const StartRunModal = ({
                     {functionalChecks.map((check) => (
                       <label
                         key={check.id}
-                        className="flex items-start p-3 border border-slate-100 dark:border-slate-700 rounded-md bg-slate-50/50 dark:bg-slate-800/30 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors group"
+                        className="flex items-start p-3 border border-slate-100 dark:border-slate-700 rounded-md bg-slate-50/50 dark:bg-[#1d2a31]/30 hover:bg-slate-50 dark:hover:bg-[#1d2a31]/50 cursor-pointer transition-colors group"
                       >
                         <div className="flex items-center h-5 mr-3">
                           <input
@@ -618,7 +618,7 @@ export const StartRunModal = ({
 
                 {/* General Checks Group */}
                 <details className="group space-y-2" open>
-                  <summary className="text-sm font-bold text-slate-800 dark:text-slate-200 cursor-pointer list-none [&::-webkit-details-marker]:hidden flex items-center outline-none group/summary hover:text-accent transition-colors bg-slate-50 dark:bg-slate-800/50 p-3 rounded-md border border-slate-200 dark:border-slate-700">
+                  <summary className="text-sm font-bold text-slate-800 dark:text-slate-200 cursor-pointer list-none [&::-webkit-details-marker]:hidden flex items-center outline-none group/summary hover:text-accent transition-colors bg-[#F2F6FC] dark:bg-[#131d22] hover:bg-[#fcfcfc] dark:hover:bg-[#131d22] p-3 rounded-md border border-slate-300 dark:border-slate-700">
                     <span className="mr-3 text-[12px] text-slate-400 transition-transform duration-300 -rotate-90 group-open:rotate-0">
                       ▼
                     </span>
@@ -661,7 +661,7 @@ export const StartRunModal = ({
                     {generalChecks.map((check) => (
                       <label
                         key={check.id}
-                        className="flex items-start p-3 border border-slate-100 dark:border-slate-700 rounded-md bg-slate-50/50 dark:bg-slate-800/30 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors group"
+                        className="flex items-start p-3 border border-slate-100 dark:border-slate-700 rounded-md bg-slate-50/50 dark:bg-[#1d2a31]/30 hover:bg-slate-50 dark:hover:bg-[#1d2a31]/50 cursor-pointer transition-colors group"
                       >
                         <div className="flex items-center h-5 mr-3">
                           <input
@@ -687,7 +687,7 @@ export const StartRunModal = ({
             </div>
 
             {requiresPassword && (
-              <div className="p-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-md mt-4">
+              <div className="p-4 bg-slate-50 dark:bg-[#131d22]/50 border border-slate-200 dark:border-slate-700 rounded-md mt-4">
                 <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   WordPress Admin Password Required
                 </label>
@@ -699,13 +699,13 @@ export const StartRunModal = ({
                   type="password"
                   {...register("wp_password")}
                   placeholder="Enter today's WP password..."
-                  className="w-full bg-white dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md px-4 py-1.5 text-[13px] text-slate-900 dark:text-slate-200 focus:outline-none focus:border-accent transition-all"
+                  className="w-full bg-[#F2F6FC] dark:bg-[#131d22] hover:bg-[#fcfcfc] dark:hover:bg-[#131d22] border border-slate-300 dark:border-slate-700 hover:border-accent dark:hover:border-accent rounded-md px-4 py-1.5 text-[13px] text-slate-900 dark:text-slate-200 focus:outline-none focus:bg-[#fcfcfc] dark:focus:bg-[#131d22] focus:border-accent transition-all"
                 />
               </div>
             )}
 
             {requiresLiveSiteUrl && (
-              <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-md mt-4">
+              <div className="p-4 bg-slate-50 dark:bg-[#131d22]/50 border border-slate-200 dark:border-slate-700 rounded-md mt-4">
                 <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   Client's Live Site URL — Required
                 </label>
@@ -718,17 +718,17 @@ export const StartRunModal = ({
                   value={liveSiteUrl}
                   onChange={(e) => setLiveSiteUrl(e.target.value)}
                   placeholder="https://www.clientlivesite.com"
-                  className="w-full bg-white dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md px-4 py-1.5 text-[13px] text-slate-900 dark:text-slate-200 focus:outline-none focus:border-accent transition-all"
+                  className="w-full bg-[#F2F6FC] dark:bg-[#131d22] hover:bg-[#fcfcfc] dark:hover:bg-[#131d22] border border-slate-300 dark:border-slate-700 hover:border-accent dark:hover:border-accent rounded-md px-4 py-1.5 text-[13px] text-slate-900 dark:text-slate-200 focus:outline-none focus:bg-[#fcfcfc] dark:focus:bg-[#131d22] focus:border-accent transition-all"
                 />
               </div>
             )}
           </div>
 
-          <div className="shrink-0 p-4 px-6 border-t border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex space-x-3">
+          <div className="shrink-0 p-4 px-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-[#131d22]/50 flex space-x-3">
             <button
               type="button"
               onClick={onClose}
-              className="btn-unified-secondary flex-1"
+              className="btn-unified-secondary flex-1 dark:bg-[#1D2A31] dark:border-slate-800 dark:hover:bg-[#1d2a31] dark:text-slate-200"
             >
               Cancel
             </button>

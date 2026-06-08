@@ -27,7 +27,8 @@ export async function processGenerateEmbeddingsJob(job: Job) {
       id,
       org_id,
       projects (
-        name
+        name,
+        org_id
       )
     `,
     )
@@ -43,7 +44,7 @@ export async function processGenerateEmbeddingsJob(job: Job) {
   }
 
   const projectName = (run.projects as any)?.name || "Unknown Project"
-  const orgId = run.org_id
+  const orgId = (run.projects as any)?.org_id
 
   // 2. Fetch all findings for this run
   const { data: findings, error: findingsError } = await supabase
@@ -96,10 +97,20 @@ export async function processGenerateEmbeddingsJob(job: Job) {
         )
       }
     } catch (err: any) {
-      const isRateLimit = err.status === 429 || err.statusCode === 429 || err.response?.status === 429 || (typeof err.message === 'string' && (err.message.includes('429') || err.message.includes('RESOURCE_EXHAUSTED') || err.message.includes('Quota exceeded')));
+      const isRateLimit =
+        err.status === 429 ||
+        err.statusCode === 429 ||
+        err.response?.status === 429 ||
+        (typeof err.message === "string" &&
+          (err.message.includes("429") ||
+            err.message.includes("RESOURCE_EXHAUSTED") ||
+            err.message.includes("Quota exceeded")))
       if (isRateLimit) {
-        logger.error({ error: err.message || err }, "Rate limit (429) encountered. Aborting further embedding attempts for this run.");
-        throw err;
+        logger.error(
+          { error: err.message || err },
+          "Rate limit (429) encountered. Aborting further embedding attempts for this run.",
+        )
+        throw err
       }
       logger.error(
         { findingId: finding.id, error: err.message || err },
@@ -149,10 +160,20 @@ export async function processGenerateEmbeddingsJob(job: Job) {
             )
           }
         } catch (err: any) {
-          const isRateLimit = err.status === 429 || err.statusCode === 429 || err.response?.status === 429 || (typeof err.message === 'string' && (err.message.includes('429') || err.message.includes('RESOURCE_EXHAUSTED') || err.message.includes('Quota exceeded')));
+          const isRateLimit =
+            err.status === 429 ||
+            err.statusCode === 429 ||
+            err.response?.status === 429 ||
+            (typeof err.message === "string" &&
+              (err.message.includes("429") ||
+                err.message.includes("RESOURCE_EXHAUSTED") ||
+                err.message.includes("Quota exceeded")))
           if (isRateLimit) {
-            logger.error({ error: err.message || err }, "Rate limit (429) encountered. Aborting further embedding attempts for this run.");
-            throw err;
+            logger.error(
+              { error: err.message || err },
+              "Rate limit (429) encountered. Aborting further embedding attempts for this run.",
+            )
+            throw err
           }
           logger.error(
             { commentId: comment.id, error: err.message || err },

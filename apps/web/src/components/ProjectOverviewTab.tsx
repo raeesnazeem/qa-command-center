@@ -98,7 +98,7 @@ export const ProjectOverviewTab = ({
         : "Never",
       icon: Calendar,
       color: "text-slate-600",
-      bg: "bg-slate-50 dark:bg-slate-800",
+      bg: "bg-slate-50 dark:bg-[#1d2a31]",
       hidden: isDeveloper,
     },
   ].filter((s) => !s.hidden)
@@ -283,11 +283,11 @@ export const ProjectOverviewTab = ({
                 <Link
                   key={run.id}
                   to={`/projects/${project.id}/runs/${run.id}`}
-                  className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group"
+                  className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 dark:hover:bg-[#1d2a31] transition-colors group"
                 >
                   <div className="flex items-center space-x-4">
                     <div
-                      className={`p-2 rounded-md bg-slate-50 dark:bg-slate-800 text-slate-400 group-hover:bg-slate-50 dark:group-hover:bg-slate-700 group-hover:text-accent transition-colors shadow-sm border border-slate-100 dark:border-slate-700`}
+                      className={`p-2 rounded-md bg-slate-50 dark:bg-[#1d2a31] text-slate-400 group-hover:bg-slate-50 dark:group-hover:bg-[#1d2a31] group-hover:text-accent transition-colors shadow-sm border border-slate-100 dark:border-slate-700`}
                     >
                       {getStatusIcon(run.status)}
                     </div>
@@ -296,7 +296,7 @@ export const ProjectOverviewTab = ({
                         <span className="text-sm font-bold text-slate-900 dark:text-slate-200 uppercase tracking-tight">
                           {run.run_type.replace("_", " ")}
                         </span>
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 uppercase">
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-[#1d2a31] text-slate-500 dark:text-slate-400 uppercase">
                           {run.status}
                         </span>
                       </div>
@@ -325,7 +325,7 @@ export const ProjectOverviewTab = ({
             </div>
           ) : (
             <div className="p-12 text-center">
-              <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100 dark:border-slate-700">
+              <div className="w-16 h-16 bg-slate-50 dark:bg-[#1d2a31] rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100 dark:border-slate-700">
                 <BarChart3 className="w-8 h-8 text-slate-300 dark:text-slate-600" />
               </div>
               <h4 className="text-lg font-bold text-slate-900 dark:text-slate-200 mb-1">
@@ -339,9 +339,9 @@ export const ProjectOverviewTab = ({
         </div>
       ) : (
         <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-700 rounded-md overflow-hidden shadow-sm">
-          <div className="px-6 py-4 border-b border-slate-50 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+          <div className="px-6 py-4 border-b border-slate-50 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-[#1d2a31]/50">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-md bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-sm">
+              <div className="w-8 h-8 rounded-md bg-slate-50 dark:bg-[#1d2a31] border border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-sm">
                 <ListTodo className="w-4 h-4 text-accent" />
               </div>
               <h3 className="font-bold text-slate-900 dark:text-slate-200">
@@ -364,7 +364,7 @@ export const ProjectOverviewTab = ({
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-slate-50/50 dark:bg-slate-800/50">
+                  <tr className="bg-slate-50/50 dark:bg-[#1d2a31]/50">
                     <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-50 dark:border-slate-700">
                       Issue Assigned
                     </th>
@@ -381,7 +381,7 @@ export const ProjectOverviewTab = ({
                   {tasksData.data.map((task: any) => (
                     <tr
                       key={task.id}
-                      className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group cursor-pointer"
+                      className="hover:bg-slate-50/50 dark:hover:bg-[#1d2a31]/50 transition-colors group cursor-pointer"
                       onClick={() =>
                         (window.location.href = `/projects/${project.id}?tab=tasks&taskId=${task.id}`)
                       }
@@ -406,7 +406,7 @@ export const ProjectOverviewTab = ({
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-2">
-                          <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-500 uppercase">
+                          <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-[#1d2a31] border border-slate-200 dark:border-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-500 uppercase">
                             {task.creator?.full_name?.charAt(0) || (
                               <User size={10} />
                             )}
@@ -438,7 +438,7 @@ export const ProjectOverviewTab = ({
             </div>
           ) : (
             <div className="p-12 text-center">
-              <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100 dark:border-slate-700">
+              <div className="w-16 h-16 bg-slate-50 dark:bg-[#1d2a31] rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100 dark:border-slate-700">
                 <CheckCircle2 className="w-8 h-8 text-slate-200 dark:text-slate-600" />
               </div>
               <h4 className="text-lg font-bold text-slate-900 dark:text-slate-200 mb-1">

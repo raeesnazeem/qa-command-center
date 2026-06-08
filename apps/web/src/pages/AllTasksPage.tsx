@@ -88,7 +88,7 @@ const KanbanCard = ({
   return (
     <div
       onClick={() => onClick(task)}
-      className="bg-[#fbfbfd] dark:bg-[#1B2A30] dark:hover:bg-transparent p-4 rounded-xl border border-transparent dark:border-slate-700 shadow-sm hover:shadow-md transition-all cursor-pointer group relative dark:hover:border-accent/50"
+      className="bg-[#fbfbfd] dark:bg-[#1B2A30] dark:hover:bg-transparent p-4 rounded-xl border border-transparent dark:border-slate-700 shadow-lg hover:shadow-xl dark:shadow-sm dark:hover:shadow-md transition-all cursor-pointer group relative dark:hover:border-accent/50"
     >
       <div className="absolute inset-0 rounded-xl pointer-events-none p-[1px] drop-shadow-sm opacity-100 dark:opacity-0 transition-opacity duration-500 overflow-hidden" style={{ mask: "linear-gradient(#fff 0 0) content-box exclude, linear-gradient(#fff 0 0)", WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)", WebkitMaskComposite: "xor" }}>
         <div className="absolute inset-0 bg-gradient-to-br from-slate-200 via-accent/30 to-slate-200/30 group-hover:opacity-50 transition-opacity duration-700"></div>
@@ -318,7 +318,7 @@ export const AllTasksPage = () => {
   if (isRoleLoading || isTasksLoading) {
     return (
       <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-500 pb-20">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-slate-50/60 dark:bg-[#1D2A31]/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-lg dark:shadow-sm transition-all">
           <div className="space-y-3">
             <Skeleton className="h-10 w-64" />
             <Skeleton className="h-4 w-96" />
@@ -344,12 +344,12 @@ export const AllTasksPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-500 pb-20">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-slate-50/60 dark:bg-[#1D2A31]/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-lg dark:shadow-sm transition-all">
         <div>
-          <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-200 tracking-tight">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-200 tracking-tight">
             All Workspace Tasks
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
             Consolidated Task assignment flow across all projects.
           </p>
         </div>

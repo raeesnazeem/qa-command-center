@@ -182,10 +182,39 @@ export const RunDetailPage = () => {
     const totalPages = run.pages.length
     const completedPages = isRunCompleted
       ? totalPages
-      : run.pages.filter((p) => p.status === "done" || p.status === "checked")
-          .length
-    const allPagesProgress =
-      totalPages > 0 ? (completedPages / totalPages) * 100 : 0
+      : run.pages.filter(
+          (p) =>
+            p.status === "done" ||
+            p.status === "checked" ||
+            p.status === "failed",
+        ).length
+    const allPagesProgress = (() => {
+      if (totalPages === 0) return 0
+
+      const hasUrlTabCompare = run.enabled_checks?.includes("url_tab_compare")
+
+      if (hasUrlTabCompare) {
+        // Weight normal pages 50%, and homepage crawl 50%
+        const completedWithoutHomepage = run.pages.filter(
+          (p) =>
+            (p.status === "done" ||
+              p.status === "checked" ||
+              p.status === "failed") &&
+            p.id !== homepage?.id,
+        ).length
+
+        const basePagesToProcess = Math.max(1, totalPages - 1)
+        const baseProgress =
+          (completedWithoutHomepage / basePagesToProcess) * 50
+        const homeProgress = homepage
+          ? ((homepage.progress || 0) / 100) * 50
+          : 0
+
+        return isRunCompleted ? 100 : baseProgress + homeProgress
+      }
+
+      return (completedPages / totalPages) * 100
+    })()
 
     // Detect API only run for accurate progress calculation
     const isApiOnlyRun = !run.enabled_checks.some((c: string) =>
@@ -663,12 +692,8 @@ export const RunDetailPage = () => {
         "logo_chatbot",
       ].includes(c),
     )
-  // 2. Prevent the "Sitemap Discovery" placeholder if it's API-only
-  const isDiscovering =
-    !isApiOnly &&
-    run?.status === "running" &&
-    pagesTotal === 0 &&
-    (!run?.selected_urls || run.selected_urls.length === 0)
+
+  const isDiscovering = false
 
   const handlePause = () => {
     updateStatus.mutate({ runId: run.id, status: "paused" })
@@ -1290,21 +1315,71 @@ export const RunDetailPage = () => {
                         checkKey === "learn_more_buttons" ||
                         checkKey === "url_tab_compare"
                           ? (() => {
-                              const isRunCompleted = run.status === "completed"
+                              const isRunCompleted =
+                                run.status === "completed" ||
+                                run.status === "cancelled" ||
+                                run.status === "failed"
+
                               const totalPages = relevantPages.length
                               const completedPages = isRunCompleted
                                 ? totalPages
                                 : relevantPages.filter(
                                     (p) =>
                                       p.status === "done" ||
-                                      p.status === "checked",
+                                      p.status === "checked" ||
+                                      p.status === "failed",
                                   ).length
-                              const deadLinksProgress =
-                                totalPages > 0
-                                  ? Math.round(
-                                      (completedPages / totalPages) * 100,
-                                    )
-                                  : 0
+                              const deadLinksProgress = (() => {
+                                if (totalPages === 0) return 0
+
+                                const hasUrlTabCompare =
+                                  run.enabled_checks?.includes(
+                                    "url_tab_compare",
+                                  )
+
+                                if (hasUrlTabCompare) {
+                                  // Safely find the homepage locally
+                                  const localHomepage = run.pages.find(
+                                    (p) =>
+                                      p.url
+                                        .replace(/^https?:\/\//, "")
+                                        .replace(/\/$/, "") ===
+                                      run.site_url
+                                        .replace(/^https?:\/\//, "")
+                                        .replace(/\/$/, ""),
+                                  )
+
+                                  // Weight normal pages 50%, and homepage crawl 50%
+                                  const completedWithoutHomepage =
+                                    relevantPages.filter(
+                                      (p) =>
+                                        (p.status === "done" ||
+                                          p.status === "checked" ||
+                                          p.status === "failed") &&
+                                        p.id !== localHomepage?.id,
+                                    ).length
+
+                                  const basePagesToProcess = Math.max(
+                                    1,
+                                    totalPages - 1,
+                                  )
+                                  const baseProgress =
+                                    (completedWithoutHomepage /
+                                      basePagesToProcess) *
+                                    50
+                                  const homeProgress = localHomepage
+                                    ? ((localHomepage.progress || 0) / 100) * 50
+                                    : 0
+
+                                  return isRunCompleted
+                                    ? 100
+                                    : Math.round(baseProgress + homeProgress)
+                                }
+
+                                return Math.round(
+                                  (completedPages / totalPages) * 100,
+                                )
+                              })()
 
                               const activePage =
                                 relevantPages.find(
@@ -1313,6 +1388,27 @@ export const RunDetailPage = () => {
                                 relevantPages.find(
                                   (p) => p.status === "pending",
                                 )
+
+                              const checkFailedPage =
+                                checkKey === "url_tab_compare"
+                                  ? relevantPages.find(
+                                      (p) =>
+                                        p.status === "failed" &&
+                                        p.url
+                                          .replace(/^https?:\/\//, "")
+                                          .replace(/\/$/, "") ===
+                                          run.site_url
+                                            .replace(/^https?:\/\//, "")
+                                            .replace(/\/$/, ""),
+                                    )
+                                  : relevantPages.find(
+                                      (p) => p.status === "failed",
+                                    )
+
+                              const checkProgress =
+                                checkKey === "url_tab_compare"
+                                  ? activePage?.progress || 0
+                                  : deadLinksProgress
 
                               // Use the fast loop effect if we are not complete, so it feels realtime
                               const displayUrl = isRunCompleted
@@ -1327,26 +1423,58 @@ export const RunDetailPage = () => {
                                 <div className="border border-slate-400 dark:border-slate-700 rounded-xl p-3 bg-slate-50 dark:bg-[#1D2A31]">
                                   <div className="flex justify-between items-center mb-2 text-xs font-mono text-slate-800 dark:text-slate-200">
                                     <span>
-                                      scanning: {displayUrl}
-                                      {!isRunCompleted &&
-                                        activePage?.current_step && (
-                                          <span className="text-slate-500 ml-2">
-                                            -{" "}
-                                            {activePage.current_step.toLowerCase()}
+                                      {checkFailedPage &&
+                                      (!activePage || isRunCompleted) ? (
+                                        <>
+                                          <span className="text-red-500 font-bold">
+                                            failed:{" "}
+                                            {checkFailedPage.url.replace(
+                                              /^https?:\/\//,
+                                              "",
+                                            )}
                                           </span>
-                                        )}
+                                          <span className="text-red-500 ml-2">
+                                            -{" "}
+                                            {checkFailedPage.current_step ||
+                                              "Unknown error"}
+                                          </span>
+                                        </>
+                                      ) : checkKey === "url_tab_compare" ? (
+                                        <>
+                                          {isRunCompleted
+                                            ? "Finished URL & Tab Name Comparison"
+                                            : activePage?.current_step ||
+                                              "Preparing..."}
+                                        </>
+                                      ) : (
+                                        <>
+                                          {isRunCompleted
+                                            ? "All pages checked"
+                                            : `scanning: ${displayUrl}`}
+                                          {!isRunCompleted &&
+                                            activePage?.current_step && (
+                                              <span className="text-slate-500 ml-2">
+                                                -{" "}
+                                                {activePage.current_step.toLowerCase()}
+                                              </span>
+                                            )}
+                                        </>
+                                      )}
                                     </span>
                                     <span className="font-bold">
-                                      {isRunCompleted
-                                        ? "completed 100%"
-                                        : `${deadLinksProgress}%`}
+                                      {run.status === "cancelled" ||
+                                      run.status === "failed"
+                                        ? `${checkProgress}% (Cancelled)`
+                                        : isRunCompleted
+                                          ? "completed 100%"
+                                          : `${checkProgress}%`}
                                     </span>
                                   </div>
                                   <div className="w-full h-3 bg-slate-50 dark:bg-[#1D2A31] border border-slate-400 dark:border-slate-700 rounded-md p-px mb-1">
                                     <div
                                       className="h-full bg-[#b5e4b5] rounded-sm transition-all duration-500"
                                       style={{
-                                        width: `${isRunCompleted ? 100 : deadLinksProgress}%`,
+                                        width: `${run.status === "cancelled" || run.status === "failed" ? checkProgress : isRunCompleted ? 100 : checkProgress}%`,
                                       }}
                                     />
                                   </div>
@@ -1356,12 +1484,16 @@ export const RunDetailPage = () => {
                           : relevantPages.map((page) => {
                               const isCompleted =
                                 run.status === "completed" ||
+                                run.status === "cancelled" ||
+                                run.status === "failed" ||
                                 (!isApiOnly &&
                                   (page.status === "done" ||
                                     page.status === "checked"))
+                              const specificCheck = (page as any)
+                                .check_progress?.[checkKey]
                               const pageProgress = isCompleted
                                 ? 100
-                                : page.progress || 0
+                                : specificCheck?.progress || 0
 
                               return (
                                 <div
@@ -1372,23 +1504,33 @@ export const RunDetailPage = () => {
                                     <span>
                                       scanning:{" "}
                                       {page.url.replace(/https?:\/\//, "")}
-                                      {!isCompleted && page.current_step && (
-                                        <span className="text-slate-500 ml-2">
-                                          - {page.current_step.toLowerCase()}
+                                      {page.status === "failed" ? (
+                                        <span className="text-red-500 font-bold ml-2">
+                                          - {page.current_step || "Failed"}
                                         </span>
-                                      )}
+                                      ) : !isCompleted &&
+                                        specificCheck?.step ? (
+                                        <span className="text-slate-500 ml-2">
+                                          - {specificCheck.step.toLowerCase()}
+                                        </span>
+                                      ) : null}
                                     </span>
 
                                     <span className="font-bold">
-                                      {isCompleted
-                                        ? "completed 100%"
-                                        : `${pageProgress}%`}
+                                      {run.status === "cancelled" ||
+                                      run.status === "failed"
+                                        ? `${pageProgress}% (Cancelled)`
+                                        : isCompleted
+                                          ? "completed 100%"
+                                          : `${pageProgress}%`}
                                     </span>
                                   </div>
                                   <div className="w-full h-3 bg-slate-50 dark:bg-[#1D2A31] border border-slate-400 dark:border-slate-700 rounded-md p-px mb-1">
                                     <div
                                       className="h-full bg-[#b5e4b5] rounded-sm transition-all duration-500"
-                                      style={{ width: `${pageProgress}%` }}
+                                      style={{
+                                        width: `${run.status === "cancelled" || run.status === "failed" ? pageProgress : isCompleted ? 100 : pageProgress}%`,
+                                      }}
                                     />
                                   </div>
                                 </div>

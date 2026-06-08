@@ -34,25 +34,25 @@ export const BasecampSelectionModal = ({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-900/40 dark:bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
       <div
         className="absolute inset-0"
         onClick={() => !isPushing && onClose()}
       />
-      <div className="relative w-full max-w-md bg-slate-50 border border-slate-200 rounded-[12px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-        <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+      <div className="relative w-full max-w-md bg-slate-50 dark:bg-[#131d22] border border-slate-200 dark:border-slate-800 rounded-[12px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-[#131d22]/50 flex justify-between items-center">
           <div>
-            <h3 className="font-bold text-slate-900 text-lg tracking-tight">
+            <h3 className="font-bold text-slate-900 dark:text-white text-lg tracking-tight">
               {title}
             </h3>
-            <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-0.5">
+            <p className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-0.5">
               {description}
             </p>
           </div>
           <button
             onClick={onClose}
             disabled={isPushing}
-            className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
+            className="p-1.5 rounded-md text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1d2a31] transition-all"
           >
             <X className="w-5 h-5" />
           </button>
@@ -61,7 +61,7 @@ export const BasecampSelectionModal = ({
         <div className="p-8 space-y-6">
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1">
                 To-do List
               </label>
               <select
@@ -71,7 +71,7 @@ export const BasecampSelectionModal = ({
                   setSelectedTodoId("")
                 }}
                 disabled={isPushing || isLoadingLists}
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all disabled:opacity-50"
+                className="w-full bg-slate-50 dark:bg-[#131d22] border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all disabled:opacity-50"
               >
                 <option value="">Select a list...</option>
                 {todolists?.map((list: any) => (
@@ -84,14 +84,14 @@ export const BasecampSelectionModal = ({
 
             {selectedTodolistId && (
               <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1">
                   Specific To-do (Optional)
                 </label>
                 <select
                   value={selectedTodoId}
                   onChange={(e) => setSelectedTodoId(e.target.value)}
                   disabled={isPushing || isLoadingTodos}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all disabled:opacity-50"
+                  className="w-full bg-slate-50 dark:bg-[#131d22] border border-slate-200 dark:border-slate-800 rounded-lg px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-accent/20 focus:border-accent outline-none transition-all disabled:opacity-50"
                 >
                   <option value="">Create New / Use "QA Findings"</option>
                   {todos?.map((todo: any) => (
@@ -127,7 +127,7 @@ export const BasecampSelectionModal = ({
             <button
               onClick={onClose}
               disabled={isPushing}
-              className="w-full py-2 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors"
+              className="w-full py-2 text-xs font-bold text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
             >
               Cancel
             </button>

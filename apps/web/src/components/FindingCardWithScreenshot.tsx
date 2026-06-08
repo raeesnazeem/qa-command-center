@@ -25,7 +25,7 @@ export const FindingCardWithScreenshot: React.FC<
   return (
     <>
       <div
-        className="relative group cursor-pointer w-[100px] h-[70px] rounded-lg overflow-hidden border border-slate-200 bg-slate-100 shadow-sm hover:shadow-md transition-all active:scale-95"
+        className="relative group cursor-pointer w-[100px] h-[70px] rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-[#1d2a31] shadow-sm hover:shadow-md transition-all active:scale-95"
         onClick={() => setIsViewerOpen(true)}
       >
         <img

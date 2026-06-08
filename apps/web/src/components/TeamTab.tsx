@@ -87,7 +87,7 @@ export const TeamTab = ({ project }: TeamTabProps) => {
       case "developer":
         return "bg-slate-400 text-white" // Gray
       default:
-        return "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+        return "bg-slate-100 dark:bg-[#131d22] text-slate-500 dark:text-slate-400"
     }
   }
 
@@ -129,7 +129,7 @@ export const TeamTab = ({ project }: TeamTabProps) => {
               <h3 className="font-bold text-slate-900 dark:text-slate-200">
                 Project Members
               </h3>
-              <span className="text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full">
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-[#1d2a31] px-2 py-1 rounded-full">
                 {project.project_members.length} Members
               </span>
             </div>
@@ -137,10 +137,10 @@ export const TeamTab = ({ project }: TeamTabProps) => {
               {project.project_members.map((member) => (
                 <div
                   key={member.user_id}
-                  className="px-6 py-4 flex items-center justify-between group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors"
+                  className="px-6 py-4 flex items-center justify-between group hover:bg-slate-50/50 dark:hover:bg-[#1d2a31] transition-colors"
                 >
                   <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 font-bold text-sm border border-slate-200 dark:border-slate-700">
+                    <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-[#131d22] flex items-center justify-center text-slate-500 dark:text-slate-400 font-bold text-sm border border-slate-200 dark:border-slate-700">
                       {getInitials(member.users.full_name)}
                     </div>
                     <div>
@@ -167,7 +167,7 @@ export const TeamTab = ({ project }: TeamTabProps) => {
                         onChange={(e) =>
                           handleUpdateRole(member.user_id, e.target.value)
                         }
-                        className="text-xs border-slate-200 dark:border-slate-700 rounded-md bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-200 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-accent/20 focus:border-accent appearance-none cursor-pointer hover:border-accent transition-all"
+                        className="text-xs border-slate-200 dark:border-slate-700 rounded-md bg-slate-50 dark:bg-[#1d2a31] text-slate-900 dark:text-slate-200 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-accent/20 focus:border-accent appearance-none cursor-pointer hover:border-accent transition-all"
                       >
                         <option value="admin">Admin</option>
                         <option value="sub_admin">Sub Admin</option>
@@ -187,7 +187,7 @@ export const TeamTab = ({ project }: TeamTabProps) => {
           <div className="lg:w-80 shrink-0">
             <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-700 rounded-xl p-6 shadow-sm sticky top-6">
               <div className="flex items-center space-x-2 mb-6">
-                <div className="p-2 bg-slate-900 dark:bg-slate-800 rounded-lg text-white">
+                <div className="p-2 bg-slate-900 dark:bg-[#131d22] rounded-lg text-white">
                   <UserPlus className="w-5 h-5" />
                 </div>
                 <h3 className="font-bold text-slate-900 dark:text-slate-200">
@@ -211,7 +211,7 @@ export const TeamTab = ({ project }: TeamTabProps) => {
                       }}
                       onFocus={() => setIsSearchFocused(true)}
                       placeholder="teammate@example.com"
-                      className="w-full bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-md pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-accent transition-all font-medium"
+                      className="w-full bg-slate-50 dark:bg-[#131d22] text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-md pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-accent transition-all font-medium"
                       required
                     />
                   </div>
@@ -219,7 +219,7 @@ export const TeamTab = ({ project }: TeamTabProps) => {
                   {/* Dropdown Suggestions */}
                   {isSearchFocused && filteredUsers.length > 0 && (
                     <div className="absolute z-50 w-full mt-1 bg-slate-50 dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl overflow-hidden animate-in slide-in-from-top-2 duration-200">
-                      <div className="p-2 border-b border-slate-50 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+                      <div className="p-2 border-b border-slate-50 dark:border-slate-700 bg-slate-50/50 dark:bg-[#1d2a31]">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                           Matching Profiles
                         </span>
@@ -229,9 +229,9 @@ export const TeamTab = ({ project }: TeamTabProps) => {
                           <div
                             key={user.id}
                             onClick={() => selectUser(user)}
-                            className="p-3 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center space-x-3 cursor-pointer group transition-colors"
+                            className="p-3 hover:bg-slate-50 dark:hover:bg-[#1d2a31] flex items-center space-x-3 cursor-pointer group transition-colors"
                           >
-                            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase transition-all group-hover:bg-slate-50 dark:group-hover:bg-slate-700 group-hover:border-accent border border-transparent">
+                            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#131d22] flex items-center justify-center text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase transition-all group-hover:bg-slate-50 dark:group-hover:bg-[#1d2a31] group-hover:border-accent border border-transparent">
                               {getInitials(user.full_name)}
                             </div>
                             <div className="flex-grow min-w-0">
@@ -261,7 +261,7 @@ export const TeamTab = ({ project }: TeamTabProps) => {
                   <select
                     value={newMemberRole}
                     onChange={(e) => setNewMemberRole(e.target.value as any)}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-accent transition-all font-bold text-slate-900 dark:text-slate-200"
+                    className="w-full bg-slate-50 dark:bg-[#131d22] border border-slate-200 dark:border-slate-700 rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-accent transition-all font-bold text-slate-900 dark:text-slate-200"
                   >
                     <option value="admin">Admin</option>
                     <option value="sub_admin">Sub Admin</option>

@@ -39,7 +39,7 @@ const MonthYearFilter: React.FC<MonthYearFilterProps> = ({
         <select
           value={year}
           onChange={(e) => onYearChange(e.target.value)}
-          className="rounded-md border border-black dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-slate-200 px-3 py-1.5 text-xs font-bold uppercase tracking-tight focus:outline-none hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer min-w-[120px]"
+          className="rounded-md border border-black dark:border-slate-700 bg-slate-50 dark:bg-[#131d22] dark:text-slate-200 px-3 py-1.5 text-xs font-bold uppercase tracking-tight focus:outline-none hover:bg-slate-50 dark:hover:bg-[#1d2a31] transition-colors cursor-pointer min-w-[120px]"
         >
           {years.map((y) => (
             <option key={y} value={y}>
@@ -56,7 +56,7 @@ const MonthYearFilter: React.FC<MonthYearFilterProps> = ({
         <select
           value={month}
           onChange={(e) => onMonthChange(e.target.value)}
-          className="rounded-md border border-black dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-slate-200 px-3 py-1.5 text-xs font-bold uppercase tracking-tight focus:outline-none hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer min-w-[120px]"
+          className="rounded-md border border-black dark:border-slate-700 bg-slate-50 dark:bg-[#131d22] dark:text-slate-200 px-3 py-1.5 text-xs font-bold uppercase tracking-tight focus:outline-none hover:bg-slate-50 dark:hover:bg-[#1d2a31] transition-colors cursor-pointer min-w-[120px]"
         >
           {months.map((m) => (
             <option key={m.value} value={m.value}>

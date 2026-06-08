@@ -32,7 +32,7 @@ export const TaskActivityFeed: React.FC<TaskActivityFeedProps> = ({
 
   return (
     <div className="space-y-4 animate-in fade-in duration-300">
-      <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 flex items-center gap-2">
+      <h3 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-2 flex items-center gap-2">
         <Activity className="w-3 h-3" />
         Activity History
       </h3>
@@ -41,17 +41,17 @@ export const TaskActivityFeed: React.FC<TaskActivityFeedProps> = ({
         {logs.map((log: any) => (
           <div
             key={log.id}
-            className="flex gap-3 p-3 bg-slate-50 border border-slate-100 rounded-xl shadow-sm hover:shadow-md transition-shadow"
+            className="flex gap-3 p-3 bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-800 rounded-xl shadow-sm hover:shadow-md transition-shadow"
           >
-            <div className="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-[#1d2a31] border border-slate-100 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
               <User className="w-4 h-4 text-slate-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-slate-700 leading-relaxed">
-                <span className="font-bold text-slate-900">
+              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                <span className="font-bold text-slate-900 dark:text-white">
                   {log.performer_name}
                 </span>{" "}
-                <span className="text-slate-600">
+                <span className="text-slate-600 dark:text-slate-400">
                   {log.details?.message ||
                     log.action_type.replace(/_/g, " ").toLowerCase()}
                 </span>
@@ -67,11 +67,11 @@ export const TaskActivityFeed: React.FC<TaskActivityFeedProps> = ({
         ))}
 
         {logs.length === 0 && (
-          <div className="text-center py-12 px-6 bg-slate-50/50 rounded-md border border-dashed border-slate-200">
-            <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mx-auto mb-3 shadow-sm">
+          <div className="text-center py-12 px-6 bg-slate-50/50 dark:bg-[#1d2a31]/50 rounded-md border border-dashed border-slate-200 dark:border-slate-700">
+            <div className="w-10 h-10 bg-slate-50 dark:bg-[#1d2a31] rounded-full flex items-center justify-center text-slate-200 dark:text-slate-600 mx-auto mb-3 shadow-sm">
               <Activity className="w-5 h-5" />
             </div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
               No activity yet
             </p>
           </div>

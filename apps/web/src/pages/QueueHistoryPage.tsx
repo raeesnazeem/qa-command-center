@@ -44,9 +44,9 @@ const QueueHistoryPage: React.FC = () => {
   )
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
       {/* Header Section */}
-      <div className="flex items-end justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-slate-50/60 dark:bg-[#1D2A31]/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-md dark:shadow-xs transition-all">
         <div className="space-y-1">
           <div className="flex items-center space-x-2 text-[#93C0B1]">
             <Database className="w-5 h-5" />

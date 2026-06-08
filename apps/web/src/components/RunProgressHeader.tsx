@@ -27,10 +27,10 @@ export const RunProgressHeader: React.FC<RunProgressHeaderProps> = ({
   const isCompleted = run.status === "completed"
 
   const getStatusColor = () => {
-    if (isFailed) return "text-red-600 bg-red-50 border-red-100"
-    if (isCompleted) return "text-emerald-600 bg-emerald-50 border-emerald-100"
-    if (isRunning) return "text-blue-600 bg-blue-50 border-blue-100"
-    return "text-slate-500 bg-slate-50 border-slate-100"
+    if (isFailed) return "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-900/30"
+    if (isCompleted) return "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-900/30"
+    if (isRunning) return "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-900/30"
+    return "text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-[#1d2a31] border-slate-100 dark:border-slate-700"
   }
 
   const getStatusIcon = () => {
@@ -60,7 +60,7 @@ export const RunProgressHeader: React.FC<RunProgressHeaderProps> = ({
             {run.pages_processed}/{run.pages_total} Pages
           </span>
         </div>
-        <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+        <div className="w-full h-1.5 bg-slate-100 dark:bg-[#1d2a31] rounded-full overflow-hidden">
           <div
             className={`h-full transition-all duration-500 ${isFailed ? "bg-red-500" : "bg-accent"}`}
             style={{ width: `${progress}%` }}
@@ -71,12 +71,12 @@ export const RunProgressHeader: React.FC<RunProgressHeaderProps> = ({
   }
 
   return (
-    <div className="bg-slate-50 rounded-md border border-slate-200 shadow-sm overflow-hidden">
+    <div className="bg-slate-50 dark:bg-[#131d22] rounded-md border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
       <div className="p-6 md:p-8 space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-3">
-              <h2 className="text-xl font-bold text-slate-900">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">
                 Run Configuration
               </h2>
               <div
@@ -95,15 +95,15 @@ export const RunProgressHeader: React.FC<RunProgressHeaderProps> = ({
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <div className="px-4 py-2 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-2">
+            <div className="px-4 py-2 bg-slate-50 dark:bg-[#1d2a31] rounded-xl border border-slate-100 dark:border-slate-700 flex items-center gap-2">
               <Globe size={16} className="text-slate-400" />
-              <span className="text-xs font-bold text-slate-700">
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
                 {run.site_url}
               </span>
             </div>
-            <div className="px-4 py-2 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-2">
+            <div className="px-4 py-2 bg-slate-50 dark:bg-[#1d2a31] rounded-xl border border-slate-100 dark:border-slate-700 flex items-center gap-2">
               <Layers size={16} className="text-slate-400" />
-              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                 {run.run_type.replace("_", " ")}
               </span>
             </div>
@@ -112,14 +112,14 @@ export const RunProgressHeader: React.FC<RunProgressHeaderProps> = ({
 
         <div className="space-y-3">
           <div className="flex justify-between items-end">
-            <div className="flex items-center gap-2 text-slate-900">
+            <div className="flex items-center gap-2 text-slate-900 dark:text-white">
               <Activity size={18} className="text-accent" />
               <span className="text-sm font-bold uppercase tracking-widest">
                 Execution Progress
               </span>
             </div>
             <div className="text-right">
-              <span className="text-2xl font-bold text-slate-900">
+              <span className="text-2xl font-bold text-slate-900 dark:text-white">
                 {Math.round(progress)}%
               </span>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">
@@ -128,7 +128,7 @@ export const RunProgressHeader: React.FC<RunProgressHeaderProps> = ({
             </div>
           </div>
 
-          <div className="w-full h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200 p-1">
+          <div className="w-full h-4 bg-slate-100 dark:bg-[#1d2a31] rounded-full overflow-hidden border border-slate-200 dark:border-slate-700 p-1">
             <div
               className={`h-full rounded-full transition-all duration-1000 ease-out shadow-sm ${
                 isFailed

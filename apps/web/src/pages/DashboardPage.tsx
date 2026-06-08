@@ -51,7 +51,7 @@ export const DashboardPage = () => {
     return (
       <div className="relative w-full h-full min-h-screen">
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-emerald-400/5 dark:bg-teal-500/5 rounded-full blur-3xl animate-gemini-glow"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] hidden dark:block bg-emerald-400/5 dark:bg-teal-500/5 rounded-full blur-3xl animate-gemini-glow"></div>
         </div>
         <main className="relative z-10 max-w-7xl mx-auto space-y-10 animate-in fade-in duration-700 pb-12 px-4">
           <header className="space-y-3">
@@ -99,7 +99,7 @@ export const DashboardPage = () => {
     return (
       <div className="relative w-full h-full min-h-screen">
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-emerald-400/5 dark:bg-teal-500/5 rounded-full blur-3xl animate-gemini-glow"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] hidden dark:block bg-emerald-400/5 dark:bg-teal-500/5 rounded-full blur-3xl animate-gemini-glow"></div>
         </div>
         <main className="relative z-10 max-w-7xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 px-4">
           <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/60 dark:bg-[#1D2A31]/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-sm mb-2">
@@ -148,7 +148,7 @@ export const DashboardPage = () => {
                       <Link
                         key={project.id}
                         to={`/projects/${project.id}`}
-                        className="bg-slate-50 dark:bg-[#1D2A31] border-2 border-slate-300 dark:border-slate-800 rounded-lg p-4 shadow-sm hover:shadow-lg hover:border-accent dark:hover:border-accent transition-all group relative overflow-hidden min-w-[240px] flex-shrink-0 flex flex-col"
+                        className="bg-slate-50 dark:bg-[#1D2A31] border-2 border-slate-300 dark:border-slate-800 rounded-lg p-4 shadow-lg hover:shadow-xl dark:shadow-sm dark:hover:shadow-md hover:border-accent dark:hover:border-accent transition-all group relative overflow-hidden min-w-[240px] flex-shrink-0 flex flex-col"
                       >
                         <div
                           className="hidden dark:block absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
@@ -165,7 +165,7 @@ export const DashboardPage = () => {
                         <h4 className="font-bold text-slate-900 text-base mb-0.5 group-hover:text-accent transition-colors leading-tight truncate">
                           {project.name}
                         </h4>
-                        <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mb-4 uppercase tracking-wider">
+                        <p className="text-[10px] text-sky-500 group-hover:text-sky-600 dark:text-sky-400 dark:group-hover:text-sky-300 transition-colors font-medium mb-4 uppercase tracking-wider">
                           {project.client_name || "Internal"}
                         </p>
 
@@ -207,7 +207,7 @@ export const DashboardPage = () => {
                       <Link
                         key={project.id}
                         to={`/projects/${project.id}`}
-                        className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-300 dark:border-slate-800 rounded-lg p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group relative overflow-hidden"
+                        className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-300 dark:border-slate-800 rounded-lg p-6 shadow-lg hover:shadow-xl dark:shadow-sm dark:hover:shadow-md hover:border-accent/20 transition-all group relative overflow-hidden"
                       >
                         <div
                           className="hidden dark:block absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
@@ -224,7 +224,7 @@ export const DashboardPage = () => {
                         <h4 className="font-bold text-slate-900 dark:text-slate-200 text-xl mb-1 group-hover:text-accent transition-colors leading-tight">
                           {project.name}
                         </h4>
-                        <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mb-6 uppercase tracking-wider">
+                        <p className="text-xs text-sky-500 group-hover:text-sky-600 dark:text-sky-400 dark:group-hover:text-sky-300 transition-colors font-medium mb-6 uppercase tracking-wider">
                           {project.client_name || "Internal"}
                         </p>
 
@@ -273,8 +273,8 @@ export const DashboardPage = () => {
                     data?.my_tasks.map((task) => (
                       <Link
                         key={task.id}
-                        to={`/tasks?taskId=${task.id}`}
-                        className="bg-slate-50 border border-slate-300 rounded-lg p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group flex flex-col h-full relative overflow-hidden"
+                        to={`/tasks/${task.id}`}
+                        className="bg-slate-50 border border-slate-300 rounded-lg p-6 shadow-lg hover:shadow-xl dark:shadow-sm dark:hover:shadow-md hover:border-accent/20 transition-all group flex flex-col h-full relative overflow-hidden"
                       >
                         <div
                           className="hidden dark:block absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
@@ -362,7 +362,7 @@ export const DashboardPage = () => {
     return (
       <div className="relative w-full h-full min-h-screen">
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-emerald-400/5 dark:bg-teal-500/5 rounded-full blur-3xl animate-gemini-glow"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] hidden dark:block bg-emerald-400/5 dark:bg-teal-500/5 rounded-full blur-3xl animate-gemini-glow"></div>
         </div>
         <main className="relative z-10 max-w-7xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12 px-4">
           <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/60 dark:bg-[#1D2A31]/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-sm mb-2">
@@ -394,7 +394,7 @@ export const DashboardPage = () => {
                   <Link
                     key={project.id}
                     to={`/projects/${project.id}`}
-                    className="bg-slate-50 dark:bg-[#1D2A31] border-2 border-slate-300 dark:border-slate-800 rounded-lg p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group relative overflow-hidden min-w-[300px] flex-shrink-0"
+                    className="bg-slate-50 dark:bg-[#1D2A31] border-2 border-slate-300 dark:border-slate-800 rounded-lg p-6 shadow-lg hover:shadow-xl dark:shadow-sm dark:hover:shadow-md hover:border-accent/20 transition-all group relative overflow-hidden min-w-[300px] flex-shrink-0"
                   >
                     <div
                       className="hidden dark:block absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
@@ -411,7 +411,7 @@ export const DashboardPage = () => {
                     <h4 className="text-xl font-bold text-slate-900 dark:text-slate-200 group-hover:text-accent transition-colors truncate pr-2">
                       {project.name}
                     </h4>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mb-6 uppercase tracking-wider">
+                    <p className="text-xs text-sky-500 group-hover:text-sky-600 dark:text-sky-400 dark:group-hover:text-sky-300 transition-colors font-medium mb-6 uppercase tracking-wider">
                       {project.client_name || "Internal"}
                     </p>
 
@@ -455,7 +455,7 @@ export const DashboardPage = () => {
                   <Link
                     key={project.id}
                     to={`/projects/${project.id}`}
-                    className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-300 dark:border-slate-800 rounded-lg p-6 shadow-sm hover:shadow-xl hover:border-accent/20 transition-all group relative overflow-hidden min-w-[300px] flex-shrink-0"
+                    className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-300 dark:border-slate-800 rounded-lg p-6 shadow-lg hover:shadow-xl dark:shadow-sm dark:hover:shadow-md hover:border-accent/20 transition-all group relative overflow-hidden min-w-[300px] flex-shrink-0"
                   >
                     <div
                       className="hidden dark:block absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
@@ -472,7 +472,7 @@ export const DashboardPage = () => {
                     <h4 className="text-xl font-bold text-slate-900 dark:text-slate-200 group-hover:text-accent transition-colors truncate pr-2">
                       {project.name}
                     </h4>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mb-6 uppercase tracking-wider">
+                    <p className="text-xs text-sky-500 group-hover:text-sky-600 dark:text-sky-400 dark:group-hover:text-sky-300 transition-colors font-medium mb-6 uppercase tracking-wider">
                       {project.client_name || "Internal"}
                     </p>
 
@@ -633,10 +633,10 @@ export const DashboardPage = () => {
   return (
     <div className="relative w-full h-full min-h-screen bg-bg-main dark:bg-[#131D22]">
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-emerald-400/5 dark:bg-teal-500/5 rounded-full blur-3xl animate-gemini-glow"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] hidden dark:block bg-emerald-400/5 dark:bg-teal-500/5 rounded-full blur-3xl animate-gemini-glow"></div>
       </div>
       <main className="relative z-10 p-6 lg:p-10 space-y-10">
-        <header className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-slate-50/60 dark:bg-[#1D2A31]/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-sm">
+        <header className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-slate-50/60 dark:bg-[#1D2A31]/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-lg dark:shadow-sm transition-all">
           <div>
             <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-200 tracking-tight">
               Global Overview
@@ -661,7 +661,7 @@ export const DashboardPage = () => {
           {stats.map((stat) => (
             <div
               key={stat.label}
-              className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-300 dark:border-slate-800 rounded-lg p-6 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden"
+              className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-300 dark:border-slate-800 rounded-lg p-6 shadow-lg hover:shadow-xl dark:shadow-sm dark:hover:shadow-md transition-all group relative overflow-hidden"
             >
               <div
                 className="hidden dark:block absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
@@ -696,52 +696,52 @@ export const DashboardPage = () => {
                 Pre-release Projects
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {data?.pre_release_projects?.map((project) => (
-              <div
-                key={project.id}
-                className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-300 dark:border-slate-800 rounded-lg p-6 shadow-sm hover:shadow-xl transition-all group relative flex flex-col overflow-hidden"
-              >
-                <div
-                  className="hidden dark:block absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
-                  style={{
-                    WebkitMask:
-                      "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-                    WebkitMaskComposite: "xor",
-                    maskComposite: "exclude",
-                  }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-white via-accent/30 to-white/30 group-hover:opacity-50 transition-opacity duration-700" />
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300%] aspect-square bg-[conic-gradient(from_0deg,transparent_0_45deg,theme(colors.accent)_135deg,transparent_180deg_225deg,#a3d4c7_315deg,transparent_360deg)] opacity-0 group-hover:opacity-100 group-hover:animate-[spin_4s_linear_infinite]" />
-                </div>
-                <div className="absolute top-4 right-4 flex gap-2 z-10">
-                  <button
-                    onClick={() => setEditingProject(project)}
-                    className="p-1.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-accent transition-all"
+                {data?.pre_release_projects?.map((project) => (
+                  <div
+                    key={project.id}
+                    className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-300 dark:border-slate-800 rounded-lg p-6 shadow-lg hover:shadow-xl dark:shadow-sm dark:hover:shadow-md transition-all group relative flex flex-col overflow-hidden"
                   >
-                    <Edit size={18} />
-                  </button>
-                </div>
-                <Link to={`/projects/${project.id}`} className="flex-1">
-                  <h4 className="font-bold text-slate-900 dark:text-slate-200 text-lg mb-1 group-hover:text-accent transition-colors">
-                    {project.name}
-                  </h4>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mb-6">
-                    {project.client_name || "Internal"}
-                  </p>
-                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50 dark:border-slate-800">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                      Active Runs:{" "}
-                      {project.qa_runs?.filter(
-                        (r: any) => r.status === "running",
-                      ).length || 0}
-                    </span>
-                    <ArrowUpRight size={18} className="text-accent" />
+                    <div
+                      className="hidden dark:block absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
+                      style={{
+                        WebkitMask:
+                          "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                        WebkitMaskComposite: "xor",
+                        maskComposite: "exclude",
+                      }}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-br from-white via-accent/30 to-white/30 group-hover:opacity-50 transition-opacity duration-700" />
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300%] aspect-square bg-[conic-gradient(from_0deg,transparent_0_45deg,theme(colors.accent)_135deg,transparent_180deg_225deg,#a3d4c7_315deg,transparent_360deg)] opacity-0 group-hover:opacity-100 group-hover:animate-[spin_4s_linear_infinite]" />
+                    </div>
+                    <div className="absolute top-4 right-4 flex gap-2 z-10">
+                      <button
+                        onClick={() => setEditingProject(project)}
+                        className="p-1.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-accent transition-all"
+                      >
+                        <Edit size={18} />
+                      </button>
+                    </div>
+                    <Link to={`/projects/${project.id}`} className="flex-1">
+                      <h4 className="font-bold text-slate-900 dark:text-slate-200 text-lg mb-1 group-hover:text-accent transition-colors">
+                        {project.name}
+                      </h4>
+                      <p className="text-xs text-sky-500 group-hover:text-sky-600 dark:text-sky-400 dark:group-hover:text-sky-300 transition-colors font-medium mb-6">
+                        {project.client_name || "Internal"}
+                      </p>
+                      <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50 dark:border-slate-800">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                          Active Runs:{" "}
+                          {project.qa_runs?.filter(
+                            (r: any) => r.status === "running",
+                          ).length || 0}
+                        </span>
+                        <ArrowUpRight size={18} className="text-accent" />
+                      </div>
+                    </Link>
                   </div>
-                </Link>
+                ))}
               </div>
-            ))}
-          </div>
-        </section>
+            </section>
 
             {/* 3. Post-release Projects (Admin) */}
             <section className="space-y-6">
@@ -750,152 +750,49 @@ export const DashboardPage = () => {
                 Post-release Projects
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {data?.post_release_projects?.map((project) => (
-              <div
-                key={project.id}
-                className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-300 dark:border-slate-800 rounded-lg p-6 shadow-sm hover:shadow-xl transition-all group relative flex flex-col overflow-hidden"
-              >
-                <div
-                  className="hidden dark:block absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
-                  style={{
-                    WebkitMask:
-                      "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-                    WebkitMaskComposite: "xor",
-                    maskComposite: "exclude",
-                  }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-white via-accent/30 to-white/30 group-hover:opacity-50 transition-opacity duration-700" />
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300%] aspect-square bg-[conic-gradient(from_0deg,transparent_0_45deg,theme(colors.accent)_135deg,transparent_180deg_225deg,#a3d4c7_315deg,transparent_360deg)] opacity-0 group-hover:opacity-100 group-hover:animate-[spin_4s_linear_infinite]" />
-                </div>
-                <div className="absolute top-4 right-4 z-10">
-                  <button
-                    onClick={() => setEditingProject(project)}
-                    className="p-1.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-accent transition-all"
+                {data?.post_release_projects?.map((project) => (
+                  <div
+                    key={project.id}
+                    className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-300 dark:border-slate-800 rounded-lg p-6 shadow-lg hover:shadow-xl dark:shadow-sm dark:hover:shadow-md transition-all group relative flex flex-col overflow-hidden"
                   >
-                    <Edit size={16} />
-                  </button>
-                </div>
-                <Link to={`/projects/${project.id}`} className="flex-1">
-                  <h4 className="font-bold text-slate-900 dark:text-slate-200 text-lg mb-1 group-hover:text-accent transition-colors">
-                    {project.name}
-                  </h4>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mb-6">
-                    {project.client_name || "Internal"}
-                  </p>
-                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50 dark:border-slate-800">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                      Open Issues: {project.open_issues_count || 0}
-                    </span>
-                    <ArrowUpRight size={18} className="text-emerald-500" />
-                  </div>
-                </Link>
-              </div>
-            ))}
-          </div>
-        </section>
-
-            {/* Real-time QA Activity */}
-            <div className="space-y-6">
-            <h3 className="font-bold text-slate-900 dark:text-slate-200 flex items-center gap-2 uppercase tracking-widest text-xs">
-              <PlayCircle className="w-4 h-4 text-slate-400" />
-              Real-time QA Activity
-            </h3>
-            <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-300 dark:border-slate-800 rounded-lg overflow-hidden shadow-sm">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50/50 dark:bg-[#1D2A31]/50 border-b border-slate-100 dark:border-slate-800">
-                    <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                      Project
-                    </th>
-                    <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                      Status
-                    </th>
-                    <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                      Timestamp
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                  {data?.recent_runs.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={3}
-                        className="px-8 py-12 text-center text-sm text-slate-400 font-medium italic"
+                    <div
+                      className="hidden dark:block absolute inset-0 rounded-lg pointer-events-none p-[1px] drop-shadow-sm opacity-50 group-hover:opacity-100 transition-opacity duration-500 overflow-hidden"
+                      style={{
+                        WebkitMask:
+                          "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                        WebkitMaskComposite: "xor",
+                        maskComposite: "exclude",
+                      }}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-br from-white via-accent/30 to-white/30 group-hover:opacity-50 transition-opacity duration-700" />
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300%] aspect-square bg-[conic-gradient(from_0deg,transparent_0_45deg,theme(colors.accent)_135deg,transparent_180deg_225deg,#a3d4c7_315deg,transparent_360deg)] opacity-0 group-hover:opacity-100 group-hover:animate-[spin_4s_linear_infinite]" />
+                    </div>
+                    <div className="absolute top-4 right-4 z-10">
+                      <button
+                        onClick={() => setEditingProject(project)}
+                        className="p-1.5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-accent transition-all"
                       >
-                        No recent runs initiated
-                      </td>
-                    </tr>
-                  ) : (
-                    (() => {
-                      let lastProjectName = ""
-                      return data?.recent_runs.map((run) => {
-                        const projectName = (run as any).projects?.name || ""
-                        const isDuplicate = projectName === lastProjectName
-                        if (!isDuplicate) {
-                          lastProjectName = projectName
-                        }
-                        return (
-                          <tr
-                            key={run.id}
-                            className="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group"
-                          >
-                            <td
-                              className={`px-8 ${isDuplicate ? "py-1" : "py-5"}`}
-                            >
-                              <div className="flex flex-col">
-                                {!isDuplicate ? (
-                                  <Link
-                                    to={`/projects/${run.project_id}/runs/${run.id}`}
-                                    className="text-sm font-bold text-slate-900 dark:text-slate-200 group-hover:text-accent transition-colors leading-tight"
-                                  >
-                                    {projectName}
-                                  </Link>
-                                ) : (
-                                  <span className="text-[10px] font-semibold text-slate-300 select-none ml-2 leading-none">
-                                    ↳
-                                  </span>
-                                )}
-                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                                  {run.run_type.replace("_", " ")}
-                                </span>
-                              </div>
-                            </td>
-                            <td
-                              className={`px-8 ${isDuplicate ? "py-1" : "py-5"}`}
-                            >
-                              <div className="flex items-center">
-                                <div
-                                  className={`rounded-full ${isDuplicate ? "w-1.5 h-1.5 mr-2" : "w-2 h-2 mr-3"} ${
-                                    run.status === "completed"
-                                      ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
-                                      : run.status === "running"
-                                        ? "bg-accent animate-pulse shadow-[0_0_8px_rgba(var(--accent-rgb),0.4)]"
-                                        : run.status === "failed"
-                                          ? "bg-red-500"
-                                          : "bg-slate-300"
-                                  }`}
-                                />
-                                <span
-                                  className={`${isDuplicate ? "text-[9px] tracking-widest font-extrabold" : "text-xs font-bold"} text-slate-600 uppercase tracking-tight`}
-                                >
-                                  {run.status}
-                                </span>
-                              </div>
-                            </td>
-                            <td
-                              className={`px-8 text-xs text-slate-400 font-medium ${isDuplicate ? "py-1" : "py-5"}`}
-                            >
-                              {format(new Date(run.created_at), "MMM d, HH:mm")}
-                            </td>
-                          </tr>
-                        )
-                      })
-                    })()
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                        <Edit size={16} />
+                      </button>
+                    </div>
+                    <Link to={`/projects/${project.id}`} className="flex-1">
+                      <h4 className="font-bold text-slate-900 dark:text-slate-200 text-lg mb-1 group-hover:text-accent transition-colors">
+                        {project.name}
+                      </h4>
+                      <p className="text-xs text-sky-500 group-hover:text-sky-600 dark:text-sky-400 dark:group-hover:text-sky-300 transition-colors font-medium mb-6">
+                        {project.client_name || "Internal"}
+                      </p>
+                      <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50 dark:border-slate-800">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                          Open Issues: {project.open_issues_count || 0}
+                        </span>
+                        <ArrowUpRight size={18} className="text-emerald-500" />
+                      </div>
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </section>
           </div>
 
           {/* Management Side Column */}
@@ -942,7 +839,7 @@ export const DashboardPage = () => {
                 <CheckCircle2 className="w-4 h-4 text-slate-400" />
                 Pending Global Sign-offs
               </h3>
-              <div className="bg-amber-50/50 dark:bg-yellow-900/60 border border-amber-100 dark:border-amber-900/30 rounded-lg p-6 space-y-4">
+              <div className="bg-accent/5 dark:bg-[#1D2A31] border border-accent dark:border-accent/40 rounded-lg p-6 space-y-4">
                 {data?.pending_signoffs.length === 0 ? (
                   <div className="text-center py-4">
                     <p className="text-xs text-emerald-600 font-bold uppercase tracking-widest">
@@ -960,7 +857,7 @@ export const DashboardPage = () => {
                   ).map((run) => (
                     <div
                       key={run.id}
-                      className="flex items-center justify-between bg-slate-50 dark:bg-[#1D2A31] p-4 rounded-lg border border-amber-100 dark:border-amber-900/30 shadow-sm hover:shadow-md transition-all group"
+                      className="flex items-center justify-between bg-slate-50 dark:bg-[#1D2A31] p-4 rounded-lg border border-accent/10 dark:border-accent/30 shadow-lg hover:shadow-xl dark:shadow-sm dark:hover:shadow-md transition-all group"
                     >
                       <div className="flex-1 min-w-0 mr-4">
                         <p className="text-xs font-bold text-slate-900 dark:text-slate-200 truncate uppercase tracking-tight">
@@ -973,12 +870,90 @@ export const DashboardPage = () => {
                       </div>
                       <Link
                         to={`/projects/${run.project_id}/runs/${run.id}`}
-                        className="w-8 h-8 flex items-center justify-center bg-amber-50 dark:bg-amber-900/30 text-amber-600 rounded-xl hover:bg-amber-600 hover:text-white transition-all"
+                        className="w-8 h-8 flex items-center justify-center bg-transparent border-2 border-accent/50 dark:bg-accent/30 dark:border-transparent text-accent/50 hover:text-accent dark:text-accent/50 dark:hover:text-accent rounded-md hover:bg-accent/80 hover:text-white transition-all"
                       >
                         <ChevronRight size={16} />
                       </Link>
                     </div>
                   ))
+                )}
+              </div>
+            </div>
+
+            {/* Real-time QA Activity */}
+            <div className="space-y-6">
+              <h3 className="font-bold text-slate-900 dark:text-slate-200 flex items-center gap-2 uppercase tracking-widest text-xs">
+                <PlayCircle className="w-4 h-4 text-slate-400" />
+                Real-time QA Activity
+              </h3>
+              <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-300 dark:border-slate-800 rounded-lg overflow-hidden shadow-sm">
+                {data?.recent_runs.length === 0 ? (
+                  <div className="p-8 text-center text-sm text-slate-400 font-medium italic">
+                    No recent runs initiated
+                  </div>
+                ) : (
+                  (() => {
+                    let lastProjectName = ""
+                    return data?.recent_runs.slice(0, 5).map((run, index) => {
+                      const projectName = (run as any).projects?.name || ""
+                      const isDuplicate = projectName === lastProjectName
+                      if (!isDuplicate) {
+                        lastProjectName = projectName
+                      }
+                      const runnerName =
+                        (run as any).users?.full_name ||
+                        (run as any).creator?.full_name ||
+                        "System"
+                      return (
+                        <div
+                          key={run.id}
+                          className="even:bg-white odd:bg-slate-50 dark:even:bg-transparent dark:odd:bg-[#131D22] hover:bg-slate-100 dark:hover:bg-[#0B151B] transition-colors group p-5 flex flex-col gap-2 border-b border-slate-200 dark:border-slate-800 last:border-b-0"
+                        >
+                          <Link
+                            to={`/projects/${run.project_id}/runs/${run.id}`}
+                            className="text-sm font-bold text-slate-900 dark:text-slate-200 group-hover:text-accent transition-colors leading-tight"
+                          >
+                            {projectName}
+                          </Link>
+
+                          <div className="flex items-center mt-1">
+                            <div
+                              className={`rounded-full w-2 h-2 mr-2 ${
+                                run.status === "completed"
+                                  ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
+                                  : run.status === "running"
+                                    ? "bg-accent animate-pulse shadow-[0_0_8px_rgba(var(--accent-rgb),0.4)]"
+                                    : run.status === "failed"
+                                      ? "bg-red-500"
+                                      : "bg-slate-300"
+                              }`}
+                            />
+                            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tight">
+                              {run.status}
+                            </span>
+                            <span className="text-slate-300 dark:text-slate-600 mx-2">
+                              •
+                            </span>
+                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                              {run.run_type.replace("_", " ")}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2 text-xs text-slate-400 font-medium mt-1">
+                            <span>
+                              {format(new Date(run.created_at), "MMM d, HH:mm")}
+                            </span>
+                            <span className="text-slate-300 dark:text-slate-600">
+                              •
+                            </span>
+                            <span className="text-slate-500 dark:text-slate-400 font-semibold">
+                              {runnerName}
+                            </span>
+                          </div>
+                        </div>
+                      )
+                    })
+                  })()
                 )}
               </div>
             </div>

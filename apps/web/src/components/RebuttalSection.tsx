@@ -23,9 +23,9 @@ export const RebuttalSection: React.FC<RebuttalSectionProps> = ({ task }) => {
 
   return (
     <CanDo role="developer">
-      <div className="space-y-4 pt-8 border-t border-slate-100">
+      <div className="space-y-4 pt-8 border-t border-slate-100 dark:border-slate-800/50">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2 text-red-600">
+          <div className="flex items-center space-x-2 text-red-600 dark:text-red-400">
             <ShieldAlert className="w-4 h-4" />
             <h3 className="font-bold uppercase tracking-widest text-xs">
               Developer Rebuttals
@@ -34,7 +34,7 @@ export const RebuttalSection: React.FC<RebuttalSectionProps> = ({ task }) => {
           {canSubmit && !showForm && (
             <button
               onClick={() => setShowForm(true)}
-              className="flex items-center space-x-1.5 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-red-100 transition-all active:scale-95 border border-red-100 shadow-sm"
+              className="flex items-center space-x-1.5 px-3 py-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-red-100 dark:hover:bg-red-900/40 transition-all active:scale-95 border border-red-100 dark:border-red-800/50 shadow-sm"
             >
               <Plus size={12} />
               <span>Submit Rebuttal</span>
@@ -42,8 +42,8 @@ export const RebuttalSection: React.FC<RebuttalSectionProps> = ({ task }) => {
           )}
         </div>
 
-        <div className="bg-red-50/30 border border-red-100 rounded-md p-4 space-y-4">
-          <p className="text-[11px] text-red-600/80 font-medium leading-relaxed bg-red-50/50 p-3 rounded-xl border border-red-100/50">
+        <div className="bg-red-50/30 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30 rounded-md p-4 space-y-4">
+          <p className="text-[11px] text-red-600/80 dark:text-red-400/80 font-medium leading-relaxed bg-red-50/50 dark:bg-red-900/10 p-3 rounded-xl border border-red-100/50 dark:border-red-900/20">
             If you disagree with this finding, provide a detailed rebuttal and
             optional screenshot. The QA team will review your submission and
             issue a final verdict.
@@ -55,7 +55,7 @@ export const RebuttalSection: React.FC<RebuttalSectionProps> = ({ task }) => {
               {task.rebuttals.map((r) => (
                 <div
                   key={r.id}
-                  className="bg-slate-50 border border-red-100 p-4 rounded-xl shadow-sm space-y-3 group hover:shadow-md transition-shadow"
+                  className="bg-slate-50 dark:bg-[#1d2a31] border border-red-100 dark:border-red-900/30 p-4 rounded-xl shadow-sm space-y-3 group hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-red-400">
                     <span className="flex items-center gap-1.5">
@@ -66,7 +66,7 @@ export const RebuttalSection: React.FC<RebuttalSectionProps> = ({ task }) => {
                       {format(new Date(r.created_at), "MMM d, HH:mm")}
                     </span>
                   </div>
-                  <p className="text-sm text-slate-700 font-medium leading-relaxed italic bg-slate-50/50 p-3 rounded-lg border border-slate-100">
+                  <p className="text-sm text-slate-700 dark:text-slate-300 font-medium leading-relaxed italic bg-slate-50/50 dark:bg-[#131d22]/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700/50">
                     "{r.text}"
                   </p>
                   {r.screenshot_url && (
@@ -150,16 +150,16 @@ const RebuttalForm: React.FC<RebuttalFormProps> = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-slate-50 border border-red-200 rounded-md p-4 shadow-xl space-y-4 ring-4 ring-red-500/5"
+      className="bg-slate-50 dark:bg-[#1d2a31] border border-red-200 dark:border-red-900/50 rounded-md p-4 shadow-xl space-y-4 ring-4 ring-red-500/5"
     >
       <div className="flex items-center justify-between mb-2">
-        <h4 className="text-[10px] font-bold uppercase tracking-widest text-red-600">
+        <h4 className="text-[10px] font-bold uppercase tracking-widest text-red-600 dark:text-red-400">
           New Rebuttal Submission
         </h4>
         <button
           type="button"
           onClick={onCancel}
-          className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors"
+          className="p-1.5 hover:bg-slate-100 dark:hover:bg-[#131d22] rounded-lg text-slate-400 transition-colors"
         >
           <X size={14} />
         </button>
@@ -171,19 +171,19 @@ const RebuttalForm: React.FC<RebuttalFormProps> = ({
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Detailed explanation of why this finding is incorrect..."
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/40 focus:bg-slate-50 transition-all resize-none min-h-[120px]"
+            className="w-full bg-slate-50 dark:bg-[#131d22] border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-medium focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/40 focus:bg-slate-50 dark:focus:bg-[#131d22] transition-all resize-none min-h-[120px]"
             required
           />
         </div>
 
         <div className="relative">
-          <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
           <input
             type="url"
             value={screenshotUrl}
             onChange={(e) => setScreenshotUrl(e.target.value)}
             placeholder="Evidence Screenshot URL (optional)"
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-4 py-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/40 focus:bg-slate-50 transition-all"
+            className="w-full bg-slate-50 dark:bg-[#131d22] border border-slate-200 dark:border-slate-700 rounded-xl pl-11 pr-4 py-3 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-bold focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/40 focus:bg-slate-50 dark:focus:bg-[#131d22] transition-all"
           />
         </div>
       </div>

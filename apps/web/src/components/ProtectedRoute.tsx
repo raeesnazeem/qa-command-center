@@ -5,10 +5,14 @@ export const ProtectedRoute = () => {
   const { isLoaded, isSignedIn } = useAuth()
 
   if (!isLoaded) {
-    const isDark = typeof window !== "undefined" && (localStorage.getItem("theme") === "dark" || (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches));
+    const isDark =
+      typeof window !== "undefined" &&
+      (localStorage.getItem("theme") === "dark" ||
+        (!localStorage.getItem("theme") &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches))
     return (
       <div className={isDark ? "dark w-full h-full" : "w-full h-full"}>
-        <div className="relative min-h-screen flex flex-col items-center justify-center bg-bg-main dark:bg-slate-900 font-sans overflow-hidden">
+        <div className="relative min-h-screen flex flex-col items-center justify-center bg-bg-main dark:bg-[#131d22] font-sans overflow-hidden">
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-emerald-200/5 dark:bg-teal-500/5 rounded-full blur-3xl animate-gemini-glow"></div>
           </div>
