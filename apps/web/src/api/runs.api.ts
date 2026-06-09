@@ -23,6 +23,8 @@ export interface QARun {
   concurrent_scans?: number
   pages?: QAPage[]
   selected_urls?: string[] | null
+  is_pinned?: boolean
+  custom_name?: string | null
 }
 
 export interface CreateFindingInput {
@@ -131,6 +133,19 @@ export const getRuns = async (
   return response.data
 }
 
+export const getPinnedRuns = async (
+  axios: AxiosInstance,
+  projectId: string,
+): Promise<QARunsResponse> => {
+  const response = await axios.get<QARunsResponse>(
+    `/api/runs/projects/${projectId}/pinned-runs`,
+    {
+      params: { _t: Date.now() },
+    },
+  )
+  return response.data
+}
+
 export const getRun = async (
   axios: AxiosInstance,
   runId: string,
@@ -148,6 +163,19 @@ export const updateRunStatus = async (
 ): Promise<QARun> => {
   const response = await axios.patch<QARun>(`/api/runs/${runId}/status`, {
     status,
+  })
+  return response.data
+}
+
+export const updateRunPinStatus = async (
+  axios: AxiosInstance,
+  runId: string,
+  is_pinned: boolean,
+  custom_name?: string | null,
+): Promise<QARun> => {
+  const response = await axios.patch<QARun>(`/api/runs/${runId}/pin`, {
+    is_pinned,
+    custom_name,
   })
   return response.data
 }

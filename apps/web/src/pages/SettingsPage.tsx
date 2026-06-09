@@ -111,7 +111,7 @@ export const SettingsPage = () => {
         {sections.map((section) => (
           <section
             key={section.id}
-            className="bg-slate-50 dark:bg-[#0B151B] border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden shadow-lg dark:shadow-sm transition-all"
+            className="bg-slate-50 dark:bg-[#131d22] border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden shadow-lg dark:shadow-sm transition-all"
           >
             <div className="px-6 py-4 border-b border-slate-50 dark:border-slate-800/50 flex items-center space-x-3 bg-slate-50/50 dark:bg-[#1D2A31]">
               <div className="p-2 bg-slate-50 dark:bg-[#131D22] border border-slate-100 dark:border-slate-700 rounded-lg text-slate-400 dark:text-slate-500">

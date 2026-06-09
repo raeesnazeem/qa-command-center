@@ -413,7 +413,7 @@ export const TasksPage = () => {
           {[1, 2].map((i) => (
             <div key={i} className="space-y-4">
               <Skeleton className="h-6 w-48" />
-              <div className="bg-slate-50 border border-slate-100 rounded-md h-64 overflow-hidden relative">
+              <div className="bg-slate-50 dark:bg-[#1D2A31] rounded-md h-64 overflow-hidden relative">
                 <Skeleton className="absolute inset-0" />
               </div>
             </div>

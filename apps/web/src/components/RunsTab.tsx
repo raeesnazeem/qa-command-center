@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { Project } from "../api/projects.api"
-import { useRuns, useUpdateRunStatus, useDeleteRuns } from "../hooks/useRuns"
+import { useRuns, useUpdateRunStatus, useDeleteRuns, usePinnedRuns, useTogglePinRun } from "../hooks/useRuns"
 import { CreateRunModal } from "./CreateRunModal"
 import { CanDo } from "./CanDo"
 import {
@@ -18,6 +18,8 @@ import {
   AlertCircle,
   Trash2,
   CheckSquare,
+  Pin,
+  PinOff,
 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { format } from "date-fns"
@@ -82,11 +84,18 @@ export const RunsTab = ({ project }: RunsTabProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [page, setPage] = useState(1)
   const { data: runsData, isLoading } = useRuns(project.id, page)
+  const { data: pinnedRunsData } = usePinnedRuns(project.id)
+  const togglePinRun = useTogglePinRun(project.id)
+
   const updateStatus = useUpdateRunStatus()
   const deleteRuns = useDeleteRuns(project.id)
   const navigate = useNavigate()
   const [selectedRunIds, setSelectedRunIds] = useState<string[]>([])
+  
   const [showLimitModal, setShowLimitModal] = useState(false)
+  const [showPinLimitModal, setShowPinLimitModal] = useState(false)
+  const [pinRunModalId, setPinRunModalId] = useState<string | null>(null)
+  const [pinCustomName, setPinCustomName] = useState("")
   const [isDeletingLimit, setIsDeletingLimit] = useState(false)
 
   useEffect(() => {
@@ -157,6 +166,38 @@ export const RunsTab = ({ project }: RunsTabProps) => {
     }
   }
 
+  const handlePinClick = (e: React.MouseEvent, runId: string) => {
+    e.stopPropagation()
+    if (pinnedRunsData && pinnedRunsData.data && pinnedRunsData.data.length >= 3) {
+      setShowPinLimitModal(true)
+      return
+    }
+    setPinCustomName("")
+    setPinRunModalId(runId)
+  }
+
+  const handleUnpinClick = (e: React.MouseEvent, runId: string) => {
+    e.stopPropagation()
+    togglePinRun.mutate({ runId, is_pinned: false })
+  }
+
+  const handleConfirmPin = () => {
+    if (!pinRunModalId) return
+    if (!pinCustomName.trim()) {
+      alert("Please enter a custom name for the pinned run.")
+      return
+    }
+    togglePinRun.mutate(
+      { runId: pinRunModalId, is_pinned: true, custom_name: pinCustomName },
+      {
+        onSuccess: () => {
+          setPinRunModalId(null)
+          setPinCustomName("")
+        },
+      },
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -201,6 +242,110 @@ export const RunsTab = ({ project }: RunsTabProps) => {
           </div>
         </CanDo>
       </div>
+
+      {/* Pinned Runs Table */}
+      {pinnedRunsData && pinnedRunsData.data && pinnedRunsData.data.length > 0 && (
+        <div className="bg-pink-50/50 dark:bg-pink-900/10 border border-pink-200 dark:border-pink-800/30 rounded-md overflow-hidden shadow-sm">
+          <div className="px-6 py-4 border-b border-pink-200 dark:border-pink-800/30 flex items-center justify-between">
+            <h4 className="text-sm font-bold text-pink-900 dark:text-pink-300 flex items-center">
+              <Pin className="w-4 h-4 mr-2" />
+              Pinned Runs ({pinnedRunsData.data.length}/3)
+            </h4>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-pink-100/50 dark:bg-pink-900/20 border-b border-pink-200 dark:border-pink-800/30">
+                  <th className="px-6 py-4 text-xs font-bold text-pink-600 dark:text-pink-400 uppercase tracking-widest">Name</th>
+                  <th className="px-6 py-4 text-xs font-bold text-pink-600 dark:text-pink-400 uppercase tracking-widest">Run #</th>
+                  <th className="px-6 py-4 text-xs font-bold text-pink-600 dark:text-pink-400 uppercase tracking-widest">Type</th>
+                  <th className="px-6 py-4 text-xs font-bold text-pink-600 dark:text-pink-400 uppercase tracking-widest">Status</th>
+                  <th className="px-6 py-4 text-xs font-bold text-pink-600 dark:text-pink-400 uppercase tracking-widest text-center">Issues Found</th>
+                  <th className="px-6 py-4 text-xs font-bold text-pink-600 dark:text-pink-400 uppercase tracking-widest">Date</th>
+                  <th className="px-6 py-4 text-xs font-bold text-pink-600 dark:text-pink-400 uppercase tracking-widest text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-pink-100 dark:divide-pink-900/20">
+                {pinnedRunsData.data.map((run, index) => (
+                  <tr
+                    key={run.id}
+                    className="hover:bg-pink-100/50 dark:hover:bg-pink-900/30 cursor-pointer group transition-colors"
+                    onClick={() => navigate(`/projects/${project.id}/runs/${run.id}`)}
+                  >
+                    <td className="px-6 py-4">
+                      <span className="text-sm font-bold text-pink-900 dark:text-pink-200">
+                        {run.custom_name}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm font-bold text-slate-900 dark:text-slate-200 tracking-tight">
+                        #{run.id.slice(0, 8)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                          run.run_type === "pre_release"
+                            ? "bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-800"
+                            : "bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-800"
+                        }`}
+                      >
+                        {run.run_type.replace("_", "-")}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <StatusBadge status={run.status} />
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      {run.status === "completed" || run.status === "failed" ? (
+                        <div
+                          className={`inline-flex items-center px-2 py-0.5 rounded font-bold text-xs ${
+                            (run.finding_counts
+                              ? Object.values(run.finding_counts).reduce(
+                                  (a, b) => (a as number) + (b as number),
+                                  0,
+                                )
+                              : 0) > 0
+                              ? "text-red-600"
+                              : "text-emerald-600"
+                          }`}
+                        >
+                          {run.finding_counts
+                            ? Object.values(run.finding_counts).reduce(
+                                (a, b) => (a as number) + (b as number),
+                                0,
+                              )
+                            : 0}
+                        </div>
+                      ) : (
+                        <span className="text-slate-300 text-xs">—</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center text-sm text-slate-600 dark:text-slate-400">
+                        <Calendar className="w-3.5 h-3.5 mr-2 text-slate-400" />
+                        {format(new Date(run.created_at), "MMM d, HH:mm")}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end space-x-3">
+                        <button
+                          onClick={(e) => handleUnpinClick(e, run.id)}
+                          className="p-1 hover:bg-pink-200 dark:hover:bg-pink-900/50 text-pink-600 dark:text-pink-400 rounded transition-colors opacity-0 group-hover:opacity-100"
+                          title="Unpin Run"
+                        >
+                          <PinOff size={16} />
+                        </button>
+                        <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-accent group-hover:translate-x-0.5 transition-all" />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 rounded-md overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
@@ -381,6 +526,13 @@ export const RunsTab = ({ project }: RunsTabProps) => {
                             </button>
                           </div>
                         )}
+                        <button
+                          onClick={(e) => handlePinClick(e, run.id)}
+                          className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded transition-colors opacity-0 group-hover:opacity-100"
+                          title="Pin Run"
+                        >
+                          <Pin size={16} />
+                        </button>
                         <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-accent group-hover:translate-x-0.5 transition-all" />
                       </div>
                     </td>
@@ -459,6 +611,67 @@ export const RunsTab = ({ project }: RunsTabProps) => {
                 </span>
                 Cleaning up...
               </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pin Run Setup Modal */}
+      {pinRunModalId && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-slate-50 dark:bg-[#1D2A31] rounded-xl shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-200 mb-4">
+              Pin Run
+            </h3>
+            <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">
+              Enter a custom name for this run. Pinned runs will not be deleted by the auto-cleanup process.
+            </p>
+            <input
+              type="text"
+              autoFocus
+              className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#131d22] rounded-md text-sm text-slate-900 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-accent mb-6"
+              placeholder="e.g. Pre-Launch Golden Run"
+              value={pinCustomName}
+              onChange={(e) => setPinCustomName(e.target.value)}
+            />
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setPinRunModalId(null)}
+                className="px-4 py-2 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmPin}
+                className="px-4 py-2 text-sm font-bold text-white bg-accent hover:bg-accent/90 rounded-md transition-colors"
+              >
+                Pin Run
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pin Limit Exceeded Modal */}
+      {showPinLimitModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-slate-50 dark:bg-[#1D2A31] rounded-xl shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-center w-12 h-12 mx-auto bg-amber-100 dark:bg-amber-900/50 rounded-full mb-4">
+              <AlertCircle className="w-6 h-6 text-amber-600" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-200 text-center mb-2">
+              Pin Limit Exceeded
+            </h3>
+            <p className="text-sm text-slate-600 dark:text-slate-300 text-center mb-6">
+              You can only have up to 3 pinned runs. Please unpin an existing run before pinning a new one.
+            </p>
+            <div className="flex justify-center">
+              <button
+                onClick={() => setShowPinLimitModal(false)}
+                className="px-4 py-2 text-sm font-bold text-white bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-md transition-colors"
+              >
+                Understood
+              </button>
             </div>
           </div>
         </div>

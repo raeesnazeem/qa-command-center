@@ -119,7 +119,7 @@ export const TeamPage = () => {
             placeholder="Search by name, email or role..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md pl-10 pr-4 py-2 text-sm text-slate-900 dark:text-slate-200 focus:outline-none focus:border-accent transition-all"
+            className="w-full bg-slate-50 dark:bg-[#131d22] border border-slate-200 dark:border-slate-800 rounded-md pl-10 pr-4 py-2 text-sm text-slate-900 dark:text-slate-200 focus:outline-none focus:border-accent transition-all"
           />
         </div>
         <button className="btn-unified-secondary flex items-center space-x-2">
@@ -128,10 +128,10 @@ export const TeamPage = () => {
         </button>
       </div>
 
-      <div className="bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden shadow-md dark:shadow-xs transition-all">
+      <div className="bg-slate-50 dark:bg-[#131d22] border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden shadow-md dark:shadow-xs transition-all">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+            <tr className="bg-slate-50/50 dark:bg-[#1d2a31]/50 border-b border-slate-100 dark:border-slate-800">
               <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                 Member
               </th>
@@ -150,7 +150,7 @@ export const TeamPage = () => {
           <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
             {isLoading ? (
               <tr className={typeof window !== "undefined" && (localStorage.getItem("theme") === "dark" || (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches)) ? "dark" : ""}>
-                <td colSpan={5} className="px-6 py-12 text-center relative overflow-hidden dark:bg-slate-900">
+                <td colSpan={5} className="px-6 py-12 text-center relative overflow-hidden dark:bg-[#131d22]">
                   <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-emerald-200/5 dark:bg-teal-500/5 rounded-full blur-2xl animate-gemini-glow"></div>
                   </div>
@@ -186,11 +186,11 @@ export const TeamPage = () => {
               filteredMembers?.map((member) => (
                 <tr
                   key={member.id}
-                  className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group"
+                  className="hover:bg-slate-50 dark:hover:bg-[#1d2a31]/50 transition-colors group"
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 font-bold text-sm border border-slate-200 dark:border-slate-700 group-hover:bg-slate-50 dark:group-hover:bg-slate-700 group-hover:border-accent/30 transition-all">
+                      <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-[#1d2a31] flex items-center justify-center text-slate-500 dark:text-slate-400 font-bold text-sm border border-slate-200 dark:border-slate-700 group-hover:bg-slate-50 dark:group-hover:bg-[#1d2a31] group-hover:border-accent/30 transition-all">
                         {member.full_name
                           ?.split(" ")
                           .map((n: string) => n[0])
@@ -252,7 +252,7 @@ export const TeamPage = () => {
           </p>
         </div>
 
-        <div className="p-6 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-md dark:shadow-xs transition-all">
+        <div className="p-6 bg-slate-50 dark:bg-[#131d22] border border-slate-200 dark:border-slate-800 rounded-xl shadow-md dark:shadow-xs transition-all">
           <Users className="w-8 h-8 text-black dark:text-white mb-4" />
           <h4 className="font-bold text-lg text-slate-900 dark:text-slate-200 mb-2">
             QA Engineers
@@ -262,7 +262,7 @@ export const TeamPage = () => {
             developer rebuttals.
           </p>
         </div>
-        <div className="p-6 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-md dark:shadow-xs transition-all">
+        <div className="p-6 bg-slate-50 dark:bg-[#131d22] border border-slate-200 dark:border-slate-800 rounded-xl shadow-md dark:shadow-xs transition-all">
           <Shield className="w-8 h-8 text-slate-400 dark:text-slate-500 mb-4" />
           <h4 className="font-bold text-lg text-slate-900 dark:text-slate-200 mb-2">Developers</h4>
           <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
@@ -275,8 +275,8 @@ export const TeamPage = () => {
       {/* Manage Modal */}
       {isManaging && selectedMember && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-slate-50 dark:bg-slate-900 w-full max-w-lg rounded-md shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
-            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+          <div className="bg-slate-50 dark:bg-[#131d22] w-full max-w-lg rounded-md shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-[#1d2a31]/50">
               <h3 className="text-lg font-bold text-slate-900 dark:text-slate-200 tracking-tight">
                 Manage Team Member
               </h3>
@@ -302,7 +302,7 @@ export const TeamPage = () => {
                       full_name: e.target.value,
                     }))
                   }
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm text-slate-900 dark:text-slate-200 font-medium focus:outline-none focus:border-accent transition-all"
+                  className="w-full bg-slate-50 dark:bg-[#1d2a31] border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm text-slate-900 dark:text-slate-200 font-medium focus:outline-none focus:border-accent transition-all"
                   placeholder="Member name"
                 />
               </div>
@@ -316,7 +316,7 @@ export const TeamPage = () => {
                   onChange={(e) =>
                     setEditForm((prev) => ({ ...prev, role: e.target.value }))
                   }
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm font-bold text-slate-900 dark:text-slate-200 focus:outline-none focus:border-accent transition-all appearance-none"
+                  className="w-full bg-slate-50 dark:bg-[#1d2a31] border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm font-bold text-slate-900 dark:text-slate-200 focus:outline-none focus:border-accent transition-all appearance-none"
                 >
                   <option value="super_admin">Super Admin</option>
                   <option value="admin">Admin</option>
@@ -339,7 +339,7 @@ export const TeamPage = () => {
                       basecamp_person_id: e.target.value,
                     }))
                   }
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm text-slate-900 dark:text-slate-200 font-medium focus:outline-none focus:border-accent transition-all"
+                  className="w-full bg-slate-50 dark:bg-[#1d2a31] border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm text-slate-900 dark:text-slate-200 font-medium focus:outline-none focus:border-accent transition-all"
                   placeholder="e.g. 42235004"
                 />
               </div>

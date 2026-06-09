@@ -13,6 +13,8 @@ import {
   updateFinding,
   createFinding,
   deleteRuns,
+  getPinnedRuns,
+  updateRunPinStatus,
   QARun,
   QARunsResponse,
   QAFinding,
@@ -242,3 +244,47 @@ export const useDeleteRuns = (projectId: string) => {
     },
   })
 }
+
+export const usePinnedRuns = (projectId: string) => {
+  const axios = useAuthAxios()
+  return useQuery<QARunsResponse>({
+    queryKey: ["pinned-runs", projectId],
+    queryFn: () => getPinnedRuns(axios, projectId),
+    enabled: !!projectId,
+    refetchInterval: (query) => {
+      const data = query.state.data as QARunsResponse | undefined
+      const hasRunning = data?.data?.some(
+        (run) => run.status === "running" || run.status === "pending",
+      )
+      return hasRunning ? 3000 : false
+    },
+  })
+}
+
+export const useTogglePinRun = (projectId: string) => {
+  const axios = useAuthAxios()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      runId,
+      is_pinned,
+      custom_name,
+    }: {
+      runId: string
+      is_pinned: boolean
+      custom_name?: string | null
+    }) => updateRunPinStatus(axios, runId, is_pinned, custom_name),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["runs", projectId] })
+      queryClient.invalidateQueries({ queryKey: ["pinned-runs", projectId] })
+      toast.success("Run pin status updated")
+    },
+    onError: (error: any) => {
+      const message =
+        error.response?.data?.error || "Failed to update pin status"
+      toast.error(message)
+    },
+  })
+}
+

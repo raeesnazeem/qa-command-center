@@ -55,7 +55,7 @@ export const ProjectDetailPage = () => {
           <Skeleton className="h-4 w-48" />
         </div>
 
-        <div className="bg-slate-50 border border-slate-100 rounded-md p-8 shadow-sm space-y-6">
+        <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-700 rounded-md p-8 shadow-sm space-y-6">
           <div className="flex justify-between items-start">
             <div className="space-y-4">
               <Skeleton className="h-10 w-64" />
@@ -67,7 +67,7 @@ export const ProjectDetailPage = () => {
             </div>
             <Skeleton className="h-10 w-32 rounded-lg" />
           </div>
-          <div className="flex gap-4 pt-4 border-t border-slate-50">
+          <div className="flex gap-4 pt-4 border-t border-slate-50 dark:border-slate-600">
             {[1, 2, 3, 4].map((i) => (
               <Skeleton key={i} className="h-6 w-24" />
             ))}

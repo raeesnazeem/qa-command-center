@@ -90,7 +90,15 @@ const KanbanCard = ({
       onClick={() => onClick(task)}
       className="bg-[#fbfbfd] dark:bg-[#1B2A30] dark:hover:bg-transparent p-4 rounded-xl border border-transparent dark:border-slate-700 shadow-lg hover:shadow-xl dark:shadow-sm dark:hover:shadow-md transition-all cursor-pointer group relative dark:hover:border-accent/50"
     >
-      <div className="absolute inset-0 rounded-xl pointer-events-none p-[1px] drop-shadow-sm opacity-100 dark:opacity-0 transition-opacity duration-500 overflow-hidden" style={{ mask: "linear-gradient(#fff 0 0) content-box exclude, linear-gradient(#fff 0 0)", WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)", WebkitMaskComposite: "xor" }}>
+      <div
+        className="absolute inset-0 rounded-xl pointer-events-none p-[1px] drop-shadow-sm opacity-100 dark:opacity-0 transition-opacity duration-500 overflow-hidden"
+        style={{
+          mask: "linear-gradient(#fff 0 0) content-box exclude, linear-gradient(#fff 0 0)",
+          WebkitMask:
+            "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+          WebkitMaskComposite: "xor",
+        }}
+      >
         <div className="absolute inset-0 bg-gradient-to-br from-slate-200 via-accent/30 to-slate-200/30 group-hover:opacity-50 transition-opacity duration-700"></div>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300%] aspect-square bg-[conic-gradient(from_0deg,transparent_0_45deg,theme(colors.accent)_135deg,transparent_180deg_225deg,#a3d4c7_315deg,transparent_360deg)] opacity-100 dark:opacity-0 group-hover:opacity-100 group-hover:animate-[spin_4s_linear_infinite]"></div>
       </div>
@@ -181,19 +189,21 @@ const KanbanColumn = ({
   <div className="space-y-4">
     <div className="flex items-center justify-between px-2">
       <h3 className="font-bold text-slate-900 dark:text-slate-100 uppercase tracking-widest text-[11px] flex items-center gap-2">
-        <div className={`w-1.5 h-1.5 rounded-full ${
-          tasks.length === 0 
-            ? "bg-slate-300 dark:bg-slate-600" 
-            : title === "To Do" 
-              ? "bg-blue-500 dark:bg-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.4)]" 
-              : title === "In Progress"
-                ? "bg-amber-500 dark:bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.4)]"
-                : title === "Resolved"
-                  ? "bg-emerald-500 dark:bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
-                  : title === "Closed"
-                    ? "bg-purple-500 dark:bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.4)]"
-                    : "bg-slate-500 dark:bg-slate-400"
-        }`} />
+        <div
+          className={`w-1.5 h-1.5 rounded-full ${
+            tasks.length === 0
+              ? "bg-slate-300 dark:bg-slate-600"
+              : title === "To Do"
+                ? "bg-blue-500 dark:bg-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.4)]"
+                : title === "In Progress"
+                  ? "bg-amber-500 dark:bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.4)]"
+                  : title === "Resolved"
+                    ? "bg-emerald-500 dark:bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
+                    : title === "Closed"
+                      ? "bg-purple-500 dark:bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.4)]"
+                      : "bg-slate-500 dark:bg-slate-400"
+          }`}
+        />
         {title}
       </h3>
       <span className="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10px] font-bold px-2 py-0.5 rounded-full">
@@ -330,7 +340,7 @@ export const AllTasksPage = () => {
           {[1, 2].map((i) => (
             <div key={i} className="space-y-4">
               <Skeleton className="h-6 w-48" />
-              <div className="bg-slate-50 border border-slate-100 rounded-md h-64 overflow-hidden relative">
+              <div className="bg-slate-50 dark:bg-[#1D2A31] rounded-md h-64 overflow-hidden relative">
                 <Skeleton className="absolute inset-0" />
               </div>
             </div>

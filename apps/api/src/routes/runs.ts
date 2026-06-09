@@ -151,6 +151,7 @@ router.get(
           { count: "exact" },
         )
         .eq("project_id", project_id)
+        .eq("is_pinned", false)
         .order("created_at", { ascending: false })
         .range(offset, offset + limit - 1)
 
@@ -168,6 +169,59 @@ router.get(
           limit,
           total: count,
         },
+      })
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message })
+    }
+  },
+)
+
+/**
+ * GET /api/runs/projects/:id/pinned-runs
+ * List pinned runs for a project.
+ */
+router.get(
+  "/projects/:id/pinned-runs",
+  clerkAuth,
+  async (req: Request, res: Response) => {
+    const { id: project_id } = req.params
+    const { orgId } = req.auth!
+
+    try {
+      // Verify project belongs to org
+      const { data: project } = await supabase
+        .from("projects")
+        .select("id")
+        .eq("id", project_id)
+        .eq("org_id", orgId)
+        .single()
+
+      if (!project) return res.status(404).json({ error: "Project not found" })
+
+      const { data: runs, error } = await supabase
+        .from("qa_runs")
+        .select(
+          `
+        *,
+        users!qa_runs_created_by_fkey (
+          full_name,
+          email
+        )
+      `
+        )
+        .eq("project_id", project_id)
+        .eq("is_pinned", true)
+        .order("created_at", { ascending: false })
+
+      if (error) throw error
+
+      const enrichedRuns = runs.map((run: any) => ({
+        ...run,
+        created_by_name: run.users?.full_name || run.users?.email || "Unknown",
+      }))
+
+      return res.json({
+        data: enrichedRuns,
       })
     } catch (error: any) {
       return res.status(500).json({ error: error.message })
@@ -375,6 +429,35 @@ router.patch(
       if (error) throw error
 
       return res.json(updatedFinding)
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message })
+    }
+  },
+)
+
+/**
+ * PATCH /api/runs/:id/pin
+ * Toggle pin status and custom name for a run.
+ */
+router.patch(
+  "/:id/pin",
+  clerkAuth,
+  requireRole("qa_engineer"),
+  async (req: Request, res: Response) => {
+    const { id } = req.params
+    const { is_pinned, custom_name } = req.body
+
+    try {
+      const { data: updatedRun, error } = await supabase
+        .from("qa_runs")
+        .update({ is_pinned, custom_name: custom_name || null })
+        .eq("id", id)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      return res.json(updatedRun)
     } catch (error: any) {
       return res.status(500).json({ error: error.message })
     }

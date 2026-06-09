@@ -17,7 +17,7 @@ const TopPerformerCard: React.FC<TopPerformerCardProps> = ({
   const displayRole = role === "developer" ? "DEVELOPER" : "QA ENGINEER"
 
   return (
-    <div className="bg-accent text-white rounded-md p-6 flex items-center justify-between shadow-lg relative overflow-hidden group w-full">
+    <div className="bg-accent dark:bg-slate-900 dark:border dark: border-slate-600 text-white dark:text-accent rounded-md p-6 flex items-center justify-between shadow-lg relative overflow-hidden group w-full">
       {/* Background Decorative Icon */}
       <div className="absolute -top-2 -right-2 opacity-10 group-hover:opacity-20 transition-opacity">
         <Trophy size={100} strokeWidth={1} />

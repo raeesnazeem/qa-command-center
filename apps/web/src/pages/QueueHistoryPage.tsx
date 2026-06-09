@@ -62,13 +62,13 @@ const QueueHistoryPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center space-x-4 bg-slate-50 dark:bg-slate-900 p-2 rounded-md border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="flex items-center space-x-4 bg-slate-50 dark:bg-[#131d22] p-2 rounded-md border border-slate-200 dark:border-slate-800 shadow-sm">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
               placeholder="Search site..."
-              className="pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 dark:text-slate-200 border-none rounded-lg text-sm focus:ring-2 focus:ring-[#93C0B1]/20 w-64"
+              className="pl-10 pr-4 py-2 bg-slate-50 dark:bg-[#1d2a31] dark:text-slate-200 border-none rounded-lg text-sm focus:ring-2 focus:ring-[#93C0B1]/20 w-64"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -78,7 +78,7 @@ const QueueHistoryPage: React.FC = () => {
 
       {/* Stats Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-md border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="bg-slate-50 dark:bg-[#131d22] p-6 rounded-md border border-slate-200 dark:border-slate-800 shadow-sm">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
             Total Scans
           </p>
@@ -86,7 +86,7 @@ const QueueHistoryPage: React.FC = () => {
             {history.length}
           </p>
         </div>
-        <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-md border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="bg-slate-50 dark:bg-[#131d22] p-6 rounded-md border border-slate-200 dark:border-slate-800 shadow-sm">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
             Avg. Cost / Run
           </p>
@@ -112,11 +112,11 @@ const QueueHistoryPage: React.FC = () => {
       </div>
 
       {/* Main Table */}
-      <div className="bg-slate-50 dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
+      <div className="bg-slate-50 dark:bg-[#131d22] rounded-md border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+              <tr className="bg-slate-50 dark:bg-[#1d2a31]/50 border-b border-slate-200 dark:border-slate-800">
                 <th className="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                   Run Details
                 </th>
@@ -148,7 +148,7 @@ const QueueHistoryPage: React.FC = () => {
                 filteredHistory.map((item) => (
                   <tr
                     key={item.id}
-                    className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group"
+                    className="hover:bg-slate-50/50 dark:hover:bg-[#1d2a31]/50 transition-colors group"
                   >
                     <td className="px-6 py-2">
                       <div className="flex flex-col">
@@ -169,7 +169,7 @@ const QueueHistoryPage: React.FC = () => {
                             ? "bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 border border-transparent dark:border-green-500/20"
                             : item.status === "failed"
                               ? "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-transparent dark:border-red-500/20"
-                              : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-transparent dark:border-slate-700"
+                              : "bg-slate-100 dark:bg-[#1d2a31] text-slate-600 dark:text-slate-400 border border-transparent dark:border-slate-700"
                         }`}
                       >
                         {item.status}
