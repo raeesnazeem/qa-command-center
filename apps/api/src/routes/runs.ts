@@ -207,7 +207,7 @@ router.get(
           full_name,
           email
         )
-      `
+      `,
         )
         .eq("project_id", project_id)
         .eq("is_pinned", true)
@@ -806,6 +806,44 @@ router.delete(
     }
 
     try {
+      // 1. Gather all file paths from Findings & Pages before deleting the run
+      const { data: findings } = await supabase
+        .from("findings")
+        .select("screenshot_url")
+        .in("run_id", runIds)
+      const { data: pages } = await supabase
+        .from("pages")
+        .select(
+          "screenshot_url_desktop, screenshot_url_tablet, screenshot_url_mobile",
+        )
+        .in("run_id", runIds)
+
+      const pathsToDelete = new Set<string>()
+      const extractPath = (url: string) => {
+        if (!url || !url.includes("/storage/v1/object/")) return
+        const match = url.match(
+          /\/object\/(?:public|sign)\/(?:screenshots|evidence)\/([^?]+)/,
+        )
+        if (match && match[1]) pathsToDelete.add(decodeURIComponent(match[1]))
+      }
+
+      findings?.forEach((f: any) => {
+        if (f.screenshot_url) f.screenshot_url.split(",").forEach(extractPath)
+      })
+      pages?.forEach((p: any) => {
+        extractPath(p.screenshot_url_desktop)
+        extractPath(p.screenshot_url_tablet)
+        extractPath(p.screenshot_url_mobile)
+      })
+
+      // 2. Delete the files from both potential buckets (old and new)
+      if (pathsToDelete.size > 0) {
+        const pathArray = Array.from(pathsToDelete)
+        await supabase.storage.from("screenshots").remove(pathArray)
+        await supabase.storage.from("evidence").remove(pathArray)
+      }
+
+      // 3. Delete the run
       const { error } = await supabase.from("qa_runs").delete().in("id", runIds)
 
       if (error) throw error

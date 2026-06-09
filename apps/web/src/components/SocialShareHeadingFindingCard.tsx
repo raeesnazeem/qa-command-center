@@ -52,6 +52,13 @@ export const SocialShareHeadingFindingCard: React.FC<FindingCardProps> = ({
         ? "opacity-60 border-slate-200 dark:border-slate-700"
         : "border-slate-200 dark:border-slate-700 hover:border-accent/40"
 
+  const screenshotUrls = finding.screenshot_url
+    ? finding.screenshot_url
+        .split(",")
+        .map((url) => url.trim())
+        .filter(Boolean)
+    : []
+
   return (
     <div
       className={`group p-6 bg-slate-200/10 dark:bg-[#1D2A31] rounded-md border transition-all duration-300 shadow-[0_10px_15px_-3px_rgba(0,0,0,0.05)] hover:shadow-md relative overflow-hidden flex flex-col gap-6 ${cardBorder}`}
@@ -104,43 +111,59 @@ export const SocialShareHeadingFindingCard: React.FC<FindingCardProps> = ({
         </p>
       </div>
 
-      {finding.screenshot_url && (
-        <div className="pt-2 flex items-start gap-4">
-          <div className="flex-1 flex gap-4 overflow-x-auto pb-2">
-            {finding.screenshot_url.split(",").map((url, i) => (
-              <a
-                key={i}
-                href={url}
-                target="_blank"
-                rel="noreferrer"
-                className="relative group cursor-pointer flex-shrink-0 w-[120px] h-[80px] rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-[#131d22] shadow-sm hover:shadow-md transition-all active:scale-95"
-              >
-                <img
-                  src={url}
-                  alt={`Social Share Thumbnail ${i + 1}`}
-                  className="w-full h-full object-cover object-top transition-transform group-hover:scale-110"
-                />
-              </a>
-            ))}
-          </div>
+      {screenshotUrls.length > 0 && (
+        <div className="space-y-2 pt-2">
+          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+            Screenshots
+          </p>
+          <div className="flex items-start justify-between w-full">
+            <div className="w-[50%] flex">
+              {screenshotUrls.slice(0, 4).map((url, idx) => (
+                <div key={url} className="space-y-1 w-1/16 gap-1 flex-shrink-0">
+                  <div className="w-full">
+                    <FindingCardWithScreenshot
+                      finding={{ ...finding, screenshot_url: url }}
+                      pageScreenshots={{}}
+                      hideTabs={true}
+                    />
+                  </div>
+                  <p
+                    className="font-bold text-slate-400 uppercase tracking-widest text-center text-[8px] truncate px-1"
+                    title={
+                      idx === 0
+                        ? "Facebook"
+                        : idx === 1
+                          ? "X"
+                          : idx === 2
+                            ? "LinkedIn"
+                            : "Meta Tags"
+                    }
+                  >
+                    {idx === 0
+                      ? "Facebook"
+                      : idx === 1
+                        ? "X"
+                        : idx === 2
+                          ? "LinkedIn"
+                          : "Meta Tags"}
+                  </p>
+                </div>
+              ))}
+            </div>
 
-          <div className="flex-shrink-0 pt-2">
-            <label className="flex items-center gap-2 cursor-pointer group/verify bg-slate-50 dark:bg-[#1d2a31] p-2.5 rounded border border-slate-200 dark:border-slate-700">
-              <div
-                className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${isManuallyVerified ? "bg-emerald-500 border-emerald-500 text-white" : "border-slate-300 dark:border-slate-600 bg-white dark:bg-[#131d22] group-hover/verify:border-accent"}`}
-              >
-                {isManuallyVerified && <Check size={12} strokeWidth={3} />}
-              </div>
-              <input
-                type="checkbox"
-                className="hidden"
-                checked={isManuallyVerified}
-                onChange={(e) => setIsManuallyVerified(e.target.checked)}
-              />
-              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest whitespace-nowrap">
-                verify title
-              </span>
-            </label>
+            <div className="w-[25%] flex flex-col gap-2 pl-4 border-l border-slate-100 dark:border-slate-700/50 ml-5">
+              <label className="flex items-center gap-2 group/cb">
+                <input
+                  type="checkbox"
+                  checked={isManuallyVerified}
+                  onChange={(e) => setIsManuallyVerified(e.target.checked)}
+                  className="w-3 h-3 text-accent border-slate-300 dark:border-slate-600 dark:bg-[#131d22] rounded focus:ring-accent accent-accent cursor-pointer transition-all"
+                />
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest group-hover/cb:text-slate-900 dark:group-hover/cb:text-slate-200 transition-colors cursor-pointer truncate">
+                  {isManuallyVerified ? "Title Verified" : "Verify Title"}
+                </span>
+              </label>
+            </div>
           </div>
         </div>
       )}

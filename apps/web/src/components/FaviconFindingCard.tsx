@@ -229,7 +229,7 @@ export const FaviconFindingCard: React.FC<FindingCardProps> = ({
                     onChange={(e) => setIsVerified(e.target.checked)}
                     className="w-3 h-3 text-accent border-slate-300 dark:border-slate-600 dark:bg-[#131d22] rounded focus:ring-accent accent-accent cursor-pointer disabled:cursor-not-allowed transition-all"
                   />
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest group-hover/cb:text-slate-900 transition-colors cursor-pointer truncate">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest group-hover/cb:text-slate-900 dark:group-hover/cb:text-slate-200 transition-colors cursor-pointer truncate">
                     {isVerified ? "Favicon Verified" : "Verify Favicon"}
                   </span>
                 </label>

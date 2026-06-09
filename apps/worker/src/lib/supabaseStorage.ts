@@ -1,38 +1,45 @@
-import { supabase } from './supabase';
-import pino from 'pino';
+import { supabase } from "./supabase"
+import pino from "pino"
 
 const logger = pino({
-  level: process.env.LOG_LEVEL || 'info',
+  level: process.env.LOG_LEVEL || "info",
   transport: {
-    target: 'pino-pretty',
+    target: "pino-pretty",
     options: { colorize: true },
   },
-});
+})
 
-const DEFAULT_BUCKET = 'screenshots';
+const DEFAULT_BUCKET = "evidence"
 
 /**
  * Ensures a bucket exists with specified privacy.
  */
-async function ensureBucketExists(bucketName: string, isPublic: boolean = false) {
-  const { data: buckets, error: listError } = await supabase.storage.listBuckets();
-  
+async function ensureBucketExists(
+  bucketName: string,
+  isPublic: boolean = false,
+) {
+  const { data: buckets, error: listError } =
+    await supabase.storage.listBuckets()
+
   if (listError) {
-    logger.error({ error: listError.message }, 'Failed to list buckets');
-    return;
+    logger.error({ error: listError.message }, "Failed to list buckets")
+    return
   }
 
-  const exists = buckets.some(b => b.name === bucketName);
-  
+  const exists = buckets.some((b) => b.name === bucketName)
+
   if (!exists) {
-    logger.info({ bucket: bucketName, isPublic }, 'Creating storage bucket');
-    const { error: createError } = await supabase.storage.createBucket(bucketName, {
-      public: isPublic,
-      allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg'],
-    });
+    logger.info({ bucket: bucketName, isPublic }, "Creating storage bucket")
+    const { error: createError } = await supabase.storage.createBucket(
+      bucketName,
+      {
+        public: isPublic,
+        allowedMimeTypes: ["image/png", "image/jpeg", "image/jpg"],
+      },
+    )
 
     if (createError) {
-      logger.error({ error: createError.message }, 'Failed to create bucket');
+      logger.error({ error: createError.message }, "Failed to create bucket")
     }
   }
 }
@@ -42,46 +49,50 @@ async function ensureBucketExists(bucketName: string, isPublic: boolean = false)
  * Returns a permanent public URL if isPublic is true, otherwise a signed URL.
  */
 export async function uploadScreenshot(
-  buffer: Buffer, 
-  path: string, 
-  options: { bucket?: string; isPublic?: boolean } = {}
+  buffer: Buffer,
+  path: string,
+  options: { bucket?: string; isPublic?: boolean } = {},
 ): Promise<string> {
-  const bucketName = options.bucket || DEFAULT_BUCKET;
-  const isPublic = options.isPublic ?? false;
+  const bucketName = options.bucket || DEFAULT_BUCKET
+  const isPublic = options.isPublic ?? true
 
-  await ensureBucketExists(bucketName, isPublic);
+  await ensureBucketExists(bucketName, isPublic)
 
-  logger.info({ path, bucketName }, 'Uploading screenshot to storage');
+  logger.info({ path, bucketName }, "Uploading screenshot to storage")
 
   const { error: uploadError } = await supabase.storage
     .from(bucketName)
     .upload(path, buffer, {
-      contentType: path.endsWith('.jpg') ? 'image/jpeg' : 'image/png',
+      contentType: path.endsWith(".jpg") ? "image/jpeg" : "image/png",
       upsert: true,
-    });
+    })
 
   if (uploadError) {
-    logger.error({ path, error: uploadError.message }, 'Failed to upload screenshot');
-    throw new Error(`Upload failed: ${uploadError.message}`);
+    logger.error(
+      { path, error: uploadError.message },
+      "Failed to upload screenshot",
+    )
+    throw new Error(`Upload failed: ${uploadError.message}`)
   }
 
   if (isPublic) {
-    const { data } = supabase.storage
-      .from(bucketName)
-      .getPublicUrl(path);
-    
-    return data.publicUrl;
+    const { data } = supabase.storage.from(bucketName).getPublicUrl(path)
+
+    return data.publicUrl
   }
 
   // Generate signed URL (1 hour expiry) for private buckets
   const { data, error: signedUrlError } = await supabase.storage
     .from(bucketName)
-    .createSignedUrl(path, 3600);
+    .createSignedUrl(path, 3600)
 
   if (signedUrlError || !data?.signedUrl) {
-    logger.error({ path, error: signedUrlError?.message }, 'Failed to generate signed URL');
-    throw new Error(`Failed to generate signed URL: ${signedUrlError?.message}`);
+    logger.error(
+      { path, error: signedUrlError?.message },
+      "Failed to generate signed URL",
+    )
+    throw new Error(`Failed to generate signed URL: ${signedUrlError?.message}`)
   }
 
-  return data.signedUrl;
+  return data.signedUrl
 }

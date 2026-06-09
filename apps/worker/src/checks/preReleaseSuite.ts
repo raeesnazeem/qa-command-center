@@ -1797,6 +1797,7 @@ export async function checkSocialShareHeading(
   let facebookUrl = ""
   let xUrl = ""
   let linkedinUrl = ""
+  let metaTagsUrl = ""
 
   let browser
   try {
@@ -1862,6 +1863,41 @@ export async function checkSocialShareHeading(
       `${runId}/${pageId}/social_ln.png`,
     )
 
+    if (onProgress) await onProgress(95, "Capturing meta tags source code...")
+
+    const codeContext = await browser.newContext({
+      userAgent:
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    })
+
+    const codePage = await codeContext.newPage()
+    await codePage
+      .goto(url, { waitUntil: "networkidle", timeout: 30000 })
+      .catch(() => {})
+
+    const codeSnippet = await codePage.evaluate(() => {
+      const tags = document.querySelectorAll(
+        'title, meta[name="description"], meta[property^="og:"], meta[name^="twitter:"], meta[property^="twitter:"]',
+      )
+      return tags.length > 0
+        ? Array.from(tags)
+            .map((tag) => tag.outerHTML)
+            .join("\n")
+        : "Meta tags not found in page source"
+    })
+
+    const renderPage = await codeContext.newPage()
+    await renderPage.setContent(
+      `<pre style="font-size: 14px; white-space: pre-wrap; word-wrap: break-word; padding: 20px; background: #f4f4f4;">${codeSnippet.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>`,
+    )
+    const codeBuffer = await renderPage.screenshot({ fullPage: false })
+    metaTagsUrl = await uploadScreenshot(
+      codeBuffer,
+      `${runId}/${pageId}/social_meta_tags.png`,
+    )
+
+    await codeContext.close()
+
     if (!sharedBrowser) await browser.close()
   } catch (err: any) {
     if (!sharedBrowser && browser) await browser.close().catch(() => null)
@@ -1879,7 +1915,7 @@ export async function checkSocialShareHeading(
     ]
   }
 
-  const screenshotUrls = [facebookUrl, xUrl, linkedinUrl]
+  const screenshotUrls = [facebookUrl, xUrl, linkedinUrl, metaTagsUrl]
     .filter(Boolean)
     .join(",")
 

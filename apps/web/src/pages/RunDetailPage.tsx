@@ -22,6 +22,7 @@ import { ManualScanOverlay } from "../components/ManualScanOverlay"
 import { useTaskStageStore } from "../store/taskStageStore"
 import { useRole } from "../hooks/useRole"
 import { startVisualDiff } from "../api/visualDiff.api"
+import { Skeleton } from "../components/Skeleton"
 import {
   ChevronLeft,
   CheckCircle2,
@@ -602,31 +603,39 @@ export const RunDetailPage = () => {
   const isLoading = isLoadingRun || isLoadingProject
 
   if (isLoading) {
-    const isDark =
-      typeof window !== "undefined" &&
-      (localStorage.getItem("theme") === "dark" ||
-        (!localStorage.getItem("theme") &&
-          window.matchMedia("(prefers-color-scheme: dark)").matches))
     return (
-      <div className={isDark ? "dark w-full h-full" : "w-full h-full"}>
-        <div className="relative flex flex-col items-center justify-center min-h-[60vh] dark:bg-slate-900 font-sans mt-[100px] overflow-hidden">
-          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-emerald-200/5 dark:bg-teal-500/5 rounded-full blur-3xl animate-gemini-glow"></div>
+      <div className="max-w-7xl mx-auto p-6 space-y-8 animate-in fade-in duration-500">
+        <div className="flex flex-col space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Skeleton className="h-9 w-9 rounded-full" />
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-8 w-64" />
+                </div>
+                <Skeleton className="h-4 w-96" />
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Skeleton className="h-10 w-32 rounded-lg" />
+            </div>
           </div>
-          <div className="relative z-10 flex flex-col items-center space-y-4 animate-pulse">
-            <img
-              src="https://growth99.com/storage/2024/09/LOGO.svg"
-              alt="QACC Logo"
-              className="h-48 w-48 dark:hidden block"
-              style={{ objectFit: "contain" }}
-            />
-            <img
-              src="https://aspire-cc.com/storage/2026/03/G99-Logo.svg"
-              alt="QACC Logo"
-              className="h-48 w-48 hidden dark:block"
-              style={{ objectFit: "contain" }}
-            />
+        </div>
+
+        <div className="bg-slate-50 dark:bg-[#1D2A31] p-6 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+          <div className="flex justify-between items-end">
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-48" />
+              <Skeleton className="h-4 w-64" />
+            </div>
+            <Skeleton className="h-8 w-16" />
           </div>
+          <Skeleton className="h-4 w-full rounded-full" />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <Skeleton className="h-64 col-span-2 rounded-md" />
+          <Skeleton className="h-64 rounded-md" />
         </div>
       </div>
     )
