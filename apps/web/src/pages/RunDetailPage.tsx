@@ -47,6 +47,10 @@ import {
   Send,
   Camera,
   Video,
+  PlayCircle,
+  CheckSquare,
+  Users,
+  Settings,
 } from "lucide-react"
 import { useEffect, useState, useMemo, useRef } from "react"
 import { useQueryClient } from "@tanstack/react-query"
@@ -941,6 +945,55 @@ export const RunDetailPage = () => {
   }
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-8 animate-in fade-in duration-200">
+      {/* Project Navigation Floating Widget */}
+      <div className="fixed right-0 top-1/2 -translate-y-1/2 flex flex-col gap-6 bg-slate-50 dark:bg-[#1D2A31] border border-1 border-accent border-r-0 rounded-l-xl p-4 shadow-lg z-50">
+        <Link
+          to={`/projects/${projectId}?tab=overview`}
+          className="text-slate-400 hover:text-accent transition-colors group relative flex items-center"
+        >
+          <LayoutDashboard size={25} />
+          <span className="absolute right-full mr-4 px-2 py-1 bg-slate-800 text-white text-[10px] font-bold uppercase tracking-wider rounded opacity-0 translate-x-4 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300 ease-out pointer-events-none whitespace-nowrap z-50">
+            Overview
+          </span>
+        </Link>
+        <Link
+          to={`/projects/${projectId}?tab=runs`}
+          className="text-slate-400 hover:text-accent transition-colors group relative flex items-center"
+        >
+          <PlayCircle size={25} />
+          <span className="absolute right-full mr-4 px-2 py-1 bg-slate-800 text-white text-[10px] font-bold uppercase tracking-wider rounded opacity-0 translate-x-4 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300 ease-out pointer-events-none whitespace-nowrap z-50">
+            QA Runs
+          </span>
+        </Link>
+        <Link
+          to={`/projects/${projectId}?tab=tasks`}
+          className="text-slate-400 hover:text-accent transition-colors group relative flex items-center"
+        >
+          <CheckSquare size={25} />
+          <span className="absolute right-full mr-4 px-2 py-1 bg-slate-800 text-white text-[10px] font-bold uppercase tracking-wider rounded opacity-0 translate-x-4 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300 ease-out pointer-events-none whitespace-nowrap z-50">
+            Tasks
+          </span>
+        </Link>
+        <Link
+          to={`/projects/${projectId}?tab=team`}
+          className="text-slate-400 hover:text-accent transition-colors group relative flex items-center"
+        >
+          <Users size={25} />
+          <span className="absolute right-full mr-4 px-2 py-1 bg-slate-800 text-white text-[10px] font-bold uppercase tracking-wider rounded opacity-0 translate-x-4 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300 ease-out pointer-events-none whitespace-nowrap z-50">
+            Team
+          </span>
+        </Link>
+        <Link
+          to={`/projects/${projectId}?tab=settings`}
+          className="text-slate-400 hover:text-accent transition-colors group relative flex items-center"
+        >
+          <Settings size={25} />
+          <span className="absolute right-full mr-4 px-2 py-1 bg-slate-800 text-white text-[10px] font-bold uppercase tracking-wider rounded opacity-0 translate-x-4 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300 ease-out pointer-events-none whitespace-nowrap z-50">
+            Settings
+          </span>
+        </Link>
+      </div>
+
       {/* Header */}
       <div className="flex flex-col space-y-6">
         <div className="flex items-center justify-between">
@@ -1168,7 +1221,7 @@ export const RunDetailPage = () => {
           </>
         )}
 
-        <button
+        {/* <button
           onClick={() => setActiveTab("visual_diff")}
           className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
             activeTab === "visual_diff"
@@ -1178,7 +1231,7 @@ export const RunDetailPage = () => {
         >
           <Eye size={14} />
           Visual Diff
-        </button>
+        </button> */}
         {run.is_woocommerce && (
           <button
             onClick={() => setActiveTab("woocommerce")}
@@ -1572,15 +1625,16 @@ export const RunDetailPage = () => {
             </div>
             <div className="bg-slate-50 dark:bg-[#1D2A31] p-6 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                Total Issues
+                Total Findings
               </p>
-              <p className="text-2xl font-bold text-red-600">
+              <p className="text-2xl font-bold text-emerald-500">
                 {Object.values(run.finding_counts || {}).reduce(
                   (a, b) => a + b,
                   0,
                 )}
               </p>
             </div>
+
             <div className="bg-slate-50 dark:bg-[#1D2A31] p-6 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
                 Status

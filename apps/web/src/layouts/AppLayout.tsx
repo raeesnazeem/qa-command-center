@@ -107,7 +107,7 @@ export const AppLayout = () => {
     <div className="flex h-screen bg-bg-main dark:bg-[#131D22] font-sans">
       {/* Sidebar */}
       <aside
-        className={`${isCollapsed ? "w-20" : "w-64"} bg-slate-50 dark:bg-[#0B151B] text-slate-900 dark:text-slate-100 flex flex-col border-r border-slate-200 dark:border-slate-800 transition-all duration-300 relative`}
+        className={`${isCollapsed ? "w-20" : "w-64"} bg-slate-50 dark:bg-[#0B151B] text-slate-900 dark:text-slate-100 flex flex-col border-r border-slate-300/50 dark:border-slate-800 transition-all duration-300 relative`}
       >
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
@@ -120,7 +120,7 @@ export const AppLayout = () => {
           )}
         </button>
         <div
-          className={`p-6 text-xl font-bold border-b border-slate-100 dark:border-slate-800 tracking-tight flex items-center ${isCollapsed ? "justify-center space-x-0" : "space-x-2"}`}
+          className={`p-6 text-xl font-bold dark:border-slate-800 tracking-tight flex items-center ${isCollapsed ? "justify-center space-x-0" : "space-x-2"}`}
         >
           <img
             src={

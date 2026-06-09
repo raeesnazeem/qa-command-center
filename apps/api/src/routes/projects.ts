@@ -179,7 +179,9 @@ router.get("/", clerkAuth, async (req: Request, res: Response) => {
         ["running", "pending", "paused"].includes(r.status),
       )
       const openIssuesCount =
-        project.tasks?.filter((t: any) => t.status === "open").length || 0
+        project.tasks?.filter((t: any) =>
+          ["open", "in_progress"].includes(t.status),
+        ).length || 0
 
       const { qa_runs, tasks, ...rest } = project
       return {
@@ -339,7 +341,7 @@ router.get("/:id", clerkAuth, async (req: Request, res: Response) => {
           id, status, completed_at, created_at, pages_processed, pages_total,
           creator:users!qa_runs_created_by_fkey (full_name, email)
         ),
-        tasks(id, status, severity, created_at),
+        tasks(id, status, severity, created_at, title, finding_id),
         project_settings(*)
       `,
       )
@@ -363,8 +365,12 @@ router.get("/:id", clerkAuth, async (req: Request, res: Response) => {
       ["running", "pending", "paused"].includes(r.status),
     )
 
-    const openIssuesCount =
-      tasks?.filter((t: any) => t.status === "open").length || 0
+    const openIssuesCount = new Set(
+      (tasks || [])
+        .filter((t: any) => ["open", "in_progress"].includes(t.status))
+        .map((t: any) => t.finding_id || t.title),
+    ).size
+
     const resolvedIssuesCount =
       tasks?.filter((t: any) => ["resolved", "closed"].includes(t.status))
         .length || 0

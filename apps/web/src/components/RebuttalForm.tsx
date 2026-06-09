@@ -197,7 +197,7 @@ export const RebuttalForm: React.FC<RebuttalFormProps> = ({
                 e.stopPropagation()
                 onDrop(e)
               }}
-              className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-8 flex flex-col items-center justify-center gap-3 hover:border-red-300 dark:hover:border-red-500/50 hover:bg-red-50/30 dark:hover:bg-red-900/10 transition-all cursor-pointer group"
+              className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-8 flex flex-col items-center justify-center gap-3 hover:border-red-300 dark:hover:border-red-400/50 hover:bg-red-50/30 dark:hover:bg-red-900/10 transition-all cursor-pointer group"
               onClick={() =>
                 document.getElementById("screenshot-upload")?.click()
               }

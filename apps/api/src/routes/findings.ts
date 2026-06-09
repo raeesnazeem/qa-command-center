@@ -383,6 +383,20 @@ router.post(
             `To-do checklist item for Hero Media not found in Basecamp checklist "${targetList.name}".`,
           )
         }
+      } else if (finding.check_factor === "social_share_heading") {
+        targetTodo = allTodos.find((todo: any) =>
+          todo.content
+            .toLowerCase()
+            .includes(
+              "qa- while sharing the website on text , business name should be matched",
+            ),
+        )
+
+        if (!targetTodo) {
+          throw new Error(
+            `To-do checklist item "QA- While sharing the website on text , business name should be matched" not found in Basecamp checklist "${targetList.name}".`,
+          )
+        }
       }
 
       // 4. Extract screenshots: split comma-separated list and reuse the worker's pre-captured reviews proof
@@ -530,9 +544,31 @@ router.post(
           <em>Sent automatically via QA Command Center</em>
         </div>
         `.trim()
+      } else if (finding.check_factor === "social_share_heading") {
+        const screens = (finding.screenshot_url || "")
+          .split(",")
+          .filter(Boolean)
+        const screenshotsHtml = screens
+          .map(
+            (url: string) =>
+              `<a href="${url.trim()}" target="_blank"><img src="${url.trim()}" width="500" style="border: 1px solid #e3e4e6; border-radius: 6px; margin-bottom: 16px;" /></a>`,
+          )
+          .join("<br/><br/>")
+
+        commentHtml = `
+        <div style="font-family: sans-serif; line-height: 1.5;">
+          <strong>Social Share Heading Verification</strong><br/><br/>
+          All social share properties and previews have been verified.<br/><br/>
+          <strong>Screenshots:</strong><br/>
+          ${screenshotsHtml}
+          <br/><br/>
+          <em>Sent automatically via QA Command Center</em>
+        </div>
+        `.trim()
       }
 
       const postCommentUrl = `https://3.basecampapi.com/${accountId}/buckets/${bcProjectId}/recordings/${targetTodo.id}/comments.json`
+
       await axios.post(postCommentUrl, { content: commentHtml }, { headers })
 
       if (finding.check_factor === "paid_media") {

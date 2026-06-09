@@ -636,7 +636,7 @@ export const DashboardPage = () => {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] hidden dark:block bg-emerald-400/5 dark:bg-teal-500/5 rounded-full blur-3xl animate-gemini-glow"></div>
       </div>
       <main className="relative z-10 p-6 lg:p-10 space-y-10">
-        <header className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-slate-50/60 dark:bg-[#1D2A31]/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-lg dark:shadow-sm transition-all">
+        <header className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-slate-50/60 dark:bg-[#1D2A31]/60 backdrop-blur-md border border-slate-400/50 dark:border-slate-800 rounded-lg p-6 shadow-lg dark:shadow-sm transition-all">
           <div>
             <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-200 tracking-tight">
               Global Overview

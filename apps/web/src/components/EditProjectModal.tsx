@@ -97,7 +97,7 @@ export const EditProjectModal = ({
                 placeholder="e.g. My Awesome Shop"
                 className={`w-full bg-[#F2F6FC] dark:bg-[#131d22] hover:bg-[#fcfcfc] dark:hover:bg-[#131d22] border ${
                   errors.name
-                    ? "border-red-500/50"
+                    ? "border-red-400/50"
                     : "border-slate-300 dark:border-slate-700 hover:border-accent dark:hover:border-accent"
                 } rounded-md px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:bg-[#fcfcfc] dark:focus:bg-[#131d22] focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all`}
               />
@@ -121,7 +121,7 @@ export const EditProjectModal = ({
                   placeholder="https://example.com"
                   className={`w-full bg-[#F2F6FC] dark:bg-[#131d22] hover:bg-[#fcfcfc] dark:hover:bg-[#131d22] border ${
                     errors.site_url
-                      ? "border-red-500/50"
+                      ? "border-red-400/50"
                       : "border-slate-300 dark:border-slate-700 hover:border-accent dark:hover:border-accent"
                   } rounded-md pl-10 pr-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:bg-[#fcfcfc] dark:focus:bg-[#131d22] focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all`}
                 />

@@ -96,7 +96,7 @@ export const SettingsPage = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-slate-50/60 dark:bg-[#1D2A31]/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-lg dark:shadow-sm transition-all">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-slate-50/60 dark:bg-[#1D2A31]/60 backdrop-blur-md border border-slate-400/40 dark:border-slate-800 rounded-lg p-6 shadow-lg dark:shadow-sm transition-all">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-200 tracking-tight">
             Settings
@@ -111,10 +111,10 @@ export const SettingsPage = () => {
         {sections.map((section) => (
           <section
             key={section.id}
-            className="bg-slate-50 dark:bg-[#131d22] border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden shadow-lg dark:shadow-sm transition-all"
+            className="bg-slate-50 dark:bg-[#131d22] border border-slate-400/40 dark:border-slate-800 rounded-xl overflow-hidden shadow-lg dark:shadow-sm transition-all"
           >
-            <div className="px-6 py-4 border-b border-slate-50 dark:border-slate-800/50 flex items-center space-x-3 bg-slate-50/50 dark:bg-[#1D2A31]">
-              <div className="p-2 bg-slate-50 dark:bg-[#131D22] border border-slate-100 dark:border-slate-700 rounded-lg text-slate-400 dark:text-slate-500">
+            <div className="px-6 py-4 border-b border-slate-400/40 dark:border-slate-800/50 flex items-center space-x-3 bg-slate-50/50 dark:bg-[#1D2A31]">
+              <div className="p-2 bg-slate-50 dark:bg-[#131D22] border border-slate-400/40 dark:border-slate-700 rounded-lg text-slate-400 dark:text-slate-500">
                 <section.icon className="w-5 h-5" />
               </div>
               <div>
@@ -148,7 +148,7 @@ export const SettingsPage = () => {
                           value={googleChatUserId}
                           onChange={(e) => setGoogleChatUserId(e.target.value)}
                           placeholder={item.placeholder}
-                          className="bg-[#F2F6FC] dark:bg-[#1D2A31] border border-slate-200 dark:border-slate-700 dark:text-slate-200 rounded px-2 py-1 text-sm focus:outline-none focus:border-accent w-48"
+                          className="bg-[#F2F6FC] dark:bg-[#1D2A31] border border-slate-400/40 dark:border-slate-700 dark:text-slate-200 rounded px-2 py-1 text-sm focus:outline-none focus:border-accent w-48"
                         />
                         <button
                           onClick={handleSaveProfile}

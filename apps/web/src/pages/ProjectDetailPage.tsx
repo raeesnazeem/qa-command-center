@@ -149,7 +149,7 @@ export const ProjectDetailPage = () => {
       </div>
 
       {/* Header Section */}
-      <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-700 rounded-md p-8 shadow-sm">
+      <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-400/50 dark:border-slate-700 rounded-md p-8 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
           <div className="space-y-4">
             <div className="flex items-center space-x-3">

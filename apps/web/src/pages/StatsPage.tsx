@@ -18,7 +18,7 @@ const StatsPage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6 animate-in fade-in duration-500 pb-20">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-slate-50/60 dark:bg-[#1D2A31]/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg p-6 shadow-md dark:shadow-xs transition-all">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-slate-50/60 dark:bg-[#1D2A31]/60 backdrop-blur-md border border-slate-400/50 dark:border-slate-800 rounded-lg p-6 shadow-md dark:shadow-xs transition-all">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-200 tracking-tight flex items-center gap-2">
             Performance Leaderboard
@@ -134,7 +134,7 @@ const StatsPage: React.FC = () => {
                   genuineCount={data.topPerformers.developer.count}
                 />
               ) : (
-                <div className="bg-slate-50 dark:bg-slate-800 border border-dashed border-slate-200 dark:border-slate-700 rounded-md p-10 flex items-center justify-center text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                <div className="bg-slate-50 dark:bg-slate-800 border border-dashed border-slate-400/50 dark:border-slate-700 rounded-md p-10 flex items-center justify-center text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                   No Top Developer Found
                 </div>
               )}
@@ -145,7 +145,7 @@ const StatsPage: React.FC = () => {
                   genuineCount={data.topPerformers.qa.count}
                 />
               ) : (
-                <div className="bg-slate-50 dark:bg-slate-800 border border-dashed border-slate-200 dark:border-slate-700 rounded-md p-10 flex items-center justify-center text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                <div className="bg-slate-50 dark:bg-slate-800 border border-dashed border-slate-400/50 dark:border-slate-700 rounded-md p-10 flex items-center justify-center text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
                   No Top QA Found
                 </div>
               )}

@@ -82,7 +82,7 @@ export const ProjectOverviewTab = ({
       value: project.open_issues_count.toString(),
       icon: AlertCircle,
       color: "text-red-500",
-      bg: "bg-red-50",
+      bg: "bg-accent/10",
     },
     {
       label: "Resolved Issues",
@@ -97,8 +97,8 @@ export const ProjectOverviewTab = ({
         ? new Date(project.last_run_date).toLocaleDateString()
         : "Never",
       icon: Calendar,
-      color: "text-slate-600",
-      bg: "bg-slate-50 dark:bg-[#1d2a31]",
+      color: "text-accent",
+      bg: "bg-accent/10",
       hidden: isDeveloper,
     },
   ].filter((s) => !s.hidden)
@@ -123,7 +123,7 @@ export const ProjectOverviewTab = ({
         <div className="flex flex-col space-y-2">
           <Link
             to={`/projects/${project.id}/runs/${ongoingRun.id}`}
-            className="flex items-center justify-between p-4 bg-blue-50 border border-blue-100 rounded-md shadow-sm hover:bg-blue-100 transition-all group"
+            className="flex items-center justify-between p-4 bg-blue-50 border border-slate-400/50 rounded-md shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:bg-blue-100 transition-all group"
           >
             <div className="flex items-center space-x-3">
               <div className="relative flex h-3 w-3">
@@ -215,7 +215,7 @@ export const ProjectOverviewTab = ({
 
       {!isDeveloper && (
         <CanDo role="qa_engineer">
-          <div className="flex items-center justify-between p-6 bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-700 rounded-md shadow-sm">
+          <div className="flex items-center justify-between p-6 bg-slate-50 dark:bg-[#1D2A31] border border-slate-400/50 dark:border-slate-700/50 rounded-md shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
             <div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-slate-200">
                 Ready to test?
@@ -240,18 +240,18 @@ export const ProjectOverviewTab = ({
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-700 rounded-md p-6 shadow-sm"
+            className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-400/50 dark:border-slate-700/50 rounded-md p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex items-center justify-between"
           >
-            <div className="flex items-center justify-between mb-4">
-              <div className={`p-2 ${stat.bg} rounded-md`}>
-                <stat.icon className={`w-5 h-5 ${stat.color}`} />
+            <div>
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                {stat.label}
+              </div>
+              <div className="text-3xl font-bold text-slate-900 dark:text-slate-200">
+                {stat.value}
               </div>
             </div>
-            <div className="text-2xl font-bold text-slate-900 dark:text-slate-200">
-              {stat.value}
-            </div>
-            <div className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-              {stat.label}
+            <div className={`p-3 ${stat.bg} rounded-full`}>
+              <stat.icon className={`w-6 h-6 ${stat.color}`} />
             </div>
           </div>
         ))}
@@ -259,7 +259,7 @@ export const ProjectOverviewTab = ({
 
       {/* Conditional Content: Recent QA Runs (Admins/QA) vs My Tasks (Developers) */}
       {!isDeveloper ? (
-        <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-700 rounded-md overflow-hidden shadow-sm">
+        <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-400/50 dark:border-slate-700/50 rounded-md overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
           <div className="px-6 py-4 border-b border-slate-50 dark:border-slate-700 flex items-center justify-between">
             <h3 className="font-bold text-slate-900 dark:text-slate-200 flex items-center">
               <Clock className="w-5 h-5 mr-2 text-slate-400" />
@@ -287,7 +287,7 @@ export const ProjectOverviewTab = ({
                 >
                   <div className="flex items-center space-x-4">
                     <div
-                      className={`p-2 rounded-md bg-slate-50 dark:bg-[#1d2a31] text-slate-400 group-hover:bg-slate-50 dark:group-hover:bg-[#1d2a31] group-hover:text-accent transition-colors shadow-sm border border-slate-100 dark:border-slate-700`}
+                      className={`p-2 rounded-md bg-slate-50 dark:bg-[#1d2a31] text-slate-400 group-hover:bg-slate-50 dark:group-hover:bg-[#1d2a31] group-hover:text-accent transition-colors shadow-sm`}
                     >
                       {getStatusIcon(run.status)}
                     </div>
@@ -338,7 +338,7 @@ export const ProjectOverviewTab = ({
           )}
         </div>
       ) : (
-        <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-100 dark:border-slate-700 rounded-md overflow-hidden shadow-sm">
+        <div className="bg-slate-50 dark:bg-[#1D2A31] border border-slate-400/50 dark:border-slate-700/50 rounded-md overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
           <div className="px-6 py-4 border-b border-slate-50 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-[#1d2a31]/50">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 rounded-md bg-slate-50 dark:bg-[#1d2a31] border border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-sm">

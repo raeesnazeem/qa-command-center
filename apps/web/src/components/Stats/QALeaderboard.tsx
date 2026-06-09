@@ -7,7 +7,7 @@ interface QALeaderboardProps {
 
 const QALeaderboard: React.FC<QALeaderboardProps> = ({ data }) => {
   return (
-    <div className="bg-slate-50 dark:bg-[#131d22] rounded-md border border-slate-200 dark:border-slate-800 shadow-md dark:shadow-sm transition-all overflow-hidden">
+    <div className="bg-slate-50 dark:bg-[#131d22] rounded-md border border-slate-400/50 dark:border-slate-800 shadow-md dark:shadow-sm transition-all overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>

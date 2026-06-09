@@ -181,7 +181,7 @@ export const CreateTaskModal = ({
                   {...register("project_id")}
                   className={`w-full bg-slate-50 dark:bg-[#1d2a31] border ${
                     errors.project_id
-                      ? "border-red-500/50 dark:border-red-500/50"
+                      ? "border-red-400/50 dark:border-red-400/50"
                       : "border-slate-200 dark:border-slate-700"
                   } rounded-md px-4 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all`}
                 >
@@ -210,7 +210,7 @@ export const CreateTaskModal = ({
                 placeholder="e.g. Fix mobile menu overlap"
                 className={`w-full bg-slate-50 dark:bg-[#1d2a31] border ${
                   errors.title
-                    ? "border-red-500/50 dark:border-red-500/50"
+                    ? "border-red-400/50 dark:border-red-400/50"
                     : "border-slate-200 dark:border-slate-700 hover:border-accent dark:hover:border-accent"
                 } rounded-md px-4 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent active:border-accent transition-all`}
               />

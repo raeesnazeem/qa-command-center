@@ -5,6 +5,7 @@ import { FindingSeverityEditor } from "./FindingSeverityEditor"
 import { QAFinding } from "../api/runs.api"
 import { useGalleryStore } from "../store/galleryStore"
 import { FindingCardWithScreenshot } from "./FindingCardWithScreenshot"
+import { useAuthAxios } from "../lib/useAuthAxios"
 
 interface FindingCardProps {
   finding: QAFinding
@@ -37,6 +38,21 @@ export const SocialShareHeadingFindingCard: React.FC<FindingCardProps> = ({
   const [localTitle, setLocalTitle] = React.useState(finding.title)
   const [isManuallyVerified, setIsManuallyVerified] = React.useState(false)
 
+  const api = useAuthAxios()
+  const [isPushing, setIsPushing] = React.useState(false)
+  const [isPushed, setIsPushed] = React.useState(finding.status === "confirmed")
+  const handlePushToBasecamp = async () => {
+    setIsPushing(true)
+    try {
+      await api.post(`/api/findings/${finding.id}/push-basecamp`, {})
+      setIsPushed(true)
+      if (onConfirm) onConfirm(finding.id)
+    } catch (err: any) {
+      alert(err.response?.data?.error || "Failed to push finding to Basecamp.")
+    } finally {
+      setIsPushing(false)
+    }
+  }
   React.useEffect(() => {
     setLocalTitle(finding.title)
   }, [finding.title])
@@ -186,6 +202,15 @@ export const SocialShareHeadingFindingCard: React.FC<FindingCardProps> = ({
                     className="btn-unified"
                   >
                     False Positive
+                  </button>
+                )}
+                {isManuallyVerified && (
+                  <button
+                    onClick={handlePushToBasecamp}
+                    disabled={isPushing || isPushed}
+                    className={`btn-unified px-3 flex items-center justify-center transition-all active:scale-95 ${isPushed ? "bg-emerald-100 text-emerald-800 border border-emerald-200 cursor-default" : "bg-[#0b1016] hover:bg-slate-800 text-white"}`}
+                  >
+                    {isPushing ? "..." : isPushed ? "Success" : "Push"}
                   </button>
                 )}
                 <button
