@@ -98,9 +98,7 @@ export const AppLayout = () => {
     ...(!isDeveloper
       ? [{ to: "/admin/activity-logs", label: "Activity Logs", icon: History }]
       : []),
-    ...(!isDeveloper
-      ? [{ to: "/settings", label: "Settings", icon: SettingsIcon }]
-      : []),
+    ...[{ to: "/settings", label: "Settings", icon: SettingsIcon }],
   ]
 
   return (
