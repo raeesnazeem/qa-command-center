@@ -102,6 +102,10 @@ export const TaskDetailPanel = ({
     const isDeadLink =
       task.findings?.check_factor === "dead_links" ||
       (task as any).check_factor === "dead_links"
+    const isLogoChatbot =
+      task.findings?.check_factor === "logo_chatbot" ||
+      (task as any).check_factor === "logo_chatbot"
+
     if (isHeroMedia) {
       console.log("Pushing hero media task to specific checklist item...", {
         taskId: task.id,
@@ -110,9 +114,17 @@ export const TaskDetailPanel = ({
       console.log("Pushing dead link task to specific checklist item...", {
         taskId: task.id,
       })
+    } else if (isLogoChatbot) {
+      console.log(
+        "Pushing logo on chatbot task to specific checklist item...",
+        {
+          taskId: task.id,
+        },
+      )
     } else {
       console.log("Pushing task...", { taskId: task.id })
     }
+
     pushToBasecamp(task.id)
   }
 
@@ -162,7 +174,9 @@ export const TaskDetailPanel = ({
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-[#131D22]">
           <div className="flex items-center space-x-3">
-            <h2 className="font-bold text-slate-900 dark:text-white">Task Details</h2>
+            <h2 className="font-bold text-slate-900 dark:text-white">
+              Task Details
+            </h2>
             <span
               className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${getSeverityStyles(task.severity)}`}
             >

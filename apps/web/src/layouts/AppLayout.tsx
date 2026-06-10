@@ -17,6 +17,7 @@ import {
   ListChecks,
   Monitor,
   User,
+  MessageSquare,
 } from "lucide-react"
 import { useRole } from "../hooks/useRole"
 import { useEffect, useState } from "react"
@@ -99,6 +100,7 @@ export const AppLayout = () => {
     ...(!isDeveloper
       ? [{ to: "/admin/activity-logs", label: "Activity Logs", icon: History }]
       : []),
+    { to: "/feedback", label: "Feedback", icon: MessageSquare },
     ...[{ to: "/settings", label: "Settings", icon: SettingsIcon }],
   ]
 
@@ -241,7 +243,6 @@ export const AppLayout = () => {
           <Outlet />
         </main>
         {isAdmin && <ChatSidebar />}
-        <AdminRedisWidget />
       </div>
     </div>
   )

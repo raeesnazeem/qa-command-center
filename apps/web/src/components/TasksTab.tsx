@@ -128,9 +128,13 @@ export const TasksTab = ({ project }: TasksTabProps) => {
     updateTask({ id: task.id, data: { status: newStatus } })
   }
 
-  const handleDelete = (taskId: string) => {
+  const handleDelete = (taskIds: string[]) => {
     if (window.confirm("Are you sure you want to delete this task?")) {
-      deleteTask(taskId)
+      if (taskIds.length === 1) {
+        deleteTask(taskIds[0])
+      } else {
+        bulkDelete(taskIds)
+      }
     }
   }
 
@@ -359,7 +363,7 @@ export const TasksTab = ({ project }: TasksTabProps) => {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation()
-                                handleDelete(task.id)
+                                handleDelete(task.allIds || [task.id])
                               }}
                               className="p-1 text-slate-300 hover:text-red-500 transition-colors"
                               title="Delete task"

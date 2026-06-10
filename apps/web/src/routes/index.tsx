@@ -21,6 +21,7 @@ import {
   ActivityLogPage,
   StatsPage,
   AllTasksPage,
+  FeedbackPage,
 } from "@/pages"
 import { AuthenticateWithRedirectCallback } from "@clerk/react"
 
@@ -144,6 +145,10 @@ export const router = createBrowserRouter(
             {
               path: "/admin/activity-logs",
               element: <ActivityLogPage />,
+            },
+            {
+              path: "/feedback",
+              element: <FeedbackPage />,
             },
           ],
         },

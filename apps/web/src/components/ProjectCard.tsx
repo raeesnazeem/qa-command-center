@@ -88,24 +88,49 @@ export const ProjectCard = ({ project }: ProjectCardProps) => {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300%] aspect-square bg-[conic-gradient(from_0deg,transparent_0_45deg,theme(colors.accent)_135deg,transparent_180deg_225deg,#a3d4c7_315deg,transparent_360deg)] opacity-100 dark:opacity-0 group-hover:opacity-100 group-hover:animate-[spin_4s_linear_infinite]" />
         </div>
 
-        <div className="flex justify-between items-start mb-4 relative z-10">
-          <div className="flex-1 min-w-0">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-200 group-hover:text-accent transition-colors truncate pr-2">
-              {project.name}
-            </h3>
-          </div>
-          <div className="flex items-center space-x-2">
-            {project.basecamp_project_id && (
-              <div
-                className="flex items-center bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-500 border border-orange-100 dark:border-orange-900/50 rounded-full px-2 py-0.5"
-                title="Basecamp Linked"
-              >
-                <Check className="w-3 h-3 mr-1" />
-                <span className="text-[10px] font-bold uppercase tracking-tight">
-                  Basecamp
-                </span>
+        <div className="mb-3 relative z-10">
+          <h3 className="text-xl font-bold text-slate-900 dark:text-slate-200 group-hover:text-accent transition-colors truncate">
+            {project.name}
+          </h3>
+        </div>
+
+        <div className="flex items-start justify-between flex-grow gap-2">
+          <div className="space-y-1 min-w-0">
+            {project.client_name && (
+              <div className="flex items-center text-slate-500 dark:text-slate-400 text-sm">
+                <span className="truncate">{project.client_name}</span>
               </div>
             )}
+            <div className="flex items-center text-slate-500 dark:text-slate-400 text-sm">
+              <span className="truncate text-sky-500 dark:text-sky-400 group-hover:text-sky-600 dark:group-hover:text-sky-300 transition-colors lowercase text-[11px] font-bold tracking-tight">
+                {project.site_url
+                  .replace(/^https?:\/\/(www\.)?/, "")
+                  .replace(/\/$/, "")}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2 shrink-0">
+            {project.basecamp_account_id &&
+              project.basecamp_project_id &&
+              project.basecamp_todo_list_id &&
+              project.basecamp_post_todo_list_id && (
+                <div
+                  className="flex items-center justify-center bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-500 border border-yellow-100 dark:border-yellow-900/50 rounded-full w-6 h-6"
+                  title="Basecamp Linked"
+                >
+                  <svg
+                    width="13"
+                    height="13"
+                    viewBox="0 0 35 30"
+                    fill="currentColor"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M18.088.27c9.1 0 15.215 10.518 15.977 21.937.02.313-.053.626-.212.896-3.14 5.35-10.061 6.527-15.737 6.558-5.487.1-10.7-2.188-14.412-6.301a1.566 1.566 0 0 1-.303-1.6 36.177 36.177 0 0 1 1.912-4.147c1.052-1.928 2.644-4.681 5.154-4.763 2.343 0 3.516 2.174 5.114 3.519 1.633-1.672 2.552-3.94 3.567-6.014a1.565 1.565 0 0 1 2.837 1.326c-.885 1.829-1.814 3.651-2.954 5.336-1.172 1.732-2.073 2.636-3.33 2.636-.746 0-1.385-.292-2.03-.801-1.103-.92-1.937-2.088-3.15-2.873-1.567.785-2.99 4.079-3.824 5.98 2.925 2.88 6.898 4.55 11.008 4.573 4.622-.028 10.286-.49 13.197-4.62-.575-7.111-4.013-18.377-12.814-18.51-7.097 0-11.754 5.047-14.775 13.644A1.565 1.565 0 1 1 .36 16.008C3.771 6.299 9.333.27 18.088.27Z"></path>
+                  </svg>
+                </div>
+              )}
+
             {canManage && (
               <button
                 onClick={(e) => {
@@ -147,22 +172,7 @@ export const ProjectCard = ({ project }: ProjectCardProps) => {
           </div>
         </div>
 
-        <div className="space-y-1 flex-grow mt-1">
-          {project.client_name && (
-            <div className="flex items-center text-slate-500 dark:text-slate-400 text-sm">
-              <span className="truncate">{project.client_name}</span>
-            </div>
-          )}
-          <div className="flex items-center text-slate-500 dark:text-slate-400 text-sm">
-            <span className="truncate text-sky-500 dark:text-sky-400 group-hover:text-sky-600 dark:group-hover:text-sky-300 transition-colors lowercase text-[11px] font-bold tracking-tight">
-              {project.site_url
-                .replace(/^https?:\/\/(www\.)?/, "")
-                .replace(/\/$/, "")}
-            </span>
-          </div>
-        </div>
-
-        <div className="mt-6 pt-4 border-t border-slate-50 dark:border-slate-800 grid grid-cols-2 gap-4">
+        <div className="mt-6 pt-4 border-t border-slate-50 dark:border-slate-800 flex justify-between gap-4">
           <div className="flex flex-col">
             <span className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold mb-1 flex items-center">
               <AlertCircle className="w-3 h-3 mr-1" /> Issues
@@ -173,11 +183,11 @@ export const ProjectCard = ({ project }: ProjectCardProps) => {
               {project.open_issues_count} Open
             </span>
           </div>
-          <div className="flex flex-col">
+          <div className="flex flex-col items-end">
             <span className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold mb-1 flex items-center">
               <Calendar className="w-3 h-3 mr-1" /> Last Run
             </span>
-            <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">
+            <span className="text-sm font-semibold text-slate-600 dark:text-slate-300 text-right">
               {formatDate(project.last_run_date)}
             </span>
           </div>

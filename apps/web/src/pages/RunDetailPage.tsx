@@ -125,6 +125,7 @@ export const RunDetailPage = () => {
   const [findingsLoaded, setFindingsLoaded] = useState(false)
   const [hasRefetched, setHasRefetched] = useState(false)
   const initialStatusRef = useRef<string | undefined>(undefined)
+  const hasAutoNavigatedGeneralRef = useRef(false)
 
   // Fast looping state for rapid UI feedback
   const [fakeIndex, setFakeIndex] = useState(0)
@@ -512,6 +513,18 @@ export const RunDetailPage = () => {
     )
   }, [runFindings])
 
+  useEffect(() => {
+    if (
+      !hasAutoNavigatedGeneralRef.current &&
+      run?.status === "completed" &&
+      runGeneralFindings &&
+      runGeneralFindings.length > 0
+    ) {
+      setActiveTab("general")
+      hasAutoNavigatedGeneralRef.current = true
+    }
+  }, [run?.status, runGeneralFindings])
+
   const findingToTaskMap = useMemo(() => {
     const map: Record<string, { taskIds: string[]; assignedUsers: any[] }> = {}
     if (!tasksData?.data) return map
@@ -826,7 +839,12 @@ export const RunDetailPage = () => {
     // Merge gallery images from store at the entry point
     const mergedFinding = {
       ...finding,
-      gallery_images: allGalleryImages[finding.id] || finding.gallery_images,
+      gallery_images: Array.from(
+        new Set([
+          ...(finding.gallery_images || []),
+          ...(allGalleryImages[finding.id] || []),
+        ]),
+      ),
     }
     setPrefillFinding(mergedFinding)
     setIsCreateTaskModalOpen(true)
@@ -937,10 +955,13 @@ export const RunDetailPage = () => {
           ...f,
           issue_number: nextIssueNum++,
           title: f.title.replace(/^Issue #\d+:?\s*/, ""),
-          gallery_images:
-            allGalleryImages[f.id] ||
-            allGalleryImages[f.id.split(",")[0]] ||
-            f.gallery_images,
+          gallery_images: Array.from(
+            new Set([
+              ...(f.gallery_images || []),
+              ...(allGalleryImages[f.id] || []),
+              ...(allGalleryImages[f.id.split(",")[0]] || []),
+            ]),
+          ),
         }
       })
       addToStage(mergedFindings as any)

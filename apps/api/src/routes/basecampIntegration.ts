@@ -191,11 +191,22 @@ router.post(
         task.findings?.check_factor === "social_share_heading" ||
         (task as any).check_factor === "social_share_heading"
 
+      const isLogoChatbot =
+        task.findings?.check_factor === "logo_chatbot" ||
+        (task as any).check_factor === "logo_chatbot"
+
       let appUrl = ""
-      if (isHeroMedia || isDeadLink || isPrivacyPolicy || isSocialShare) {
+      if (
+        isHeroMedia ||
+        isDeadLink ||
+        isPrivacyPolicy ||
+        isSocialShare ||
+        isLogoChatbot
+      ) {
         console.log(
-          `[BasecampPush] Task is a ${isHeroMedia ? "Hero Media" : isDeadLink ? "Dead Link" : isPrivacyPolicy ? "Privacy Policy" : "Social Share"} finding. Locating specific checklist item...`,
+          `[BasecampPush] Task is a ${isHeroMedia ? "Hero Media" : isDeadLink ? "Dead Link" : isPrivacyPolicy ? "Privacy Policy" : isSocialShare ? "Social Share" : isLogoChatbot ? "Logo on Chatbot" : "Other"} finding. Locating specific checklist item...`,
         )
+
         const headers = {
           Authorization: `Bearer ${projectSettings.basecamp_token}`,
           "User-Agent": "QACC (raees.nazeem@growth99.com)",
@@ -301,8 +312,20 @@ router.post(
               `To-do checklist item "QA- While sharing the website on text , business name should be matched" not found in Basecamp checklist "${targetList.name}".`,
             )
           }
+        } else if (isLogoChatbot) {
+          targetTodo = allTodos.find((todo: any) =>
+            todo.content
+              .toLowerCase()
+              .includes("qa - check if website logo is added to the chat bot"),
+          )
+          if (!targetTodo) {
+            throw new Error(
+              `To-do checklist item "QA - Check if website logo is added to the chat bot." not found in Basecamp checklist "${targetList.name}".`,
+            )
+          }
         } else {
           // isDeadLink
+
           const targetTodoName = "qa - verify deadlink"
 
           targetTodo = allTodos.find((todo: any) =>
@@ -592,7 +615,11 @@ Created via QA Command Center`.trim()
       }
 
       const basecampUrl =
-        isHeroMedia || isDeadLink || isPrivacyPolicy || isSocialShare
+        isHeroMedia ||
+        isDeadLink ||
+        isPrivacyPolicy ||
+        isSocialShare ||
+        isLogoChatbot
           ? appUrl ||
             `https://3.basecamp.com/${projectSettings.basecamp_account_id}/buckets/${projectSettings.basecamp_project_id}/todos/${todolistId}`
           : `https://3.basecamp.com/${projectSettings.basecamp_account_id}/buckets/${projectSettings.basecamp_project_id}/todolists/${todolistId}`

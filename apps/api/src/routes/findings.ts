@@ -397,6 +397,18 @@ router.post(
             `To-do checklist item "QA- While sharing the website on text , business name should be matched" not found in Basecamp checklist "${targetList.name}".`,
           )
         }
+      } else if (finding.check_factor === "logo_chatbot") {
+        targetTodo = allTodos.find((todo: any) =>
+          todo.content
+            .toLowerCase()
+            .includes("qa - check if website logo is added to the chat bot"),
+        )
+
+        if (!targetTodo) {
+          throw new Error(
+            `To-do checklist item "QA - Check if website logo is added to the chat bot." not found in Basecamp checklist "${targetList.name}".`,
+          )
+        }
       }
 
       // 4. Extract screenshots: split comma-separated list and reuse the worker's pre-captured reviews proof
@@ -562,6 +574,15 @@ router.post(
           <strong>Screenshots:</strong><br/>
           ${screenshotsHtml}
           <br/><br/>
+          <em>Sent automatically via QA Command Center</em>
+        </div>
+        `.trim()
+      } else if (finding.check_factor === "logo_chatbot") {
+        const { isLogoVerified } = req.body || {}
+        commentHtml = `
+        <div style="font-family: sans-serif; line-height: 1.5;">
+          <strong>Logo on Chatbot Verification</strong><br/><br/>
+          Logo on chatbot verified? <strong>${isLogoVerified ? "YES" : "NO"}</strong><br/><br/>
           <em>Sent automatically via QA Command Center</em>
         </div>
         `.trim()

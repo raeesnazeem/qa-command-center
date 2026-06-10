@@ -416,15 +416,25 @@ export const DashboardPage = () => {
                     </p>
 
                     <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50 dark:border-slate-800">
-                      <div className="flex flex-col">
-                        <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                          Active Runs
-                        </span>
-                        <span className="text-sm font-bold text-slate-900 dark:text-slate-200">
-                          {project.qa_runs?.filter(
-                            (r: any) => r.status === "running",
-                          ).length || 0}
-                        </span>
+                      <div className="flex items-center gap-6">
+                        <div className="flex flex-col">
+                          <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                            Active Runs
+                          </span>
+                          <span className="text-sm font-bold text-slate-900 dark:text-slate-200">
+                            {project.qa_runs?.filter(
+                              (r: any) => r.status === "running",
+                            ).length || 0}
+                          </span>
+                        </div>
+                        <div className="flex flex-col border-l border-slate-200 dark:border-slate-700 pl-6">
+                          <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                            Open Issues
+                          </span>
+                          <span className="text-sm font-bold text-slate-900 dark:text-slate-200">
+                            {project.open_issues_count || 0}
+                          </span>
+                        </div>
                       </div>
                       <div className="bg-[#fff] dark:bg-slate-800 text-accent p-1.5 rounded-lg group-hover:bg-[#fff] dark:group-hover:bg-slate-700 group-hover:text-black dark:group-hover:text-white transition-colors">
                         <ArrowUpRight size={18} />
@@ -729,12 +739,17 @@ export const DashboardPage = () => {
                         {project.client_name || "Internal"}
                       </p>
                       <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50 dark:border-slate-800">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                          Active Runs:{" "}
-                          {project.qa_runs?.filter(
-                            (r: any) => r.status === "running",
-                          ).length || 0}
-                        </span>
+                        <div className="flex items-center gap-4">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            Active Runs:{" "}
+                            {project.qa_runs?.filter(
+                              (r: any) => r.status === "running",
+                            ).length || 0}
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-l border-slate-200 dark:border-slate-700 pl-4">
+                            Open Issues: {project.open_issues_count || 0}
+                          </span>
+                        </div>
                         <ArrowUpRight size={18} className="text-accent" />
                       </div>
                     </Link>

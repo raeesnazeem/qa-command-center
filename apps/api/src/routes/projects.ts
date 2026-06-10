@@ -137,7 +137,7 @@ router.get("/", clerkAuth, async (req: Request, res: Response) => {
       .from("projects")
       .select(
         `
-        *,
+               *,
         qa_runs(
           id,
           status,
@@ -148,6 +148,12 @@ router.get("/", clerkAuth, async (req: Request, res: Response) => {
         ),
         tasks(
           status
+        ),
+        project_settings(
+          basecamp_account_id,
+          basecamp_project_id,
+          basecamp_todolist_id,
+          basecamp_post_todolist_id
         )
       `,
       )
@@ -183,9 +189,17 @@ router.get("/", clerkAuth, async (req: Request, res: Response) => {
           ["open", "in_progress"].includes(t.status),
         ).length || 0
 
-      const { qa_runs, tasks, ...rest } = project
+      const { qa_runs, tasks, project_settings, ...rest } = project
+      const settings = Array.isArray(project_settings)
+        ? project_settings[0]
+        : project_settings
+
       return {
         ...rest,
+        basecamp_account_id: settings?.basecamp_account_id || null,
+        basecamp_project_id: settings?.basecamp_project_id || null,
+        basecamp_todo_list_id: settings?.basecamp_todolist_id || null,
+        basecamp_post_todo_list_id: settings?.basecamp_post_todolist_id || null,
         total_runs_count: project.qa_runs?.length || 0,
         last_run_date: lastRun
           ? lastRun.completed_at || lastRun.created_at

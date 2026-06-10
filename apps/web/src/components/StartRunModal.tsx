@@ -375,12 +375,13 @@ export const StartRunModal = ({
                     </span>
                   </div>
                 </label>
-                <label className="relative cursor-pointer">
+                <label className="relative cursor-not-allowed opacity-50">
                   <input
                     type="radio"
                     {...register("run_type")}
                     value="post_release"
                     className="sr-only peer"
+                    disabled
                   />
                   <div className="p-1 border border-slate-200 dark:border-slate-700 rounded-md text-center peer-checked:border-accent peer-checked:bg-accent/5 dark:peer-checked:bg-accent/10 transition-all">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 peer-checked:text-accent">
@@ -418,14 +419,16 @@ export const StartRunModal = ({
                   (Optional)
                 </span>
               </label>
-              <div className="relative">
+              <div className="relative opacity-50 cursor-not-allowed">
                 <Layout className="absolute left-3 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-slate-400" />
                 <input
                   {...register("figma_url")}
+                  disabled
                   placeholder="https://figma.com/file/..."
-                  className="w-full bg-[#F2F6FC] dark:bg-[#131d22] hover:bg-[#fcfcfc] dark:hover:bg-[#131d22] border border-slate-300 dark:border-slate-700 hover:border-accent dark:hover:border-accent rounded-md pl-7 pr-4 py-1.5 text-[13px] text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:bg-[#fcfcfc] dark:focus:bg-[#131d22] focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
+                  className="w-full bg-[#F2F6FC] dark:bg-[#131d22] border border-slate-300 dark:border-slate-700 rounded-md pl-7 pr-4 py-1.5 text-[13px] text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 cursor-not-allowed transition-all"
                 />
               </div>
+
               {errors.figma_url && (
                 <p className="mt-1.5 text-xs text-red-500 font-medium">
                   {errors.figma_url.message}
@@ -685,41 +688,48 @@ export const StartRunModal = ({
                 </details>
               </div>
             </div>
+          </div>
 
-            {requiresPassword && (
-              <div className="p-4 bg-slate-50 dark:bg-[#131d22]/50 border border-slate-200 dark:border-slate-700 rounded-md mt-4">
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  WordPress Admin Password Required
-                </label>
-                <p className="text-[10px] text-slate-500 mb-3 font-medium">
-                  One or more selected checks require access to the WordPress
-                  backend. Username will be set to onboarding.india@growth99.com
-                </p>
-                <input
-                  type="password"
-                  {...register("wp_password")}
-                  placeholder="Enter today's WP password..."
-                  className="w-full bg-[#F2F6FC] dark:bg-[#131d22] hover:bg-[#fcfcfc] dark:hover:bg-[#131d22] border border-slate-300 dark:border-slate-700 hover:border-accent dark:hover:border-accent rounded-md px-4 py-1.5 text-[13px] text-slate-900 dark:text-slate-200 focus:outline-none focus:bg-[#fcfcfc] dark:focus:bg-[#131d22] focus:border-accent transition-all"
-                />
-              </div>
-            )}
+          <div className="shrink-0 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-[#131d22]/50">
+            {(requiresPassword || requiresLiveSiteUrl) && (
+              <div className="p-4 px-6 space-y-4 border-b border-slate-100 dark:border-slate-800">
+                {requiresPassword && (
+                  <div className="p-4 bg-white dark:bg-[#1d2a31] border border-slate-200 dark:border-slate-700 rounded-md">
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                      WordPress Admin Password Required
+                    </label>
+                    <p className="text-[10px] text-slate-500 mb-3 font-medium">
+                      One or more selected checks require access to the
+                      WordPress backend. Username will be set to
+                      onboarding.india@growth99.com
+                    </p>
+                    <input
+                      type="password"
+                      {...register("wp_password")}
+                      placeholder="Enter today's WP password..."
+                      className="w-full bg-[#F2F6FC] dark:bg-[#131d22] hover:bg-[#fcfcfc] dark:hover:bg-[#131d22] border border-slate-300 dark:border-slate-700 hover:border-accent dark:hover:border-accent rounded-md px-4 py-1.5 text-[13px] text-slate-900 dark:text-slate-200 focus:outline-none focus:bg-[#fcfcfc] dark:focus:bg-[#131d22] focus:border-accent transition-all"
+                    />
+                  </div>
+                )}
 
-            {requiresLiveSiteUrl && (
-              <div className="p-4 bg-slate-50 dark:bg-[#131d22]/50 border border-slate-200 dark:border-slate-700 rounded-md mt-4">
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Client's Live Site URL — Required
-                </label>
-                <p className="text-[10px] text-slate-500 mb-3 font-medium">
-                  Enter the client's CURRENT live website URL. We will compare
-                  all pages from this site against our dev site.
-                </p>
-                <input
-                  type="url"
-                  value={liveSiteUrl}
-                  onChange={(e) => setLiveSiteUrl(e.target.value)}
-                  placeholder="https://www.clientlivesite.com"
-                  className="w-full bg-[#F2F6FC] dark:bg-[#131d22] hover:bg-[#fcfcfc] dark:hover:bg-[#131d22] border border-slate-300 dark:border-slate-700 hover:border-accent dark:hover:border-accent rounded-md px-4 py-1.5 text-[13px] text-slate-900 dark:text-slate-200 focus:outline-none focus:bg-[#fcfcfc] dark:focus:bg-[#131d22] focus:border-accent transition-all"
-                />
+                {requiresLiveSiteUrl && (
+                  <div className="p-4 bg-white dark:bg-[#1d2a31] border border-slate-200 dark:border-slate-700 rounded-md">
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                      Client's Live Site URL — Required
+                    </label>
+                    <p className="text-[10px] text-slate-500 mb-3 font-medium">
+                      Enter the client's CURRENT live website URL. We will
+                      compare all pages from this site against our dev site.
+                    </p>
+                    <input
+                      type="url"
+                      value={liveSiteUrl}
+                      onChange={(e) => setLiveSiteUrl(e.target.value)}
+                      placeholder="https://www.clientlivesite.com"
+                      className="w-full bg-[#F2F6FC] dark:bg-[#131d22] hover:bg-[#fcfcfc] dark:hover:bg-[#131d22] border border-slate-300 dark:border-slate-700 hover:border-accent dark:hover:border-accent rounded-md px-4 py-1.5 text-[13px] text-slate-900 dark:text-slate-200 focus:outline-none focus:bg-[#fcfcfc] dark:focus:bg-[#131d22] focus:border-accent transition-all"
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>

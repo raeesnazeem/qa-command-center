@@ -72,11 +72,11 @@ export const AdminRedisWidget: React.FC = () => {
       {/* Floating Button - High Z-index to stay on top of Sidebar */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 left-6 w-12 h-12 bg-[#93C0B1] text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-[99999] group border-4 border-white"
+        className="relative pointer-events-auto w-12 h-12 bg-[#93C0B1] dark:bg-[#1d2a31] text-white dark:text-[#93C0B1] rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-[60] group border-2 border-white dark:border-slate-300"
         title="Redis Monitor"
       >
         <Database className="w-6 h-6" />
-        <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full animate-pulse"></span>
+        <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white dark:border-[#131d22] rounded-full animate-pulse"></span>
       </button>
 
       {/* Modal Overlay */}
