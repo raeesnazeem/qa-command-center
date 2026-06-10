@@ -224,23 +224,12 @@ export const PagesTable: React.FC<PagesTableProps> = ({
                       </div>
                     ) : (
                       <div className="w-10 h-6 bg-slate-50 dark:bg-[#131d22] rounded border border-slate-200 dark:border-slate-700 flex items-center justify-center">
-                        <ImageIcon size={12} className="text-slate-300 dark:text-slate-600" />
+                        <ImageIcon
+                          size={12}
+                          className="text-slate-300 dark:text-slate-600"
+                        />
                       </div>
                     )}
-                  </div>
-                )}
-
-                {onManualScan && (
-                  <div className="w-24 flex justify-center pt-1">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onManualScan(page)
-                      }}
-                      className="px-2 py-1 border border-red-500 rounded-sm text-red-500 text-[8px] font-bold uppercase tracking-tighter hover:bg-red-50 transition-colors"
-                    >
-                      Manual Scan
-                    </button>
                   </div>
                 )}
               </div>

@@ -277,10 +277,11 @@ export const RunDetailPage = () => {
     run?.status === "completed" && !findingsLoaded ? "running" : run?.status
   const displayProgress =
     run?.status === "completed" && !findingsLoaded ? 99 : trueAverageProgress
-  
-  const safeDisplayProgress = run?.status === "completed" && findingsLoaded
-    ? 100
-    : Math.min(99, Math.max(1, Math.round(displayProgress)))
+
+  const safeDisplayProgress =
+    run?.status === "completed" && findingsLoaded
+      ? 100
+      : Math.min(99, Math.max(1, Math.round(displayProgress)))
 
   const { data: tasksData } = useTasks({ projectId: projectId! })
   const updateFindingMutation = useUpdateFinding(selectedPageId)
@@ -1131,17 +1132,6 @@ export const RunDetailPage = () => {
             </div>
 
             <div className="text-right flex items-center gap-4">
-              {canActionManual && (
-                <button
-                  onClick={() => {
-                    setSelectedManualPageId(null)
-                    setIsManualScanOpen(true)
-                  }}
-                  className="px-2 py-1 border border-accent rounded-sm text-accent text-[10px] font-bold uppercase tracking-tighter hover:bg-accent/5 transition-colors"
-                >
-                  Manual Scan
-                </button>
-              )}
               <p className="text-xl font-bold text-slate-900 dark:text-slate-200">
                 {isDiscovering
                   ? "..."
@@ -1288,24 +1278,12 @@ export const RunDetailPage = () => {
                 </p>
               </div>
 
-              <div className="text-right flex items-center gap-4">
-                {canActionManual && (
-                  <button
-                    onClick={() => {
-                      setSelectedManualPageId(null)
-                      setIsManualScanOpen(true)
-                    }}
-                    className="px-2 py-1 border border-accent rounded text-accent text-[10px] font-bold uppercase tracking-tighter hover:bg-accent/5 transition-colors"
-                  >
-                    Manual Scan
-                  </button>
-                )}
-              </div>
+              <div className="text-right flex items-center gap-4"></div>
             </div>
 
             {/* Check-wise Progress Bars */}
             {isDiscovering ? (
-              <div className="w-full h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200 p-1">
+              <div className="w-full h-4 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700 p-1">
                 <div className="h-full rounded-full transition-all duration-500 ease-out shadow-sm bg-accent w-[40%]">
                   <div className="w-full h-full opacity-30 bg-[linear-gradient(45deg,rgba(255,255,255,.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,.15)_50%,rgba(255,255,255,.15)_75%,transparent_75%,transparent)] bg-[length:1rem_1rem] animate-[progress-bar-stripes_1s_linear_infinite]" />
                 </div>
@@ -1537,9 +1515,9 @@ export const RunDetailPage = () => {
                                           : `${checkProgress}%`}
                                     </span>
                                   </div>
-                                  <div className="w-full h-3 bg-slate-50 dark:bg-[#1D2A31] border border-slate-400 dark:border-slate-700 rounded-md p-px mb-1">
+                                  <div className="w-full h-4 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700 p-1 mb-1">
                                     <div
-                                      className="h-full bg-[#b5e4b5] rounded-sm transition-all duration-500"
+                                      className="h-full rounded-full transition-all duration-500 ease-out shadow-sm bg-accent"
                                       style={{
                                         width: `${run.status === "cancelled" || run.status === "failed" ? checkProgress : isRunCompleted ? 100 : checkProgress}%`,
                                       }}
@@ -1592,9 +1570,9 @@ export const RunDetailPage = () => {
                                           : `${pageProgress}%`}
                                     </span>
                                   </div>
-                                  <div className="w-full h-3 bg-slate-50 dark:bg-[#1D2A31] border border-slate-400 dark:border-slate-700 rounded-md p-px mb-1">
+                                  <div className="w-full h-4 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700 p-1 mb-1">
                                     <div
-                                      className="h-full bg-[#b5e4b5] rounded-sm transition-all duration-500"
+                                      className="h-full rounded-full transition-all duration-500 ease-out shadow-sm bg-accent"
                                       style={{
                                         width: `${run.status === "cancelled" || run.status === "failed" ? pageProgress : isCompleted ? 100 : pageProgress}%`,
                                       }}
@@ -2089,7 +2067,7 @@ export const RunDetailPage = () => {
                           {cat.count} Issues
                         </span>
                       </div>
-                      <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                         <div
                           className={`h-full ${cat.color} rounded-full`}
                           style={{

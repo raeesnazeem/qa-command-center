@@ -15,7 +15,7 @@ import {
   ListTodo,
 } from "lucide-react"
 import { CanDo } from "./CanDo"
-import { useRuns, useUpdateRunStatus } from "../hooks/useRuns"
+import { useRuns, useUpdateRunStatus, usePinnedRuns } from "../hooks/useRuns"
 import { useTasks } from "../hooks/useTasks"
 import { useRole } from "../hooks/useRole"
 import { Link } from "react-router-dom"
@@ -31,7 +31,21 @@ export const ProjectOverviewTab = ({
   onStartRun,
 }: ProjectOverviewTabProps) => {
   const { role: userRole } = useRole()
-  const { data: runsData, isLoading: isLoadingRuns } = useRuns(project.id, 1, 5)
+  const { data: runsData, isLoading: isLoadingRuns } = useRuns(project.id, 1, 6)
+  const { data: pinnedRunsData, isLoading: isLoadingPinned } = usePinnedRuns(
+    project.id,
+  )
+
+  const recentRuns = [
+    ...(runsData?.data || []),
+    ...(pinnedRunsData?.data || []),
+  ]
+    .sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    )
+    .slice(0, 6)
+
   // Fetch assigned tasks if user is a developer
   const { data: tasksData, isLoading: isLoadingTasks } = useTasks({
     projectId: project.id,
@@ -41,7 +55,7 @@ export const ProjectOverviewTab = ({
   const updateStatus = useUpdateRunStatus()
 
   const isDeveloper = userRole === "developer"
-  const ongoingRun = runsData?.data?.find(
+  const ongoingRun = recentRuns.find(
     (run) =>
       run.status === "running" ||
       run.status === "pending" ||
@@ -265,29 +279,29 @@ export const ProjectOverviewTab = ({
               <Clock className="w-5 h-5 mr-2 text-slate-400" />
               Recent QA Runs
             </h3>
-            <Link
-              to={`/projects/${project.id}/runs`}
-              className="text-sm font-semibold text-accent hover:text-accent/80 transition-colors"
-            >
-              View All
-            </Link>
           </div>
 
-          {isLoadingRuns ? (
+          {isLoadingRuns || isLoadingPinned ? (
             <div className="p-12 flex justify-center">
               <Loader2 className="w-8 h-8 text-accent animate-spin" />
             </div>
-          ) : runsData?.data && runsData.data.length > 0 ? (
+          ) : recentRuns.length > 0 ? (
             <div className="divide-y divide-slate-50 dark:divide-slate-800">
-              {runsData.data.map((run) => (
+              {recentRuns.map((run, index) => (
                 <Link
                   key={run.id}
                   to={`/projects/${project.id}/runs/${run.id}`}
-                  className="flex items-center justify-between px-6 py-4 hover:bg-slate-50 dark:hover:bg-[#1d2a31] transition-colors group"
+                  className={`flex items-center justify-between px-6 py-4 hover:bg-slate-100 dark:hover:bg-[#1d2a31] transition-colors group ${
+                    index % 2 === 0 ? "bg-accent/10 dark:bg-[#1d2a31]/60" : ""
+                  }`}
                 >
                   <div className="flex items-center space-x-4">
                     <div
-                      className={`p-2 rounded-md bg-slate-50 dark:bg-[#1d2a31] text-slate-400 group-hover:bg-slate-50 dark:group-hover:bg-[#1d2a31] group-hover:text-accent transition-colors shadow-sm`}
+                      className={`p-2 rounded-md bg-slate-50 dark:bg-[#1d2a31] ${
+                        run.status === "cancelled"
+                          ? "text-rose-500 dark:text-rose-400 group-hover:text-rose-500 dark:group-hover:text-rose-400"
+                          : "text-slate-400 group-hover:text-accent"
+                      } group-hover:bg-slate-50 dark:group-hover:bg-[#1d2a31] transition-colors shadow-sm`}
                     >
                       {getStatusIcon(run.status)}
                     </div>
@@ -296,7 +310,13 @@ export const ProjectOverviewTab = ({
                         <span className="text-sm font-bold text-slate-900 dark:text-slate-200 uppercase tracking-tight">
                           {run.run_type.replace("_", " ")}
                         </span>
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-[#1d2a31] text-slate-500 dark:text-slate-400 uppercase">
+                        <span
+                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-[#1d2a31] uppercase ${
+                            run.status === "cancelled"
+                              ? "text-rose-500 dark:text-rose-400"
+                              : "text-accent"
+                          }`}
+                        >
                           {run.status}
                         </span>
                       </div>

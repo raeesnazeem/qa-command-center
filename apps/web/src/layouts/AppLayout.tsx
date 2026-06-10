@@ -16,6 +16,7 @@ import {
   Kanban,
   ListChecks,
   Monitor,
+  User,
 } from "lucide-react"
 import { useRole } from "../hooks/useRole"
 import { useEffect, useState } from "react"
@@ -195,9 +196,13 @@ export const AppLayout = () => {
       <div className="flex-1 flex flex-col overflow-hidden relative">
         <header className="h-16 bg-slate-50 dark:bg-[#0B151B] border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 shadow-sm z-49">
           <div className="flex items-center space-x-2">
-            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-1.5 py-1 rounded-md dark:px-3 dark:bg-black dark:text-emerald dark:rounded-md dark:border dark:border-emerald">
-              {role?.replace("_", " ")}
-            </span>
+            {!isLoading && role && (
+              <div className="flex items-center space-x-2 px-3 py-1.5 rounded-md bg-slate-100 dark:bg-[#1d2a31] border border-slate-200 dark:border-slate-700">
+                <span className="text-[8px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-widest">
+                  {role.replace("_", "-")}
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center space-x-6">
