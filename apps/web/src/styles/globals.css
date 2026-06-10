@@ -3,6 +3,9 @@
 @tailwind utilities;
 
 @layer base {
+  * {
+    outline: none !important;
+  }
   html,
   body {
     @apply transition-colors duration-300 ease-in-out;

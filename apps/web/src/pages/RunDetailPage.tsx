@@ -277,6 +277,11 @@ export const RunDetailPage = () => {
     run?.status === "completed" && !findingsLoaded ? "running" : run?.status
   const displayProgress =
     run?.status === "completed" && !findingsLoaded ? 99 : trueAverageProgress
+  
+  const safeDisplayProgress = run?.status === "completed" && findingsLoaded
+    ? 100
+    : Math.min(99, Math.max(1, Math.round(displayProgress)))
+
   const { data: tasksData } = useTasks({ projectId: projectId! })
   const updateFindingMutation = useUpdateFinding(selectedPageId)
   const { mutate: createTask } = useCreateTask()
@@ -1096,7 +1101,7 @@ export const RunDetailPage = () => {
             {run.status === "running" && !isDiscovering && (
               <div className="text-right">
                 <p className="text-2xl font-bold text-slate-900 dark:text-slate-200 leading-none">
-                  {Math.round(displayProgress)}%
+                  {safeDisplayProgress}%
                 </p>
                 {eta && (
                   <p className="text-xs font-bold text-blue-500 uppercase mt-1 tracking-widest">
@@ -1142,7 +1147,7 @@ export const RunDetailPage = () => {
                   ? "..."
                   : displayStatus === "completed"
                     ? "100%"
-                    : `${Math.max(1, Math.round(displayProgress))}%`}
+                    : `${safeDisplayProgress}%`}
               </p>
             </div>
           </div>

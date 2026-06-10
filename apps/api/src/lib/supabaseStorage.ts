@@ -1,7 +1,7 @@
 import { supabase } from "./supabase"
 import { logger } from "./logger"
 
-const DEFAULT_BUCKET = "evidence"
+const DEFAULT_BUCKET = "public_evidence"
 
 /**
  * Ensures a bucket exists with specified privacy.

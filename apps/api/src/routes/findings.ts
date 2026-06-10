@@ -571,7 +571,10 @@ router.post(
 
       await axios.post(postCommentUrl, { content: commentHtml }, { headers })
 
-      if (finding.check_factor === "paid_media") {
+      if (
+        finding.check_factor === "paid_media" ||
+        finding.check_factor === "social_share_heading"
+      ) {
         try {
           const {
             notifyOnGoogleChat,
@@ -596,12 +599,14 @@ router.post(
             projectId: projectId,
             issueNumber: finding.issue_number || 0,
             projectName: siteUrl || "Project",
-            issueHeading: finding.title || "Paid Media Finding",
+            issueHeading: finding.title || "Finding",
             findingsUrl: targetTodo.app_url || "", // The "View Task" button in Google Chat will link directly to the Basecamp To-do!
             assignedUserIds: assignedUserIds,
             category: (finding.severity || "Finding").toUpperCase(),
             description: finding.description || "",
-            thumbnails: screenshot1Url ? [screenshot1Url] : [],
+            thumbnails: screenshotParts
+              .map((url: string) => url.trim())
+              .filter(Boolean),
           })
         } catch (gcError: any) {
           logger.error(

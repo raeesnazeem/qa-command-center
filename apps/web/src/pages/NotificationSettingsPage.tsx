@@ -133,7 +133,9 @@ export const NotificationSettingsPage = ({
     label: string
   }) => (
     <div className="flex items-center justify-between py-3">
-      <span className="text-sm font-medium text-slate-700">{label}</span>
+      <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+        {label}
+      </span>
       <button
         type="button"
         onClick={(e) => {
@@ -142,7 +144,7 @@ export const NotificationSettingsPage = ({
           onChange(!checked)
         }}
         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-          checked ? "bg-accent" : "bg-slate-200"
+          checked ? "bg-accent" : "bg-slate-200 dark:bg-slate-700"
         }`}
       >
         <span
@@ -157,19 +159,21 @@ export const NotificationSettingsPage = ({
   return (
     <div className="space-y-8 max-w-4xl animate-in fade-in slide-in-from-bottom-2 duration-500 pb-20">
       {/* Email Notifications */}
-      <section className="bg-slate-50 border border-slate-100 rounded-md overflow-hidden shadow-sm">
-        <div className="px-6 py-4 border-b border-slate-50 flex items-center space-x-3 bg-slate-50/50">
-          <div className="p-2 bg-slate-50 border border-slate-100 rounded-md text-slate-400 shadow-sm">
+      <section className="bg-slate-50 dark:bg-[#1d2a31] border border-slate-400/50 rounded-md overflow-hidden shadow-sm">
+        <div className="px-6 py-4 border-b border-slate-400/50 flex items-center space-x-3 bg-slate-50/50 dark:bg-[#131D22]/50">
+          <div className="p-2 bg-slate-50 dark:bg-[#131D22] border border-slate-400/50 rounded-md text-slate-400 shadow-sm">
             <Mail className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-bold text-slate-900">Email Notifications</h3>
-            <p className="text-xs text-slate-500 font-medium">
+            <h3 className="font-bold text-slate-900 dark:text-slate-200">
+              Email Notifications
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
               Choose which updates you want delivered to your inbox.
             </p>
           </div>
         </div>
-        <div className="p-6 divide-y divide-slate-50">
+        <div className="p-6 divide-y divide-slate-400/50">
           <Toggle
             label="Task assigned to me"
             checked={emailPrefs.taskAssigned}
@@ -202,14 +206,14 @@ export const NotificationSettingsPage = ({
       </section>
 
       {/* Slack Integration */}
-      {/* <section className="bg-slate-50 border border-slate-100 rounded-md overflow-hidden shadow-sm">
-        <div className="px-6 py-4 border-b border-slate-50 flex items-center space-x-3 bg-slate-50/50">
-          <div className="p-2 bg-slate-50 border border-slate-100 rounded-md text-slate-400 shadow-sm">
+      {/* <section className="bg-slate-50 dark:bg-[#1d2a31] border border-slate-400/50 rounded-md overflow-hidden shadow-sm">
+        <div className="px-6 py-4 border-b border-slate-400/50 flex items-center space-x-3 bg-slate-50/50 dark:bg-[#131D22]/50">
+          <div className="p-2 bg-slate-50 dark:bg-[#131D22] border border-slate-400/50 rounded-md text-slate-400 shadow-sm">
             <Hash className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-bold text-slate-900">Slack Integration</h3>
-            <p className="text-xs text-slate-500 font-medium">
+            <h3 className="font-bold text-slate-900 dark:text-slate-200">Slack Integration</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
               Broadcast project updates to your Slack workspace.
             </p>
           </div>
@@ -232,7 +236,7 @@ export const NotificationSettingsPage = ({
                       })
                     }
                     placeholder="https://hooks.slack.com/services/..."
-                    className="flex-1 bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+                    className="flex-1 bg-slate-50 dark:bg-[#131D22] border border-slate-400/50 rounded-md px-3 py-2 text-slate-900 dark:text-slate-200 text-sm focus:outline-none focus:border-accent transition-all"
                   />
                   <button
                     type="button"
@@ -253,7 +257,7 @@ export const NotificationSettingsPage = ({
                 </div>
               </div>
 
-              <div className="divide-y divide-slate-50 pt-2">
+              <div className="divide-y divide-slate-400/50 pt-2">
                 <Toggle
                   label="Notify when a run is completed"
                   checked={slackPrefs.notifyRunComplete}
@@ -288,16 +292,16 @@ export const NotificationSettingsPage = ({
       </section> */}
 
       {/* Google Chat Integration */}
-      <section className="bg-slate-50 border border-slate-100 rounded-md overflow-hidden shadow-sm">
-        <div className="px-6 py-4 border-b border-slate-50 flex items-center space-x-3 bg-slate-50/50">
-          <div className="p-2 bg-slate-50 border border-slate-100 rounded-md text-slate-400 shadow-sm">
+      <section className="bg-slate-50 dark:bg-[#1d2a31] border border-slate-400/50 rounded-md overflow-hidden shadow-sm">
+        <div className="px-6 py-4 border-b border-slate-400/50 flex items-center space-x-3 bg-slate-50/50 dark:bg-[#131D22]/50">
+          <div className="p-2 bg-slate-50 dark:bg-[#131D22] border border-slate-400/50 rounded-md text-slate-400 shadow-sm">
             <Bell className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-bold text-slate-900">
+            <h3 className="font-bold text-slate-900 dark:text-slate-200">
               Google Chat Integration
             </h3>
-            <p className="text-xs text-slate-500 font-medium">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
               Broadcast project updates to a Google Chat space.
             </p>
           </div>
@@ -319,7 +323,7 @@ export const NotificationSettingsPage = ({
                     })
                   }
                   placeholder="https://chat.googleapis.com/v1/spaces/..."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+                  className="w-full bg-slate-50 dark:bg-[#131D22] border border-slate-400/50 rounded-md px-3 py-2 text-slate-900 dark:text-slate-200 text-sm focus:outline-none focus:border-accent transition-all"
                 />
               </div>
               <Toggle
@@ -331,7 +335,7 @@ export const NotificationSettingsPage = ({
               />
             </div>
           </CanDo>
-          <div className="pt-4 border-t border-slate-50">
+          {/* <div className="pt-4 border-t border-slate-400/50">
             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
               My Google Chat User ID (for tagging)
             </label>
@@ -340,66 +344,13 @@ export const NotificationSettingsPage = ({
               value={googleChatUserId}
               onChange={(e) => setGoogleChatUserId(e.target.value)}
               placeholder="e.g. 1092837465..."
-              className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent transition-all"
+              className="w-full bg-slate-50 dark:bg-[#131D22] border border-slate-400/50 rounded-md px-3 py-2 text-slate-900 dark:text-slate-200 text-sm focus:outline-none focus:border-accent transition-all"
             />
-            <p className="mt-2 text-[10px] text-slate-500">
+            <p className="mt-2 text-[10px] text-slate-500 dark:text-slate-400">
               Find your ID by clicking your profile picture in Google Chat.
               Required for personal @mentions.
             </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Notification Frequency */}
-      <section className="bg-slate-50 border border-slate-100 rounded-md overflow-hidden shadow-sm">
-        <div className="px-6 py-4 border-b border-slate-50 flex items-center space-x-3 bg-slate-50/50">
-          <div className="p-2 bg-slate-50 border border-slate-100 rounded-md text-slate-400 shadow-sm">
-            <Clock className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="font-bold text-slate-900">Notification Frequency</h3>
-            <p className="text-xs text-slate-500 font-medium">
-              Control how often you receive updates.
-            </p>
-          </div>
-        </div>
-        <div className="p-6 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault()
-                setFrequency("immediate")
-              }}
-              className={`flex flex-col p-4 rounded-md border text-left transition-all ${
-                frequency === "immediate"
-                  ? "border-accent bg-accent/5 ring-1 ring-accent"
-                  : "border-slate-100 bg-slate-50/50 hover:bg-slate-100"
-              }`}
-            >
-              <span className="font-bold text-slate-900">Immediate</span>
-              <span className="text-xs text-slate-500 mt-1">
-                Get notified as soon as events happen.
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault()
-                setFrequency("daily")
-              }}
-              className={`flex flex-col p-4 rounded-md border text-left transition-all ${
-                frequency === "daily"
-                  ? "border-accent bg-accent/5 ring-1 ring-accent"
-                  : "border-slate-100 bg-slate-50/50 hover:bg-slate-100"
-              }`}
-            >
-              <span className="font-bold text-slate-900">Daily Digest</span>
-              <span className="text-xs text-slate-500 mt-1">
-                A summary of all updates at 9:00 AM daily.
-              </span>
-            </button>
-          </div>
+          </div> */}
         </div>
       </section>
 

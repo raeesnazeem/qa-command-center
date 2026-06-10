@@ -215,7 +215,7 @@ export const AppLayout = () => {
             <NotificationBell />
             <div className="flex items-center space-x-4">
               {user?.firstName && (
-                <span className="text-sm text-slate-700 font-bold tracking-tight">
+                <span className="text-sm text-slate-700 dark:text-slate-300 font-bold tracking-tight">
                   {user.firstName}
                 </span>
               )}

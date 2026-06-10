@@ -822,7 +822,7 @@ router.delete(
       const extractPath = (url: string) => {
         if (!url || !url.includes("/storage/v1/object/")) return
         const match = url.match(
-          /\/object\/(?:public|sign)\/(?:screenshots|evidence)\/([^?]+)/,
+          /\/object\/(?:public|sign)\/(?:screenshots|evidence|public_evidence)\/([^?]+)/,
         )
         if (match && match[1]) pathsToDelete.add(decodeURIComponent(match[1]))
       }
@@ -830,6 +830,7 @@ router.delete(
       findings?.forEach((f: any) => {
         if (f.screenshot_url) f.screenshot_url.split(",").forEach(extractPath)
       })
+
       pages?.forEach((p: any) => {
         extractPath(p.screenshot_url_desktop)
         extractPath(p.screenshot_url_tablet)
@@ -841,6 +842,7 @@ router.delete(
         const pathArray = Array.from(pathsToDelete)
         await supabase.storage.from("screenshots").remove(pathArray)
         await supabase.storage.from("evidence").remove(pathArray)
+        await supabase.storage.from("public_evidence").remove(pathArray)
       }
 
       // 3. Delete the run

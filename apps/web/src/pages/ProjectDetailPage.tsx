@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { useParams, useSearchParams, Link } from "react-router-dom"
+import { useParams, useSearchParams, Link, useLocation, useNavigate } from "react-router-dom"
 import { useProject } from "../hooks/useProjects"
 import { useBasecampPeople } from "../hooks/useBasecampPeople"
 import {
@@ -32,6 +32,8 @@ export const ProjectDetailPage = () => {
   const activeTab = searchParams.get("tab") || "overview"
   const { canDo } = useRole()
   const [isRunModalOpen, setIsRunModalOpen] = useState(false)
+  const location = useLocation()
+  const navigate = useNavigate()
 
   const { data: project, isLoading, isError, error } = useProject(id!)
   useBasecampPeople(id)
@@ -46,6 +48,28 @@ export const ProjectDetailPage = () => {
       setTab("tasks")
     }
   }, [searchParams, activeTab])
+
+  useEffect(() => {
+    if (activeTab === "tasks" && !location.state?.runsFixApplied) {
+      const taskId = searchParams.get("taskId")
+      navigate(`/projects/${id}?tab=runs`, { 
+        replace: true,
+        state: { ...location.state, overviewFixApplied: true }
+      })
+      setTimeout(() => {
+        navigate(`/projects/${id}?tab=tasks${taskId ? `&taskId=${taskId}` : ''}`, {
+          state: { ...location.state, runsFixApplied: true }
+        })
+      }, 0)
+    } else if (["runs", "team", "settings"].includes(activeTab) && !location.state?.overviewFixApplied) {
+      navigate(`/projects/${id}?tab=overview`, { replace: true })
+      setTimeout(() => {
+        navigate(`/projects/${id}?tab=${activeTab}`, {
+          state: { ...location.state, overviewFixApplied: true }
+        })
+      }, 0)
+    }
+  }, [activeTab, location.state, navigate, id, searchParams])
 
   if (isLoading) {
     return (
@@ -129,7 +153,11 @@ export const ProjectDetailPage = () => {
       {/* Breadcrumbs & Back */}
       <div className="flex items-center space-x-4">
         <Link
-          to="/projects"
+          to={
+            activeTab === 'tasks' ? `/projects/${id}?tab=runs` : 
+            ["runs", "team", "settings"].includes(activeTab) ? `/projects/${id}?tab=overview` : 
+            "/projects"
+          }
           className="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-full transition-colors border border-transparent hover:border-slate-100 dark:hover:border-slate-700 shadow-none hover:shadow-sm"
         >
           <ChevronLeft className="w-5 h-5 text-slate-600 dark:text-slate-400" />
@@ -142,9 +170,37 @@ export const ProjectDetailPage = () => {
             Projects
           </Link>
           <span>/</span>
-          <span className="text-slate-900 dark:text-slate-200">
-            {project.name}
-          </span>
+          {activeTab === 'tasks' ? (
+            <>
+              <Link
+                to={`/projects/${id}?tab=runs`}
+                className="hover:text-accent dark:hover:text-accent transition-colors"
+              >
+                {project.name}
+              </Link>
+              <span>/</span>
+              <span className="text-slate-900 dark:text-slate-200">
+                Tasks
+              </span>
+            </>
+          ) : ["runs", "team", "settings"].includes(activeTab) ? (
+            <>
+              <Link
+                to={`/projects/${id}?tab=overview`}
+                className="hover:text-accent dark:hover:text-accent transition-colors"
+              >
+                {project.name}
+              </Link>
+              <span>/</span>
+              <span className="text-slate-900 dark:text-slate-200">
+                {activeTab === "runs" ? "QA Runs" : activeTab === "team" ? "Team" : "Settings"}
+              </span>
+            </>
+          ) : (
+            <span className="text-slate-900 dark:text-slate-200">
+              {project.name}
+            </span>
+          )}
         </div>
       </div>
 

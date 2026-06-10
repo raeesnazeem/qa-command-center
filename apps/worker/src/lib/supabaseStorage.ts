@@ -9,7 +9,7 @@ const logger = pino({
   },
 })
 
-const DEFAULT_BUCKET = "evidence"
+const DEFAULT_BUCKET = "public_evidence"
 
 /**
  * Ensures a bucket exists with specified privacy.
